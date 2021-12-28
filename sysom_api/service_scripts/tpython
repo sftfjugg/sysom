@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+import json
+import sys
+
+args = sys.argv[1]
+result = {
+    'commands':[
+        {
+            'instance': '116.62.146.75',
+            'cmd': 'ls /root'
+        },
+        {
+            'instance': '116.62.146.75',
+            'cmd': 'ls /; echo %s' % args,
+        }
+    ]
+}
+data = json.dumps(result)
+print(data)

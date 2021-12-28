@@ -14,7 +14,6 @@ router = DefaultRouter()
 
 router.register('jobs', views.JobAPIView)
 router.register('tasks', views.TaskAPIView)
-router.register('service', views.ServiceAPIView)
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),

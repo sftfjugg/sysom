@@ -1,0 +1,15 @@
+#!/bin/bash
+
+args=$1
+echo "{
+    'commands':[
+        {
+            'instance': '116.62.146.75',
+            'cmd': 'ls /root'
+        },
+        {
+            'instance': '116.62.146.75',
+            'cmd': 'ls /root && echo ${args}'
+        }
+    ]
+}"

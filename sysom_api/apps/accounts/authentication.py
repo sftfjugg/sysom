@@ -44,7 +44,7 @@ class Authentication(BaseAuthentication):
         try:
             payload = jwt_decode_handler(token)
         except jwt.ExpiredSignature:
-            msg = _('令牌过期！.')
+            msg = _('令牌过期！，请重新登录')
             raise AuthenticationFailed(msg)
         except jwt.DecodeError:
             msg = _('令牌验证失败!.')

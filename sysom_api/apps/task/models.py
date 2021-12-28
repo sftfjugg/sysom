@@ -24,11 +24,3 @@ class JobModel(BaseModel):
 
     class Meta:
         db_table = 'sys_job'
-
-
-class ServiceModel(BaseModel):
-    service_name = models.CharField(max_length=64, verbose_name="service名称")
-    service_script = models.CharField(max_length=64, verbose_name="脚本名称")
-
-    class Meta:
-        db_table = 'service'

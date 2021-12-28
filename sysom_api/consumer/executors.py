@@ -14,7 +14,9 @@ class SshJob:
         try:
             update_job(instance=self.job, status="Running")
             host_ips = []
+            count = 0
             for script in self.resp_scripts:
+                count = count + 1
                 ip = script.get("instance", None)
                 cmd = script.get("cmd", None)
                 if not ip or not cmd:
@@ -28,7 +30,7 @@ class SshJob:
                     if str(status) != '0':
                         update_job(instance=self.job, status="Fail", job_result=result, host_by=host_ips)
                         break
-                    if self.resp_scripts.index(script) == len(self.resp_scripts) - 1:
+                    if count == len(self.resp_scripts):
                         update_job(instance=self.job, status="Success", job_result=result, host_by=host_ips)
                     if self.kwargs.get('update_host_status', None):
                         host.status = status if status == 0 else 1

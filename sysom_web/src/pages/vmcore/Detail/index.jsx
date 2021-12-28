@@ -126,7 +126,7 @@ const VmcoreDetail = (props) => {
           <ProDescriptions.Item label="当前进程" dataIndex="comm"></ProDescriptions.Item>
           <ProDescriptions.Item label="内核版本" dataIndex="ver"></ProDescriptions.Item>
           <ProDescriptions.Item label="宕机时间" dataIndex="core_time" valueType="dateTime"> {moment().valueOf()} </ProDescriptions.Item>
-          <ProDescriptions.Item span={2} label="calltrace" dataIndex="calltrace" valueType="textArea" ></ProDescriptions.Item>
+          <ProDescriptions.Item span={2} label="dmesg" dataIndex="dmesg" valueType="textArea" ></ProDescriptions.Item>
         </ProDescriptions>
       </ProCard>
     </PageContainer>

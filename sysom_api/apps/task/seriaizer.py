@@ -7,7 +7,7 @@
 @Software: PyCharm
 """
 from rest_framework import serializers
-from apps.task.models import JobModel, ServiceModel
+from apps.task.models import JobModel
 
 
 class JobListSerializer(serializers.ModelSerializer):
@@ -19,10 +19,3 @@ class JobListSerializer(serializers.ModelSerializer):
 
     def get_job_result(self, attr: JobModel):
         return attr.job_result or '暂无'
-
-
-class ServiceSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ServiceModel
-        exclude = ('deleted_at', )

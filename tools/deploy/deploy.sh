@@ -1,9 +1,8 @@
 #!/bin/bash
 #****************************************************************#
 # ScriptName: deploy.sh
-# Author: xianpeng.lxp@alibaba-inc.com
+# Author: algalon
 # Create Date: 2021-11-13 22:42
-# Modify Author: $SHTERM_REAL_USER@alibaba-inc.com
 # Modify Date: 2021-11-16 00:02
 # Function: deploy sysom
 #***************************************************************#
@@ -132,8 +131,8 @@ init_conf() {
     cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
     sed -i "s;/home/sysom;${APP_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
     pushd ${TARGET_PATH}/${API_DIR}
-    python manage.py makemigrations job
     python manage.py makemigrations vmcore
+    python manage.py makemigrations task
     python manage.py makemigrations
     python manage.py migrate
     python manage.py loaddata ./apps/accounts/role.json

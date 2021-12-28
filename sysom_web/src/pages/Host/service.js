@@ -12,7 +12,7 @@ export async function getCluster(options) {
     ...(options || {}),
   });
   const array = msg.data
-  const results = array.map(item => {
+  const results = array?.map(item => {
     return {
       label: item.type_name,
       value: item.id,
