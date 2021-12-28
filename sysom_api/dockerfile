@@ -1,0 +1,5 @@
+FROM python:3.7.5
+WORKDIR /home
+RUN pip install django==3.2.3
+RUN pip install uwsgi
+EXPOSE 8080

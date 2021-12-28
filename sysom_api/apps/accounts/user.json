@@ -1,0 +1,16 @@
+[
+    {
+        "model": "accounts.user", 
+        "pk": 1, 
+        "fields": {
+            "created_at": "2021-12-07 17:38:28", 
+            "deleted_at": null, 
+            "username": "admin", 
+            "password": "pbkdf2_sha256$260000$l7J8CLGVx5TOroHqIrm8Ml$7xshVn1wHfCAeYYNZKHBo7B8bGfklfcKqmhpun6ARSk=", 
+            "is_admin": true, 
+            "is_agree": true, 
+            "description": "", 
+            "role": [1]
+        }
+    }
+]

@@ -1,0 +1,90 @@
+@import '~antd/lib/style/themes/default.less';
+
+.pre {
+  margin: 12px 0;
+  padding: 12px 20px;
+  background: @input-bg;
+  box-shadow: @card-shadow;
+}
+.header{
+  position: absolute;
+  top: 40px;
+  width: 100%;
+  height: 48px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  background: none;
+}
+.logo{
+  position: absolute;
+  left: 84px;
+  width: 120px;
+  font-size: 16px;
+}
+.menuCenter{
+  position: absolute;
+  max-width: 50%;
+  left: 48%;
+  transform: translate(-50%,-5%);
+  line-height: 48px!important;
+  background: none;
+  font-size: 16px;
+  border: none;
+}
+.avatarRight{
+  position: absolute;
+  right: 60px;
+  height: 48px;
+  width: auto;
+}
+.avatarRight .ant-avatar-sm{
+  width: 48px;
+}
+.banner{
+  position: relative;
+}
+.title{
+  width: 100%;
+  height: 100%; 
+  text-align: center;
+  position: absolute;
+  padding-top: 20%;
+  background: rgba(0,0,0,.2);
+  h3{
+    font-size: 100px;
+  }
+  a{
+    width: 300px;
+    height: 60px;
+    line-height: 60px;
+    background: rgba(0,0,0,.3);
+    border: 1px solid #777;
+    border-radius: 30px;
+    font-size: 20px;
+    color: #fff;
+    display: inline-block;
+  }
+  a:hover{
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+.img{width: 100%;height: 100vh;}
+.right {
+  display: flex;
+  float: right;
+  height: 48px;
+  margin-left: auto;
+  overflow: hidden;
+  .account {
+    .avatar {
+      margin-right: 8px;
+      color: @primary-color;
+      vertical-align: top;
+      background: rgba(255, 255, 255, 0.85);
+    }
+  }
+}
+
+
+

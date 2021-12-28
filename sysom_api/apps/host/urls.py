@@ -1,0 +1,15 @@
+from django.urls import path
+from django.urls.conf import include
+
+from rest_framework.routers import DefaultRouter
+
+from apps.host import views
+
+router = DefaultRouter()
+router.register('host', views.HostModelViewSet)
+router.register('cluster', views.HostTypeViewSet)
+
+urlpatterns = [
+    path('api/v1/host/upload_file/', views.SaveUploadFile.as_view()),
+    path('api/v1/', include(router.urls)),
+]
