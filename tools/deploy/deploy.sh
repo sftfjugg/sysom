@@ -8,14 +8,24 @@
 #***************************************************************#
 
 ALIYUN_MIRROR="https://mirrors.aliyun.com/pypi/simple/"
-APP_HOME="/home/sysom"
 APP_NAME="sysom"
 API_DIR="sysom_api"
 WEB_DIR="sysom_web"
+SCRIPT_DIR="script"
 
-if [ $1 ];then
-    APP_HOME=$1
-fi
+if [ $# != 3 ] ; then 
+    echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP"
+    echo " e.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx"
+    exit 1
+fi 
+
+APP_HOME=$1
+SERVER_IP=$2
+OUTER_IP=$3
+
+export APP_HOME=${APP_HOME}
+export SERVER_IP=${SERVER_IP}
+
 VIRTUALENV_HOME="${APP_HOME}/virtualenv"
 TARGET_PATH="${APP_HOME}/target"
 
@@ -24,24 +34,7 @@ if [ "$UID" -ne 0 ]; then
     exit 1
 fi
 
-if [ -d ${APP_HOME} ]; then
-    read -r -p "${APP_HOME} Already Exists!!! Are You Sure deploy sysom in this path Again? [Y/N] " input
-    case $input in
-        [yY][eE][sS]|[yY])
-            rm -rf ${APP_HOME}
-            mkdir -p ${APP_HOME}
-            ;;
-        [nN][nO]|[nN])
-            exit 0
-            ;;
-        *)
-            echo "Invalid input..."
-            exit 1
-            ;;
-    esac
-else
-    mkdir -p ${APP_HOME}
-fi
+mkdir -p ${APP_HOME}
 
 touch_env_rpms() {
     if [ -f /etc/alios-release ]; then
@@ -150,6 +143,24 @@ start_app() {
     systemctl restart supervisord.service
 }
 
+start_script_server() {
+    pushd ${SCRIPT_DIR}/server
+    bash -x init.sh
+    popd
+}
+
+start_script_node() {
+    pushd ${SCRIPT_DIR}/node
+    bash -x pre_init.sh
+    popd
+}
+
+modify_grafana_url() {
+    pushd ${TARGET_PATH}/${WEB_DIR}
+    sed -i "s/127.0.0.1:3000/${OUTER_IP}\/grafana/g" p__monitor__SystemDashboard*js
+    popd
+}
+
 deploy() {
     touch_env_rpms
     touch_virtualenv
@@ -157,6 +168,9 @@ deploy() {
     check_requirements
     setup_database > ${APP_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
     init_conf
+    start_script_server
+    start_script_node
+    modify_grafana_url
     start_app
 }
 
