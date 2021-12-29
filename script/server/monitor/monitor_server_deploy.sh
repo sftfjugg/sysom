@@ -1,8 +1,8 @@
 #!/bin/bash -x
 
-UPLOAD_DIR=/usr/local/sysom/target/sysom_web/download/
+UPLOAD_DIR=${APP_HOME}/target/sysom_web/download/
+RESOURCE_DIR=${APP_HOME}/monitor
 GRAFANA_PKG=grafana-8.2.5-1.x86_64.rpm
-RESOURCE_DIR=/usr/local/sysom/monitor
 PROMETHEUS_VER=2.29.1
 PROMETHEUS_ARCH=linux-amd64
 PROMETHEUS_PKG=prometheus-${PROMETHEUS_VER}.${PROMETHEUS_ARCH}
@@ -55,20 +55,19 @@ install_grafana()
 ##configure prometheus.yml to auto discovery new nodes
 add_auto_discovery()
 {
-    _dir=${PWD}
-    pushd $RESOURCE_DIR/prometheus
+    pushd ${RESOURCE_DIR}/prometheus
     mkdir -p node
 
     cat << EOF >> prometheus.yml
   - job_name: 'auto_discovery'
     file_sd_configs:
     - files:
-      - "/usr/local/sysom/monitor/prometheus/node/node.json"
+      - "${RESOURCE_DIR}/prometheus/node/node.json"
       refresh_interval: 10s
 EOF
 
    popd
-   cp prometheus_get_node.py $RESOURCE_DIR/prometheus/
+   cp prometheus_get_node.py ${RESOURCE_DIR}/prometheus/
 }
 
 start_prometheus_service()
@@ -117,8 +116,8 @@ install_prometheus()
     popd
 }
 
-##download node_exporter pkg and upload to sysom dir
-upload_node_exporter()
+##download node_exporter pkg
+download_node_exporter()
 {
     echo "install node_exporter......"
     pushd $RESOURCE_DIR
@@ -130,12 +129,8 @@ upload_node_exporter()
         echo "wget node_exporter"
         wget https://github.com/prometheus/node_exporter/releases/download/v$NODE_EXPORTER_VER/$NODE_EXPORTER_TAR
     fi
-#    tar -zxvf $NODE_EXPORTER_TAR
-
-#    mv $NODE_EXPORTER_PKG node_exporter
-    cp $NODE_EXPORTER_TAR $UPLOAD_DIR
     popd
-    cp node_exporter_deploy.sh $UPLOAD_DIR
+
 }
 
 configure_grafana()
@@ -145,12 +140,12 @@ configure_grafana()
 
 configure_cron()
 {
-    echo "* * * * * python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 10;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 20;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 30;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 40;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 50;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
+    echo "* * * * * python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 10;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 20;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 30;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 40;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 50;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
 }
 
 main()
@@ -161,7 +156,7 @@ main()
 #    bash -x local_copy_pkg.sh
     install_grafana
     install_prometheus
-    upload_node_exporter
+    download_node_exporter
 
     start_grafana_service
     start_prometheus_service

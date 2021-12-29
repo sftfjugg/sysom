@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-RESOURCE_DIR=/usr/local/sysom/monitor
+RESOURCE_DIR=$1/monitor
 
 disable_prometheus()
 {

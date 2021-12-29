@@ -29,7 +29,10 @@
 	```
  	tar xf sysomRelease-20211207022031.tar.gz
  	cd sysomRelease-20211207022031
- 	# 默认部署在 /home/sysom 目录，可以接参数自定义安装目录，
- 	bash deploy.sh /usr/local
+    # 使用deploy.sh脚本部署项目，需要带三个参数，
+    # arg1 : 部署目录，
+    # arg2 : 内网IP（主要是方便内网通讯，用户需要保证内网能通）
+    # arg3 : 外网IP（浏览器可以访问到的IP地址)
+ 	bash deploy.sh /usr/local/sysom 192.168.100.100 100.100.22.22
 	```
 
