@@ -131,9 +131,11 @@ init_conf() {
     cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
     sed -i "s;/home/sysom;${APP_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
     pushd ${TARGET_PATH}/${API_DIR}
+    python manage.py makemigrations accounts
+    python manage.py makemigrations host
     python manage.py makemigrations vmcore
     python manage.py makemigrations task
-    python manage.py makemigrations
+    python manage.py makemigrations monitor
     python manage.py migrate
     python manage.py loaddata ./apps/accounts/role.json
     python manage.py loaddata ./apps/accounts/user.json
