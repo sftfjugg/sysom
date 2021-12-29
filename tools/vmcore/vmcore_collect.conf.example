@@ -1,5 +1,0 @@
-#/etc/vmcore_collect.conf example
-
-#nfs_ip=YOUR_NFS_SERVER_IP
-#nfs_dir=YOUR_NFS_SERVER_DIR
-
