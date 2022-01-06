@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 from django.shortcuts import render
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
@@ -122,8 +123,12 @@ class VmcoreViewSet(GenericViewSet,
             start_time=end_time + datetime.timedelta(days=-30)
 
             host_sum = models.Panic.objects.values('hostname').distinct().count()
+            total = 0
+            if isinstance(data, Dict):
+                data = data['data']
+                total = data['total']
             if host_sum == 0:
-                return success(result=data['data'], total=data['total'], success=True, vmcore_30days=0, vmcore_7days=0, rate_30days=0, rate_7days=0)
+                return success(result=data, total=total, success=True, vmcore_30days=0, vmcore_7days=0, rate_30days=0, rate_7days=0)
             vmcores_sum_30 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).count()
             hosts_sum_30 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).count()
 
@@ -131,13 +136,11 @@ class VmcoreViewSet(GenericViewSet,
             vmcores_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
             hosts_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
 
-            rate_30 = hosts_sum_30 / host_sum
-            rate7 = hosts_sum_7 /host_sum
             data['vmcore_30days'] = vmcores_sum_30
             data['vmcore_7days'] = vmcores_sum_7
             data['rate_30days'] = hosts_sum_30/host_sum
             data['rate_7days'] = hosts_sum_7/host_sum
-            return success(result=data['data'], total=data['total'], success=True, vmcore_30days=vmcores_sum_30, vmcore_7days=vmcores_sum_7, rate_30days=hosts_sum_30/host_sum, rate_7days=hosts_sum_7/host_sum)
+            return success(result=data, total=total, success=True, vmcore_30days=vmcores_sum_30, vmcore_7days=vmcores_sum_7, rate_30days=hosts_sum_30/host_sum, rate_7days=hosts_sum_7/host_sum)
         return success(result=data['data'], success=True)
 
     def update(self, request, *args, **kwargs):

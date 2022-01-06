@@ -14,11 +14,9 @@ class SSH:
             username='root',
             pkey=None,
             password=None,
-            default_env=None,
             connect_timeout=10
     ):
         self.client = None
-        self.default_env = self.make_env_command(default_env)
         self.arguments = {
             'hostname': hostname,
             'port': port,
@@ -55,47 +53,12 @@ class SSH:
         if exit_code != 0:
             raise Exception(f'add public key error: {out}')
 
-    def exec_command(self, command, environment=None):
+    def exec_command(self, command):
         ssh_session = self.client.get_transport().open_session()
-        if environment:
-            ssh_session.update_environment(environment)
         ssh_session.set_combine_stderr(True)
         ssh_session.exec_command(command)
         stdout = ssh_session.makefile("rb", -1)
-        return ssh_session.recv_exit_status(), self.decode(stdout.read())
-
-    def put_file(self, local_path, remote_path):
-        with self as cli:
-            sftp = cli.client.open_sftp()
-            sftp.put(local_path, remote_path)
-
-    def get_file(self, local_path, remote_path):
-        with self as cli:
-            sftp = cli.client.open_sftp()
-            sftp.get(remote_path, local_path)
-
-    def remove_file(self, path):
-        sftp = self.client.open_sftp()
-        sftp.remove(path)
-
-    def make_env_command(self, environment):
-        if not environment:
-            return None
-        str_envs = []
-        for k, v in environment.items():
-            k = k.replace('-', '_')
-            if isinstance(v, str):
-                v = v.replace("'", "'\"'\"'")
-            str_envs.append(f"{k}='{v}'")
-        str_envs = ' '.join(str_envs)
-        return f'export {str_envs}'
-
-    def decode(self, content):
-        try:
-            content = content.decode()
-        except UnicodeDecodeError:
-            content = content.decode(encoding='GBK', errors='ignore')
-        return content
+        return ssh_session.recv_exit_status(), stdout.read().decode()
 
     def __enter__(self):
         self.get_client()

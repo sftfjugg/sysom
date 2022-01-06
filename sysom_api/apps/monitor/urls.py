@@ -3,7 +3,6 @@
 @File    : urls.py
 @Time    : 2021/11/2 11:07
 @Author  : DM
-@Email   : smmic@isoftstone.com
 @Software: PyCharm
 """
 

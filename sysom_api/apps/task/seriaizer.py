@@ -3,7 +3,6 @@
 @File    : seriaizer.py
 @Time    : 2021/11/22 17:41
 @Author  : DM
-@Email   : smmic@isoftstone.com
 @Software: PyCharm
 """
 from rest_framework import serializers

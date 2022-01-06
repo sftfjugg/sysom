@@ -2,7 +2,6 @@
 @File: paginations.py
 @Time: 2021-12-14 13:46:02
 @Author: DM
-@Email: wb-msm261421@alibaba-inc.com
 @Desc: Local Paginations Class
 '''
 

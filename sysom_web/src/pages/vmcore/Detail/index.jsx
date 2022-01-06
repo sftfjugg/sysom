@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
-import { Button, message } from "antd";
-import { useIntl } from "umi";
+import { Button, message, Descriptions } from "antd";
+import { useIntl, useRequest } from "umi";
 import moment from "moment";
 import ProCard from "@ant-design/pro-card";
 import ProDescriptions from "@ant-design/pro-descriptions";
@@ -30,6 +30,10 @@ const VmcoreDetail = (props) => {
   const [createModalIssue, handleModalIssue] = useState(false);
   const actionRef = useRef();
   const intl = useIntl();
+  const { data, error, loading } = useRequest(() => {
+    return getVmcoreDetail({vmcore_id: props.match.params.id})
+  })
+
   return (
     <PageContainer>
       <ProCard>
@@ -119,15 +123,15 @@ const VmcoreDetail = (props) => {
       />
       <Divider />
       <ProCard>
-        <ProDescriptions column={2} title="宕机详情" params={{ vmcore_id: props.match.params.id }} request={getVmcoreDetail}>
-          <ProDescriptions.Item label="hostname" dataIndex="hostname"></ProDescriptions.Item>
-          <ProDescriptions.Item label="IP" dataIndex="ip"></ProDescriptions.Item>
-          <ProDescriptions.Item label="RIP" dataIndex="rip"></ProDescriptions.Item>
-          <ProDescriptions.Item label="当前进程" dataIndex="comm"></ProDescriptions.Item>
-          <ProDescriptions.Item label="内核版本" dataIndex="ver"></ProDescriptions.Item>
-          <ProDescriptions.Item label="宕机时间" dataIndex="core_time" valueType="dateTime"> {moment().valueOf()} </ProDescriptions.Item>
-          <ProDescriptions.Item span={2} label="dmesg" dataIndex="dmesg" valueType="textArea" ></ProDescriptions.Item>
-        </ProDescriptions>
+        <Descriptions column={2} title="宕机详情" >
+          <Descriptions.Item label="hostname">{data?.hostname}</Descriptions.Item>
+          <Descriptions.Item label="IP" >{data?.ip}</Descriptions.Item>
+          <Descriptions.Item label="RIP" >{data?.func_name}</Descriptions.Item>
+          <Descriptions.Item label="当前进程" >{data?.comm}</Descriptions.Item>
+          <Descriptions.Item label="内核版本" >{data?.ver}</Descriptions.Item>
+          <Descriptions.Item label="宕机时间" >{data?.core_time} </Descriptions.Item>
+          <Descriptions.Item label="dmesg"  ><pre>{data?.dmesg}</pre></Descriptions.Item>
+        </Descriptions>
       </ProCard>
     </PageContainer>
   );

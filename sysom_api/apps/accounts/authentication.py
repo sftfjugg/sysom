@@ -3,7 +3,6 @@
 @File    : authentication.py
 @Time    : 2021/10/29 11:04
 @Author  : DM
-@Email   : smmic@isoftstone.com
 @Software: PyCharm
 """
 import logging

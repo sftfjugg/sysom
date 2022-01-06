@@ -6,6 +6,8 @@ NODE_EXPORTER_ARCH=linux-amd64
 NODE_EXPORTER_PKG=node_exporter-${NODE_EXPORTER_VER}.${NODE_EXPORTER_ARCH}
 NODE_EXPORTER_TAR=${NODE_EXPORTER_PKG}.tar.gz
 
+
+exit 0
 ##设置node_exporter开机自动启动
 cat << EOF > node_exporter.service
 [Unit]

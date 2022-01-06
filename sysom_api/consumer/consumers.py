@@ -18,33 +18,6 @@ def get_host_instance(model, **kwargs):
     return model.objects.filter(**kwargs).first()
 
 
-class ExecConsumer(WebsocketConsumer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.rds = get_redis_connection()
-
-    def connect(self):
-        self.accept()
-
-    def disconnect(self, code):
-        self.send(text_data="disconnect")
-        self.rds.close()
-        self.close()
-
-    def get_response(self):
-        token = self.scope['url_route']['kwargs']['token']
-        response = self.rds.brpop(token, timeout=5)  # 移除并获取最后一个元素
-        return response[1] if response else None
-
-    def receive(self, **kwargs):
-        response = self.get_response()
-        while response:
-            data = response.decode()
-            self.send(text_data=data)
-            response = self.get_response()
-        self.send(text_data='pong')
-
-
 class SshConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

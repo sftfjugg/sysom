@@ -4,7 +4,6 @@
 @File    : utils.py
 @Time    : 2021/10/28 11:09
 @Author  : DM
-@Email   : smmic@isoftstone.com
 @Software: PyCharm
 """
 import uuid as UUID

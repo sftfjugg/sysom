@@ -3,7 +3,6 @@
 @File    : urls.py
 @Time    : 2021/11/22 10:38
 @Author  : DM
-@Email   : smmic@isoftstone.com
 @Software: PyCharm
 """
 from django.urls import path, include

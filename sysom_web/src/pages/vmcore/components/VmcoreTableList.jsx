@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import ProTable from "@ant-design/pro-table";
-import { getVmcore } from "../service";
 
 const VmcoreTableList = (props) => {
   const actionRef = useRef();
@@ -84,26 +83,17 @@ const VmcoreTableList = (props) => {
       ],
     },
   ];
-  let config = {
-    request: getVmcore,
-    params: props.params,
-  };
-  if (props.request) {
-    config = {
-      request: props.request,
-      params: props.params,
-      postData: props.postData,
-    };
-  }
   return (
     <ProTable
       headerTitle={props.headerTitle}
       actionRef={actionRef}
       rowKey="id"
       columns={columns}
+      params={props.params}
+      request={props.request}
       pagination={props.pagination}
       search={props.search}
-      {...config}
+      postData={props.postData}
     />
   );
 };

@@ -115,6 +115,7 @@ setup_database() {
 }
 
 init_conf() {
+    mkdir -p /run/daphne
     sed -i 's;"env", "testing";"env", "develop";g' ${TARGET_PATH}/${API_DIR}/conf/__init__.py
     cp tools/deploy/nginx.conf /etc/nginx/
     cp tools/deploy/sysom.conf /etc/nginx/conf.d/

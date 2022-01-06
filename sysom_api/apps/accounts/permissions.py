@@ -3,7 +3,6 @@
 @File    : permissions.py
 @Time    : 2021/11/9 13:53
 @Author  : DM
-@Email   : smmic@isoftstone.com
 @Software: PyCharm
 """
 import logging

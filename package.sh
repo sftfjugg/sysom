@@ -8,7 +8,7 @@ SCRIPTDIR=script
 TOOLSDIR=tools
 # build web
 pushd sysom_web
-yarn add umi
+yarn
 yarn build
 popd
 
