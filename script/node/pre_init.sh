@@ -34,7 +34,7 @@ set_node_init_cmd()
 {
     line_num=`cat -n $APP_CMD_CONF | grep CLIENT_DEPLOY_CMD | awk '{print $1}'`
     sed -i "s/CLIENT_DEPLOY_CMD/#CLIENT_DEPLOY_CMD/g" $APP_CMD_CONF
-    sed -i "$line_num a \ \ \ \ CLIENT_DEPLOY_CMD = \'mkdir -p /tmp/sysom;cd /tmp/sysom;wget http://${SERVER_IP}/download/${NODE_INIT_PKG};tar -xf ${NODE_INIT_PKG};bash -x ${NODE_INIT_DIR}/init.sh\'" $APP_CMD_CONF
+    sed -i "$line_num a \ \ \ \ CLIENT_DEPLOY_CMD = \'rm -rf /tmp/sysom; mkdir -p /tmp/sysom;cd /tmp/sysom;wget http://${SERVER_IP}/download/${NODE_INIT_PKG};tar -xf ${NODE_INIT_PKG};bash -x ${NODE_INIT_DIR}/init.sh\'" $APP_CMD_CONF
 }
 
 pre_init()
