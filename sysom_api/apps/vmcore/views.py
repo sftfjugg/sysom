@@ -118,7 +118,7 @@ class VmcoreViewSet(GenericViewSet,
             data = super().list(request, *args, **kwargs).data
 
         #if len(data_get) == 0:
-        if 'hostname' not in data_get and 'start_time' not in data_get and 'end_time' not in data_get and 'vmcore_id' not in data_get and 'similar' not in data_get and 'similar_dmesg' not in data_get :
+        if 'hostname' not in data_get and 'startTime' not in data_get and 'endTime' not in data_get and 'vmcore_id' not in data_get and 'similar' not in data_get and 'similar_dmesg' not in data_get :
             end_time=datetime.date.today() + datetime.timedelta(days=1)
             start_time=end_time + datetime.timedelta(days=-30)
 
@@ -136,11 +136,8 @@ class VmcoreViewSet(GenericViewSet,
             vmcores_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
             hosts_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
 
-            data['vmcore_30days'] = vmcores_sum_30
-            data['vmcore_7days'] = vmcores_sum_7
-            data['rate_30days'] = hosts_sum_30/host_sum
-            data['rate_7days'] = hosts_sum_7/host_sum
-            return success(result=data, total=total, success=True, vmcore_30days=vmcores_sum_30, vmcore_7days=vmcores_sum_7, rate_30days=hosts_sum_30/host_sum, rate_7days=hosts_sum_7/host_sum)
+            return success(result=data, total=total, success=True, vmcore_30days=vmcores_sum_30, vmcore_7days=vmcores_sum_7, rate_30days=hosts_sum_30 * 100 / host_sum, rate_7days=hosts_sum_7 * 100 /host_sum)
+        print(data)
         return success(result=data['data'], success=True)
 
     def update(self, request, *args, **kwargs):

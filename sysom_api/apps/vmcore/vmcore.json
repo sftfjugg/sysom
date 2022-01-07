@@ -1,1 +1,449 @@
-[{"model": "vmcore.panic", "pk": 1, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs1", "ip": "192.168.0.1", "hostname": "ecs1", "vertype": 310, "status": 4, "core_time": "2021-12-07T10:34:59Z", "vmcore_file": "/var/crash/127.0.0.1_20211207/vmcore", "dmesg_file": "/var/crash/127.0.0.1_20211207/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at (null) ", "ver": "3.10.0-327.ali2008.odps.alios7.x86_64", "rip": "ffffffffa04fa814", "func_name": "ovl_cleanup", "comm": "pip", "calltrace": "ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty", "crashkey": "310$ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty", "modules": "vrbd(OE) aisqos(OE) aisqos_hotfixes(OE) sn_core_even(OE) 8021q garp mrp kiodump(OE) kpatch_D598343(OE) tcp_diag inet_diag ", "upload_time": 1627283526, "issue_id": 10, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.panic", "pk": 2, "fields": {"created_at": "2021-12-07 14:42:13", "deleted_at": null, "name": "20211207_ecs2", "ip": "192.168.0.2", "hostname": "ecs2", "vertype": 409, "status": 2, "core_time": "2021-12-07T10:35:59Z", "vmcore_file": "/var/crash/127.0.0.1_20211207/vmcore", "dmesg_file": "/var/crash/127.0.0.1_20211207/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at 00000000000003c0", "ver": "4.9.79-009.ali3000.alios7.x86_64", "rip": "ffffffff813496d0", "func_name": "blk_get_backing_dev_info", "comm": "kworker/1:2", "calltrace": "blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to", "crashkey": "409$blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to", "modules": "i40e(E) binfmt_misc(E) kpatch_D543129(OE) kpatch_D437534(OE) kpatch_D489564(OE) kpatch_D850131(OE) kpatch_D465774(OE)", "upload_time": 1627283526, "issue_id": 0, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.panic", "pk": 3, "fields": {"created_at": "2021-12-07 16:04:08", "deleted_at": null, "name": "20211207_ecs3", "ip": "192.168.0.3", "hostname": "ecs3", "vertype": 419, "status": 4, "core_time": "2021-12-07T15:34:59Z", "vmcore_file": "/var/crash/127.0.0.3_20211207/vmcore", "dmesg_file": "/var/crash/127.0.0.3_20211207/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000", "ver": "4.19.91-21.2.al7.x86_64", "rip": "null", "func_name": "locked_inode_to_wb_and_lock_list", "comm": "kworker/u192:5", "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb", "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus", "upload_time": 1627283526, "issue_id": 6, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.panic", "pk": 4, "fields": {"created_at": "2021-12-07 17:34:45", "deleted_at": null, "name": "20211207_ecs4", "ip": "192.168.0.4", "hostname": "ecs4", "vertype": 419, "status": 4, "core_time": "2021-11-15T15:34:59Z", "vmcore_file": "/var/crash/127.0.0.4_20211207/vmcore", "dmesg_file": "/var/crash/127.0.0.4_20211207/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000", "ver": "4.19.91-21.2.al7.x86_64", "rip": "null", "func_name": "locked_inode_to_wb_and_lock_list", "comm": "kworker/u192:5", "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus", "upload_time": 1627283526, "issue_id": 14, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.panic", "pk": 5, "fields": {"created_at": "2021-12-08 19:16:40", "deleted_at": null, "name": "20211106_ecs3", "ip": "192.168.0.3", "hostname": "ecs3", "vertype": 310, "status": 4, "core_time": "2021-12-07T15:34:59Z", "vmcore_file": "/var/crash/127.0.0.3_20211106/vmcore", "dmesg_file": "/var/crash/127.0.0.3_20211106/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000010", "ver": "3.10.0-327.ali2016.alios7.x86_64", "rip": "ffffffff8119701d", "func_name": "free_percpu", "comm": "kworker/u128:85", "calltrace": "free_percpu$percpu_counter_destroy$wb_init", "crashkey": "310$free_percpu$percpu_counter_destroy$wb_init", "modules": "mptctl mptbase overlay toa hookers 8021q garp mrp sch_ingress sch_htb tcp_diag inet_diag binfmt_misc bridge(F) stp(F) llc(F) kpatch_D95837(OE) kpatch(OE) coelper ttm ixgbe crct10dif_pclmul mdio mpt2sas crct10dif_common ptp drm crc32c_intel raid_class pps_core scsi_transport_sas i2c_core dca [last unloaded: unevictpid]", "upload_time": 1627243526, "issue_id": 11, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.panic", "pk": 6, "fields": {"created_at": "2021-12-08 19:19:50", "deleted_at": null, "name": "20211204_ecs1", "ip": "192.168.0.1", "hostname": "ecs1", "vertype": 419, "status": 4, "core_time": "2021-12-04T15:34:59Z", "vmcore_file": "/var/crash/127.0.0.1_20211204/vmcore", "dmesg_file": "/var/crash/127.0.0.3_20211207/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000", "ver": "4.19.91-21.2.al7.x86_64", "rip": "null", "func_name": "locked_inode_to_wb_and_lock_list", "comm": "kworker/u192:5", "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to", "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to", "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus", "upload_time": 1627283526, "issue_id": 15, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.panic", "pk": 7, "fields": {"created_at": "2021-12-08 19:20:35", "deleted_at": null, "name": "20211130_ecs4", "ip": "192.168.0.4", "hostname": "ecs4", "vertype": 419, "status": 2, "core_time": "2021-11-30T15:34:59Z", "vmcore_file": "/var/crash/127.0.0.1_20211204/vmcore", "dmesg_file": "/var/crash/127.0.0.3_20211207/vmcore_dmesg.txt", "dmesg": "xxxxx", "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000", "ver": "4.19.91-21.2.al7.x86_64", "rip": "null", "func_name": "locked_inode_to_wb_and_lock_list", "comm": "kworker/u192:5", "calltrace": "locked_inode_to_wb_and_lock_list$do_page_fault$switch_to", "crashkey": "419$locked_inode_to_wb_and_lock_list$do_page_fault$switch_to", "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus", "upload_time": 1627283526, "issue_id": 1, "panic_type": "Basekernel:fs", "panic_class": "PANIC_NULLPOINTER"}}, {"model": "vmcore.issue", "pk": 1, "fields": {"created_at": "", "deleted_at": null, "calltrace": "ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty", "crashkey": "310$ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty", "solution": "84889d49335627bc770b32787c1ef9ebad1da232"}}, {"model": "vmcore.issue", "pk": 2, "fields": {"created_at": "2021-12-07 14:43:18", "deleted_at": null, "calltrace": "blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to", "crashkey": "409$blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to", "solution": "d877854"}}, {"model": "vmcore.issue", "pk": 6, "fields": {"created_at": "2021-12-07 16:05:29", "deleted_at": null, "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb", "solution": "adfadfasdfasdfasdfasfdasdfasdfaasdfadfasdfadfadsf"}}, {"model": "vmcore.issue", "pk": 7, "fields": {"created_at": "2021-12-08 10:48:31", "deleted_at": null, "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "solution": "test"}}, {"model": "vmcore.issue", "pk": 8, "fields": {"created_at": "2021-12-08 10:49:09", "deleted_at": null, "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "solution": "test"}}, {"model": "vmcore.issue", "pk": 9, "fields": {"created_at": "2021-12-08 10:50:35", "deleted_at": null, "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "solution": "test"}}, {"model": "vmcore.issue", "pk": 10, "fields": {"created_at": "2021-12-15 16:50:40", "deleted_at": null, "calltrace": "ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty", "crashkey": "310$ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty", "solution": "a12121231231"}}, {"model": "vmcore.issue", "pk": 11, "fields": {"created_at": "2021-12-15 16:55:46", "deleted_at": null, "calltrace": "free_percpu$percpu_counter_destroy$wb_init", "crashkey": "310$free_percpu$percpu_counter_destroy$wb_init", "solution": "asdfasdfasdfasdfasdfasdfasfasfasdfasfasdf"}}, {"model": "vmcore.issue", "pk": 12, "fields": {"created_at": "2021-12-15 16:59:51", "deleted_at": null, "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "solution": "testtest"}}, {"model": "vmcore.issue", "pk": 13, "fields": {"created_at": "2021-12-15 17:00:55", "deleted_at": null, "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "solution": "testtest"}}, {"model": "vmcore.issue", "pk": 14, "fields": {"created_at": "2021-12-15 17:01:11", "deleted_at": null, "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb", "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb", "solution": "adafasasasdfasdf"}}, {"model": "vmcore.issue", "pk": 15, "fields": {"created_at": "2021-12-15 17:13:51", "deleted_at": null, "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to", "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to", "solution": "asd12121212"}}, {"model": "vmcore.calltrace", "pk": 1, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs2", "line": "blk_get_backing_dev_info", "idx": 1, "vmcore": "20211207_ecs2"}}, {"model": "vmcore.calltrace", "pk": 2, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs2", "line": "inode_switch_wbs_work_fn", "idx": 2, "vmcore": "20211207_ecs2"}}, {"model": "vmcore.calltrace", "pk": 3, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs2", "line": "__switch_to", "idx": 3, "vmcore": "20211207_ecs2"}}, {"model": "vmcore.calltrace", "pk": 4, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs3", "line": "__writeback_inodes_wb", "idx": 3, "vmcore": "20211207_ecs3"}}, {"model": "vmcore.calltrace", "pk": 5, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs3", "line": "writeback_sb_inodes", "idx": 2, "vmcore": "20211207_ecs3"}}, {"model": "vmcore.calltrace", "pk": 6, "fields": {"created_at": "", "deleted_at": null, "name": "20211207_ecs3", "line": "locked_inode_to_wb_and_lock_list", "idx": 1, "vmcore": "20211207_ecs3"}}, {"model": "vmcore.calltrace", "pk": 7, "fields": {"created_at": "", "deleted_at": null, "name": "20211204_ecs1", "line": "locked_inode_to_wb_and_lock_list", "idx": 1, "vmcore": "20211204_ecs1"}}, {"model": "vmcore.calltrace", "pk": 8, "fields": {"created_at": "", "deleted_at": null, "name": "20211204_ecs1", "line": "writeback_sb_inodes", "idx": 2, "vmcore": "20211204_ecs1"}}, {"model": "vmcore.calltrace", "pk": 9, "fields": {"created_at": "", "deleted_at": null, "name": "20211204_ecs1", "line": "switch_to", "idx": 3, "vmcore": "20211204_ecs1"}}, {"model": "vmcore.calltrace", "pk": 10, "fields": {"created_at": "", "deleted_at": null, "name": "20211130_ecs4", "line": "locked_inode_to_wb_and_lock_list", "idx": 1, "vmcore": "20211130_ecs4"}}, {"model": "vmcore.calltrace", "pk": 11, "fields": {"created_at": "", "deleted_at": null, "name": "20211130_ecs4", "line": "do_page_fault", "idx": 2, "vmcore": "20211130_ecs4"}}, {"model": "vmcore.calltrace", "pk": 12, "fields": {"created_at": "", "deleted_at": null, "name": "20211130_ecs4", "line": "switch_to", "idx": 3, "vmcore": "20211130_ecs4"}}]
+[{
+    "model": "vmcore.panic",
+    "pk": 1,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs1",
+        "ip": "192.168.0.1",
+        "hostname": "ecs1",
+        "vertype": 310,
+        "status": 4,
+        "core_time": "2021-12-26T10:34:59Z",
+        "vmcore_file": "/var/crash/127.0.0.1_20211207/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.1_20211207/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at (null) ",
+        "ver": "3.10.0-327.ali2008.odps.alios7.x86_64",
+        "rip": "ffffffffa04fa814",
+        "func_name": "ovl_cleanup",
+        "comm": "pip",
+        "calltrace": "ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty",
+        "crashkey": "310$ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty",
+        "modules": "vrbd(OE) aisqos(OE) aisqos_hotfixes(OE) sn_core_even(OE) 8021q garp mrp kiodump(OE) kpatch_D598343(OE) tcp_diag inet_diag ",
+        "upload_time": 1627283526,
+        "issue_id": 10,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.panic",
+    "pk": 2,
+    "fields": {
+        "created_at": "2021-12-07 14:42:13",
+        "deleted_at": null,
+        "name": "20211207_ecs2",
+        "ip": "192.168.0.2",
+        "hostname": "ecs2",
+        "vertype": 409,
+        "status": 2,
+        "core_time": "2021-12-28T10:35:59Z",
+        "vmcore_file": "/var/crash/127.0.0.1_20211207/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.1_20211207/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at 00000000000003c0",
+        "ver": "4.9.79-009.ali3000.alios7.x86_64",
+        "rip": "ffffffff813496d0",
+        "func_name": "blk_get_backing_dev_info",
+        "comm": "kworker/1:2",
+        "calltrace": "blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to",
+        "crashkey": "409$blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to",
+        "modules": "i40e(E) binfmt_misc(E) kpatch_D543129(OE) kpatch_D437534(OE) kpatch_D489564(OE) kpatch_D850131(OE) kpatch_D465774(OE)",
+        "upload_time": 1627283526,
+        "issue_id": 0,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.panic",
+    "pk": 3,
+    "fields": {
+        "created_at": "2021-12-07 16:04:08",
+        "deleted_at": null,
+        "name": "20211207_ecs3",
+        "ip": "192.168.0.3",
+        "hostname": "ecs3",
+        "vertype": 419,
+        "status": 4,
+        "core_time": "2021-12-27T15:34:59Z",
+        "vmcore_file": "/var/crash/127.0.0.3_20211207/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.3_20211207/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000",
+        "ver": "4.19.91-21.2.al7.x86_64",
+        "rip": "null",
+        "func_name": "locked_inode_to_wb_and_lock_list",
+        "comm": "kworker/u192:5",
+        "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb",
+        "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus",
+        "upload_time": 1627283526,
+        "issue_id": 6,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.panic",
+    "pk": 4,
+    "fields": {
+        "created_at": "2021-12-07 17:34:45",
+        "deleted_at": null,
+        "name": "20211207_ecs4",
+        "ip": "192.168.0.4",
+        "hostname": "ecs4",
+        "vertype": 419,
+        "status": 4,
+        "core_time": "2021-12-15T15:34:59Z",
+        "vmcore_file": "/var/crash/127.0.0.4_20211207/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.4_20211207/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000",
+        "ver": "4.19.91-21.2.al7.x86_64",
+        "rip": "null",
+        "func_name": "locked_inode_to_wb_and_lock_list",
+        "comm": "kworker/u192:5",
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus",
+        "upload_time": 1627283526,
+        "issue_id": 14,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.panic",
+    "pk": 5,
+    "fields": {
+        "created_at": "2021-12-08 19:16:40",
+        "deleted_at": null,
+        "name": "20211106_ecs3",
+        "ip": "192.168.0.3",
+        "hostname": "ecs3",
+        "vertype": 310,
+        "status": 4,
+        "core_time": "2021-12-27T15:34:59Z",
+        "vmcore_file": "/var/crash/127.0.0.3_20211106/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.3_20211106/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000010",
+        "ver": "3.10.0-327.ali2016.alios7.x86_64",
+        "rip": "ffffffff8119701d",
+        "func_name": "free_percpu",
+        "comm": "kworker/u128:85",
+        "calltrace": "free_percpu$percpu_counter_destroy$wb_init",
+        "crashkey": "310$free_percpu$percpu_counter_destroy$wb_init",
+        "modules": "mptctl mptbase overlay toa hookers 8021q garp mrp sch_ingress sch_htb tcp_diag inet_diag binfmt_misc bridge(F) stp(F) llc(F) kpatch_D95837(OE) kpatch(OE) coelper ttm ixgbe crct10dif_pclmul mdio mpt2sas crct10dif_common ptp drm crc32c_intel raid_class pps_core scsi_transport_sas i2c_core dca [last unloaded: unevictpid]",
+        "upload_time": 1627243526,
+        "issue_id": 11,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.panic",
+    "pk": 6,
+    "fields": {
+        "created_at": "2021-12-08 19:19:50",
+        "deleted_at": null,
+        "name": "20211204_ecs1",
+        "ip": "192.168.0.1",
+        "hostname": "ecs1",
+        "vertype": 419,
+        "status": 4,
+        "core_time": "2022-01-04T15:34:59Z",
+        "vmcore_file": "/var/crash/127.0.0.1_20211204/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.3_20211207/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000",
+        "ver": "4.19.91-21.2.al7.x86_64",
+        "rip": "null",
+        "func_name": "locked_inode_to_wb_and_lock_list",
+        "comm": "kworker/u192:5",
+        "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to",
+        "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to",
+        "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus",
+        "upload_time": 1627283526,
+        "issue_id": 15,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.panic",
+    "pk": 7,
+    "fields": {
+        "created_at": "2021-12-08 19:20:35",
+        "deleted_at": null,
+        "name": "20211130_ecs4",
+        "ip": "192.168.0.4",
+        "hostname": "ecs4",
+        "vertype": 419,
+        "status": 2,
+        "core_time": "2021-12-30T15:34:59Z",
+        "vmcore_file": "/var/crash/127.0.0.1_20211204/vmcore",
+        "dmesg_file": "/var/crash/127.0.0.3_20211207/vmcore_dmesg.txt",
+        "dmesg": "xxxxx",
+        "title": "BUG: unable to handle kernel NULL pointer dereference at 0000000000000000",
+        "ver": "4.19.91-21.2.al7.x86_64",
+        "rip": "null",
+        "func_name": "locked_inode_to_wb_and_lock_list",
+        "comm": "kworker/u192:5",
+        "calltrace": "locked_inode_to_wb_and_lock_list$do_page_fault$switch_to",
+        "crashkey": "419$locked_inode_to_wb_and_lock_list$do_page_fault$switch_to",
+        "modules": "8021q garp stp llc tcp_diag inet_diag sunrpc intel_rapl_msr intel_rapl_common iosf_mbi mousedev hid_generic isst_if_common psmouse pvpanic nfit button usbhid uhci_hcd ehci_pci ehci_hcd cirrus",
+        "upload_time": 1627283526,
+        "issue_id": 1,
+        "panic_type": "Basekernel:fs",
+        "panic_class": "PANIC_NULLPOINTER"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 1,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "calltrace": "ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty",
+        "crashkey": "310$ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty",
+        "solution": "84889d49335627bc770b32787c1ef9ebad1da232"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 2,
+    "fields": {
+        "created_at": "2021-12-07 14:43:18",
+        "deleted_at": null,
+        "calltrace": "blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to",
+        "crashkey": "409$blk_get_backing_dev_info$inode_switch_wbs_work_fn$__switch_to",
+        "solution": "d877854"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 6,
+    "fields": {
+        "created_at": "2021-12-07 16:05:29",
+        "deleted_at": null,
+        "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "adfadfasdfasdfasdfasfdasdfasdfaasdfadfasdfadfadsf"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 7,
+    "fields": {
+        "created_at": "2021-12-08 10:48:31",
+        "deleted_at": null,
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "test"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 8,
+    "fields": {
+        "created_at": "2021-12-08 10:49:09",
+        "deleted_at": null,
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "test"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 9,
+    "fields": {
+        "created_at": "2021-12-08 10:50:35",
+        "deleted_at": null,
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "test"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 10,
+    "fields": {
+        "created_at": "2021-12-15 16:50:40",
+        "deleted_at": null,
+        "calltrace": "ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty",
+        "crashkey": "310$ovl_cleanup$ovl_cleanup_whiteouts$ovl_clear_empty",
+        "solution": "a12121231231"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 11,
+    "fields": {
+        "created_at": "2021-12-15 16:55:46",
+        "deleted_at": null,
+        "calltrace": "free_percpu$percpu_counter_destroy$wb_init",
+        "crashkey": "310$free_percpu$percpu_counter_destroy$wb_init",
+        "solution": "asdfasdfasdfasdfasdfasdfasfasfasdfasfasdf"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 12,
+    "fields": {
+        "created_at": "2021-12-15 16:59:51",
+        "deleted_at": null,
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "testtest"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 13,
+    "fields": {
+        "created_at": "2021-12-15 17:00:55",
+        "deleted_at": null,
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "testtest"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 14,
+    "fields": {
+        "created_at": "2021-12-15 17:01:11",
+        "deleted_at": null,
+        "calltrace": "dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "crashkey": "419$dd$writeback_sb_inodes$__writeback_inodes_wb",
+        "solution": "adafasasasdfasdf"
+    }
+}, {
+    "model": "vmcore.issue",
+    "pk": 15,
+    "fields": {
+        "created_at": "2021-12-15 17:13:51",
+        "deleted_at": null,
+        "calltrace": "locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to",
+        "crashkey": "419$locked_inode_to_wb_and_lock_list$writeback_sb_inodes$switch_to",
+        "solution": "asd12121212"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 1,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs2",
+        "line": "blk_get_backing_dev_info",
+        "idx": 1,
+        "vmcore": "20211207_ecs2"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 2,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs2",
+        "line": "inode_switch_wbs_work_fn",
+        "idx": 2,
+        "vmcore": "20211207_ecs2"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 3,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs2",
+        "line": "__switch_to",
+        "idx": 3,
+        "vmcore": "20211207_ecs2"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 4,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs3",
+        "line": "__writeback_inodes_wb",
+        "idx": 3,
+        "vmcore": "20211207_ecs3"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 5,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs3",
+        "line": "writeback_sb_inodes",
+        "idx": 2,
+        "vmcore": "20211207_ecs3"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 6,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211207_ecs3",
+        "line": "locked_inode_to_wb_and_lock_list",
+        "idx": 1,
+        "vmcore": "20211207_ecs3"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 7,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211204_ecs1",
+        "line": "locked_inode_to_wb_and_lock_list",
+        "idx": 1,
+        "vmcore": "20211204_ecs1"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 8,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211204_ecs1",
+        "line": "writeback_sb_inodes",
+        "idx": 2,
+        "vmcore": "20211204_ecs1"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 9,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211204_ecs1",
+        "line": "switch_to",
+        "idx": 3,
+        "vmcore": "20211204_ecs1"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 10,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211130_ecs4",
+        "line": "locked_inode_to_wb_and_lock_list",
+        "idx": 1,
+        "vmcore": "20211130_ecs4"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 11,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211130_ecs4",
+        "line": "do_page_fault",
+        "idx": 2,
+        "vmcore": "20211130_ecs4"
+    }
+}, {
+    "model": "vmcore.calltrace",
+    "pk": 12,
+    "fields": {
+        "created_at": "",
+        "deleted_at": null,
+        "name": "20211130_ecs4",
+        "line": "switch_to",
+        "idx": 3,
+        "vmcore": "20211130_ecs4"
+    }
+}]
