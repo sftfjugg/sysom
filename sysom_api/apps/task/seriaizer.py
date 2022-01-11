@@ -10,11 +10,18 @@ from apps.task.models import JobModel
 
 
 class JobListSerializer(serializers.ModelSerializer):
-    job_result = serializers.SerializerMethodField()
+    result = serializers.SerializerMethodField()
 
     class Meta:
         model = JobModel
-        exclude = ('deleted_at', )
+        exclude = ('deleted_at', 'host_by', 'command')
 
-    def get_job_result(self, attr: JobModel):
-        return attr.job_result or '暂无'
+    def get_result(self, attr: JobModel):
+        return attr.result or '暂无'
+
+
+class JobDelResultSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = JobModel
+        exclude = ('deleted_at', 'host_by', 'command', 'result')

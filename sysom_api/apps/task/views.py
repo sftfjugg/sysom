@@ -52,6 +52,7 @@ class TaskAPIView(GenericViewSet,
     def create(self, request, *args, **kwargs):
         try:
             data = request.data
+            params = data.copy()
             service_name = data.pop("service_name", None)
             task_id = uuid_8()
             if service_name:
@@ -65,13 +66,13 @@ class TaskAPIView(GenericViewSet,
                 resp_scripts = resp.get("commands")
                 username = "admin"
                 user = User.objects.filter(username=username).first()
-                self.ssh_job(resp_scripts, task_id, user)
+                self.ssh_job(resp_scripts, task_id, user, params)
                 return success(result={"instance_id": task_id})
             else:
                 return self.default_ssh_job(data, task_id)
         except Exception as e:
             logger.error(e)
-            return other_response(message=str(e), code=400)
+            return other_response(message=str(e), code=400, success=False)
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
@@ -95,13 +96,21 @@ class TaskAPIView(GenericViewSet,
             return success(result={"instance_id": task_id})
         except Exception as e:
             logger.error(e)
-            return other_response(message=str(e), code=400)
+            return other_response(message=str(e), code=400, success=False)
 
-    def ssh_job(self, resp_scripts, task_id, user):
-        job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
-                                            created_by=user)
+    def ssh_job(self, resp_scripts, task_id, user, data=None):
+        if not data:
+            job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
+                                                created_by=user)
+        else:
+            job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
+                                                created_by=user, params=data)
         sch_job = SshJob(resp_scripts, job_model)
         scheduler.add_job(sch_job.run)
+
+    def list(self, request, *args, **kwargs):
+        data = seriaizer.JobDelResultSerializer(instance=self.queryset, many=True)
+        return success(result=data.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()

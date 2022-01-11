@@ -1,7 +1,11 @@
+import ast
+import json
+import os
 import socket
 from apps.host.models import HostModel
 from lib.ssh import SSH
 from apps.task.models import JobModel
+from sysom import settings
 
 
 class SshJob:
@@ -20,7 +24,7 @@ class SshJob:
                 ip = script.get("instance", None)
                 cmd = script.get("cmd", None)
                 if not ip or not cmd:
-                    update_job(instance=self.job, status="Fail", job_result="script result find not instance or cmd")
+                    update_job(instance=self.job, status="Fail", result="script result find not instance or cmd")
                     break
                 host_ips.append(ip)
                 host = HostModel.objects.filter(ip=ip).first()
@@ -28,17 +32,29 @@ class SshJob:
                 with ssh_cli as ssh:
                     status, result = ssh.exec_command(cmd)
                     if str(status) != '0':
-                        update_job(instance=self.job, status="Fail", job_result=result, host_by=host_ips)
+                        update_job(instance=self.job, status="Fail", result=result, host_by=host_ips)
                         break
                     if count == len(self.resp_scripts):
-                        update_job(instance=self.job, status="Success", job_result=result, host_by=host_ips)
+                        params = self.job.params
+                        if params:
+                            service_name = params.get("service_name", None)
+                            if service_name:
+                                SCRIPTS_DIR = settings.SCRIPTS_DIR
+                                service_post_name = service_name + '_post'
+                                service_post_path = os.path.join(SCRIPTS_DIR, service_post_name)
+                                if os.path.exists(service_post_path):
+                                    print(type(result))
+                                    command = "%s  '%s'" % (service_post_path, json.dumps(result))
+                                    output = os.popen(command)
+                                    result = ast.literal_eval(output.read())
+                        update_job(instance=self.job, status="Success", result=result, host_by=host_ips)
                     if self.kwargs.get('update_host_status', None):
                         host.status = status if status == 0 else 1
                         host.save()
         except socket.timeout:
-            update_job(instance=self.job, status="Fail", job_result="socket time out")
+            update_job(instance=self.job, status="Fail", result="socket time out")
         except Exception as e:
-            update_job(instance=self.job, status="Fail", job_result=str(e))
+            update_job(instance=self.job, status="Fail", result=str(e))
 
 
 def update_job(instance: JobModel, **kwargs):
