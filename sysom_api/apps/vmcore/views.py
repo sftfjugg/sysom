@@ -125,8 +125,9 @@ class VmcoreViewSet(GenericViewSet,
             host_sum = models.Panic.objects.values('hostname').distinct().count()
             total = 0
             if isinstance(data, Dict):
-                data = data['data']
-                total = data['total']
+                result = data
+                data = result['data']
+                total = result['total']
             if host_sum == 0:
                 return success(result=data, total=total, success=True, vmcore_30days=0, vmcore_7days=0, rate_30days=0, rate_7days=0)
             vmcores_sum_30 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).count()
