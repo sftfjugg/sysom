@@ -30,9 +30,9 @@ class HostModel(BaseModel):
     def __str__(self):
         return f'主机：{self.hostname}'
 
-    def get_host_client(self, pkey=None, default_env=None):
+    def get_host_client(self, pkey=None):
         pkey = pkey or self.private_key
-        return SSH(hostname=self.ip, port=self.port, username=self.username, pkey=pkey, default_env=default_env)
+        return SSH(hostname=self.ip, port=self.port, username=self.username, pkey=pkey)
 
 
 class HostType(BaseModel):

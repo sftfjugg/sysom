@@ -5,7 +5,6 @@ from .middleware import AuthMiddleware
 
 ws_router = AuthMiddleware(
     URLRouter([
-        path('ws/exec/<str:token>/', ExecConsumer.as_asgi()),
         path('ws/ssh/<int:id>/', SshConsumer.as_asgi()),
     ])
 )

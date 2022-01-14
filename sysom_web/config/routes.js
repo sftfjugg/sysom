@@ -74,6 +74,11 @@ export default [
         name: 'match',
         component: './vmcore/match',
       },
+      {
+        path: '/vmcore/analyse',
+        name: 'analyse',
+        component: './vmcore/analyse',
+      },
     ],
   },
   {

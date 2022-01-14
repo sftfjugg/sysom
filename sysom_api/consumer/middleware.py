@@ -1,7 +1,6 @@
 import logging
 
 from channels.db import database_sync_to_async
-from django.contrib.auth.models import AnonymousUser
 
 from apps.accounts.models import User
 from rest_framework_jwt.settings import api_settings
@@ -17,7 +16,7 @@ def get_user(user_id: int):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return AnonymousUser()
+        return None
     return user
 
 
@@ -34,11 +33,11 @@ class AuthMiddleware:
         user_id = None
         token = scope.get('query_string', None)
         if not token:
-            scope['user'] = AnonymousUser()
+            scope['user'] = None
         if token.decode().startswith('user_id='):
             user_id = token.decode().replace('user_id=', '')
         if not user_id:
-            scope['user'] = AnonymousUser()
+            scope['user'] = None
         else:
             scope['user'] = await get_user(user_id=user_id)
         return await self.application(scope, receive, send, *args, **kwargs)

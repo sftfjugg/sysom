@@ -48,17 +48,6 @@ DEBUG = constant.DEBUG
 if DEBUG:
     CORS_ORIGIN_ALLOW_ALL = True
 
-# Redis缓存
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": constant.DEFAULT_CACHE_REDIS,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
 # Mysql数据库
 DATABASES = constant.DATABASES
 
@@ -74,16 +63,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sysom.wsgi.application'
 ASGI_APPLICATION = 'sysom.asgi.application'
-
-# channels 配置
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)]
-        }
-    }
-}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

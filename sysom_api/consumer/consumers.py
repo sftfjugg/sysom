@@ -4,7 +4,6 @@ from threading import Thread
 
 from channels.generic.websocket import WebsocketConsumer
 from channels.exceptions import StopConsumer
-from django.contrib.auth.models import AnonymousUser
 from django_redis import get_redis_connection
 
 from apps.host.models import HostModel
@@ -30,7 +29,7 @@ class SshConsumer(WebsocketConsumer):
         self.user = self.scope['user']
         self.host_id = self.scope['url_route']['kwargs']['id']
 
-        if isinstance(self.user, AnonymousUser):
+        if not self.user:
             self.close()
         else:
             self.accept()
@@ -65,12 +64,7 @@ class SshConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         data = text_data or bytes_data
         if data:
-            data = json.loads(data)
-            resize = data.get('resize')
-            if resize and len(resize) == 2:
-                self.xterm.resize_pty(*resize)
-            else:
-                self.xterm.send(data['data'])
+            self.xterm.send(data)
 
     def websocket_disconnect(self, message):
         raise StopConsumer()

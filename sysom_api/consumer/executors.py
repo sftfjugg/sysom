@@ -43,8 +43,7 @@ class SshJob:
                                 service_post_name = service_name + '_post'
                                 service_post_path = os.path.join(SCRIPTS_DIR, service_post_name)
                                 if os.path.exists(service_post_path):
-                                    print(type(result))
-                                    command = "%s  '%s'" % (service_post_path, json.dumps(result))
+                                    command = "%s  '%s'" % (service_post_path, result)
                                     output = os.popen(command)
                                     result = ast.literal_eval(output.read())
                         update_job(instance=self.job, status="Success", result=result, host_by=host_ips)
