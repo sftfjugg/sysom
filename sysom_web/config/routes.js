@@ -27,7 +27,22 @@ export default [
   {
     path: '/host',
     name: 'host',
-    component: './Host',
+    // component: './Host',
+    routes: [
+      {
+        path: '/host',
+        redirect: '/host/list',
+      },
+      {
+        path: '/host/list',
+        name: 'list',
+        component: './host/List',
+      },
+      {
+        path: '/host/terminal/:id?',
+        component: './host/Terminal',
+      }
+    ],
   },
   {
     path: '/monitor',
@@ -41,11 +56,11 @@ export default [
         path: 'dashboard',
         name: 'dashboard',
         hideInBreadcrumb:true,
-        component: './monitor/SystemDashboard',
+        component: './Monitor/SystemDashboard',
       },
       {
         path: 'dashboard/:host?',
-        component: './monitor/SystemDashboard',
+        component: './Monitor/SystemDashboard',
       },
       {
         component: './404',
@@ -63,7 +78,7 @@ export default [
       {
         path: '/vmcore/list',
         name: 'list',
-        component: './vmcore/list',
+        component: './vmcore/List',
       },
       {
         path: '/vmcore/detail/:id?',
@@ -72,12 +87,11 @@ export default [
       {
         path: '/vmcore/match',
         name: 'match',
-        component: './vmcore/match',
+        component: './vmcore/Match',
       },
       {
-        path: '/vmcore/analyse',
-        name: 'analyse',
-        component: './vmcore/analyse',
+        path: '/vmcore/analyse/:id?',
+        component: './vmcore/Analyse',
       },
     ],
   },
@@ -92,12 +106,12 @@ export default [
       {
         path: '/diagnose/io',
         name: 'io',
-        component: './diagnose/io',
+        component: './diagnose/Io',
       },
       {
         path: '/diagnose/net',
         name: 'net',
-        component: './diagnose/net',
+        component: './diagnose/Net',
       },
     ],
   },

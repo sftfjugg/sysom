@@ -1,6 +1,8 @@
 export default {
   'menu.welcome': '首页',
   'menu.host': '主机管理',
+  'menu.host.list': '主机列表',
+  'menu.host.terminal': '主机终端',
   'menu.monitor': '监控中心',
   'menu.monitor.': '监控中心',
   'menu.monitor.dashboard': '系统监控',

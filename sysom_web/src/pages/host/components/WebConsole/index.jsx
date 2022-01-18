@@ -6,22 +6,23 @@ import { Terminal } from 'xterm';
 import { WebLinksAddon } from 'xterm-addon-web-links';
 import { FitAddon } from 'xterm-addon-fit';
 import { AttachAddon } from 'xterm-addon-attach';
+import styles from './index.less';
 
 const WebConsole = (props) => {
   const divRef = useRef(null);
   let socket = null;
 
   const initTerminal = () => {
-    const terminal = new Terminal({
-      cursorBlink: true,
-    });
-    socket = new WebSocket(`ws://127.0.0.1:8001/ws/ssh/2/?user_id=1`);
+    socket = new WebSocket(`ws://127.0.0.1:8001/ws/ssh/${props.id}/?user_id=${props.user_id}`);
     socket.onopen = () => {
       terminal.focus();
     };
     socket.onerror = () => {
       message.error('连接出错')
     };
+    const terminal = new Terminal({
+      cursorBlink: true,
+    });
     const webLinksAddon = new WebLinksAddon();
     const fitAddon = new FitAddon();
     const attachAddon = new AttachAddon(socket);
@@ -45,7 +46,7 @@ const WebConsole = (props) => {
 
   return (
     <PageContainer>
-      <div style={{ marginTop: 10, width: 760, height: 500 }} ref={divRef} />;
+      <div className={styles.webconsole} ref={divRef} />
     </PageContainer>
   )
 };

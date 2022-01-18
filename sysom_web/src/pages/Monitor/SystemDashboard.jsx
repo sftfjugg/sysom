@@ -5,7 +5,7 @@ import { Card, Statistic } from 'antd';
 import { Space, Row, Col } from 'antd';
 import { useIntl, useRequest, useParams, FormattedMessage } from 'umi';
 import { useState } from 'react'
-import { getHost } from '../Host/service';
+import { getHost } from '../host/service';
 
 const ServerList = (props) => {
 

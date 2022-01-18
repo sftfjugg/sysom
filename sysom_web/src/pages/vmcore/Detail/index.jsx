@@ -78,9 +78,7 @@ const VmcoreDetail = (props) => {
             </Button>
             <Button
               type="primary"
-              onClick={() => {
-                actionRef.current?.reload();
-              }}
+              href={`/vmcore/analyse/${data?.id}`}
               key="analyse"
             >
               在线分析Vmcore

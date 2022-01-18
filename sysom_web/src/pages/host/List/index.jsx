@@ -5,8 +5,8 @@ import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
-import { getCluster, getHost, addHost, deleteHost } from './service';
-import Cluster from './components/ClusterForm';
+import { getCluster, getHost, addHost, deleteHost } from '../service';
+import Cluster from '../components/ClusterForm';
 
 const handleAddHost = async (fields) => {
   const hide = message.loading('正在添加');
@@ -124,6 +124,11 @@ const HostList = () => {
           }}>
           <a><FormattedMessage id="pages.hostTable.delete" defaultMessage="host delete" /></a>
         </Popconfirm>
+        </span>,
+        <span key='terminal'>
+          <a href={"/host/terminal/" + record.id} target="_blank">
+            终端
+          </a>
         </span>
       ],
     },
