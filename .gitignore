@@ -15,5 +15,3 @@ sysom_api/logs/
 */src/.umi-production/
 dist/
 sysom_api/uploads/*
-sysom_api/conf/
-sysom_api/doc/
