@@ -31,15 +31,15 @@ result['commands'] = []
 
 cmd0_arg = int(int(args["追踪包数"]) * int(args["间隔毫秒数"]) / 1000) + 5
 cmd0 = {}
-cmd0['instance'] = args["源虚拟机私网IP"]
+cmd0['instance'] = args["源实例IP"]
 cmd0['cmd'] = "sysak pingtrace -s -t "+str(cmd0_arg)+" &"
 
 cmd1 = {}
-cmd1['instance'] = args["目标虚拟机私网IP"]
-cmd1_arg_c = args["目标虚拟机私网IP"]
+cmd1['instance'] = args["目标实例IP"]
+cmd1_arg_c = args["目标实例IP"]
 cmd1_arg_t = str(cmd0_arg - 4)
 cmd1_arg_i = str(int(args["间隔毫秒数"]) * 1000)
-cmd1_arg_C = args["追踪包数"]
+cmd1_arg_C = str(args["追踪包数"])
 cmd1['cmd'] = "sysak pingtrace -c "+cmd1_arg_c+" -t "+cmd1_arg_t+" -i "+cmd1_arg_i+" -C "+cmd1_arg_C
 
 result['commands'].append(cmd0)
