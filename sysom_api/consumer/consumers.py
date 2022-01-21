@@ -1,12 +1,9 @@
-import json
 import logging
 from threading import Thread
+from urllib import parse
 
 from channels.generic.websocket import WebsocketConsumer
 from channels.exceptions import StopConsumer
-from django_redis import get_redis_connection
-
-from apps.host.models import HostModel
 
 
 logger = logging.getLogger(__name__)
@@ -21,15 +18,19 @@ class SshConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = None
-        self.host_id = None
+        self.host_ip = None
+        self.start_cmd = None
         self.ssh = None
         self.xterm = None
 
     def connect(self):
         self.user = self.scope['user']
-        self.host_id = self.scope['url_route']['kwargs']['id']
+        query = self.scope.get('query')
+        self.host_ip = query.get('host_ip', None)
+        self.start_cmd = query.get('start', None)
 
-        if not self.user:
+        if not self.user or not self.host_ip:
+            logger.info('链接失败')
             self.close()
         else:
             self.accept()
@@ -37,11 +38,15 @@ class SshConsumer(WebsocketConsumer):
 
     def _connect_host_init(self):
         """初始化host连接"""
-        instance = get_host_instance(model=HostModel, pk=self.host_id, created_by=self.user.id)
+        from apps.host.models import HostModel
+        instance = get_host_instance(model=HostModel, ip=self.host_ip, created_by=self.user.id)
         if not instance:
             self.send(bytes_data=b'Not Found host / No Permission\r\n')
             self.close()
         self.host: HostModel = instance
+        self.send(bytes_data=b'Welcome Using SysOM ^_^ ^_^ ^_^\r\n')
+        self.send(bytes_data=b'\r\n')
+        self.send(bytes_data=b'\r\n')
         self.send(bytes_data=b'Connecting ...\r\n')
         try:
             self.ssh = self.host.get_host_client().get_client()
@@ -51,11 +56,17 @@ class SshConsumer(WebsocketConsumer):
             return
         self.xterm = self.ssh.invoke_shell(term='xterm')
         self.xterm.transport.set_keepalive(30)
+        if self.start_cmd:
+            try:
+                self.xterm.send(eval(parse.unquote(self.start_cmd))+'\n')
+            except Exception as e:
+                self.xterm.send(parse.unquote(self.start_cmd)+'\n')
+
         Thread(target=self.loop_read).start()
 
     def loop_read(self):
         while True:
-            data = self.xterm.recv(32 * 1024)
+            data = self.xterm.recv(1024)
             if not data:
                 self.close()
                 break

@@ -13,7 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
 
 from apps.host import serializer
-from apps.host.models import HostModel, HostType
+from apps.host.models import HostModel, Cluster
 from apps.accounts.authentication import Authentication
 from consumer.executors import SshJob
 from apps.task.models import JobModel
@@ -34,7 +34,7 @@ class HostModelViewSet(GenericViewSet,
     serializer_class = serializer.HostListSerializer
     authentication_classes = [Authentication]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['ip', 'hostname', 'h_type', 'status']
+    filterset_fields = ['ip', 'hostname', 'cluster', 'status']
 
     def get_authenticators(self):
         if self.request.method == "GET":
@@ -119,14 +119,14 @@ class HostModelViewSet(GenericViewSet,
         sche.start()
 
 
-class HostTypeViewSet(GenericViewSet,
+class ClusterViewSet(GenericViewSet,
                       mixins.ListModelMixin,
                       mixins.RetrieveModelMixin,
                       mixins.DestroyModelMixin,
                       mixins.CreateModelMixin,
                       mixins.UpdateModelMixin):
-    queryset = HostType.objects.filter(Q(deleted_at=None) | Q(deleted_at=""))
-    serializer_class = serializer.HostTypeListSerializer
+    queryset = Cluster.objects.filter(Q(deleted_at=None) | Q(deleted_at=""))
+    serializer_class = serializer.ClusterListSerializer
 
     def get_authenticators(self):
         if self.request.method == "GET":
@@ -136,9 +136,9 @@ class HostTypeViewSet(GenericViewSet,
 
     def get_serializer_class(self):
         if self.request.method == "GET":
-            return serializer.HostTypeListSerializer
+            return serializer.ClusterListSerializer
         else:
-            return serializer.AddHostTypeSerializer
+            return serializer.AddClusterSerializer
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)

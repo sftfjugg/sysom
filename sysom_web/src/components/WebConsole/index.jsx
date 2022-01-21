@@ -9,11 +9,11 @@ import { AttachAddon } from 'xterm-addon-attach';
 import styles from './index.less';
 
 const WebConsole = (props) => {
-  const divRef = useRef(null);
+  const container = useRef(null);
   let socket = null;
 
   const initTerminal = () => {
-    socket = new WebSocket(`ws://127.0.0.1:8001/ws/ssh/${props.id}/?user_id=${props.user_id}`);
+    socket = new WebSocket(`ws://127.0.0.1:8001/ws/ssh/?user_id=${props.user_id}&host_ip=${props.host_ip}`);
     socket.onopen = () => {
       terminal.focus();
     };
@@ -21,6 +21,7 @@ const WebConsole = (props) => {
       message.error('连接出错')
     };
     const terminal = new Terminal({
+      // rendererType: 'canvas',
       cursorBlink: true,
     });
     const webLinksAddon = new WebLinksAddon();
@@ -29,10 +30,10 @@ const WebConsole = (props) => {
     terminal.loadAddon(webLinksAddon);
     terminal.loadAddon(fitAddon);
     terminal.loadAddon(attachAddon);
-    terminal.open(divRef.current);
+    terminal.open(container.current);
     fitAddon.fit();
     terminal.prompt = () => {
-      terminal.write('\r\n ');
+      terminal.write('\r\n');
     };
     terminal.prompt();
   };
@@ -45,8 +46,8 @@ const WebConsole = (props) => {
   }, []);
 
   return (
-    <PageContainer>
-      <div className={styles.webconsole} ref={divRef} />
+    <PageContainer header={{title: props.title}}>
+      <div className={styles.webconsole} ref={container} />
     </PageContainer>
   )
 };

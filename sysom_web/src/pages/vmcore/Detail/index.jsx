@@ -78,7 +78,8 @@ const VmcoreDetail = (props) => {
             </Button>
             <Button
               type="primary"
-              href={`/vmcore/analyse/${data?.id}`}
+              href={"/vmcore/analyse/" + data?.ip}
+              target="_blank"
               key="analyse"
             >
               在线分析Vmcore

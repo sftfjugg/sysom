@@ -109,6 +109,7 @@ setup_database() {
     systemctl enable mariadb.service
     mysql -uroot -e "create user 'sysom'@'%' identified by 'sysom_admin';"
     mysql -uroot -e "grant usage on *.* to 'sysom'@'localhost' identified by 'sysom_admin'"
+    mysql -uroot -e "drop database sysom;"
     mysql -uroot -e "create database sysom character set utf8;"
     mysql -uroot -e "grant all privileges on sysom.* to 'sysom'@'%';"
     mysql -uroot -e "flush privileges;"
@@ -116,7 +117,6 @@ setup_database() {
 
 init_conf() {
     mkdir -p /run/daphne
-    sed -i 's;"env", "testing";"env", "develop";g' ${TARGET_PATH}/${API_DIR}/conf/__init__.py
     cp tools/deploy/nginx.conf /etc/nginx/
     cp tools/deploy/sysom.conf /etc/nginx/conf.d/
     sed -i "s;/home/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
@@ -125,13 +125,13 @@ init_conf() {
     cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
     sed -i "s;/home/sysom;${APP_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
     pushd ${TARGET_PATH}/${API_DIR}
+    rm -f apps/*/migrations/00*.py
     python manage.py makemigrations accounts
     python manage.py makemigrations host
     python manage.py makemigrations vmcore
     python manage.py makemigrations task
     python manage.py makemigrations monitor
     python manage.py migrate
-    python manage.py loaddata ./apps/accounts/role.json
     python manage.py loaddata ./apps/accounts/user.json
     python manage.py loaddata ./apps/vmcore/vmcore.json
     popd

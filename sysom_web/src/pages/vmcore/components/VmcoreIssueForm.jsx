@@ -13,7 +13,6 @@ const handleAddIssue = async (fields) => {
     return true;
   } catch (error) {
     hide();
-    message.error("添加失败，请重试!");
     return false;
   }
 };

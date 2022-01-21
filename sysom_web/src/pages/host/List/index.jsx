@@ -19,7 +19,6 @@ const handleAddHost = async (fields) => {
     return true;
   } catch (error) {
     hide();
-    message.error('添加失败，排查原因后重试!');
     return false;
   }
 };
@@ -35,7 +34,6 @@ const handleDeleteHost = async (record) => {
     return true;
   } catch (error) {
     hide();
-    message.error('删除失败，排查原因后重试');
     return false;
   }
 };
@@ -48,7 +46,7 @@ const HostList = () => {
   const columns = [
     {
       title: <FormattedMessage id="pages.hostTable.cluster" defaultMessage="cluster" />,
-      dataIndex: 'h_type',
+      dataIndex: 'cluster',
       filters: true,
       onFilter: true,
       valueType: 'select',
@@ -126,7 +124,7 @@ const HostList = () => {
         </Popconfirm>
         </span>,
         <span key='terminal'>
-          <a href={"/host/terminal/" + record.id} target="_blank">
+          <a href={"/host/terminal/" + record.ip} target="_blank">
             终端
           </a>
         </span>
@@ -194,7 +192,7 @@ const HostList = () => {
             },
           ]}
           width="md"
-          name="h_type"
+          name="cluster"
           request={getCluster}
           placeholder="请选择主机所属集群"
         />

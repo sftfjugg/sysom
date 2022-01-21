@@ -20,7 +20,7 @@ class HostModel(BaseModel):
     description = models.CharField(max_length=255, null=True)
     status = models.IntegerField(choices=HOST_STATUS_CHOICES, default=2, verbose_name="主机状态")
     client_deploy_cmd = models.TextField(verbose_name="client部署命令", default="")
-    h_type = models.ForeignKey('HostType', on_delete=models.CASCADE, related_name='hosts')
+    cluster = models.ForeignKey('Cluster', on_delete=models.CASCADE, related_name='hosts', default="")
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="c_hosts")
     deleted_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name="d_hosts")
 
@@ -35,11 +35,11 @@ class HostModel(BaseModel):
         return SSH(hostname=self.ip, port=self.port, username=self.username, pkey=pkey)
 
 
-class HostType(BaseModel):
-    type_name = models.CharField(max_length=128, unique=True)
+class Cluster(BaseModel):
+    cluster_name = models.CharField(max_length=128, unique=True)
 
     class Meta:
-        db_table = "sys_host_type"
+        db_table = "sys_cluster"
 
     def __str__(self) -> str:
-        return f'主机类型: {self.type_name}'
+        return f'集群: {self.cluster_name}'

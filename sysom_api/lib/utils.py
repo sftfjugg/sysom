@@ -14,7 +14,6 @@ from decimal import Decimal
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from paramiko import BadAuthenticationType, AuthenticationException
-from rest_framework.pagination import PageNumberPagination
 from lib.ssh import SSH
 
 
@@ -97,6 +96,17 @@ def uuid_8():
     return result
 
 
+def url_format_dict(url_params: str):
+    """转化查询参数为dict"""
+    result = dict()
+    try:
+        for item in [{p.split('=')[0]: p.split('=')[1]} for p in url_params.split('&')]:
+            result.update(item)
+    except Exception as e:
+        logger.error(str(e))
+    return result
+
+
 def generate_private_key(hostname, port, username, password=None, pkey=None):
     try:
         if password:
@@ -113,6 +123,6 @@ def generate_private_key(hostname, port, username, password=None, pkey=None):
     except BadAuthenticationType:
         return False, "认证类型暂不支持"
     except AuthenticationException:
-        return False, "认证失败，请检查用户名密码或密钥"
+        return False, "认证失败，请检查用户名密码或IP地址是否正确"
     except Exception as e:
         return False, e

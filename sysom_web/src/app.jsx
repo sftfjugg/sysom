@@ -9,7 +9,12 @@ const loginPath = '/user/login';
 
 const errorHandler = function(error) {
   if (error.response) {
-    message.error(error.data.message);
+    if (typeof(error.data.message) == "object"){
+      message.error(Object.values(error.data.message))
+    }
+    else {
+      message.error(error.data.message);
+    }
   } else {
     message.error(error.message);
   }

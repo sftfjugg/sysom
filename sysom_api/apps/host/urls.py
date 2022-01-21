@@ -7,7 +7,7 @@ from apps.host import views
 
 router = DefaultRouter()
 router.register('host', views.HostModelViewSet)
-router.register('cluster', views.HostTypeViewSet)
+router.register('cluster', views.ClusterViewSet)
 
 urlpatterns = [
     path('api/v1/host/upload_file/', views.SaveUploadFile.as_view()),

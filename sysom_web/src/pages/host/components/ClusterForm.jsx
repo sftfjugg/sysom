@@ -14,8 +14,7 @@ const handleAddCluster = async (fields) => {
     message.success('创建成功');
     return true;
   } catch (error) {
-    hide();
-    message.error('创建失败，请重试!');
+    hide()
     return false;
   }
 };
@@ -42,7 +41,7 @@ const Cluster = () => {
     >
       <ProFormText
         width="md"
-        name="type_name"
+        name="cluster_name"
         label="集群名称"
         placeholder="请输入集群名称"
         rules={[

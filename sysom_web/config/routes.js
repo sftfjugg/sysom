@@ -27,7 +27,6 @@ export default [
   {
     path: '/host',
     name: 'host',
-    // component: './Host',
     routes: [
       {
         path: '/host',
@@ -39,7 +38,7 @@ export default [
         component: './host/List',
       },
       {
-        path: '/host/terminal/:id?',
+        path: '/host/terminal/:ip?',
         component: './host/Terminal',
       }
     ],
@@ -90,7 +89,7 @@ export default [
         component: './vmcore/Match',
       },
       {
-        path: '/vmcore/analyse/:id?',
+        path: '/vmcore/analyse/:ip?',
         component: './vmcore/Analyse',
       },
     ],

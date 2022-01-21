@@ -45,7 +45,7 @@ class SshJob:
                                 if os.path.exists(service_post_path):
                                     command = "%s  '%s'" % (service_post_path, result)
                                     output = os.popen(command)
-                                    result = ast.literal_eval(output.read())
+                                    result = output.read()
                         update_job(instance=self.job, status="Success", result=result, host_by=host_ips)
                     if self.kwargs.get('update_host_status', None):
                         host.status = status if status == 0 else 1

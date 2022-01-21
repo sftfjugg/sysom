@@ -66,7 +66,7 @@ class TaskAPIView(GenericViewSet,
                 resp_scripts = resp.get("commands")
                 username = "admin"
                 user = User.objects.filter(username=username).first()
-                self.ssh_job(resp_scripts, task_id, user, params)
+                self.ssh_job(resp_scripts, task_id, user, json.dumps(params))
                 return success(result={"instance_id": task_id})
             else:
                 return self.default_ssh_job(data, task_id)

@@ -14,7 +14,7 @@ export async function getCluster(options) {
   const array = msg.data
   const results = array?.map(item => {
     return {
-      label: item.type_name,
+      label: item.cluster_name,
       value: item.id,
     }
   });
