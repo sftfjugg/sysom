@@ -5,6 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
+from django.db.models import Q
 
 from django.conf import settings
 from apps.accounts.authentication import Authentication
@@ -42,7 +43,7 @@ class TaskAPIView(GenericViewSet,
                   mixins.DestroyModelMixin,
                   mixins.CreateModelMixin
                   ):
-    queryset = JobModel.objects.filter(deleted_at=None)
+    queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
     serializer_class = seriaizer.JobListSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ('id', 'task_id', 'host_by')  # 模糊查询
@@ -75,7 +76,10 @@ class TaskAPIView(GenericViewSet,
             return other_response(message=str(e), code=400, success=False)
 
     def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
+        instance = self.get_queryset().filter(**kwargs).first()
+        if not instance:
+            return not_found()
+        response = self.get_serializer(instance)
         return success(result=response.data)
 
     def default_ssh_job(self, data, task_id):
@@ -109,7 +113,8 @@ class TaskAPIView(GenericViewSet,
         scheduler.add_job(sch_job.run)
 
     def list(self, request, *args, **kwargs):
-        data = seriaizer.JobDelResultSerializer(instance=self.queryset, many=True)
+        queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
+        data = seriaizer.JobDelResultSerializer(instance=queryset, many=True)
         return success(result=data.data)
 
     def destroy(self, request, *args, **kwargs):
