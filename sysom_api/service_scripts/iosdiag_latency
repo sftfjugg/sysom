@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  如前端入参是这个：
+##  {
+##    "时间阈值":"1",
+##    "诊断时长":"10"
+##    "目标磁盘":"vda"
+##  }
+##  解析参数方法：
+##  sysak iosdiag latency -t 1 -T 10 vda
+##  -t 1 时间阈值，表示要捕获IO耗时超过1ms的IO
+##  -T 10 诊断时长，表示诊断10秒后自动退出
+##  vda 目标磁盘，可以不填，不填默认会捕获系统所有磁盘的IO
+##                如填写有效盘符则只捕获指定磁盘IO
+##                如填写一个无效盘符，也会捕获系统所有磁盘的IO
+##
+###############################################################################
+
+args = json.loads(sys.argv[1])
+result = {}
+result['commands'] = []
+
+cmd0_arg_t = args["时间阈值"]
+cmd0_arg_T = args["诊断时长"]
+cmd0_arg_device = args["目标磁盘"]
+cmd0 = {}
+check_result_cmd = "\"$(grep iosdiag /var/log/sysak/sysak.log -wr | tail -n 1 | awk -F \"iosdiag \" \'{print $2}\')\""
+dump_log_cmd = "cat /var/log/sysak/iosdiag/latency/result.log.stat 2>/dev/null;\
+    echo \"\";cat /var/log/sysak/iosdiag/latency/result.log 2>/dev/null;\
+    echo \"\";cat /var/log/sysak/iosdiag/latency/result.log.seq 2>/dev/null;"
+iosdiag_cmd = "sysak iosdiag latency -t "+cmd0_arg_t+" -T "+cmd0_arg_T+" "+cmd0_arg_device
+print_result_cmd = "if [ "+check_result_cmd+" = \"0\" ]; then "+\
+    dump_log_cmd+"else echo \"fail\"; fi"
+cmd0['cmd'] = iosdiag_cmd+" && "+print_result_cmd
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)
