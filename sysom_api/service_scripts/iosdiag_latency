@@ -6,6 +6,7 @@ import sys
 ###############################################################################
 ##  如前端入参是这个：
 ##  {
+##    "实例IP":"192.168.1.101",
 ##    "时间阈值":"1",
 ##    "诊断时长":"10"
 ##    "目标磁盘":"vda"
@@ -24,10 +25,11 @@ args = json.loads(sys.argv[1])
 result = {}
 result['commands'] = []
 
+cmd0 = {}
+cmd0['instance'] = args["实例IP"]
 cmd0_arg_t = args["时间阈值"]
 cmd0_arg_T = args["诊断时长"]
 cmd0_arg_device = args["目标磁盘"]
-cmd0 = {}
 check_result_cmd = "\"$(grep iosdiag /var/log/sysak/sysak.log -wr | tail -n 1 | awk -F \"iosdiag \" \'{print $2}\')\""
 dump_log_cmd = "cat /var/log/sysak/iosdiag/latency/result.log.stat 2>/dev/null;\
     echo \"\";cat /var/log/sysak/iosdiag/latency/result.log 2>/dev/null;\
