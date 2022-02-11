@@ -11,23 +11,11 @@ def iosdiagJoinData(raw):
         data = {"status":"success","IO timeout":"false"}
     else:
         data = {"status":"success","IO timeout":"true","stat":[],"seq":[]}
-        time = {}
         for s in raw.split('\n'):
             obj = json.loads(s)
             if "percent" in str(obj):
                 data['stat'] = obj['summary']
-            elif "abnormal" in str(obj):
-                for entry in obj['summary']:
-                    disk = entry['diskname']
-                    for io in entry['slow ios']:
-                        time.setdefault(disk+"-"+str(io['seq']), io['time'])
             else:
-                for entry in obj['summary']:
-                    disk = entry['diskname']
-                    entry['slow ios'] = sorted(entry['slow ios'], key=lambda e:e['seq'], reverse=False)
-                    for io in entry['slow ios']:
-                        io.setdefault('time', time[disk+"-"+str(io['seq'])])
-                        del io['seq']
                 data["seq"] = obj['summary']
     s = json.dumps(data, indent=4)
     print(s)
