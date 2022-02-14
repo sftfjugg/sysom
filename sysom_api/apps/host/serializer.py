@@ -49,7 +49,7 @@ class AddHostSerializer(serializers.ModelSerializer):
     def validate_ip(self, attr):
         try:
             HostModel.objects.get(ip=attr)
-        except Cluster.DoesNotExist:
+        except HostModel.DoesNotExist:
             return attr
         msg = _('IP地址冲突!，请重新输入!')
         raise serializers.ValidationError(msg)
