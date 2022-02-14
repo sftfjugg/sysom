@@ -37,6 +37,7 @@ class SshJob:
                     if count == len(self.resp_scripts):
                         params = self.job.params
                         if params:
+                            params = json.loads(params)
                             service_name = params.get("service_name", None)
                             if service_name:
                                 SCRIPTS_DIR = settings.SCRIPTS_DIR
