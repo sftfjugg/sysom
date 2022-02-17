@@ -158,7 +158,8 @@ start_script_node() {
 
 modify_grafana_url() {
     pushd ${TARGET_PATH}/${WEB_DIR}
-    sed -i "s/127.0.0.1:3000/${OUTER_IP}\/grafana/g" p__monitor__SystemDashboard*js
+    dashboard_file=`grep -nru "sysom-dashboard/sysom-dashboard" | awk -F":" '{print $1}'`
+    sed -i "s/127.0.0.1:3000/${OUTER_IP}\/grafana/g" $dashboard_file
     popd
 }
 
