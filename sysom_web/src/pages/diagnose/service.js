@@ -5,8 +5,35 @@ import { ConsoleSqlOutlined } from '@ant-design/icons';
 import { request } from 'umi';
 
 /** 获取宕机列表 GET /api/vmcore */
-export async function getNetTable(params, options) {
-  const msg = await request('/api/getable/', {
+
+
+
+function parseJsonString(str) {
+  try {
+    return JSON.parse(str.replace(/\'/g, "\""));
+  }
+  catch (e) {
+    return {}
+  }
+}
+
+
+//POST /api/v1/tasks
+//{service:"pingtrace",
+//源IP:"xxx"}
+export async function postTask(params, options) {
+  return request('/api/v1/tasks/', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+
+//GET /api/v1/tasks
+//
+export async function getTaskList(params, options) {
+  const msg = await request('/api/v1/tasks/', {
     method: 'GET',
     params: { ...params },
     ...(options || {}),
@@ -18,19 +45,23 @@ export async function getNetTable(params, options) {
   };
 }
 
-export async function getMetric(params = {}, options) {
-  const msg = await request('/api/metric/', {
+//GET /api/vi/tasks/xxxxx/
+export async function getTask(id, params = {}, options) {
+  const msg = await request('/api/v1/tasks/' + id, {
     method: 'GET',
     params: { ...params },
     ...(options || {}),
   });
-  const metric = msg.data.seq.reduce((metric, item) => { 
-    metric.push({
-        x:item.meta.seq,
-        y:item.delays.filter((item) => item.delay === "total")[0].ts
-    }); return metric}, [])
-  return {
-    data: metric,
-    success: true
-  };
+
+  if (msg.data.status == "Success") {
+    msg.data.result = parseJsonString(msg.data.result);
+    msg.data.metric = msg.data.result.seq.reduce((metric, item) => {
+      metric.push({
+        x: item.meta.seq,
+        y: item.delays.filter((item) => item.delay === "total")[0].ts
+      }); return metric
+    }, [])
+  }
+
+  return msg.data;
 }
