@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 UPLOAD_DIR=${APP_HOME}/target/sysom_web/download/
-APP_CMD_CONF=${APP_HOME}/target/sysom_api/conf/__init__.py
+APP_CMD_CONF=${APP_HOME}/target/sysom_api/conf/product.py
 RESOURCE_DIR=${APP_HOME}/monitor
 PROMETHEUS_ARCH=linux-amd64
 NODE_EXPORTER_VER=1.2.2
@@ -9,6 +9,7 @@ NODE_EXPORTER_PKG=node_exporter-${NODE_EXPORTER_VER}.${PROMETHEUS_ARCH}
 NODE_EXPORTER_TAR=$NODE_EXPORTER_PKG.tar.gz
 NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
+NODE_INIT_CMD="CLIENT_DEPLOY_CMD = 'rm -rf /tmp/sysom; mkdir -p /tmp/sysom;cd /tmp/sysom;wget http://${SERVER_IP}/download/${NODE_INIT_PKG};tar -xf ${NODE_INIT_PKG};bash -x ${NODE_INIT_DIR}/init.sh'"
 
 BASE_DIR=`dirname $0`
 
@@ -32,9 +33,7 @@ prepare_init_tar()
 
 set_node_init_cmd()
 {
-    line_num=`cat -n $APP_CMD_CONF | grep CLIENT_DEPLOY_CMD | awk '{print $1}'`
-    sed -i "s/CLIENT_DEPLOY_CMD/#CLIENT_DEPLOY_CMD/g" $APP_CMD_CONF
-    sed -i "$line_num a \ \ \ \ CLIENT_DEPLOY_CMD = \'rm -rf /tmp/sysom; mkdir -p /tmp/sysom;cd /tmp/sysom;wget http://${SERVER_IP}/download/${NODE_INIT_PKG};tar -xf ${NODE_INIT_PKG};bash -x ${NODE_INIT_DIR}/init.sh\'" $APP_CMD_CONF
+    echo ${NODE_INIT_CMD} >> ${APP_CMD_CONF}
 }
 
 pre_init()
