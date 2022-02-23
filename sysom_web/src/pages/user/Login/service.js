@@ -5,9 +5,13 @@ import {
   request
 } from 'umi';
 /** 获取当前的用户 GET /api/currentUser */
-export async function currentUser(userId, options) {
+export async function currentUser(userId, token, options) {
   return request('/api/v1/user/' + userId + '/', {
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
     ...(options || {}),
   });
 }

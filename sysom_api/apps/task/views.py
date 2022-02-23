@@ -1,5 +1,4 @@
 import os
-import uuid
 import ast
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -8,11 +7,11 @@ from rest_framework import mixins
 from django.db.models import Q
 
 from django.conf import settings
-from apps.accounts.authentication import Authentication
 from apps.task import seriaizer
 from apps.task.models import JobModel
 from apps.host.models import HostModel
 from apps.accounts.models import User
+from apps.task.filter import TaskFilter
 from consumer.executors import SshJob
 from lib import *
 
@@ -45,9 +44,9 @@ class TaskAPIView(GenericViewSet,
                   ):
     queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
     serializer_class = seriaizer.JobListSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    search_fields = ('id', 'task_id', 'host_by')  # 模糊查询
-    filter_fields = ('id', 'task_id', 'host_by')  # 精确查询
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter, TaskFilter)
+    search_fields = ('id', 'task_id', 'created_by__id', 'status')  # 模糊查询
+    filter_fields = ('id', 'task_id', 'created_by__id', 'status')  # 精确查询
     authentication_classes = []
 
     def create(self, request, *args, **kwargs):
@@ -78,8 +77,8 @@ class TaskAPIView(GenericViewSet,
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()
         if not instance:
-            return not_found()
-        response = self.get_serializer(instance)
+            return success([])
+        response = seriaizer.JobRetrieveSerializer(instance)
         return success(result=response.data)
 
     def default_ssh_job(self, data, task_id):
@@ -113,9 +112,11 @@ class TaskAPIView(GenericViewSet,
         scheduler.add_job(sch_job.run)
 
     def list(self, request, *args, **kwargs):
-        queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
-        data = seriaizer.JobDelResultSerializer(instance=queryset, many=True)
-        return success(result=data.data)
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([])
+        serializer = self.get_serializer(queryset, many=True)
+        return success(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()

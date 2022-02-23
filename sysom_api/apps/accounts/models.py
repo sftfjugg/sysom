@@ -53,3 +53,33 @@ class Permission(BaseModel):
 
     def __str__(self):
         return f"API：{self.path} - Method: {self.get_method_display()}"
+
+
+class HandlerLog(BaseModel):
+    METHOD_CHOICES = (
+        ('get', 'GET'),
+        ('post', 'POST'),
+        ('put', 'PUT'),
+        ('patch', 'PATCH'),
+        ('delete', 'DELETE'),
+    )
+    OPTION_CHOICES = (
+        (0, 'login'),
+        (1, 'action')
+    )
+    request_ip = models.GenericIPAddressField(verbose_name='请求IP地址')
+    request_url = models.CharField(max_length=64, verbose_name='请求API路径')
+    request_browser_agent = models.CharField(max_length=256, verbose_name="浏览器信息")
+    request_method = models.CharField(max_length=32, choices=METHOD_CHOICES, default='get', verbose_name='请求方式')
+    handler_view = models.CharField(max_length=32, verbose_name="处理视图")
+    response_status = models.IntegerField(verbose_name="响应时间", default=200)
+    request_option = models.IntegerField(default=1, choices=OPTION_CHOICES, verbose_name='请求动作')
+    user = models.ForeignKey(to='User', on_delete=models.CASCADE, related_name='option_logs', verbose_name='操作人')
+
+    class Meta:
+        db_table = 'sys_handler_log'
+        verbose_name_plural = verbose_name = '操作日志'
+
+    def __str__(self):
+        return f'{self.user.username}: 于{self.created_at} 通过{self.request_method}方式请求{self.request_url},' \
+            f'状态: {self.response_status}'

@@ -88,7 +88,7 @@ REST_FRAMEWORK = {
     'VERSION_PARAM': 'version',
 
     'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
+        'lib.renderers.SysomJsonRender',
     ),
     'DEFAULT_PAGINATION_CLASS': 'lib.paginations.Pagination',
     'UNICODE_JSON': False,

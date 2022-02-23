@@ -35,9 +35,10 @@ export const initialStateConfig = {
 
 export async function getInitialState() {
   const userId = localStorage.getItem('userId');
-  const fetchUserInfo = async (userId) => {
+  const token = localStorage.getItem('token');
+  const fetchUserInfo = async () => {
     try {
-      const msg = await queryCurrentUser(userId);
+      const msg = await queryCurrentUser(userId, token);
       if (msg.code === 400) {
         history.push(loginPath);
         return undefined;

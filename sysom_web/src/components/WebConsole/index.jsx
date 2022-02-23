@@ -13,7 +13,7 @@ const WebConsole = (props) => {
   let socket = null;
 
   const initTerminal = () => {
-    socket = new WebSocket(`ws://127.0.0.1:8001/ws/ssh/?user_id=${props.user_id}&host_ip=${props.host_ip}`);
+    socket = new WebSocket(`ws:${location.host}/ws/ssh/?user_id=${props.user_id}&host_ip=${props.host_ip}`);
     socket.onopen = () => {
       terminal.focus();
     };

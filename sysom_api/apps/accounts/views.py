@@ -1,13 +1,14 @@
 import logging
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins, status
 from rest_framework.views import APIView
+from rest_framework.generics import CreateAPIView
 
-from apps.accounts.permissions import IsAdminPermission, IsOperationPermission
+from apps.accounts.permissions import IsAdminPermission
 from apps.accounts.serializer import UserAuthSerializer
 from apps.accounts.authentication import Authentication
+
 from . import models
 from . import serializer
 from lib import success, other_response
@@ -25,9 +26,11 @@ class UserModelViewSet(
 ):
     queryset = models.User.objects.all()
     serializer_class = serializer.UserListSerializer
-    authentication_classes = [Authentication]
     # permission_classes = [IsAdminPermission]
-
+    logging_options = {
+        'login': 0,
+        'action': 1
+    }
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -40,12 +43,6 @@ class UserModelViewSet(
             return []
         else:
             return [permission() for permission in self.permission_classes]
-
-    def get_authenticators(self):
-        if self.request.method == "GET":
-            return []
-        else:
-            return [auth() for auth in self.authentication_classes]
 
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
@@ -73,11 +70,24 @@ class UserModelViewSet(
         result = super().retrieve(request, *args, **kwargs)
         return success(result=result.data, message="获取成功")
 
+    def get_logs(self, request: Request, *args, **kwargs):
+        params = request.query_params.dict()
+        option = self.logging_options.get(params.get('option'), None)
+        queryset = models.HandlerLog.objects.select_related().all()
 
-class AuthAPIView(APIView):
+        user = getattr(request, 'user', None)
+        if not user.is_admin:
+            queryset = queryset.filter(user=user)
+
+        if option:
+            queryset = queryset.filter(request_option=option)
+
+        ser = serializer.HandlerLoggerListSerializer(queryset, many=True)
+        return success(result=ser.data)
+
+class AuthAPIView(CreateAPIView):
     authentication_classes = []
 
-    @swagger_auto_schema(method='POST')
     def post(self, request):
         ser = UserAuthSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
