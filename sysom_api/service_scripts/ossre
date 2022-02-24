@@ -1,0 +1,29 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  {
+##    "service_name":"ossre",
+##    "实例IP":"192.168.1.101"
+##  }
+##  解析参数方法：
+##  sysak ossre_client -d > /dev/null 2>&1  &&  cat /var/log/sysak/ossre.log
+##  sysak ossre_client -d > /dev/null 2>&1 实际ossre执行系统诊断命令，隐藏控制台输出
+##  cat /var/log/sysak/ossre.log 是ossre诊断结果，json格式
+##
+###############################################################################
+
+args = json.loads(sys.argv[1])
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["实例IP"]
+cmd0['cmd'] = "sysak ossre_client -d > /dev/null 2>&1 " + " && " + "cat /var/log/sysak/ossre.log"
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)

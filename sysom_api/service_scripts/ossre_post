@@ -1,0 +1,182 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys,os
+import json
+import traceback
+if sys.version[0] == '2':
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
+ERR_LEVEL = ["none","info","warning","error","critical","fatal"]
+
+def ossre_to_sysom_json(raw):
+    retdata = {}
+    retdata["check_success"] = 0
+    retdata["CONFIG"] = {}
+    retdata["CONFIG"]["SCHED"] = {}
+    retdata["CONFIG"]["SCHED"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["SCHED"]["level"] = "none"
+    retdata["CONFIG"]["MEM"] = {}
+    retdata["CONFIG"]["MEM"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["MEM"]["level"] = "none"
+    retdata["CONFIG"]["IO"] = {}
+    retdata["CONFIG"]["IO"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["IO"]["level"] = "none"
+    retdata["CONFIG"]["NET"] = {}
+    retdata["CONFIG"]["NET"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["NET"]["level"] = "none"
+    retdata["CONFIG"]["HOTFIX"] = {}
+    retdata["CONFIG"]["HOTFIX"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["HOTFIX"]["level"] = "none"
+    retdata["CONFIG"]["MISC"] = {}
+    retdata["CONFIG"]["MISC"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["MISC"]["level"] = "none"
+    retdata["CONFIG"]["CPU"] = {}
+    retdata["CONFIG"]["CPU"]["summary"] = "未发现异常"
+    retdata["CONFIG"]["CPU"]["level"] = "none"
+    retdata["SLI"] = {}
+    retdata["SLI"]["CPU"] = {}
+    retdata["SLI"]["CPU"]["summary"] = "未发现异常"
+    retdata["SLI"]["CPU"]["level"] = "none"
+    retdata["SLI"]["MEM"] = {}
+    retdata["SLI"]["MEM"]["summary"] = "未发现异常"
+    retdata["SLI"]["MEM"]["level"] = "none"
+    retdata["SLI"]["IO"] = {}
+    retdata["SLI"]["IO"]["summary"] = "未发现异常"
+    retdata["SLI"]["IO"]["level"] = "none"
+    retdata["SLI"]["NET"] = {}
+    retdata["SLI"]["NET"]["summary"] = "未发现异常"
+    retdata["SLI"]["NET"]["level"] = "none"
+    retdata["SLI"]["HOTFIX"] = {}
+    retdata["SLI"]["HOTFIX"]["summary"] = "未发现异常"
+    retdata["SLI"]["HOTFIX"]["level"] = "none"
+    retdata["SLI"]["CRASH"] = {}
+    retdata["SLI"]["CRASH"]["summary"] = "未发现异常"
+    retdata["SLI"]["CRASH"]["level"] = "none"
+    retdata["SLI"]["MISC"] = {}
+    retdata["SLI"]["MISC"]["summary"] = "未发现异常"
+    retdata["SLI"]["MISC"]["level"] = "none"
+    retdata["ISSUE"] = {}
+    retdata["ISSUE"]["CRIT"] = {}
+    retdata["ISSUE"]["CRIT"]["summary"] = "未发现异常"
+    retdata["ISSUE"]["CRIT"]["level"] = "none"
+    retdata["ISSUE"]["ERR"] = {}
+    retdata["ISSUE"]["ERR"]["summary"] = "未发现异常"
+    retdata["ISSUE"]["ERR"]["level"] = "none"
+    retdata["ISSUE"]["WARN"] = {}
+    retdata["ISSUE"]["WARN"]["summary"] = "未发现异常"
+    retdata["ISSUE"]["WARN"]["level"] = "none"
+    retdata["LOG"] = {}
+    retdata["LOG"]["CRIT"] = {}
+    retdata["LOG"]["CRIT"]["summary"] = "未发现异常"
+    retdata["LOG"]["CRIT"]["level"] = "none"
+    retdata["LOG"]["ERR"] = {}
+    retdata["LOG"]["ERR"]["summary"] = "未发现异常"
+    retdata["LOG"]["ERR"]["level"] = "none"
+    retdata["LOG"]["WARN"] = {}
+    retdata["LOG"]["WARN"]["summary"] = "未发现异常"
+    retdata["LOG"]["WARN"]["level"] = "none"
+    retdata["HW"] = {}
+    retdata["HW"]["DMESG"] = {}
+    retdata["HW"]["DMESG"]["summary"] = "未发现异常"
+    retdata["HW"]["DMESG"]["level"] = "none"
+    try:
+        if "ossre" not in raw:
+            print (json.dumps(retdata, indent=4,ensure_ascii=False))
+        else:
+            rawdata_json = json.loads(raw)
+            retdata["check_success"] = 1
+            cust = rawdata_json["ossre"]["fields"]["cust"]
+            if "CONFIG" in cust:
+                for item in cust["CONFIG"]:
+                    if retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] == "未发现异常":
+                        retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] = ""
+                    retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] += "%s\n"%cust["CONFIG"][item]["name"]
+                    if len(cust["CONFIG"][item]["desc"]) != 0:
+                        retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] += "%s\n"%cust["CONFIG"][item]["desc"]
+                    retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] += "%s\n"%cust["CONFIG"][item]["summary"]
+
+                    if ERR_LEVEL.index(cust["CONFIG"][item]["level"]) > ERR_LEVEL.index(retdata["CONFIG"][cust["CONFIG"][item]["category"]]["level"]):
+                        retdata["CONFIG"][cust["CONFIG"][item]["category"]]["level"] = cust["CONFIG"][item]["level"]
+
+            if "SLI" in cust:
+                for item in cust["SLI"]:
+                    if retdata["SLI"][cust["SLI"][item]["category"]]["summary"] == "未发现异常":
+                        retdata["SLI"][cust["SLI"][item]["category"]]["summary"] = ""
+                    retdata["SLI"][cust["SLI"][item]["category"]]["summary"] += "%s\n"%cust["SLI"][item]["name"]
+                    if len(cust["SLI"][item]["desc"]) != 0:
+                        retdata["SLI"][cust["SLI"][item]["category"]]["summary"] += "%s\n"%cust["SLI"][item]["desc"]
+                    retdata["SLI"][cust["SLI"][item]["category"]]["summary"] += "%s\n"%cust["SLI"][item]["summary"]
+
+                    if ERR_LEVEL.index(cust["SLI"][item]["level"]) > ERR_LEVEL.index(retdata["SLI"][cust["SLI"][item]["category"]]["level"]):
+                        retdata["SLI"][cust["SLI"][item]["category"]]["level"] = cust["SLI"][item]["level"]
+
+            if "ISSUE" in cust:
+                for item in cust["ISSUE"]:
+                    level = cust["ISSUE"][item]["level"]
+
+                    if level in ERR_LEVEL:
+                        if ERR_LEVEL.index(level) <= ERR_LEVEL.index("warning"):
+                            level_idx = "WARN"
+                        elif ERR_LEVEL.index(level) == ERR_LEVEL.index("error"):
+                            level_idx = "ERR"
+                        elif ERR_LEVEL.index(level) >= ERR_LEVEL.index("critical"):
+                            level_idx = "CRIT"
+                    else:
+                        level_idx = "WARN"
+
+                    if retdata["ISSUE"][level_idx]["summary"] == "未发现异常":
+                        retdata["ISSUE"][level_idx]["summary"] = ""
+                    retdata["ISSUE"][level_idx]["summary"] += "%s\n"%cust["ISSUE"][item]["summary"]
+                    retdata["ISSUE"][level_idx]["summary"] += "%s\n\n"%cust["ISSUE"][item]["solution"]
+                    retdata["ISSUE"][level_idx]["level"] = level
+
+            if "LOG" in cust:
+                for item in cust["LOG"]:
+                    level = cust["LOG"][item]["level"]
+
+                    if level in ERR_LEVEL:
+                        if ERR_LEVEL.index(level) <= ERR_LEVEL.index("warning"):
+                            level_idx = "WARN"
+                        elif ERR_LEVEL.index(level) == ERR_LEVEL.index("error"):
+                            level_idx = "ERR"
+                        elif ERR_LEVEL.index(level) >= ERR_LEVEL.index("critical"):
+                            level_idx = "CRIT"
+                    else:
+                        level_idx = "WARN"
+
+                    if retdata["LOG"][level_idx]["summary"] == "未发现异常":
+                        retdata["LOG"][level_idx]["summary"] = ""
+                    retdata["LOG"][level_idx]["summary"] += "%s\n%s\n"%(cust["LOG"][item]["name"],cust["LOG"][item]["desc"])
+                    retdata["LOG"][level_idx]["summary"] += "%s\n"%cust["LOG"][item]["summary"]
+                    retdata["LOG"][level_idx]["level"] = level
+
+            if "HW" in cust:
+                for item in cust["HW"]:
+                    level = cust["HW"][item]["level"]
+
+
+                    if retdata["HW"]["DMESG"]["summary"] == "未发现异常":
+                        retdata["HW"]["DMESG"]["summary"] = ""
+                    if ERR_LEVEL.index(cust["HW"][item]["level"]) > ERR_LEVEL.index(retdata["HW"]["DMESG"]["level"]):
+                        retdata["HW"]["DMESG"]["level"] = cust["HW"][item]["level"]
+
+                    retdata["HW"]["DMESG"]["summary"] += "%s\n%s\n"%(cust["HW"][item]["name"],cust["HW"][item]["desc"])
+                    retdata["HW"]["DMESG"]["summary"] += "%s\n"%cust["HW"][item]["summary"]
+
+            print (json.dumps(retdata, indent=4,ensure_ascii=False))
+    except:
+        print (json.dumps(retdata, indent=4,ensure_ascii=False))
+        #traceback.print_exc()
+
+if __name__ == "__main__":
+    #iosdiagJoinData(sys.argv[1])
+    #cmd = "cat /var/log/sysak/ossre.log"
+    #cmd = "cat /tmp/ossre.log2"
+    #output = os.popen(cmd)
+    #rawdata = output.read()
+    #output.close()
+    #rawdata_json = json.loads(rawdata)
+    ##print (json.dumps(rawdata_json,ensure_ascii=False,indent=4))
+    ossre_to_sysom_json(sys.argv[1])
+    #ossre_to_sysom_json(rawdata)
