@@ -45,7 +45,7 @@ class TaskAPIView(GenericViewSet,
     queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
     serializer_class = seriaizer.JobListSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter, TaskFilter)
-    search_fields = ('id', 'task_id', 'created_by__id', 'status')  # 模糊查询
+    search_fields = ('id', 'task_id', 'created_by__id', 'status', 'params')  # 模糊查询
     filter_fields = ('id', 'task_id', 'created_by__id', 'status')  # 精确查询
     authentication_classes = []
 
