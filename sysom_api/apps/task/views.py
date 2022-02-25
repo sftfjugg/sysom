@@ -114,9 +114,8 @@ class TaskAPIView(GenericViewSet,
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         if not queryset:
-            return success([])
-        serializer = self.get_serializer(queryset, many=True)
-        return success(serializer.data)
+            return success([], total=0)
+        return super(TaskAPIView, self).list(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()

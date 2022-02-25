@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'apps.monitor',
     'apps.task',
     'apps.vmcore',
+    'apps.alarm',
     'consumer',
 
     'rest_framework',
