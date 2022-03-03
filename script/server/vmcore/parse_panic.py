@@ -467,6 +467,7 @@ def parse_new_crash(crash_dir):
         column['hostname'] = column['name'].split('_')[1]
         init_column(column)
         column['dmesg_file'] = '%s/vmcore-dmesg.txt' % crash_dir
+        column['vmcore_file'] = '%s/vmcore' % crash_dir
         ret = check_panic(column)
         if ret:
             with open('%s/.upload'%crash_dir,'w'):
