@@ -45,36 +45,53 @@ def get_crash_path():
         pass
     return '/var/crash/'
 
+def unmount_nfs():
+    cmd = 'umount /tmp/vmcore-nfs'
+    ret = os.system(cmd)
+    if ret != 0:
+        raise Exception('failed to unmount nfs at /tmp/vmcore-nfs')
+
 def upload_nfs(vmcore_dir):
-    try:
-        hostname=socket.gethostname()
-        ip=socket.gethostbyname(hostname)
-        timelist = vmcore_dir.split('-')[1:]
-        core_time = ''.join(timelist)
-        core_time = core_time.replace(':','')
-        vmcore_name ='%s_%s'%(core_time,ip) 
+    hostname=socket.gethostname()
+    ip=socket.gethostbyname(hostname)
+    timelist = vmcore_dir.split('-')[1:]
+    core_time = ''.join(timelist)
+    core_time = core_time.replace(':','')
+    vmcore_name ='%s_%s'%(core_time,ip) 
+
+    if os.path.exists("/tmp/vmcore-nfs") == False:
         cmd = 'mkdir -p /tmp/vmcore-nfs'
         ret = os.system(cmd)
-        cmd = 'mount -t nfs %s:%s /tmp/vmcore-nfs' % (nfs_ip,nfs_dir)
-        ret = os.system(cmd)
+        if ret != 0:
+            raise Exception('failed to make nfs mount point at /tmp/vmcore-nfs')
+
+    cmd = 'mount -t nfs %s:%s /tmp/vmcore-nfs' % (nfs_ip,nfs_dir)
+    ret = os.system(cmd)
+    if ret != 0:
+        raise Exception('failed to mount to nfs %s' % vmcore_dir)
+
+    if os.path.exists("/tmp/vmcore-nfs/%s" % vmcore_name) == False:
         cmd = 'mkdir /tmp/vmcore-nfs/%s' % vmcore_name
         ret = os.system(cmd)
-        cmd = 'cp %s/vmcore-dmesg.txt /tmp/vmcore-nfs/%s/vmcore-dmesg.txt' % (vmcore_dir,vmcore_name)
-        ret = os.system(cmd)
         if ret != 0:
-            print('faile to copy to nfs %s' % vmcore_dir)
-        cmd = 'cp %s/vmcore /tmp/vmcore-nfs/%s/vmcore' % (vmcore_dir,vmcore_name)
-        ret = os.system(cmd)
-        if ret != 0:
-            print('faile to copy to nfs %s' % vmcore_dir)
-        cmd = 'umount /tmp/vmcore-nfs'
-        ret = os.system(cmd)
-        with open('%s/.upload' % vmcore_dir,'w') as f:
-            pass
+            unmount_nfs()
+            raise Exception('failed to make dir at mount point (/tmp/vmcore-nfs/%s)' % vmcore_name)
 
-    except:
-        import traceback
-        traceback.print_exc()
+    cmd = 'cp %s/vmcore-dmesg.txt /tmp/vmcore-nfs/%s/vmcore-dmesg.txt' % (vmcore_dir,vmcore_name)
+    ret = os.system(cmd)
+    if ret != 0:
+        unmount_nfs()
+        raise Exception('failed to copy to nfs /tmp/vmcore-nfs/%s/vmcore-dmesg.txt' % vmcore_name)
+
+    cmd = 'cp %s/vmcore /tmp/vmcore-nfs/%s/vmcore' % (vmcore_dir,vmcore_name)
+    ret = os.system(cmd)
+    if ret != 0:
+        unmount_nfs()
+        raise Exception('failed to copy to nfs /tmp/vmcore-nfs/%s/vmcore' % vmcore_name)
+
+    unmount_nfs()
+    with open('%s/.upload' % vmcore_dir,'w') as f:
+        pass
 
 def main():
     crash_path = get_crash_path()
