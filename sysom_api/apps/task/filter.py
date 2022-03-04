@@ -8,15 +8,9 @@ from apps.task.models import JobModel
 class TaskFilter(BaseFilterBackend):
     def filter_queryset(self, request: Request, queryset, view):
         params = request.query_params.dict()
-        queryset_all = JobModel.objects.all()
-        search = params.get("search", None)
-        if search:
-            queryset = queryset | queryset_all.filter(params__contains=search)
-            queryset = queryset | queryset_all.filter(host_by__contains=search)
         service_name = params.get('service_name', None)
         if service_name:
-            queryset = queryset.filter(params__contains=service_name)
-        host_by = params.get('host_by', None)
-        if host_by:
-            queryset = queryset.filter(host_by__contains=host_by)
+            service_name_all = '"service_name"'+': '+'"%s"' % service_name
+            print(service_name_all)
+            queryset = queryset.filter(params__contains=service_name_all)
         return queryset
