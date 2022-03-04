@@ -54,6 +54,7 @@ class TaskAPIView(GenericViewSet,
             data = request.data
             params = data.copy()
             service_name = data.pop("service_name", None)
+            update_host_status = data.pop("update_host_status", False)
             task_id = uuid_8()
             if service_name:
                 SCRIPTS_DIR = settings.SCRIPTS_DIR
@@ -66,7 +67,8 @@ class TaskAPIView(GenericViewSet,
                 resp_scripts = resp.get("commands")
                 username = "admin"
                 user = User.objects.filter(username=username).first()
-                self.ssh_job(resp_scripts, task_id, user, json.dumps(params))
+                self.ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
+                             service_name=service_name)
                 return success(result={"instance_id": task_id})
             else:
                 return self.default_ssh_job(data, task_id)
@@ -101,14 +103,14 @@ class TaskAPIView(GenericViewSet,
             logger.error(e)
             return other_response(message=str(e), code=400, success=False)
 
-    def ssh_job(self, resp_scripts, task_id, user, data=None):
+    def ssh_job(self, resp_scripts, task_id, user, data=None, **kwargs):
         if not data:
             job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
                                                 created_by=user)
         else:
             job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
                                                 created_by=user, params=data)
-        sch_job = SshJob(resp_scripts, job_model)
+        sch_job = SshJob(resp_scripts, job_model, **kwargs)
         scheduler.add_job(sch_job.run)
 
     def list(self, request, *args, **kwargs):

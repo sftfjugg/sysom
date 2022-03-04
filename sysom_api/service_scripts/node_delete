@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+import os
+import sys
+import json
+
+arg = json.loads(sys.argv[1])
+host_ip = arg.get('instance')
+path = os.getcwd()
+path_init = os.path.join(path, "service_scripts", "delete.sh")
+with open(path_init, 'r') as f:
+    src_command = f.read()
+    command = src_command.replace('$1', host_ip, 1)
+result = {
+    'commands': [
+        {
+            'instance': host_ip,
+            'cmd': command,
+        }
+    ]
+}
+print(result)

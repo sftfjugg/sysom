@@ -37,7 +37,7 @@ MIDDLEWARE = [
 ]
 
 DEBUG = True
-
+INIT_SERVER = 'http://127.0.0.1:8001/'
 
 # Mysql数据库
 DATABASES = {
@@ -109,7 +109,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
 
 SERVER_IP = get_ip_address()
-CLIENT_DEPLOY_CMD = 'ls /root'
 
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')
