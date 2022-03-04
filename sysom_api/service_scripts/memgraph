@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  {
+##    "service_name":"memgraph",
+##    "实例IP":"192.168.1.101"
+##  }
+##  解析参数方法：
+##  sysak memgraph -j /var/log/sysak/memgraph.json -g -l -f -k -c 3 &&  cat /var/log/sysak/memgraph.json
+##  cat /var/log/sysak/memgraph.json 是memgraph诊断结果
+##
+###############################################################################
+
+args = json.loads(sys.argv[1])
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["实例IP"]
+cmd0['cmd'] = "sysak memgraph -j /var/log/sysak/memgraph.json -g -l -f -k -c 3 &&  cat /var/log/sysak/memgraph.json"
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)
