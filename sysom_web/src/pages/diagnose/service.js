@@ -65,3 +65,26 @@ export async function getTask(id, params = {}, options) {
 
   return msg.data;
 }
+
+/** 获取IO延时诊断列表 GET /api/IO */
+export async function getIoTable(params, options) {
+  const msg = await request('/api/getable/', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+  return {
+    data: msg.data,
+    success: true,
+    total: msg.total,
+  };
+}
+/**io延时诊断 诊断 */
+export async function postIOTask(params, options) {
+  return request('/api/iotask/', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+

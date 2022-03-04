@@ -1,5 +1,5 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, message, Popconfirm } from 'antd';
+import { Button, message, Popconfirm, Table, Space } from 'antd';
 import { useState, useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
@@ -7,6 +7,7 @@ import ProTable from '@ant-design/pro-table';
 import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
 import { getCluster, getHost, addHost, deleteHost } from '../service';
 import Cluster from '../components/ClusterForm';
+import BulkImport from '../components/BulkImport';
 
 const handleAddHost = async (fields) => {
   const hide = message.loading('正在添加');
@@ -154,9 +155,32 @@ const HostList = () => {
           >
             <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
           </Button>,
+          <BulkImport/>,
         ]}
         request={getHost}
         columns={columns}
+        rowSelection={{
+          selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
+          defaultSelectedRowKeys: [1],
+        }}
+        tableAlertRender={({ selectedRowKeys, selectedRows, onCleanSelected }) => (
+          <Space size={24}>
+            <span>
+              已选 {selectedRowKeys.length} 项
+              <a style={{ marginLeft: 8 }} onClick={onCleanSelected}>
+                取消选择
+              </a>
+            </span>
+          </Space>
+        )}
+        tableAlertOptionRender={(selectedRowKeys, selectedRows) => {
+          return (
+            <Space size={16}>
+              <a>批量删除</a>
+              {/* <a>导出数据</a> */}
+            </Space>
+          );                                                                                                                                                                                                                   
+        }}
       />
       <ModalForm
         title={intl.formatMessage({

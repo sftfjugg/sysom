@@ -24,7 +24,9 @@ const genList = (current, pageSize) => {
     const index = (current - 1) * 10 + i;
     const name = Math.random().toString(36).slice(-6);
     const packet = Math.ceil(Math.random() * 10);
+    const threshold = Math.ceil(Math.random() * 10);
     const ms = Math.ceil(Math.random() * 100);
+    const time = Math.random() * 100;
     const items = ["icmp","tcp"];
     const agreement = items[Math.floor(Math.random() * items.length)];
     tableListDataSource.push({
@@ -36,6 +38,9 @@ const genList = (current, pageSize) => {
       endip: getRandIP(),
       packet: packet,
       ms: ms,
+      time: packet,
+      disk: "",
+      threshold: threshold,
       agreement: agreement,
       core_time: new Date(),
       ver: "3.10.0-327.ali2008." + name + ".alios7.x86_64",
@@ -53,7 +58,7 @@ const genList = (current, pageSize) => {
 
 let tableListDataSource = genList(1, 100);
 
-async function getNetTable(req, res, u) {
+async function getIoTable(req, res, u) {
   let realUrl = u;
 
   if (
@@ -22589,7 +22594,447 @@ async function getMetric(req, res, u) {
   return res.json(result);
 }
 
+async function getCurve(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+  
+    const dataSource = {
+        "status": "success",
+        "stat": [
+            {
+                "diskname": "vda",
+                "delays": [
+                    {
+                        "percent": "26.842%",
+                        "min": 14,
+                        "component": "os(block)",
+                        "avg": 3913,
+                        "max": 58271
+                    },
+                    {
+                        "percent": "0.11%",
+                        "min": 6,
+                        "component": "os(driver)",
+                        "avg": 16,
+                        "max": 44
+                    },
+                    {
+                        "percent": "73.028%",
+                        "min": 252,
+                        "component": "disk",
+                        "avg": 10646,
+                        "max": 42696
+                    },
+                    {
+                        "percent": "0.014%",
+                        "min": 0,
+                        "component": "os(complete)",
+                        "avg": 2,
+                        "max": 6
+                    }
+                ]
+            }
+        ],
+        "seq": [
+            {
+                "diskname": "vda",
+                "slow ios": [
+                    {
+                        "delays": [
+                            {
+                                "delay": 61,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 23,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 1411,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 1501,
+                        "time": "2022-2-24 12:4:16.474"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 58271,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 12,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 252,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 1,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 58536,
+                        "time": "2022-2-24 12:4:16.532"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 15,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 18,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 23453,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 4,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 23490,
+                        "time": "2022-2-24 12:4:16.785"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 60,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 15,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 633,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 2,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 710,
+                        "time": "2022-2-24 12:4:18.92"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 24,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 24,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 803,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 857,
+                        "time": "2022-2-24 12:4:18.379"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 82,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 12,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 2745,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 0,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 2839,
+                        "time": "2022-2-24 12:4:19.630"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 23,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 20,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 407,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 456,
+                        "time": "2022-2-24 12:4:20.370"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 33,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 13,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 827,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 1,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 874,
+                        "time": "2022-2-24 12:4:21.164"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 58,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 26,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 42696,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 42786,
+                        "time": "2022-2-24 12:4:21.521"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 3786,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 11,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 261,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 2,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 4060,
+                        "time": "2022-2-24 12:4:21.525"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 47,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 14,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 5525,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 3,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 5589,
+                        "time": "2022-2-24 12:4:21.681"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 44,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 10,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 28883,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 1,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 28938,
+                        "time": "2022-2-24 12:4:21.705"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 35,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 30161,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 1,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 30203,
+                        "time": "2022-2-24 12:4:21.706"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 29,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 30103,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 1,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 30139,
+                        "time": "2022-2-24 12:4:21.706"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 14,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 10,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 1776,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 0,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 1800,
+                        "time": "2022-2-24 12:4:21.706"
+                    },
+                    {
+                        "delays": [
+                            {
+                                "delay": 29,
+                                "component": "block"
+                            },
+                            {
+                                "delay": 44,
+                                "component": "driver"
+                            },
+                            {
+                                "delay": 402,
+                                "component": "disk"
+                            },
+                            {
+                                "delay": 6,
+                                "component": "complete"
+                            }
+                        ],
+                        "totaldelay": 481,
+                        "time": "2022-2-24 12:4:24.236"
+                    }
+                ]
+            }
+        ],
+        "IO timeout": "true"
+    };
+  
+    const result = {
+      data: dataSource,
+      success: true,
+    };
+    return res.json(result);
+}
+
+async function postIOTask(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+  
+    const dataSource = {
+        "status": "success",
+        "data": []
+    };
+  
+    const result = {
+      data: dataSource,
+      success: true,
+    };
+    return res.json(result);
+}
+
 export default {
-  "GET /api/getable/": getNetTable,
+  "GET /api/getable/": getIoTable,
   "GET /api/metric/": getMetric,
+  "GET /api/curve/": getCurve,
+  "POST /api/iotask/": postIOTask,
 };

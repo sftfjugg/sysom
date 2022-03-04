@@ -1,7 +1,7 @@
-import { Button, message } from "antd";
-import { ModalForm, ProFormText } from "@ant-design/pro-form";
+import { Button, message  } from "antd";
+import ProForm, { ModalForm, ProFormText, ProFormUploadButton } from "@ant-design/pro-form";
 import { FormattedMessage } from 'umi';
-import { PlusOutlined } from "@ant-design/icons";
+import { ImportOutlined } from "@ant-design/icons";
 import { addCluster } from "../service";
 
 const handleAddCluster = async (fields) => {
@@ -19,14 +19,14 @@ const handleAddCluster = async (fields) => {
   }
 };
 
-const Cluster = () => {
+const BulkImport = () => {
   return (
     <ModalForm
-      title="新建集群"
+      title="批量导入"
       width="440px"
       trigger={
         <Button type="primary">
-          <PlusOutlined />新建集群
+          <ImportOutlined />批量导入
         </Button>
       }
       submitter={{
@@ -40,24 +40,19 @@ const Cluster = () => {
         return true;
       }}
     >
-      <ProFormText
-        width="md"
-        name="cluster_name"
-        label="集群名称"
-        placeholder="请输入集群名称"
-        rules={[
-          {
-            required: true,
-            message: (
-              <FormattedMessage
-                id="pages.hostTable.cluster_name_required"
-                defaultMessage="Cluster name is required"
-              />
-            ),
-          },
-        ]}
+      <ProFormUploadButton
+        name="upload"
+        label="批量导入："
+        // labelCol={ span: 4 }
+        // wrapperCol={ span: 14 }
+        max={2}
+        fieldProps={{
+          name: 'file',
+        }}
+        action="/upload.do"
+        extra="导入excel文件"
       />
     </ModalForm>
   );
 };
-export default Cluster
+export default BulkImport
