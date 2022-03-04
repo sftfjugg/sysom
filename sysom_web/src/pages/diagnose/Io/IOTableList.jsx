@@ -72,7 +72,6 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
       request={getIoTable}
       columns={columns}
       pagination={props.pagination}
-      pagination={{pageSize:5}}
       search={false}
     />
   );

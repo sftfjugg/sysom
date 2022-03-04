@@ -27,8 +27,8 @@ const Login = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
   const intl = useIntl();
 
-  const fetchUserInfo = async (userId) => {
-    const userInfo = await initialState?.fetchUserInfo?.(userId);
+  const fetchUserInfo = async (userId, token) => {
+    const userInfo = await initialState?.fetchUserInfo?.(userId, token);
 
     if (userInfo) {
       await setInitialState((s) => ({ ...s, currentUser: userInfo }));
@@ -46,10 +46,11 @@ const Login = () => {
           defaultMessage: '登录成功！',
         });
         const userId = msg.data.id;
+        const token = msg.data.token
         localStorage.setItem('userId', userId);
-        localStorage.setItem('token', msg.data.token);
+        localStorage.setItem('token', token);
         message.success(defaultLoginSuccessMessage);
-        await fetchUserInfo(userId);
+        await fetchUserInfo(userId, token);
 
         if (!history) return;
         const { query } = history.location;

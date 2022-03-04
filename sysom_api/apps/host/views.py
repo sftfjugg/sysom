@@ -188,7 +188,7 @@ class SaveUploadFile(APIView):
         file_path = os.path.join(
             settings.MEDIA_ROOT, catalogue) if catalogue else settings.MEDIA_ROOT
         if not os.path.exists(file_path):
-            os.mkdir(file_path)
+            os.makedirs(file_path)
         path = os.path.join(file_path, file.name)
         try:
             with open(path, 'wb') as f:
