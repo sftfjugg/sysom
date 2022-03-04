@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+
+def memgraph_result(raw):
+    print(raw)
+
+if __name__ == "__main__":
+    memgraph_result(sys.argv[1])
