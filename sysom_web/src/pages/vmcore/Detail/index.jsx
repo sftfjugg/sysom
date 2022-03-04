@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Button, message, Descriptions } from "antd";
-import { useIntl, useRequest } from "umi";
+import { Link, useIntl, useRequest } from "umi";
 import moment from "moment";
 import ProCard from "@ant-design/pro-card";
 import ProDescriptions from "@ant-design/pro-descriptions";
@@ -21,7 +21,7 @@ const handleAddIssue = async (fields) => {
     return true;
   } catch (error) {
     hide();
-    message.error("添加失败，排查原因后重试!");
+    message.error("添加失败, 排查原因后重试!");
     return false;
   }
 };
@@ -76,13 +76,15 @@ const VmcoreDetail = (props) => {
             >
               录入解决方案
             </Button>
-            <Button
-              type="primary"
-              href={"/vmcore/analyse/" + data?.ip}
+            <Button type="primary">
+            <Link
               target="_blank"
-              key="analyse"
-            >
+              to={{
+              pathname: '/vmcore/analyse',
+              search: `kernel_version=${data?.ver}&vmcore_file=${data?.vmcore_file}`,
+            }}>
               在线分析Vmcore
+            </Link>
             </Button>
           </ProDescriptions.Item>
         </ProDescriptions>

@@ -89,7 +89,7 @@ export default [
         component: './vmcore/Match',
       },
       {
-        path: '/vmcore/analyse/:ip?',
+        path: '/vmcore/analyse',
         component: './vmcore/Analyse',
       },
     ],

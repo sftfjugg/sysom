@@ -4,6 +4,9 @@ from urllib import parse
 
 from channels.generic.websocket import WebsocketConsumer
 from channels.exceptions import StopConsumer
+from django.conf import settings
+
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -57,10 +60,26 @@ class SshConsumer(WebsocketConsumer):
         self.xterm = self.ssh.invoke_shell(term='xterm')
         self.xterm.transport.set_keepalive(30)
         if self.start_cmd:
-            try:
-                self.xterm.send(eval(parse.unquote(self.start_cmd))+'\n')
-            except Exception as e:
-                self.xterm.send(parse.unquote(self.start_cmd)+'\n')
+            start_cmd = eval(parse.unquote(self.start_cmd))
+            if isinstance(start_cmd, dict):
+                SCRIPTS_DIR = settings.SCRIPTS_DIR
+                start_dict = start_cmd
+                option = start_dict.get("option")
+                kernel_version = start_dict.get("kernel_version")
+                vmcore_file = start_dict.get("vmcore_file")
+                service_path = os.path.join(SCRIPTS_DIR, option)
+                if os.path.exists(service_path):
+                    command = "%s  %s %s" % (service_path, kernel_version, vmcore_file)
+                    output = os.popen(command)
+                    start_cmd = output.read()
+                    self.xterm.send(start_cmd)
+                else:
+                    self.xterm.send("echo 'Can not find {} script file, please check script name'\n".format(option))
+            else:
+                try:
+                    self.xterm.send(eval(parse.unquote(start_cmd))+'\n')
+                except Exception as e:
+                    self.xterm.send(parse.unquote(start_cmd)+'\n')
 
         Thread(target=self.loop_read).start()
 
