@@ -115,6 +115,21 @@ export default [
     ],
   },
   {
+    path: '/journal',
+    name: 'journal',
+    routes: [
+      {
+        path: '/journal',
+        redirect: '/journal/audit',
+      },
+      {
+        path: '/journal/audit',
+        name: 'audit',
+        component: './journal/Audit',
+      },
+    ],
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },

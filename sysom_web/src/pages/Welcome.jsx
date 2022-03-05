@@ -35,6 +35,9 @@ const Welcome = () => {
             <Menu.Item key="io"><a href="/diagnose/io">IO延时诊断</a></Menu.Item>
             <Menu.Item key="net"><a href="/diagnose/net">网络诊断</a></Menu.Item>
           </SubMenu>
+          <SubMenu key="journal" title="日志中心">
+            <Menu.Item key="audit"><a href="/journal/audit">审计日志</a></Menu.Item>
+          </SubMenu>
         </Menu>
         <div className={styles.avatarRight}>
           <AvatarDrop/>

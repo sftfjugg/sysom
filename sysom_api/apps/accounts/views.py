@@ -70,7 +70,7 @@ class UserModelViewSet(
         result = super().retrieve(request, *args, **kwargs)
         return success(result=result.data, message="获取成功")
 
-    def get_logs(self, request: Request, *args, **kwargs):
+    def get_logs(self, request, *args, **kwargs):
         params = request.query_params.dict()
         option = self.logging_options.get(params.get('option'), None)
         queryset = models.HandlerLog.objects.select_related().all()
@@ -79,7 +79,7 @@ class UserModelViewSet(
         if not user.is_admin:
             queryset = queryset.filter(user=user)
 
-        if option:
+        if option is not None:
             queryset = queryset.filter(request_option=option)
 
         ser = serializer.HandlerLoggerListSerializer(queryset, many=True)

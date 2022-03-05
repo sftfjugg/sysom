@@ -66,4 +66,6 @@ export default {
   'menu.diagnose.io': 'IO延时诊断',
   'menu.diagnose.net': '网络诊断',
   'menu.vmcore.analyse': '在线分析',
+  'menu.journal': '日志中心',
+  'menu.journal.audit': '审计日志',
 };
