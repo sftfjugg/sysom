@@ -2,6 +2,8 @@
 
 UPLOAD_DIR=${APP_HOME}/target/sysom_web/download/
 APP_CMD_CONF=${APP_HOME}/target/sysom_api/conf/product.py
+NODE_INIT_SCRIPT=${APP_HOME}/target/sysom_api/service_scripts/node_init
+NODE_DELETE_SCRIPT=${APP_HOME}/target/sysom_api/service_scripts/node_delete
 RESOURCE_DIR=${APP_HOME}/monitor
 PROMETHEUS_ARCH=linux-amd64
 NODE_EXPORTER_VER=1.2.2
@@ -33,7 +35,11 @@ prepare_init_tar()
 
 set_node_init_cmd()
 {
-    echo ${NODE_INIT_CMD} >> ${APP_CMD_CONF}
+    sed "s#server_local_ip=xxx#server_local_ip=\"${SERVER_IP}\"#" -i ${NODE_INIT_SCRIPT}
+    sed "s#server_public_ip=xxx#server_public_ip=\"${SERVER_PUB_IP}\"#" -i  ${NODE_INIT_SCRIPT}
+    sed "s#app_home=xxx#app_home=\"${APP_HOME}\"#" -i ${NODE_INIT_SCRIPT}
+    sed "s#app_home=xxx#app_home=\"${APP_HOME}\"#" -i ${NODE_DELETE_SCRIPT}
+
 }
 
 pre_init()

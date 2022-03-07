@@ -1,21 +1,32 @@
 #!/usr/bin/python3
-import os
-import sys
+# coding=utf-8
 import json
+import sys
 
+###############################################################################
+## 主机初始化脚本
+## 主要完成以下功能
+## 1、增加配置文件
+## 2、下载主机初始化文件
+## 3、执行主机初始化操作
+###############################################################################
+server_local_ip=xxx
+server_public_ip=xxx
+app_home=xxx
 arg = json.loads(sys.argv[1])
 host_ip = arg.get('instance')
-path = os.getcwd()
-path_init = os.path.join(path, "service_scripts", "init.sh")
-with open(path_init, 'r') as f:
-    src_command = f.read()
-    command = src_command.replace('$1', host_ip, 1)
-result = {
-    'commands': [
-        {
-            'instance': host_ip,
-            'cmd': command,
-        }
-    ]
-}
-print(result)
+
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = host_ip
+mkdir_cmd = "rm -rf "+app_home+" && mkdir -p "+app_home+" && cd "+app_home
+download_res_cmd = "wget -T 3 -t 1 http://"+server_local_ip+"/download/sysom_node_init.tar.gz || wget -T 3 -t 1 http://"+server_public_ip+"/download/sysom_node_init.tar.gz"
+do_init_cmd = "if [ -e sysom_node_init.tar.gz ]; then tar -xf sysom_node_init.tar.gz && echo NODE_IP="+host_ip+" >> sysom_node_init/conf && bash -x sysom_node_init/init.sh; fi"
+cmd0['cmd'] = mkdir_cmd+" && "+download_res_cmd+" && "+do_init_cmd
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)
