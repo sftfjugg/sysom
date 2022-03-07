@@ -131,6 +131,7 @@ init_conf() {
     python manage.py makemigrations vmcore
     python manage.py makemigrations task
     python manage.py makemigrations monitor
+    python manage.py makemigrations alarm
     python manage.py migrate
     python manage.py loaddata ./apps/accounts/user.json
     python manage.py loaddata ./apps/vmcore/vmcore.json
