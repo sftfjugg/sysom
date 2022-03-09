@@ -11,6 +11,5 @@ class TaskFilter(BaseFilterBackend):
         service_name = params.get('service_name', None)
         if service_name:
             service_name_all = '"service_name"'+': '+'"%s"' % service_name
-            print(service_name_all)
             queryset = queryset.filter(params__contains=service_name_all)
         return queryset

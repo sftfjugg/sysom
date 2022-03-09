@@ -99,18 +99,28 @@ export default [
     name: 'diagnose',
     routes: [
       {
+        path: '/diagnose',
+        redirect: '/diagnose/oscheck',
+      },
+      {
         path: '/diagnose/oscheck',
         name: 'oscheck',
         component: './diagnose/oscheck',
       },
       {
-        path: '/diagnose',
-        redirect: '/diagnose/io',
-      },
-      {
-        path: '/diagnose/io',
-        name: 'io',
-        component: './diagnose/Io',
+        path: '/diagnose/storage',
+        name: 'storage',
+        routes: [
+          {
+            path: '/diagnose/storage',
+            redirect: '/diagnose/storage/io',
+          },
+          {
+            path: '/diagnose/storage/io',
+            name: 'io',
+            component: './diagnose/Storage/Io',
+          }
+        ]
       },
       {
         path: '/diagnose/net',

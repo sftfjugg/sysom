@@ -110,7 +110,6 @@ class HostModelViewSet(GenericViewSet,
 
     def client_deploy_cmd_init(self, instance):
         url = settings.INIT_SERVER + "api/v1/tasks/"
-        print("url is :%s" % url)
         data = {"service_name": "node_init",
                 "instance": instance.ip,
                 "update_host_status": True

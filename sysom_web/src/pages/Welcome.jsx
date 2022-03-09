@@ -32,8 +32,9 @@ const Welcome = () => {
             <Menu.Item key="vmmatch"><a href="/vmcore/match">宕机匹配</a></Menu.Item>
           </SubMenu>
           <SubMenu key="diagnose" title="诊断中心">
-            <Menu.Item key="io"><a href="/diagnose/io">IO延时诊断</a></Menu.Item>
-            <Menu.Item key="net"><a href="/diagnose/net">网络诊断</a></Menu.Item>
+            <Menu.Item key="io"><a href="/diagnose/oscheck">系统健康检查</a></Menu.Item>
+            <Menu.Item key="io"><a href="/diagnose/storage">存储诊断中心</a></Menu.Item>
+            <Menu.Item key="net"><a href="/diagnose/net">网络诊断中心</a></Menu.Item>
           </SubMenu>
           <SubMenu key="journal" title="日志中心">
             <Menu.Item key="audit"><a href="/journal/audit">审计日志</a></Menu.Item>
