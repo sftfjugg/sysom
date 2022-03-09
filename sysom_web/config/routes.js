@@ -99,6 +99,11 @@ export default [
     name: 'diagnose',
     routes: [
       {
+        path: '/diagnose/oscheck',
+        name: 'oscheck',
+        component: './diagnose/oscheck',
+      },
+      {
         path: '/diagnose',
         redirect: '/diagnose/io',
       },

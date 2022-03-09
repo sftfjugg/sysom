@@ -63,6 +63,7 @@ export default {
   'menu.editor.mind': '脑图编辑器',
   'menu.editor.koni': '拓扑编辑器',
   'menu.diagnose': '诊断中心',
+  'menu.diagnose.oscheck': '系统健康检查',
   'menu.diagnose.io': 'IO延时诊断',
   'menu.diagnose.net': '网络诊断',
   'menu.vmcore.analyse': '在线分析',

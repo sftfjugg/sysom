@@ -45,6 +45,21 @@ export async function getTaskList(params, options) {
   };
 }
 
+
+//GET /api/vi/tasks/xxxxx/
+export async function _getTask(id, params = {}, options) {
+  const msg = await request('/api/v1/tasks/' + id, {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+  if (msg.data.status == "Success") {
+    msg.data.result = parseJsonString(msg.data.result);
+  }
+  return msg.data;
+};
+
+
 //GET /api/vi/tasks/xxxxx/
 export async function getTask(id, params = {}, options) {
   const msg = await request('/api/v1/tasks/' + id, {
