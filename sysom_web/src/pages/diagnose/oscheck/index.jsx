@@ -1,4 +1,5 @@
 import { PageContainer } from '@ant-design/pro-layout';
+import { Modal } from "antd";
 import { useState, useRef } from 'react';
 import ProCard from '@ant-design/pro-card';
 import OSCheckTaskForm from './osCheckTaskForm';
@@ -17,6 +18,17 @@ const NetList = () => {
     refOSCheckList.current.reload();
   }
 
+  const onError = async (record) => {
+    const msg = await _getTask(record.id);
+    Modal.error({
+      title: '诊断失败',
+      content: (
+        <div>
+          <div>错误信息：{msg.result}</div>
+        </div>
+      ),
+    });
+  }
 
   const onListClick = async (record) => {
     let map = {
@@ -51,7 +63,7 @@ const NetList = () => {
       let children = []
       let maxStatusLevel = 0;
       for (let item in msg.result[type]) {
-        msg.result[type][item].summary =  msg.result[type][item].summary
+        msg.result[type][item].summary = msg.result[type][item].summary
         children.push({ ...msg.result[type][item], item: map[item], key: type + item })
         maxStatusLevel = maxStatusLevel < statusLevelMap[msg.result[type][item].level] ?
           statusLevelMap[msg.result[type][item].level] : maxStatusLevel
@@ -70,7 +82,7 @@ const NetList = () => {
       <OSCheckTaskForm onSuccess={onPostTask} />
       <Divider />
       <OSCheckList headerTitle="诊断记录查看"
-        search={true} onClick={onListClick} ref={refOSCheckList} />
+        search={true} onClick={onListClick} onError={onError} ref={refOSCheckList} />
       <Divider />
       {
         osCheckResult ? <OSCheckTaskResult data={osCheckResult} /> : <></>
