@@ -51,7 +51,7 @@ const NetList = () => {
       let children = []
       let maxStatusLevel = 0;
       for (let item in msg.result[type]) {
-        msg.result[type][item].summary = "fefef</br>" + msg.result[type][item].summary
+        msg.result[type][item].summary =  msg.result[type][item].summary
         children.push({ ...msg.result[type][item], item: map[item], key: type + item })
         maxStatusLevel = maxStatusLevel < statusLevelMap[msg.result[type][item].level] ?
           statusLevelMap[msg.result[type][item].level] : maxStatusLevel
