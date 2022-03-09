@@ -68,3 +68,4 @@ urllib3==1.26.7
 uWSGI==2.0.19.1
 webencodings==0.5.1
 zope.interface==5.4.0
+django-apscheduler==0.6.0

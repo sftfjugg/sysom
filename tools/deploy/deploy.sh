@@ -132,9 +132,11 @@ init_conf() {
     python manage.py makemigrations task
     python manage.py makemigrations monitor
     python manage.py makemigrations alarm
+    python manage.py makemigrations vul
     python manage.py migrate
     python manage.py loaddata ./apps/accounts/user.json
     python manage.py loaddata ./apps/vmcore/vmcore.json
+    python manage.py loaddata ./apps/vul/vuladdr.json
     popd
 }
 
