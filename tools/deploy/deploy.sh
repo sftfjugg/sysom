@@ -20,11 +20,12 @@ if [ $# != 3 ] ; then
 fi 
 
 APP_HOME=$1
-SERVER_IP=$2
-OUTER_IP=$3
+SERVER_LOCAL_IP=$2
+SERVER_PUBLIC_IP=$3
 
 export APP_HOME=${APP_HOME}
-export SERVER_IP=${SERVER_IP}
+export SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
+export SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
 
 VIRTUALENV_HOME="${APP_HOME}/virtualenv"
 TARGET_PATH="${APP_HOME}/target"
@@ -160,7 +161,7 @@ start_script_node() {
 modify_grafana_url() {
     pushd ${TARGET_PATH}/${WEB_DIR}
     dashboard_file=`grep -nru "sysom-dashboard/sysom-dashboard" | awk -F":" '{print $1}'`
-    sed -i "s/127.0.0.1:3000/${OUTER_IP}\/grafana/g" $dashboard_file
+    sed -i "s/127.0.0.1:3000/${SERVER_PUBLIC_IP}\/grafana/g" $dashboard_file
     popd
 }
 

@@ -6,7 +6,7 @@ if [ $? -ne 0 ];then
     systemctl start nfs-server && systemctl enable nfs-server
 fi
 
-internal_net_seg=`echo ${SERVER_IP} | awk -F"." '{print $1"."$2"."$3}'`
+internal_net_seg=`echo ${SERVER_LOCAL_IP} | awk -F"." '{print $1"."$2"."$3}'`
 file_path=${APP_HOME}/vmcore/vmcore-nfs
 mkdir -p ${file_path}
 echo "${file_path} ${internal_net_seg}.0/24(rw,async)" >> /etc/exports
