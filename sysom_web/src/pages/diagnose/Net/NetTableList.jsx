@@ -1,113 +1,125 @@
-import { useRef } from "react";
+import React, { useRef } from "react";
 import ProTable from "@ant-design/pro-table";
-import { getNetTable } from "../service";
+import { getTaskList } from "../service";
 import { Button } from "antd";
 
-const DiagnoTableList = (props) => {
-  const actionRef = useRef();
-  
+function parseJsonString(str) {
+  try {
+    return JSON.parse(str.replace(/\'/g, "\""));
+  }
+  catch (e) {
+    return {}
+  }
+}
+
+const getPingTraceList = async () => {
+  try {
+    let msg = await getTaskList({ service_name: "pingtrace" });
+    msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
+    return {
+      data: msg.data.reverse(),
+      success: true,
+      total: msg.total,
+    };
+  } catch (e) {
+    return { success: false }
+  }
+}
+
+
+const DiagnoTableList = React.forwardRef((props, ref) => {
+
+
   const columns = [
     {
-      title: "源虚拟机私网IP",
-      dataIndex: "startip",
-      hideInTable: true,
-      valueType: "textarea"
-    },
-    {
       title: "源实例IP",
-      dataIndex: "endip",
-      hideInSearch: true,
-      valueType: "textarea"
-    },
-    {
-      title: "目标虚拟机私网IP",
-      dataIndex: "endip",
-      hideInTable: true,
+      dataIndex: "源实例IP",
       valueType: "textarea"
     },
     {
       title: "目标实例IP",
-      dataIndex: "endip",
-      hideInSearch: true,
+      dataIndex: "目标实例IP",
       valueType: "textarea"
     },
     {
       title: "追踪包数",
-      dataIndex: "packet",
-      hideInTable: true,
-      valueType: "progress",
+      dataIndex: "追踪包数",
+      valueType: "textarea",
     },
     {
       title: "间隔毫秒数",
-      dataIndex: "ms",
-      hideInTable: true,
-      valueType: "progress",
+      dataIndex: "间隔毫秒数",
+      valueType: "textarea",
     },
     {
       title: "报文协议",
-      dataIndex: "agreement",
-      hideInTable: true,
+      dataIndex: "报文协议",
       valueType: "select",
       valueEnum: {
         icmp: { text: 'ICMP', status: 'icmp' },
-        tcp: { text: 'TCP', status: 'tcp'}
+        tcp: { text: 'TCP', status: 'tcp' }
       }
     },
     {
       title: "创建时间",
-      dataIndex: "core_time",
-      hideInSearch: true,
+      sortOrder: "descend",
+      dataIndex: "created_at",
       valueType: "dateTime",
     },
     {
       title: "PingTraceId",
-      dataIndex: "ping",
-      hideInSearch: true,
+      dataIndex: "task_id",
       valueType: "textarea",
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      width: 150,
+      valueEnum: {
+        Ready: { text: '运行中', status: 'Processing' },
+        Success: { text: '诊断完毕', status: 'Success' },
+        Fail: { text: '异常', status: 'Error' },
+      },
     },
     {
       title: "操作",
       dataIndex: "option",
       valueType: "option",
-      render: (_, record) => [
-        <a key="showDiagnose" onClick={()=>{
-          props.onClick()
-        }}>
-          查看诊断结果
-        </a>
-      ],
+      render: (_, record) => {
+        if (record.status == "Success") {
+          return (
+            <a key="showDiagnose" onClick={() => {
+              props?.onClick?.(record)
+            }}>查看诊断结果</a>
+          )
+        }
+        else if (record.status == "Fail") {
+          return (
+            <a key="showError" onClick={() => {
+              props?.onError?.(record)
+            }}>查看出错信息</a>
+          )
+        }
+        else {
+          return (<span>暂无可用操作</span>);
+        }
+      },
     }
   ];
 
-  
+  const pagination=(props.pagination) ? props.pagination: {pageSize: 5}
   return (
-      <ProTable
-        headerTitle={props.headerTitle}
-        actionRef={actionRef}
-        params={props.params}
-        rowKey="id"
-        request={getNetTable}
-        columns={columns}
-        pagination={props.pagination}
-        pagination={{pageSize:5}}
-        formRef={actionRef}
-        search={
-          {
-            labelWidth: 120,
-            optionRender:(Config, formProps, dom) => {
-              return [
-                <Button
-                key="开始诊断"
-                type="primary"
-                onClick={()=>{
-                  console.log(Config, formProps, dom,"000");
-                }}
-                >开始诊断</Button>,
-              ]
-            },
-          }}
-      />
+    <ProTable
+      headerTitle={props.headerTitle}
+      actionRef={ref}
+      params={props.params}
+      rowKey="id"
+      request={getPingTraceList}
+      columns={columns}
+      pagination={pagination}
+      search={false}
+    />
   );
-};
+});
 
 export default DiagnoTableList;

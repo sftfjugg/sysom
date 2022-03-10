@@ -2,9 +2,8 @@ import WebConsole from '@/components/WebConsole';
 
 const VmcoreAnalyse = (props) => {
   const userId = localStorage.getItem('userId');
-  console.log(props)
   return (
-    <WebConsole title='Vmcore在线分析' host_ip={props.match.params.ip}  user_id={userId} />
+    <WebConsole title='Vmcore在线分析' kernel_version={props.location.query.kernel_version} vmcore_file = {props.location.query.vmcore_file}  user_id={userId} />
   )
 };
 

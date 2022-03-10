@@ -24,7 +24,9 @@ const genList = (current, pageSize) => {
     const index = (current - 1) * 10 + i;
     const name = Math.random().toString(36).slice(-6);
     const packet = Math.ceil(Math.random() * 10);
+    const threshold = Math.ceil(Math.random() * 10);
     const ms = Math.ceil(Math.random() * 100);
+    const time = Math.random() * 100;
     const items = ["icmp","tcp"];
     const agreement = items[Math.floor(Math.random() * items.length)];
     tableListDataSource.push({
@@ -36,6 +38,9 @@ const genList = (current, pageSize) => {
       endip: getRandIP(),
       packet: packet,
       ms: ms,
+      time: packet,
+      disk: "",
+      threshold: threshold,
       agreement: agreement,
       core_time: new Date(),
       ver: "3.10.0-327.ali2008." + name + ".alios7.x86_64",
@@ -53,7 +58,7 @@ const genList = (current, pageSize) => {
 
 let tableListDataSource = genList(1, 100);
 
-async function getNetTable(req, res, u) {
+async function getIoTable(req, res, u) {
   let realUrl = u;
 
   if (
@@ -22589,7 +22594,303 @@ async function getMetric(req, res, u) {
   return res.json(result);
 }
 
+async function getCurve(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+    
+    const dataSource = {
+        "status":"success",
+        "IO timeout":"true",
+        "stat":[
+            {
+                "diskname":"vda",
+                "delays":[
+                    {
+                        "component":"os(block)",
+                        "percent":"8.894%",
+                        "max":123,
+                        "min":25,
+                        "avg":74
+                    },
+                    {
+                        "component":"os(driver)",
+                        "percent":"1.442%",
+                        "max":17,
+                        "min":8,
+                        "avg":12
+                    },
+                    {
+                        "component":"disk",
+                        "percent":"89.183%",
+                        "max":830,
+                        "min":655,
+                        "avg":742
+                    },
+                    {
+                        "component":"os(complete)",
+                        "percent":"0.361%",
+                        "max":5,
+                        "min":2,
+                        "avg":3
+                    }
+                ]
+            },
+            {
+                "diskname":"vdb",
+                "delays":[
+                    {
+                        "component":"os(block)",
+                        "percent":"9.824%",
+                        "max":133,
+                        "min":43,
+                        "avg":22
+                    },
+                    {
+                        "component":"os(driver)",
+                        "percent":"3.442%",
+                        "max":19,
+                        "min":80,
+                        "avg":120
+                    },
+                    {
+                        "component":"disk",
+                        "percent":"80.183%",
+                        "max":810,
+                        "min":605,
+                        "avg":702
+                    },
+                    {
+                        "component":"os(complete)",
+                        "percent":"1.361%",
+                        "max":7,
+                        "min":6,
+                        "avg":5
+                    }
+                ]
+            },
+            {
+                "diskname":"vdc",
+                "delays":[
+                    {
+                        "component":"os(block)",
+                        "percent":"12.894%",
+                        "max":193,
+                        "min":27,
+                        "avg":36
+                    },
+                    {
+                        "component":"os(driver)",
+                        "percent":"0.442%",
+                        "max":10,
+                        "min":2,
+                        "avg":3
+                    },
+                    {
+                        "component":"disk",
+                        "percent":"8.183%",
+                        "max":13,
+                        "min":65,
+                        "avg":71
+                    },
+                    {
+                        "component":"os(complete)",
+                        "percent":"3.361%",
+                        "max":8,
+                        "min":9,
+                        "avg":4
+                    }
+                ]
+            }
+        ],
+        "seq":[
+            {
+                "diskname":"vda",
+                "slow ios":[
+                    {
+                        "time": "Tue Jan 18 15:03:50 2022",
+                        "totaldelay":877,
+                        "delays":[
+                            {
+                                "component":"block",
+                                "delay":25
+                            },
+                            {
+                                "component":"driver",
+                                "delay":17
+                            },
+                            {
+                                "component":"disk",
+                                "delay":830
+                            },
+                            {
+                                "component":"complete",
+                                "delay":5
+                            }
+                        ]
+                    },
+                    {
+                        "time": "Tue Jan 19 15:03:50 2022",
+                        "totaldelay":788,
+                        "delays":[
+                            {
+                                "component":"block",
+                                "delay":123
+                            },
+                            {
+                                "component":"driver",
+                                "delay":8
+                            },
+                            {
+                                "component":"disk",
+                                "delay":655
+                            },
+                            {
+                                "component":"complete",
+                                "delay":2
+                            }
+                        ]
+                    }
+                ]
+            },
+           {
+                "diskname":"vdb",
+                "slow ios":[
+                    {
+                        "time": "Tue Jan 18 15:03:50 2022",
+                        "totaldelay":877,
+                        "delays":[
+                            {
+                                "component":"block",
+                                "delay":30
+                            },
+                            {
+                                "component":"driver",
+                                "delay":10
+                            },
+                            {
+                                "component":"disk",
+                                "delay":880
+                            },
+                            {
+                                "component":"complete",
+                                "delay":46
+                            }
+                        ]
+                    },
+                    {
+                        "time": "Tue Jan 19 15:03:50 2022",
+                        "totaldelay":788,
+                        "delays":[
+                            {
+                                "component":"block",
+                                "delay":122
+                            },
+                            {
+                                "component":"driver",
+                                "delay":9
+                            },
+                            {
+                                "component":"disk",
+                                "delay":66
+                            },
+                            {
+                                "component":"complete",
+                                "delay":267
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "diskname":"vdc",
+                "slow ios":[
+                    {
+                        "time": "Tue Jan 18 15:03:50 2022",
+                        "totaldelay":877,
+                        "delays":[
+                            {
+                                "component":"block",
+                                "delay":33
+                            },
+                            {
+                                "component":"driver",
+                                "delay":15
+                            },
+                            {
+                                "component":"disk",
+                                "delay":886
+                            },
+                            {
+                                "component":"complete",
+                                "delay":45
+                            }
+                        ]
+                    },
+                    {
+                        "time": "Tue Jan 19 15:03:50 2022",
+                        "totaldelay":788,
+                        "delays":[
+                            {
+                                "component":"block",
+                                "delay":113
+                            },
+                            {
+                                "component":"driver",
+                                "delay":6
+                            },
+                            {
+                                "component":"disk",
+                                "delay":78
+                            },
+                            {
+                                "component":"complete",
+                                "delay":244
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    };
+  
+    const result = {
+      data: dataSource,
+      success: true,
+    };
+    return res.json(result);
+}
+
+async function postIOTask(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+  
+    const dataSource = {
+        "status": "success",
+        "data": []
+    };
+  
+    const result = {
+      data: dataSource,
+      success: true,
+    };
+    return res.json(result);
+}
+
 export default {
-  "GET /api/getable/": getNetTable,
+  "GET /api/getable/": getIoTable,
   "GET /api/metric/": getMetric,
+  "GET /api/curve/": getCurve,
+  "POST /api/iotask/": postIOTask,
 };

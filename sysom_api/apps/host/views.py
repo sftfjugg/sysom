@@ -1,7 +1,7 @@
 import logging
 import os
-import uuid
-
+import threading
+import requests
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -59,15 +59,12 @@ class HostModelViewSet(GenericViewSet,
         self.perform_create(create_serializer)
         instance = create_serializer.instance
         # 检查输入client部署命令 更新host状态
-        self._client_deploy_cmd_check(instance)
-
+        self.client_deploy_cmd_execute(instance, 'init')
         host_list_serializer = serializer.HostListSerializer(instance=instance)
         return success(result=host_list_serializer.data)
 
     def perform_create(self, ser):
-        client_deploy_cmd = settings.CLIENT_DEPLOY_CMD
-        ser.save(created_by=self.request.user,
-                 client_deploy_cmd=client_deploy_cmd)
+        ser.save(created_by=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.check_instance_exist(request, *args, **kwargs)
@@ -86,8 +83,14 @@ class HostModelViewSet(GenericViewSet,
         instance = self.check_instance_exist(request, *args, **kwargs)
         if not instance:
             return not_found()
-        super().destroy(request, *args, **kwargs)
+        self.client_deploy_cmd_execute(instance, 'delete')
+        self.perform_destroy(instance)
         return success(message="删除成功", code=200, result={})
+
+    def perform_destroy(self, instance: HostModel):
+        instance.deleted_at = human_datetime()
+        instance.deleted_by = self.request.user
+        instance.save()
 
     def update(self, request, *args, **kwargs):
         response = super().update(request, *args, **kwargs)
@@ -97,26 +100,36 @@ class HostModelViewSet(GenericViewSet,
         instance = self.get_queryset().filter(**kwargs).first()
         return instance if instance else None
 
-    @staticmethod
-    def _client_deploy_cmd_check(instance: HostModel):
-        task_id = uuid_8()
-        job_instance = JobModel.objects.create(
-            command=instance.client_deploy_cmd,
-            task_id=task_id,
-            created_by=instance.created_by
-        )
-        commands = [
-            {"instance": instance.ip,
-             "cmd": instance.client_deploy_cmd
-             }]
-        job = SshJob(
-            commands,
-            job_instance,
-            update_host_status=True
-        )
-        sche = BackgroundScheduler()
-        sche.add_job(job.run, )
-        sche.start()
+    def client_deploy_cmd_execute(self, instance, exec):
+        if exec == 'init':
+            thread = threading.Thread(target=self.client_deploy_cmd_init, args=(instance,))
+            thread.start()
+        if exec == 'delete':
+            thread = threading.Thread(target=self.client_deploy_cmd_delete, args=(instance,))
+            thread.start()
+
+    def client_deploy_cmd_init(self, instance):
+        url = settings.INIT_SERVER + "api/v1/tasks/"
+        data = {"service_name": "node_init",
+                "instance": instance.ip,
+                "update_host_status": True
+                }
+        headers = {
+            'Content-Type': "application/json"
+        }
+        data = json.dumps(data)
+        requests.post(url=url, data=data, headers=headers)
+
+    def client_deploy_cmd_delete(self, instance):
+        url = settings.INIT_SERVER + "api/v1/tasks/"
+        data = {"service_name": "node_delete",
+                "instance": instance.ip
+                }
+        headers = {
+            'Content-Type': "application/json"
+        }
+        data = json.dumps(data)
+        requests.post(url=url, data=data, headers=headers)
 
 
 class ClusterViewSet(GenericViewSet,
@@ -188,7 +201,7 @@ class SaveUploadFile(APIView):
         file_path = os.path.join(
             settings.MEDIA_ROOT, catalogue) if catalogue else settings.MEDIA_ROOT
         if not os.path.exists(file_path):
-            os.mkdir(file_path)
+            os.makedirs(file_path)
         path = os.path.join(file_path, file.name)
         try:
             with open(path, 'wb') as f:

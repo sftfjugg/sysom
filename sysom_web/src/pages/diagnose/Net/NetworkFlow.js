@@ -63,10 +63,10 @@ const NetworkFlow = (props) => {
     }, {})
 
     return (
-        <ProCard title="时延分析">
+        <ProCard title="时延分析" bodyStyle={{display:"flex", justifyContent:"center"}}>
             <svg
                 height="600px"
-                width="100%"
+                width="1300px"
             >
                 <defs >
                     <marker

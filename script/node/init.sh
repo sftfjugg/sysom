@@ -9,6 +9,8 @@ do
     export $i
 done
 
+cp -f conf ${APP_HOME}/
+
 for dir in `ls`
 do
     if [ -d $dir ]

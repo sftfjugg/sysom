@@ -15,11 +15,13 @@ SECRET_KEY = 'django-insecure-^d8b9di9w&-mmsbpt@)o#e+2^z+^m4nhf+z8304%9@8y#ko46l
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+    'apps.vul',
     'apps.accounts',
     'apps.host',
     'apps.monitor',
     'apps.task',
     'apps.vmcore',
+    'apps.alarm',
     'consumer',
 
     'rest_framework',
@@ -27,6 +29,7 @@ INSTALLED_APPS = [
     'drf_yasg', # 在线API文档
     'channels',
     'django_filters',
+    'django_apscheduler',
 ]
 
 MIDDLEWARE = [
@@ -36,7 +39,7 @@ MIDDLEWARE = [
 ]
 
 DEBUG = True
-
+INIT_SERVER = 'http://127.0.0.1:8001/'
 
 # Mysql数据库
 DATABASES = {
@@ -88,7 +91,7 @@ REST_FRAMEWORK = {
     'VERSION_PARAM': 'version',
 
     'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
+        'lib.renderers.SysomJsonRender',
     ),
     'DEFAULT_PAGINATION_CLASS': 'lib.paginations.Pagination',
     'UNICODE_JSON': False,
@@ -108,7 +111,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
 
 SERVER_IP = get_ip_address()
-CLIENT_DEPLOY_CMD = 'ls /root'
 
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')

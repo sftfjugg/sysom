@@ -13,7 +13,19 @@ const WebConsole = (props) => {
   let socket = null;
 
   const initTerminal = () => {
-    socket = new WebSocket(`ws://127.0.0.1:8001/ws/ssh/?user_id=${props.user_id}&host_ip=${props.host_ip}`);
+    const user_id = props.user_id
+    if (props.host_ip) {
+      socket = new WebSocket(`ws:${location.host}/ws/ssh/?user_id=${user_id}&host_ip=${props.host_ip}`);
+    } else {
+      const host_ip = '127.0.0.1'
+      var start_obj = {
+        "option": "vmcore_analyse",
+        "kernel_version": `${props.kernel_version}`,
+        "vmcore_file": `${props.vmcore_file}`
+      };
+      const start = JSON.stringify(start_obj);
+      socket = new WebSocket(`ws:${location.host}/ws/ssh/?user_id=${user_id}&host_ip=${host_ip}&start=${start}`)
+    }
     socket.onopen = () => {
       terminal.focus();
     };
@@ -21,7 +33,6 @@ const WebConsole = (props) => {
       message.error('连接出错')
     };
     const terminal = new Terminal({
-      // rendererType: 'canvas',
       cursorBlink: true,
     });
     const webLinksAddon = new WebLinksAddon();

@@ -23,6 +23,7 @@ const Cluster = () => {
   return (
     <ModalForm
       title="新建集群"
+      width="440px"
       trigger={
         <Button type="primary">
           <PlusOutlined />新建集群

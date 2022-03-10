@@ -1,5 +1,4 @@
 import os
-import uuid
 import ast
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -8,11 +7,11 @@ from rest_framework import mixins
 from django.db.models import Q
 
 from django.conf import settings
-from apps.accounts.authentication import Authentication
 from apps.task import seriaizer
 from apps.task.models import JobModel
 from apps.host.models import HostModel
 from apps.accounts.models import User
+from apps.task.filter import TaskFilter
 from consumer.executors import SshJob
 from lib import *
 
@@ -45,9 +44,9 @@ class TaskAPIView(GenericViewSet,
                   ):
     queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
     serializer_class = seriaizer.JobListSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    search_fields = ('id', 'task_id', 'host_by')  # 模糊查询
-    filter_fields = ('id', 'task_id', 'host_by')  # 精确查询
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter, TaskFilter)
+    search_fields = ('id', 'task_id', 'created_by__id', 'status', 'params')  # 模糊查询
+    filter_fields = ('id', 'task_id', 'created_by__id', 'status')  # 精确查询
     authentication_classes = []
 
     def create(self, request, *args, **kwargs):
@@ -55,6 +54,7 @@ class TaskAPIView(GenericViewSet,
             data = request.data
             params = data.copy()
             service_name = data.pop("service_name", None)
+            update_host_status = data.pop("update_host_status", False)
             task_id = uuid_8()
             if service_name:
                 SCRIPTS_DIR = settings.SCRIPTS_DIR
@@ -67,7 +67,8 @@ class TaskAPIView(GenericViewSet,
                 resp_scripts = resp.get("commands")
                 username = "admin"
                 user = User.objects.filter(username=username).first()
-                self.ssh_job(resp_scripts, task_id, user, json.dumps(params))
+                self.ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
+                             service_name=service_name)
                 return success(result={"instance_id": task_id})
             else:
                 return self.default_ssh_job(data, task_id)
@@ -78,8 +79,8 @@ class TaskAPIView(GenericViewSet,
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()
         if not instance:
-            return not_found()
-        response = self.get_serializer(instance)
+            return success([])
+        response = seriaizer.JobRetrieveSerializer(instance)
         return success(result=response.data)
 
     def default_ssh_job(self, data, task_id):
@@ -102,20 +103,21 @@ class TaskAPIView(GenericViewSet,
             logger.error(e)
             return other_response(message=str(e), code=400, success=False)
 
-    def ssh_job(self, resp_scripts, task_id, user, data=None):
+    def ssh_job(self, resp_scripts, task_id, user, data=None, **kwargs):
         if not data:
             job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
                                                 created_by=user)
         else:
             job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
                                                 created_by=user, params=data)
-        sch_job = SshJob(resp_scripts, job_model)
+        sch_job = SshJob(resp_scripts, job_model, **kwargs)
         scheduler.add_job(sch_job.run)
 
     def list(self, request, *args, **kwargs):
-        queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
-        data = seriaizer.JobDelResultSerializer(instance=queryset, many=True)
-        return success(result=data.data)
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super(TaskAPIView, self).list(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()

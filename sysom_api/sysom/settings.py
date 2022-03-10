@@ -1,13 +1,13 @@
 import os
 
-env = os.environ.get("env", "testing")
+env = os.environ.get("env", "product")
 
 
 if env == "develop":
     from conf.develop import *
 elif env == "testing":
     from conf.testing import *
-elif env == "produce":
+elif env == "product":
     from conf.product import *
 
 # 跨域允许

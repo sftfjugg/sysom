@@ -1,0 +1,25 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+## 主机清理脚本
+###############################################################################
+app_home=xxx
+arg = json.loads(sys.argv[1])
+host_ip = arg.get('instance')
+
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = host_ip
+do_clear_cmd = "pushd "+app_home+" && bash -x sysom_node_init/clear.sh"
+del_dir_cmd = "popd && rm -rf "+app_home
+cmd0['cmd'] = do_clear_cmd+" && "+del_dir_cmd
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)

@@ -31,12 +31,18 @@ class SshJob:
                 ssh_cli = SSH(host.ip, host.port, host.username, host.private_key)
                 with ssh_cli as ssh:
                     status, result = ssh.exec_command(cmd)
+                    if self.kwargs.get('update_host_status', None):
+                        host.status = status if status == 0 else 1
+                        host.save()
+                    if self.kwargs.get('service_name', None) == "node_delete":
+                        host.delete()
                     if str(status) != '0':
                         update_job(instance=self.job, status="Fail", result=result, host_by=host_ips)
                         break
                     if count == len(self.resp_scripts):
                         params = self.job.params
                         if params:
+                            params = json.loads(params)
                             service_name = params.get("service_name", None)
                             if service_name:
                                 SCRIPTS_DIR = settings.SCRIPTS_DIR
@@ -47,9 +53,6 @@ class SshJob:
                                     output = os.popen(command)
                                     result = output.read()
                         update_job(instance=self.job, status="Success", result=result, host_by=host_ips)
-                    if self.kwargs.get('update_host_status', None):
-                        host.status = status if status == 0 else 1
-                        host.save()
         except socket.timeout:
             update_job(instance=self.job, status="Fail", result="socket time out")
         except Exception as e:

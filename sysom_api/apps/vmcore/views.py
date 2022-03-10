@@ -138,7 +138,6 @@ class VmcoreViewSet(GenericViewSet,
             hosts_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
 
             return success(result=data, total=total, success=True, vmcore_30days=vmcores_sum_30, vmcore_7days=vmcores_sum_7, rate_30days=hosts_sum_30 * 100 / host_sum, rate_7days=hosts_sum_7 * 100 /host_sum)
-        print(data)
         return success(result=data['data'], success=True)
 
     def update(self, request, *args, **kwargs):

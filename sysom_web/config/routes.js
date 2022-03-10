@@ -89,7 +89,7 @@ export default [
         component: './vmcore/Match',
       },
       {
-        path: '/vmcore/analyse/:ip?',
+        path: '/vmcore/analyse',
         component: './vmcore/Analyse',
       },
     ],
@@ -100,17 +100,47 @@ export default [
     routes: [
       {
         path: '/diagnose',
-        redirect: '/diagnose/io',
+        redirect: '/diagnose/oscheck',
       },
       {
-        path: '/diagnose/io',
-        name: 'io',
-        component: './diagnose/Io',
+        path: '/diagnose/oscheck',
+        name: 'oscheck',
+        component: './diagnose/oscheck',
+      },
+      {
+        path: '/diagnose/storage',
+        name: 'storage',
+        routes: [
+          {
+            path: '/diagnose/storage',
+            redirect: '/diagnose/storage/io',
+          },
+          {
+            path: '/diagnose/storage/io',
+            name: 'io',
+            component: './diagnose/Storage/Io',
+          }
+        ]
       },
       {
         path: '/diagnose/net',
         name: 'net',
         component: './diagnose/Net',
+      },
+    ],
+  },
+  {
+    path: '/journal',
+    name: 'journal',
+    routes: [
+      {
+        path: '/journal',
+        redirect: '/journal/audit',
+      },
+      {
+        path: '/journal/audit',
+        name: 'audit',
+        component: './journal/Audit',
       },
     ],
   },

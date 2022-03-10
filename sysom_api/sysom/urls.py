@@ -24,6 +24,8 @@ urlpatterns = [
     path('', include("apps.monitor.urls")),
     path('', include("apps.task.urls")),
     path('', include("apps.vmcore.urls")),
+    path('', include("apps.alarm.urls")),
+    path('', include("apps.vul.urls")),
 ]
 
 if settings.DEBUG:

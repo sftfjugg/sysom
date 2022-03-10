@@ -136,4 +136,13 @@ class PermissionListSerializer(serializers.ModelSerializer):
 class AddPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Permission
-        fields = "__all__"
+        exclude = ('deleted_at', )
+
+
+class HandlerLoggerListSerializer(serializers.ModelSerializer):
+    request_option = serializers.CharField(source='get_request_option_display', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = models.HandlerLog
+        exclude = ('deleted_at', 'user')
