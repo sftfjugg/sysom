@@ -22,39 +22,45 @@ const IOList = () => {
   ))
 
   const onListClick = async (record) => {
-    const msg = await getTask(record.id);
-    setData(msg);
+    const recorded = record;
+    const msg = await request('/api/v1/tasks/' + record.id);
+    if (msg.data.result == '{\n    \"status\": \"success\",\n    \"IO timeout\": \"false\"\n}\n') {
+        Modal.success({
+          title: '诊断成功',
+          content: (
+            <div>
+              <div>诊断完成: {msg.data.result}</div>
+            </div>
+          ),
+        });
+        return
+    }
+    const metlist = [];
+    const ioList = msg.data.result.seq.reduce((ioList, item, index, arr) => {
+      const block = item["slow ios"].filter((item2,index2) => {
+        const block2 = item2.delays.filter((item3,index3) => {
+          metlist.push({
+            x:item2.time,
+            y:item3.delay,
+            category:item3.component,
+          });
+        })
+      });
+      ioList.push({
+        diskname: item.diskname,
+        delays: msg.data.result.stat[index].delays,
+      });
+      return ioList
+    }, [])
+    const metric = [];
+    const size = metlist.length / ioList.length;
+    for(let i = 0;i<Math.ceil(ioList.length);i++){
+      let start = i*size;
+      let end = start + size;
+      metric.push(metlist.slice(start,end));
+    }
+    setData({rawData:msg, metric:metric, ioList:ioList, recorded: recorded});
   }
-  // const onListClick = async (record) => {
-  //   const recorded = record;
-  //   const msg = await getTask(record.id);
-  //   const metlist = [];
-  //   const metric = msg.data.seq.reduce((metric, item, index, arr) => { 
-  //     const block = item["slow ios"].filter((item2,index2) => {
-  //       const block2 = item2.delays.filter((item3,index3) => {
-  //         metlist.push({
-  //           x:item2.time,
-  //           y:item3.delay,
-  //           category:item3.component,
-  //         });
-  //       })
-  //     });
-  //     metric.push({
-  //       diskname: item.diskname,
-  //       slowios: item["slow ios"],
-  //       delays: msg.data.stat[index].delays,
-  //     });
-  //     return metric
-  //   }, [])
-  //   const restlist = [];
-  //   const size = metlist.length / metric.length;
-  //   for(let i = 0;i<Math.ceil(metric.length);i++){
-  //     let start = i*size;
-  //     let end = start + size;
-  //     restlist.push(metlist.slice(start,end));
-  //   }
-  //   setData({rawData:msg, metric:metric, restlist:restlist, recorded: recorded});
-  // }
 
   const onPostTask = () => {
     refIoTableList.current.reload();
@@ -80,8 +86,8 @@ const IOList = () => {
       {
         data ?
           <>
-            <IOResults data={data.metric} recorded={data.recorded} />
-            <MetricShow2 data={data.restlist} title="IO 诊断各阶段延迟分析" xField="x" yField="y" category="category" slider="false" />
+            <IOResults data={data.ioList} recorded={data.recorded} />
+            <MetricShow2 data={data.metric} title="IO 诊断各阶段延迟分析" xField="x" yField="y" category="category" slider="false" />
           </>
           :
           <></>

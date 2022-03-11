@@ -1,5 +1,7 @@
 import os
 import ast
+import subprocess
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import GenericViewSet
@@ -56,24 +58,42 @@ class TaskAPIView(GenericViewSet,
             service_name = data.pop("service_name", None)
             update_host_status = data.pop("update_host_status", False)
             task_id = uuid_8()
+            username = data['username'] if data.get('username') else "admin"
+            user = User.objects.filter(username=username).first()
             if service_name:
                 SCRIPTS_DIR = settings.SCRIPTS_DIR
                 service_path = os.path.join(SCRIPTS_DIR, service_name)
                 if not os.path.exists(service_path):
                     return other_response(message="can not find script file, please check service name", code=400)
-                command = "%s  '%s'" % (service_path, json.dumps(data))
-                output = os.popen(command)
-                resp = ast.literal_eval(output.read())
+                try:
+                    resp = subprocess.run([service_path, json.dumps(data)], stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
+                except Exception as e:
+                    JobModel.objects.create(command='', task_id=task_id,
+                                            created_by=user, result=str(e), status="Fail")
+                    logger.error(e, exc_info=True)
+                    return other_response(message=str(e), code=400, success=False)
+                if resp.returncode != 0:
+                    JobModel.objects.create(command='', task_id=task_id,
+                                            created_by=user, result=resp.stderr.decode('utf-8'), status="Fail")
+                    return other_response(message=str(resp.stderr.decode('utf-8')), code=400, success=False)
+                stdout = resp.stdout
+                stdout = stdout.decode('utf-8')
+                resp = ast.literal_eval(stdout)
                 resp_scripts = resp.get("commands")
-                username = "admin"
-                user = User.objects.filter(username=username).first()
+                if not resp_scripts:
+                    JobModel.objects.create(command='', task_id=task_id,
+                                            created_by=user, result="not find commands, Please check the script return",
+                                            status="Fail")
+                    return other_response(message="not find commands, Please check the script return", code=400)
+
                 self.ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
                              service_name=service_name)
                 return success(result={"instance_id": task_id})
             else:
                 return self.default_ssh_job(data, task_id)
         except Exception as e:
-            logger.error(e)
+            logger.error(e, exc_info=True)
             return other_response(message=str(e), code=400, success=False)
 
     def retrieve(self, request, *args, **kwargs):
@@ -100,7 +120,7 @@ class TaskAPIView(GenericViewSet,
             self.ssh_job(cmds, task_id, user)
             return success(result={"instance_id": task_id})
         except Exception as e:
-            logger.error(e)
+            logger.error(e, exc_info=True)
             return other_response(message=str(e), code=400, success=False)
 
     def ssh_job(self, resp_scripts, task_id, user, data=None, **kwargs):

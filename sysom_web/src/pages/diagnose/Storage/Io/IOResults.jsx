@@ -81,6 +81,7 @@ export default (props) => {
       >
         <ProCard title="诊断链路" gutter={8}>
           {props.data[count].delays.map((item, index) => {
+            const length = props.data[count].delays.length
             return (
               <ProCard key={index + "wl"}>
                 <ProCard
@@ -97,7 +98,7 @@ export default (props) => {
                   <div>AVG: {item.avg}</div>
                   <div>MIN: {item.min}</div>
                 </ProCard>
-                {index !== 3 ? (
+                {index !== (length - 1) ? (
                   <ProCard
                     colSpan={{ md: 4 }}
                     layout="center"

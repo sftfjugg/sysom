@@ -2,6 +2,8 @@ import ast
 import json
 import os
 import socket
+import subprocess
+
 from apps.host.models import HostModel
 from lib.ssh import SSH
 from apps.task.models import JobModel
@@ -49,9 +51,18 @@ class SshJob:
                                 service_post_name = service_name + '_post'
                                 service_post_path = os.path.join(SCRIPTS_DIR, service_post_name)
                                 if os.path.exists(service_post_path):
-                                    command = "%s  '%s'" % (service_post_path, result)
-                                    output = os.popen(command)
-                                    result = output.read()
+                                    try:
+                                        resp = subprocess.run([service_post_path, result], stdout=subprocess.PIPE,
+                                                              stderr=subprocess.PIPE)
+                                        if resp.returncode != 0:
+                                            update_job(instance=self.job, status="Fail",
+                                                       result=resp.stderr.decode('utf-8'))
+                                            break
+                                        stdout = resp.stdout
+                                        result = stdout.decode('utf-8')
+                                    except Exception as e:
+                                        update_job(instance=self.job, status="Fail", result=str(e))
+                                        break
                         update_job(instance=self.job, status="Success", result=result, host_by=host_ips)
         except socket.timeout:
             update_job(instance=self.job, status="Fail", result="socket time out")
