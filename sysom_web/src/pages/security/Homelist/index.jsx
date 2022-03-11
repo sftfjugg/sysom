@@ -1,8 +1,6 @@
 import React ,{useState,useEffect}from 'react';
 import { Card, Table, Button,Progress,Row, Col} from "antd";
 import './homelist.less'
-import { useIntl, FormattedMessage } from 'umi';
-// import "antd/dist/antd.css"
 import {getOneById,manyApi} from '../products'
 
 function index(props) {
@@ -11,10 +9,10 @@ function index(props) {
   const [total,setTotal]=useState(0)
   const [selectedRowKeys, setselectedRowKeys] = useState([]);
   const [selectedRows, setselectedRows] = useState([]);
-  // console.log(props)
+  
+ 
   useEffect(()=>{
     getOneById(props.match.params.id).then(res=>{
-      console.log(res)
       setlovodata(res.data.hosts)
       setdata(res.data.software)
     })
@@ -94,7 +92,22 @@ function index(props) {
       return (
         <div>
             <Button type="link" onClick={()=>{
-              console.log(record)
+              // console.log(record)
+              const  arry=[];
+              const id=props.match.params.id
+              arry.push({"cve_id":id, "hostname":record.hostname })
+              manyApi({cve_id_list:arry}).then((res)=>{
+                console.log(res)
+                if(res.message=="fix cve failed"){
+                  seterrvisible(true)
+                }else{
+                  setsuccesvisible(true)
+                  setTimeout(() => {
+                    props.history.push("/security/list")                       
+                   
+                  }, 1000);
+                }
+              })
             }}>修复</Button>
            
         </div>
@@ -106,18 +119,24 @@ function index(props) {
 const  repair=()=>{
   const  arry=[];
   const leght =selectedRows.length;
-  console.log(selectedRows)
-//   for(let i = 0; i < leght; i++){
-//     arry.push({"cve_id":selectedRows[i].cve_id, "hostname":selectedRows[i].hosts })
-// }
-// console.log(arry)
-  // manyApi({cve_id_list:arry}).then((res)=>{
-  //   console.log(res)
-  // })
+  const id=props.match.params.id
+for(let i = 0; i < leght; i++){
+    arry.push({"cve_id":id, "hostname":selectedRows[i].hostname })
 }
 
-
-
+  manyApi({cve_id_list:arry}).then((res)=>{
+    console.log(res)
+    if(res.message=="fix cve failed"){
+      seterrvisible(true)
+    }else{
+      setsuccesvisible(true)
+      setTimeout(() => {
+        props.history.push("/security/list")                       
+       
+      }, 1000);
+    }
+  })
+}
   const paginationProps = {
     showSizeChanger: true,
     showQuickJumper: true,
@@ -129,8 +148,7 @@ const  repair=()=>{
     position:["bottomLeft"],
     // size:"small"
   };
-
-  return (
+ return (
 
     <div>
        <Card className="home-heard">200台主机存在被攻击风险，涉及CVE漏洞1000个，其中高危漏洞100个，请尽快修复。

@@ -31,7 +31,6 @@ function List(props) {
   const handleOk = () => {
    setconfirmLoading(true);
    setTimeout(() => {
-      // setVisible(false);
       setIsModalVisible(false);
       setconfirmLoading(false);
    }, 11000);
@@ -49,8 +48,7 @@ function List(props) {
           setsuccesvisible(true)
           setTimeout(() => {
            
-           console.log("进度条") 
-           setsuccesvisible(false)                         
+            props.history.push("/security")               
           
          }, 1000);
         }

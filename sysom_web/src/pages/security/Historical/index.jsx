@@ -107,7 +107,9 @@ function index(props) {
       </Card>
       <Row>
       <Col span={20}></Col>
-      <Col  className="err_Button" span={4}> <Button type="primary">返回</Button></Col>
+      <Col  className="err_Button" span={4}> <Button type="primary" onClick={()=>{
+         props.history.push("/security/list")
+      }}>返回</Button></Col>
       </Row>
     </div>
   );
