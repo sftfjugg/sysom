@@ -5,7 +5,33 @@ import json
 import random
 
 def memgraph_result(raw):
-    print(raw)
+    """
+    fd = open("./test.json",'r')
+    raw = fd.read().strip()
+    fd.close()
+    """
+    outdata = {}
+    if raw.find("memGraph") == -1:
+        outdata = {"status":"fail"}
+        print(outdata)
+        return
+    rawdata = json.loads(raw)
+    outdata["event"] = rawdata["event"]
+
+    memgraph = {}
+    memgraph["used"] = rawdata["memGraph"]["used"]
+    memgraph["free"] = rawdata["memGraph"]["free"]
+    memgraph["available"] = rawdata["memGraph"]["available"]
+    memgraph["cache"] = (rawdata["memGraph"]["user"]["cache"] + rawdata["memGraph"]["user"]["shmem"])
+    outdata["memgraph"] = memgraph
+   
+    outdata["kernel"] = rawdata["memGraph"]["kernel"]
+    outdata["memleak"] = rawdata["memleak"]
+    outdata["user"] = rawdata["memGraph"]["user"]
+    outdata["taskMemTop"] = rawdata["memTop"]
+    outdata["filecacheTop"] = rawdata["filecacheTop"]
+    outdata = json.dumps(outdata, indent=4)
+    print(outdata)
 
 if __name__ == "__main__":
     memgraph_result(sys.argv[1])
