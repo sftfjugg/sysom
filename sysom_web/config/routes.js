@@ -145,6 +145,37 @@ export default [
     ],
   },
   {
+    path: "/security",
+    name: "security",
+    routes: [
+      {
+        path: "/security",
+        redirect: "/security/list",
+      },
+      {
+        path: "/security/list",
+        name: "list",
+        component: "./security/List",
+      },
+      {
+        path: "/security/homelist/:id?",
+        component: "./security/Homelist",
+      },
+      {
+        path: "/security/historical",
+        component: "./security/Historical",
+      },
+      {
+        path: "/security/historicalist/:id?",
+        component: "./security/Historicalist",
+      },
+      {
+        path: "/security/viewdetails/:id?/:homename?",
+        component: "./security/Viewdetails",
+      },
+    ],
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },

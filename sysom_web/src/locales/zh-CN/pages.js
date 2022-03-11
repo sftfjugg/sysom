@@ -66,4 +66,5 @@ export default {
   'pages.journal.audit.login': '登录行为',
   'pages.journal.audit.action': '操作行为',
   'pages.journal.audit.response_status': '返回状态',
+  
 };

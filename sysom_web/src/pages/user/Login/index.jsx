@@ -4,11 +4,12 @@ import {
 } from '@ant-design/icons';
 import { Alert, message, Tabs } from 'antd';
 import { useState } from 'react';
-import { ProFormText, LoginForm } from '@ant-design/pro-form';
+import { ProFormText, LoginForm ,ProFormCheckbox} from '@ant-design/pro-form';
 import { useIntl, history, FormattedMessage, useModel } from 'umi';
 import Footer from '@/components/Footer';
 import { login } from './service';
 import styles from './index.less';
+import Agreem from "./agreem"
 
 const LoginMessage = ({ content }) => (
   <Alert
@@ -153,6 +154,17 @@ const Login = () => {
                   },
                 ]}
               />
+               <ProFormCheckbox  name="agreement"
+                  valuePropName="checked"
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        value ? Promise.resolve() : Promise.reject(new Error('请先勾选同意后再进行登录')),
+                    },
+                     ]}>
+                    <div className="read"><Agreem/>  </div> 
+  
+               </ProFormCheckbox>
             </>
           )}
         </LoginForm>

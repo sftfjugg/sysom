@@ -11,6 +11,7 @@ const imgBanner = [
   {key:2,banner:"#1a2933",title:"宕机分析",urls:'/vmcore',des:""},
   {key:4,banner:"#1a2933",title:"监控中心",urls:'/monitor',des:""},
   {key:3,banner:"#1a2933",title:"诊断中心",urls:'/diagnose',des:""},
+  {key:5,banner:"#1a2933",title:"安全中心",urls:'/security',des:""},
 ]
 
 const Welcome = () => {
@@ -38,6 +39,9 @@ const Welcome = () => {
           </SubMenu>
           <SubMenu key="journal" title="日志中心">
             <Menu.Item key="audit"><a href="/journal/audit">审计日志</a></Menu.Item>
+          </SubMenu>
+          <SubMenu key="security" title="安全中心">
+            <Menu.Item key="List"><a href="/security/List">安全列表</a></Menu.Item>
           </SubMenu>
         </Menu>
         <div className={styles.avatarRight}>
