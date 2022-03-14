@@ -36,6 +36,7 @@ const IOList = () => {
         return
     }
     const metlist = [];
+    msg.data.result = JSON.parse(msg.data.result)
     const ioList = msg.data.result.seq.reduce((ioList, item, index, arr) => {
       const block = item["slow ios"].filter((item2,index2) => {
         const block2 = item2.delays.filter((item3,index3) => {
