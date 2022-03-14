@@ -351,6 +351,9 @@ def get_calltrace(column):
         column['func_name'] = list1[0]
         del list1[0]
 
+    column['calltrace_list'] = []
+    column['calltrace_list'].extend(list1)
+
     calltrace = column['func_name']
     if calltrace != '':
         calltrace = calltrace.split('+')[0]
@@ -424,11 +427,23 @@ def check_panic(column):
     print(res.json())
     if res.status_code == 200:
         print(f"add {column['name']} to db")
-        return True
     else:
         print("插入失败")
         return False
 
+    idx = 0
+    for line in column['calltrace_list']:
+        calltrace_info = {'name':column['name'], 'line':line, 'idx':idx}
+        calltrace_url = root_url+"/api/v1/vmcore/"
+        data = json.dumps(calltrace_info)
+        headers = {'content-type': 'application/json'}
+        res = requests.post(url=calltrace_url, data=data, headers=headers)
+        if res.status_code != 200:
+            print(f"{column['name']} 插入calltrace line失败")
+            return False
+        idx += 1
+    print(f"add {column['name']} calltrace line to db")
+    return True
 def do_cmd(cmd):
     output = os.popen(cmd)
     ret = output.read().strip()

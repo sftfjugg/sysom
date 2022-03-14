@@ -61,6 +61,13 @@ class VmcoreViewSet(GenericViewSet,
             dmesg = data.get('similar_dmesg')
             data = self.parse_calltrace(dmesg)
             return other_response(result=data)
+        elif 'idx' in data and 'line' in data:
+            vmcore_name = data.get('name')
+            idx = data.get('idx')
+            line = data.get('line')
+            vmcore = models.Panic.objects.get(name=vmcore_name)
+            models.Calltrace.objects.create(idx=idx, name=vmcore_name, line=line, vmcore = vmcore)
+            return other_response(result=data)
         response = super().create(request, *args, **kwargs)
         data = response.data
         vmcore_id = data['id']
