@@ -103,3 +103,26 @@ export async function postIOTask(params, options) {
   });
 }
 
+/** 获取内存诊断大盘列表 GET /api/market */
+export async function getMarketTable(params, options) {
+  const msg = await request('/api/marketable/', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+  return {
+    data: msg.data,
+    success: true,
+    total: msg.total,
+  };
+}
+/** 内存诊断大盘 诊断 POST /api/marketask */
+export async function postMarketTask(params, options) {
+  return request('/api/marketask/', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
+
+

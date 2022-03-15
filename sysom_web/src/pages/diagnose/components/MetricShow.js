@@ -3,7 +3,6 @@ import ProCard from '@ant-design/pro-card';
 import { Line } from '@ant-design/charts';
 
 const MetricShow = (props) => {
-  console.log(props);
   const config = {
     data: props.data,
     padding: 'auto',
@@ -13,7 +12,6 @@ const MetricShow = (props) => {
     xAxis: {
       tickCount: 5,
     },
-    // props.slider === "false" ? slider:false : slider: { start: 0,end: 1},
     slider: {
       start: 0.1,
       end: 0.5,

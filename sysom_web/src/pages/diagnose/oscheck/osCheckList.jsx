@@ -52,7 +52,7 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
       title: '状态',
       dataIndex: 'status',
       valueEnum: {
-        Ready: { text: '运行中', status: 'Processing' },
+        Running: { text: '运行中', status: 'Processing' },
         Success: { text: '诊断完毕', status: 'Success' },
         Fail: { text: '异常', status: 'Error' },
       },

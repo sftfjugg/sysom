@@ -125,7 +125,32 @@ export default [
       {
         path: '/diagnose/net',
         name: 'net',
-        component: './diagnose/Net',
+        routes: [
+          {
+            path: '/diagnose/net',
+            redirect: '/diagnose/net/network',
+          },
+          {
+            path: '/diagnose/net/network',
+            name: 'network',
+            component: './diagnose/Net/Network',
+          }
+        ]
+      },
+      {
+        path: '/diagnose/memory',
+        name: 'memory',
+        routes: [
+          {
+            path: '/diagnose/memory',
+            redirect: '/diagnose/memory/market',
+          },
+          {
+            path: '/diagnose/memory/market',
+            name: 'market',
+            component: './diagnose/Memory/Market',
+          }
+        ]
       },
     ],
   },

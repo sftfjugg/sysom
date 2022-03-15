@@ -1,6 +1,6 @@
 import { useState} from 'react';
 import { Popover, Modal, Button } from 'antd';
-import MetricShow from '../components/MetricShow'
+import MetricShow from '../../components/MetricShow'
 import ProCard from '@ant-design/pro-card';
 import { Line } from '@ant-design/charts';
 

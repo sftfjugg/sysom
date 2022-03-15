@@ -29,6 +29,8 @@ const genList = (current, pageSize) => {
     const time = Math.random() * 100;
     const items = ["icmp","tcp"];
     const agreement = items[Math.floor(Math.random() * items.length)];
+    const sta = ["Ready","Success","Fail"];
+    const status = sta[Math.floor(Math.random() * sta.length)];
     tableListDataSource.push({
       id: index,
       name: name,
@@ -43,6 +45,7 @@ const genList = (current, pageSize) => {
       threshold: threshold,
       agreement: agreement,
       core_time: new Date(),
+      status: status,
       ver: "3.10.0-327.ali2008." + name + ".alios7.x86_64",
       ping: "pt-" + name + "bm",
       vmcore_file: Boolean(Math.round(Math.random())),
@@ -22888,9 +22891,304 @@ async function postIOTask(req, res, u) {
     return res.json(result);
 }
 
+async function getMarketTable(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+  
+    const { current = 1, pageSize = 10 } = req.query;
+    const params = parse(realUrl, true).query;
+    let dataSource = tableListDataSource;
+  
+    if (params.sorter) {
+      const sorter = JSON.parse(params.sorter);
+      dataSource = dataSource.sort((prev, next) => {
+        let sortNumber = 0;
+        Object.keys(sorter).forEach((key) => {
+          if (sorter[key] === "descend") {
+            if (prev[key] - next[key] > 0) {
+              sortNumber += -1;
+            } else {
+              sortNumber += 1;
+            }
+  
+            return;
+          }
+  
+          if (prev[key] - next[key] > 0) {
+            sortNumber += 1;
+          } else {
+            sortNumber += -1;
+          }
+        });
+        return sortNumber;
+      });
+    }
+  
+    if (params.filter) {
+      const filter = JSON.parse(params.filter);
+  
+      if (Object.keys(filter).length > 0) {
+        dataSource = dataSource.filter((item) => {
+          return Object.keys(filter).some((key) => {
+            if (!filter[key]) {
+              return true;
+            }
+  
+            if (filter[key].includes(`${item[key]}`)) {
+              return true;
+            }
+  
+            return false;
+          });
+        });
+      }
+    }
+  
+    if (params.hostname) {
+      dataSource = dataSource.filter((data) =>
+        data.hostname.includes(params.hostname || "")
+      );
+    }
+  
+    if (params.similar == 1) {
+      dataSource = dataSource.filter((data) =>
+        data.ip.includes(params.vmcore_id || "")
+      );
+    }
+  
+    let finalPageSize = 10;
+  
+    if (params.pageSize) {
+      finalPageSize = parseInt(`${params.pageSize}`, 10);
+    }
+    const length = dataSource.length;
+    dataSource = [...dataSource].slice(
+      (current - 1) * pageSize,
+      current * pageSize
+    );
+  
+    const result = {
+      data: dataSource,
+      total: length,
+      success: true,
+      pageSize: finalPageSize,
+      current: parseInt(`${params.currentPage}`, 10) || 1,
+    };
+    return res.json(result);
+}
+
+async function getMarket(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+    
+    const dataSource = {
+        "filecacheTop": [
+            {
+                "cached": 69004, 
+                "task": [
+                    "syslog-ng_68406 "
+                ], 
+                "file": "/var/log/messages"
+            }, 
+            {
+                "cached": 67816, 
+                "task": [
+                    "syslog-ng_68406 "
+                ], 
+                "file": "/var/log/journal/da4b86843a464cc18ac897729463ef74/system@9a57abf447d44e578c8ee95d84eddbee-0000000005425f10-0005d9a9bb01fe00.journal"
+            }, 
+            {
+                "cached": 67616, 
+                "task": [
+                    "syslog-ng_68406 "
+                ], 
+                "file": "/var/log/journal/da4b86843a464cc18ac897729463ef74/system@9a57abf447d44e578c8ee95d84eddbee-00000000053f2bd4-0005d99aee9fb330.journal"
+            }, 
+            {
+                "cached": 67592, 
+                "task": [
+                    "syslog-ng_68406 "
+                ], 
+                "file": "/var/log/journal/da4b86843a464cc18ac897729463ef74/system@9a57abf447d44e578c8ee95d84eddbee-0000000005414e2c-0005d9a4cb789d8a.journal"
+            }, 
+            {
+                "cached": 67576, 
+                "task": [
+                    "syslog-ng_68406 "
+                ], 
+                "file": "/var/log/journal/da4b86843a464cc18ac897729463ef74/system@9a57abf447d44e578c8ee95d84eddbee-0000000005403d47-0005d99fdc2a1ed8.journal"
+            }, 
+            {
+                "cached": 11722112, 
+                "task": [], 
+                "file": "total cached of close file"
+            }
+        ], 
+        "kernel": {
+            "SReclaimable": 927448, 
+            "VmallocUsed": 40952, 
+            "allocPage": 1024, 
+            "KernelStack": 6516, 
+            "PageTables": 11512, 
+            "SUnreclaim": 53432
+        }, 
+        "taskMemTop": [
+            {
+                "RssShmem": 0, 
+                "pid": "116787", 
+                "total_mem": 410236, 
+                "RssFile": 21312, 
+                "comm": "crash", 
+                "RssAnon": 388924
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "119220", 
+                "total_mem": 123112, 
+                "RssFile": 6964, 
+                "comm": "java", 
+                "RssAnon": 116148
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "25669", 
+                "total_mem": 103500, 
+                "RssFile": 16740, 
+                "comm": "java", 
+                "RssAnon": 86760
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "10417", 
+                "total_mem": 93312, 
+                "RssFile": 56400, 
+                "comm": "ilogtail", 
+                "RssAnon": 36912
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "41785", 
+                "total_mem": 79580, 
+                "RssFile": 4940, 
+                "comm": "java", 
+                "RssAnon": 74640
+            }, 
+            {
+                "RssShmem": 4, 
+                "pid": "68409", 
+                "total_mem": 69768, 
+                "RssFile": 67268, 
+                "comm": "systemd-journal", 
+                "RssAnon": 2496
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "10570", 
+                "total_mem": 61696, 
+                "RssFile": 40632, 
+                "comm": "telegraf", 
+                "RssAnon": 21064
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "94955", 
+                "total_mem": 42468, 
+                "RssFile": 8176, 
+                "comm": "AliYunDun", 
+                "RssAnon": 34292
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "68406", 
+                "total_mem": 41176, 
+                "RssFile": 39424, 
+                "comm": "syslog-ng", 
+                "RssAnon": 1752
+            }, 
+            {
+                "RssShmem": 0, 
+                "pid": "111008", 
+                "total_mem": 30868, 
+                "RssFile": 16768, 
+                "comm": "argusagent", 
+                "RssAnon": 14100
+            }
+        ], 
+        "user": {
+            "cache": 13944196, 
+            "anon": 837196, 
+            "mlock": 0, 
+            "huge1G": 0, 
+            "huge2M": 0, 
+            "buffers": 322444, 
+            "shmem": 860
+        }, 
+        "memgraph": {
+            "available": 14833036, 
+            "cache": 13945056, 
+            "used": 933268, 
+            "free": 279884
+        }, 
+        "memleak": {
+            "usage": 0, 
+            "leak": "No", 
+            "type": "No"
+        }, 
+        "event": {
+            "util": 8, 
+            "memcg": false, 
+            "memfrag": false, 
+            "leak": false
+        }
+    };
+  
+    const result = {
+      data: dataSource,
+      success: true,
+    };
+    return res.json(result);
+}
+
+async function postMarketTask(req, res, u) {
+    let realUrl = u;
+  
+    if (
+      !realUrl ||
+      Object.prototype.toString.call(realUrl) !== "[object String]"
+    ) {
+      realUrl = req.url;
+    }
+  
+    const dataSource = {
+        "status": "success",
+        "data": []
+    };
+  
+    const result = {
+      data: dataSource,
+      success: true,
+    };
+    return res.json(result);
+}
+
 export default {
   "GET /api/getable/": getIoTable,
   "GET /api/metric/": getMetric,
   "GET /api/curve/": getCurve,
   "POST /api/iotask/": postIOTask,
+  "GET /api/marketable/": getMarketTable,
+  "GET /api/market/": getMarket,
+  "POST /api/marketask/": postMarketTask,
 };

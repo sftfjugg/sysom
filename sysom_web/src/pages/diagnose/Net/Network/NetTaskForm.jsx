@@ -2,7 +2,7 @@ import ProForm, { ProFormSelect, ProFormText, ProFormDigit } from '@ant-design/p
 import { message, Button, Row, Col } from 'antd';
 import { useRequest } from 'umi';
 import ProCard from '@ant-design/pro-card';
-import { postTask } from '../service'
+import { postTask } from '../../service'
 
 export default (props) => {
     const { loading, error, run } = useRequest(postTask, {

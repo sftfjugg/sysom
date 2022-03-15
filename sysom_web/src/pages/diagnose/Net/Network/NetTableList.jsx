@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import ProTable from "@ant-design/pro-table";
 import { getTaskList } from "../../service";
+import { Button } from "antd";
 
 function parseJsonString(str) {
   try {
@@ -11,9 +12,9 @@ function parseJsonString(str) {
   }
 }
 
-const getIODiagList = async () => {
+const getPingTraceList = async () => {
   try {
-    let msg = await getTaskList({ service_name: "iosdiag_latency" });
+    let msg = await getTaskList({ service_name: "pingtrace" });
     msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
     return {
       data: msg.data.reverse(),
@@ -25,37 +26,48 @@ const getIODiagList = async () => {
   }
 }
 
-const IOTableList = React.forwardRef((props, ref) => {
-  const actionRef = useRef();
+
+const DiagnoTableList = React.forwardRef((props, ref) => {
+
 
   const columns = [
     {
-      title: "实例IP",
-      dataIndex: "实例IP",
+      title: "源实例IP",
+      dataIndex: "源实例IP",
+      valueType: "textarea"
+    },
+    {
+      title: "目标实例IP",
+      dataIndex: "目标实例IP",
+      valueType: "textarea"
+    },
+    {
+      title: "追踪包数",
+      dataIndex: "追踪包数",
       valueType: "textarea",
     },
     {
-      title: "诊断时长",
-      dataIndex: "诊断时长",
+      title: "间隔毫秒数",
+      dataIndex: "间隔毫秒数",
       valueType: "textarea",
     },
     {
-      title: "时间阈值",
-      dataIndex: "时间阈值",
-      valueType: "textarea",
+      title: "报文协议",
+      dataIndex: "报文协议",
+      valueType: "select",
+      valueEnum: {
+        icmp: { text: 'ICMP', status: 'icmp' },
+        tcp: { text: 'TCP', status: 'tcp' }
+      }
     },
     {
-      title: "目标磁盘",
-      dataIndex: "目标磁盘",
-      valueType: "textarea",
-    },
-    {
-      title: "诊断时间",
+      title: "创建时间",
+      sortOrder: "descend",
       dataIndex: "created_at",
       valueType: "dateTime",
     },
     {
-      title: "诊断ID",
+      title: "PingTraceId",
       dataIndex: "task_id",
       valueType: "textarea",
     },
@@ -76,14 +88,14 @@ const IOTableList = React.forwardRef((props, ref) => {
       render: (_, record) => {
         if (record.status == "Success") {
           return (
-            <a key="showIODiagnose" onClick={() => {
+            <a key="showDiagnose" onClick={() => {
               props?.onClick?.(record)
             }}>查看诊断结果</a>
           )
         }
         else if (record.status == "Fail") {
           return (
-            <a key="showIOError" onClick={() => {
+            <a key="showError" onClick={() => {
               props?.onError?.(record)
             }}>查看出错信息</a>
           )
@@ -94,14 +106,15 @@ const IOTableList = React.forwardRef((props, ref) => {
       },
     }
   ];
-  const pagination=(props.pagination) ? props.pagination : {pageSize: 5}
+
+  const pagination=(props.pagination) ? props.pagination: {pageSize: 5}
   return (
     <ProTable
       headerTitle={props.headerTitle}
       actionRef={ref}
       params={props.params}
       rowKey="id"
-      request={getIODiagList}
+      request={getPingTraceList}
       columns={columns}
       pagination={pagination}
       search={false}
@@ -109,4 +122,4 @@ const IOTableList = React.forwardRef((props, ref) => {
   );
 });
 
-export default IOTableList;
+export default DiagnoTableList;

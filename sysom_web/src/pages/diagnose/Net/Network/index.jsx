@@ -7,8 +7,8 @@ import NetTableList from './NetTableList';
 import PacketLoss from './PacketLoss'
 import NetworkFlow from './NetworkFlow';
 import NetTaskForm from './NetTaskForm';
-import MetricShow from '../components/MetricShow'
-import { getTask } from '../service'
+import MetricShow from '../../components/MetricShow'
+import { getTask } from '../../service'
 
 const { Divider } = ProCard;
 
