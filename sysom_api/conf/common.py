@@ -55,6 +55,8 @@ DATABASES = {
 
 ROOT_URLCONF = 'sysom.urls'
 
+AUTH_USER_MODEL = 'accounts.User'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

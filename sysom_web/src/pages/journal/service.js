@@ -7,7 +7,7 @@ import {
 
 export async function getAudit(params, options) {
   const token = localStorage.getItem('token');
-  return request('/api/v1/journal/', {
+  const msg = await request('/api/v1/journal/', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -16,4 +16,6 @@ export async function getAudit(params, options) {
     params: params,
     ...(options || {}),
   });
+  msg.data.reverse()
+  return msg
 }

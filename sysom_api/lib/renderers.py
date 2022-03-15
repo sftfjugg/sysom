@@ -1,4 +1,6 @@
 import logging
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django.core.handlers.asgi import ASGIRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
@@ -7,6 +9,7 @@ from apps.accounts.models import HandlerLog
 
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class SysomJsonRender(JSONRenderer):
@@ -19,7 +22,7 @@ class SysomJsonRender(JSONRenderer):
         return super().render(data, accepted_media_type, renderer_context)
 
     def before_response_save_log(self, request: Request, view, response):
-        user = getattr(request, 'user', None)
+        user = getattr(request, 'user') or get_object_or_404(User, pk=1)
         request: ASGIRequest = getattr(request, '_request', None)
         method = request.method
 
