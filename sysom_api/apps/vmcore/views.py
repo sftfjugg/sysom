@@ -138,10 +138,10 @@ class VmcoreViewSet(GenericViewSet,
             if host_sum == 0:
                 return success(result=data, total=total, success=True, vmcore_30days=0, vmcore_7days=0, rate_30days=0, rate_7days=0)
             vmcores_sum_30 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).count()
-            hosts_sum_30 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).count()
+            hosts_sum_30 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
 
             start_time=end_time + datetime.timedelta(days=-7)
-            vmcores_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
+            vmcores_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).count()
             hosts_sum_7 = models.Panic.objects.filter(core_time__range=(start_time,end_time)).values('hostname').distinct().count()
 
             return success(result=data, total=total, success=True, vmcore_30days=vmcores_sum_30, vmcore_7days=vmcores_sum_7, rate_30days=hosts_sum_30 * 100 / host_sum, rate_7days=hosts_sum_7 * 100 /host_sum)
