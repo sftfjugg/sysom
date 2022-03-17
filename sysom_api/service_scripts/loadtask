@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+# coding=utf-8
+
+import sys
+import json
+
+###############################################################################
+##  执行loadtask命令。
+##  输出数据：
+##  {
+##    "service_name":"loadtask",
+##    "实例IP":"192.168.1.101"
+##  }
+##  解析参数方法：
+##  sysak loadtask -s -g >> /dev/null && cat /var/log/sysak/loadtask/.tmplog 
+##  结果自动保存到/var/log/sysak/loadtask/loadtask-<time stamp>.log
+##
+###############################################################################
+
+args = json.loads(sys.argv[1])
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["实例IP"]
+cmd0['cmd'] = "sysak loadtask -s -g >> /dev/null && cat /var/log/sysak/loadtask/.tmplog"
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)
