@@ -20,4 +20,4 @@ cp ${TOOLSDIR}/deploy/deploy.sh  ${RELEASE}/
 cp -r ${SCRIPTDIR} ${RELEASE}/
 tar czf ${RELEASE}.tar.gz ${RELEASE}/
 rm -rf ${RELEASE}
-printf "$green The release pacakge is ${RELEASE}.tar.gz"
+printf "$green The release pacakge is ${RELEASE}.tar.gz\n\033[0m"
