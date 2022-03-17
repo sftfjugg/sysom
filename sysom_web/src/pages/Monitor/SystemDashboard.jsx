@@ -4,11 +4,11 @@ import ProTable from '@ant-design/pro-table';
 import { Card, Statistic } from 'antd';
 import { Space, Row, Col } from 'antd';
 import { useIntl, useRequest, useParams, FormattedMessage } from 'umi';
-import { useState } from 'react'
+import {useState, useRef} from 'react'
 import { getHost } from '../host/service';
 
 const ServerList = (props) => {
-
+  const actionRef = useRef();
   const ServerListColumns = [
     {
       title: "机器HostName（IP）",
@@ -58,10 +58,10 @@ const ServerList = (props) => {
     <ProTable
       style={{ width: "100%" }}
       headerTitle = "机器列表"
+      actionRef={actionRef}
+      request={getHost}
       cardBordered = {true}
       columns = {ServerListColumns}
-      dataSource = {props.data}
-      loading = {props.loading}
       rowKey = "id"
       pagination={{
         showQuickJumper: true,
@@ -112,7 +112,7 @@ const Dashboard = () => {
               </Card>
             </Row>
             <Row gutter={16}>
-                <ServerList data = {data} loading = {loading} onClick = {(ip) => setHostIP(ip)}/>
+              <ServerList onClick={(ip) => setHostIP(ip)}/>
             </Row>
           </Space>
         </Col>
