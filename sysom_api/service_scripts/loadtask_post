@@ -1,0 +1,135 @@
+#!/usr/bin/python3
+# coding=utf-8
+
+import sys
+import os.path
+import re
+import json
+import random
+#import requests
+
+
+def exectue_cmd(command):
+    command=command.replace("\n", "")
+    command_fd = os.popen(command, "r")
+    ret = command_fd.read()
+    command_fd.close()
+    return ret
+
+def stack(name, file):
+    fd = open(file,"r")
+    satck_str = fd.read().split("-----")
+    for i, ek in enumerate(satck_str):
+        if name in satck_str[i]:
+            result = ek
+            fd.close()
+            return result
+    fd.close()
+
+def cpuflamegraph(file):
+    fd = open(file,"r")
+    graph = fd.read().split("####################################################################################")
+    return graph[2]
+    fd.close()
+
+def parse_log(file):
+    parse_data = {}
+    tasks = {}
+    load_avg = {}
+    load_avg_r = {}
+    load_avg_d = {}
+    task_stack = {}
+    task_list = []
+    load = []
+
+    fd = open(file,"r")
+    for line in fd.readlines():
+        if "global_cpuflamegraph" in line:
+            parse_data["Global lamegraph"] = cpuflamegraph(file)
+            continue
+        if "caused by" in line:
+            parse_data["Caused by"] = line.replace("\n", "")
+            recommend_tool = re.search( r'.*sysak\[(\S+)\].*', line, re.I)
+            if recommend_tool:
+                parse_data["Recommend sysak tool"] = recommend_tool.group(1)
+            continue
+        if "load reason" in line:
+            parse_data["Load reason"] = line.replace("\n", "")[13:]
+            continue
+        if "Name" in line:
+            task_name = re.search( r'Name:	(\S+)', line, re.I)
+            if task_name:
+                #print(task_name.group(1))
+                if task_name.group(1) in tasks:
+                #if tasks.has_key(task_name.group(1)):                   
+                    tasks[task_name.group(1)] = tasks[task_name.group(1)] + 1
+                else:
+                    tasks[task_name.group(1)] = 1
+                if "[<0>]" in stack(task_name.group(1),file):
+                    task_stack[task_name.group(1)] = stack(task_name.group(1),file)
+            continue
+        if "Time" in line:
+            time = re.search( r'Time: (.+)', line, re.I)
+            if time:
+                parse_data["Time"] = time.group(1)
+            continue
+        if "loadavg_r:" in line:
+            load_avg_r["Loadavg_r_1"] =  line.split()[1]
+            load_avg_r["Loadavg_r_5"] =  line.split()[2]
+            load_avg_r["Loadavg_r_15"] =  line.split()[3]
+        else:
+            load_avg_r["Loadavg_r_1"] =  0
+            load_avg_r["Loadavg_r_5"] =  0
+            load_avg_r["Loadavg_r_15"] =  0
+        if "loadavg_d:" in line:
+            load_avg_d["Loadavg_d_1"] =  line.split()[1]
+            load_avg_d["Loadavg_d_5"] =  line.split()[2]
+            load_avg_d["Loadavg_d_15"] =  line.split()[3]
+        else:
+            load_avg_d["Loadavg_d_1"] =  0
+            load_avg_d["Loadavg_d_5"] =  0
+            load_avg_d["Loadavg_d_15"] =  0
+        if "loadavg:" in line:
+            load_avg["Loadavg_1"] =  line.split()[1]
+            load_avg["Loadavg_5"] =  line.split()[2]
+            load_avg["Loadavg_15"] =  line.split()[3]
+        elif "load_proc" in line:
+            load_avg["Loadavg_1"] =  line.split()[1]
+            load_avg["Loadavg_5"] =  line.split()[2]
+            load_avg["Loadavg_15"] =  line.split()[3]          
+
+    fd.close()
+    parse_data["Solution"] = "xxxx"
+    task_sort = sorted(tasks.items(), key = lambda kv:kv[1],reverse=True)
+    stack_sort = sorted(task_stack.items(), key = lambda kv:kv[1],reverse=True)
+    for i, el in enumerate(task_sort):
+        each_task = {}
+        each_task["task"] = el[0]
+        each_task["weight"] = el[1]
+        each_task["stack"] = ""
+        for j, ek in enumerate(stack_sort):
+            if el[0] == ek[0]:
+                each_task["stack"] = ek[1]
+                each_task["stat"] = "D"
+            else:
+                each_task["stack"] = ""
+                each_task["stat"] = "R"
+        task_list.append(each_task)
+    parse_data["Top load tasks"] = task_list
+    load.append(load_avg)
+    load.append(load_avg_r)
+    load.append(load_avg_d)
+    parse_data["Loadavg"] = load
+    out = json.dumps(parse_data, indent=4)
+    #data = {"catalogue": parse_data["Global lamegraph"]}
+    #files = {"file": open(parse_data["Global lamegraph"], 'rb')}
+    #requests.post("http://127.0.0.1:8001/api/v1/host/upload_file/", data=data, files=files)
+    print(out)
+
+if __name__ == '__main__':
+    fname="/tmp/loadtask_argv_"+str(random.random())
+    f=open(fname,"w+")
+    f.write(sys.argv[1])
+    f.close()
+    parse_log(fname)
+    os.remove(fname)
