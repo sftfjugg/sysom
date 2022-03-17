@@ -1,0 +1,108 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import os
+import json
+import random
+import collections
+
+items = ["time", "cpu", "comm", "tid", "latency", "lenth"]
+sumary_runslw = {"cpus":[], "num":0, "avg":0.00, "max":0, "total":0}
+sumary_runnsc = {"cpus":[], "num":0, "avg":0.00, "max":0, "total":0}
+sumary_irqoff = {"cpus":[], "num":0, "avg":0.00, "max":0, "total":0}
+
+class schedmoni(object):
+	def __init__(self, f):
+		super(schedmoni, self).__init__()
+		self._file = f
+
+	def seprator_data(self, line):
+		arry = line.split()
+		data = arry[0].split('(')
+		return data[1].strip(')')
+
+	def common_data(self, line):
+		tmpdic = {}
+		arry = line.split()
+		lenth = min(len(items), len(arry))
+		for i in range(lenth):
+			tmpdic[items[i]] = arry[i]
+		return tmpdic
+
+	def sumary_data(self, sumary, last_dic):
+		lat_sum = sumary[last_dic['mode']]
+		data = last_dic['data']
+		if data['cpu'] not in lat_sum['cpus']:
+			lat_sum['cpus'].append(data['cpu'])
+		lat_sum['total'] = lat_sum['total'] + int(data['latency'])
+		lat_sum['num'] = lat_sum['num'] + 1
+		lat_sum['avg'] = float(lat_sum['total'])/float(lat_sum['num'])
+		lat_sum['max'] = max(lat_sum['max'], int(data['latency']))
+
+	def class_identify(self, line):
+		if line[0:4]=='TIME':					#seprator
+			data = self.seprator_data(line)
+			return 0, data
+		elif line[0:3]=='<0x': 					#private:stack trace
+			return 1, line
+		elif len(line) > 10:					#common datas
+			tmp_dic = self.common_data(line)
+			return 2, tmp_dic
+	def proc(self):
+		top = []
+		sumary = {'mode':'sumary', 'nosch':sumary_runnsc, 'runslw':sumary_runslw, 'irqoff':sumary_irqoff}
+		dic = collections.OrderedDict()
+		dic['mode'] = None
+		dic['data'] = None
+		dic['stack'] = []
+		last_dic = {}
+		mode = 0
+		modstr = ""
+		for line in self._file.readlines():
+			if len(line) < 2:
+				continue
+			mode, val = self.class_identify(line)
+			if mode == 0:
+				if last_dic:
+					self.sumary_data(sumary, last_dic)
+					top.append(last_dic)
+					s = json.dumps(last_dic)
+					print(s)
+				modstr = val
+				last_dic = {}
+				continue
+			elif mode == 2:
+				if last_dic:
+					self.sumary_data(sumary, last_dic)
+					top.append(last_dic)
+					s = json.dumps(last_dic)
+					print(s)
+				dic['mode'] = modstr
+				dic['data'] = val
+				dic['stack'] = []
+				last_dic = dic
+			elif mode == 1:
+				last_dic['stack'].append(line)
+				continue
+		if last_dic:
+			self.sumary_data(sumary, last_dic)
+			top.append(last_dic)
+			s = json.dumps(last_dic)
+			print(s)
+		for mode in ["runslw", "nosch", "irqoff"]:
+			mode_dic = sumary[mode]
+			if mode_dic['total'] == 0:
+				del sumary[mode] 
+		s = json.dumps(sumary)
+		print(s)
+if __name__ == "__main__":
+	fname="/tmp/schedmoni_argv_"+str(random.random())
+	f=open(fname,"w+")
+	f.write(sys.argv[1])
+	f.close()
+
+	f=open(fname,"r")
+	c1 = schedmoni(f)
+	c1.proc()
+	f.close()
+	os.remove(fname)
