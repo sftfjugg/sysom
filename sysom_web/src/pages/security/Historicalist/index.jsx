@@ -18,8 +18,8 @@ function index(props) {
     showSizeChanger: true,
     showQuickJumper: true,
     total: total, // 数据总数
-    pageSizeOptions:	[4,6,8]	,
-    defaultPageSize:6,
+    pageSizeOptions: [10, 20, 50, 100],
+    defaultPageSize: 10,
     // current: pageNum, // 当前页码
     showTotal: ((total,ranage) => `共 ${total} 条`),
     position:["bottomLeft"],
