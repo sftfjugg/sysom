@@ -32,10 +32,10 @@ cmd0_arg_T = args.get("诊断时长","10")
 cmd0_arg_device = args.get("目标磁盘","")
 dump_log_cmd = "cat /var/log/sysak/iosdiag/latency/result.log.stat 2>/dev/null;\
     echo \"\";cat /var/log/sysak/iosdiag/latency/result.log.seq 2>/dev/null;"
-iosdiag_cmd = "sysak iosdiag latency -t "+str(cmd0_arg_t)+" -T "+str(cmd0_arg_T)+" "+cmd0_arg_device+" > /dev/null 2>&1"
+iosdiag_cmd = "sysak iosdiag latency -t "+cmd0_arg_t+" -T "+cmd0_arg_T+" "+cmd0_arg_device+" > /dev/null 2>&1"
 print_result_cmd = "if [ \"$?\" = \"0\" ]; then "+\
     dump_log_cmd+"else echo \"fail\"; fi"
-cmd0['cmd'] = iosdiag_cmd+" && "+print_result_cmd
+cmd0['cmd'] = "rm /var/log/sysak/iosdiag/latency/* -f && "+iosdiag_cmd+" && "+print_result_cmd
 
 result['commands'].append(cmd0)
 
