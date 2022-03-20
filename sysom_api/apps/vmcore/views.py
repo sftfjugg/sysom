@@ -38,7 +38,14 @@ class VmcoreViewSet(GenericViewSet,
     def get_queryset(self):
         data = self.request.GET.dict()
         start_time = data.get("startTime", None) or "2021-01-01"
-        end_time = data.get('endTime', None) or datetime.datetime.now()
+        if 'endTime' in data:
+            try:
+                valid_date = datetime.datetime.strptime(data.get('endTime', None), '%Y-%m-%d')
+                end_time = datetime.datetime.combine(valid_date, datetime.time.max)
+            except ValueError:
+                end_time = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
+        else:
+            end_time = datetime.datetime.combine(datetime.datetime.now(), datetime.time.max)
         return models.Panic.objects.filter(core_time__range=(start_time, end_time))
 
 
