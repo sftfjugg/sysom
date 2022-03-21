@@ -228,9 +228,14 @@ class SaFixHistDetailsView(APIView):
     def get(self, request, pk, format=None):
         sa_fix_hist_details = SaFixHistToHost.objects.filter(sa_fix_hist_id=pk)
         data = [self.get_cve2host_details(detail_obj) for detail_obj in sa_fix_hist_details]
+        cve_id = sa_fix_hist_details.first().sa_fix_hist.cve_id
+
         for item in range(len(data)):
             data[item]["id"] = item + 1
-        return success(result=data)
+        return success(result={
+            "cve_id": cve_id,
+            "hosts_datail": data
+        })
 
 
 class SaFixHistDetailHostView(APIView):
