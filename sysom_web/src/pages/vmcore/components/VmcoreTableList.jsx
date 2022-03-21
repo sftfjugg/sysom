@@ -19,9 +19,13 @@ const VmcoreTableList = (props) => {
     {
       title: "宕机时间",
       dataIndex: "core_time",
-      sorter: true,
       hideInSearch: true,
       valueType: "dateTime",
+      sorter: (a, b) => {
+        const poa = parseInt(a.core_time.replace(/-/g,"").replace(/:/g,"").replace(/T/g,""),10);
+        const pob = parseInt(b.core_time.replace(/-/g,"").replace(/:/g,"").replace(/T/g,""),10);
+        return poa - pob;
+      },
     },
     {
       title: "时间范围",
