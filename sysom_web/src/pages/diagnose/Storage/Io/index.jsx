@@ -29,7 +29,7 @@ const IOList = () => {
           title: '诊断成功',
           content: (
             <div>
-              <div>诊断完成: {msg.data.result}</div>
+              <div>诊断完成，无异常超时IO</div>
             </div>
           ),
         });
