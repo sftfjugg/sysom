@@ -1,7 +1,9 @@
+from datetime import datetime
 import logging
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins, status
+from rest_framework.status import *
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
 
@@ -70,20 +72,50 @@ class UserModelViewSet(
         result = super().retrieve(request, *args, **kwargs)
         return success(result=result.data, message="获取成功")
 
-    def get_logs(self, request, *args, **kwargs):
-        params = request.query_params.dict()
-        option = self.logging_options.get(params.get('option'), None)
-        queryset = models.HandlerLog.objects.select_related().all()
-
+    def get_logs(self, request):
+        queryset = self._filter_log_params(request, models.HandlerLog.objects.select_related().all())
         user = getattr(request, 'user', None)
         if not user.is_admin:
             queryset = queryset.filter(user=user)
-
-        if option is not None:
-            queryset = queryset.filter(request_option=option)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            ser = serializer.HandlerLoggerListSerializer(page, many=True)
+            return self.get_paginated_response(ser.data)
 
         ser = serializer.HandlerLoggerListSerializer(queryset, many=True)
         return success(result=ser.data)
+
+    def _filter_log_params(self, request, queryset):
+        kwargs = dict()
+        params = request.query_params.dict()
+        request_option = params.pop('request_option', None)
+        if request_option:
+            option = self.logging_options.get(request_option, None)
+            if option is not None:
+                kwargs['request_option'] = option
+        request_ip = params.get('request_ip', None)
+        request_url = params.get('request_url', None)
+        request_method: str = params.get('request_method', None)
+        response_status = params.get('response_status', None)
+        start_time = params.get('startTime', '2000-01-01 00:00:00')
+        end_time = params.get('endTime', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+        if request_ip:
+            kwargs['request_ip'] = request_ip
+        if request_url:
+            kwargs['request_url'] = request_url
+        if request_method:
+            kwargs['request_method'] = request_method
+        if response_status:
+            kwargs['response_status'] = response_status
+
+        queryset = queryset.filter(created_at__range=[start_time, end_time], **kwargs)
+        return queryset
+
+    def get_response_code(self, request):
+        status_map = [{'label': k, 'value': v}for k, v in globals().items() if k.startswith('HTTP')]
+        return success(result=status_map)
+
 
 class AuthAPIView(CreateAPIView):
     authentication_classes = []

@@ -27,23 +27,22 @@ class SysomJsonRender(JSONRenderer):
         method = request.method
 
         result = response.data
-        if method != 'GET':
-            kwargs = {
-                'request_ip': request.META.get('REMOTE_ADDR', None),
-                'request_url': request.path,
-                'request_browser_agent': request.headers.get('User-Agent', ''),
-                'request_method': method,
-                'handler_view': view.__class__.__name__,
-                'response_status': result.get('code')
-            }
-            if 'auth' in request.path:
-                kwargs['request_option'] = 0
-                if result.get('code') == 200:
-                    kwargs['user_id'] = result['data']['id']
-            else:
-                kwargs['request_option'] = 1
-                kwargs['user'] = user
-            try:
-                HandlerLog.objects.create(**kwargs)
-            except:
-                pass
+        kwargs = {
+            'request_ip': request.META.get('REMOTE_ADDR', None),
+            'request_url': request.path,
+            'request_browser_agent': request.headers.get('User-Agent', ''),
+            'request_method': method,
+            'handler_view': view.__class__.__name__,
+            'response_status': result.get('code')
+        }
+        if 'auth' in request.path:
+            kwargs['request_option'] = 0
+            if result.get('code') == 200:
+                kwargs['user_id'] = result['data']['id']
+        else:
+            kwargs['request_option'] = 1
+            kwargs['user'] = user
+        try:
+            HandlerLog.objects.create(**kwargs)
+        except:
+            pass

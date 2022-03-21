@@ -15,6 +15,7 @@ from django.conf import settings
 from apps.host import serializer
 from apps.host.models import HostModel, Cluster
 from apps.accounts.authentication import Authentication
+from apps.task.views import script_task
 from consumer.executors import SshJob
 from apps.task.models import JobModel
 from lib import *
@@ -59,7 +60,8 @@ class HostModelViewSet(GenericViewSet,
         self.perform_create(create_serializer)
         instance = create_serializer.instance
         # 检查输入client部署命令 更新host状态
-        self.client_deploy_cmd_execute(instance, 'init')
+        thread = threading.Thread(target=self.client_deploy_cmd_init, args=(instance,))
+        thread.start()
         host_list_serializer = serializer.HostListSerializer(instance=instance)
         return success(result=host_list_serializer.data)
 
@@ -83,7 +85,9 @@ class HostModelViewSet(GenericViewSet,
         instance = self.check_instance_exist(request, *args, **kwargs)
         if not instance:
             return not_found()
-        self.client_deploy_cmd_execute(instance, 'delete')
+        status, content = self.client_deploy_cmd_delete(instance)
+        if status != 200:
+            return other_response(message="删除失败，清除脚本执行失败，错误如下：{}".format(content.get("message")), code=400, success=False)
         self.perform_destroy(instance)
         return success(message="删除成功", code=200, result={})
 
@@ -100,36 +104,24 @@ class HostModelViewSet(GenericViewSet,
         instance = self.get_queryset().filter(**kwargs).first()
         return instance if instance else None
 
-    def client_deploy_cmd_execute(self, instance, exec):
-        if exec == 'init':
-            thread = threading.Thread(target=self.client_deploy_cmd_init, args=(instance,))
-            thread.start()
-        if exec == 'delete':
-            thread = threading.Thread(target=self.client_deploy_cmd_delete, args=(instance,))
-            thread.start()
-
     def client_deploy_cmd_init(self, instance):
-        url = settings.INIT_SERVER + "api/v1/tasks/"
         data = {"service_name": "node_init",
                 "instance": instance.ip,
                 "update_host_status": True
                 }
-        headers = {
-            'Content-Type': "application/json"
-        }
-        data = json.dumps(data)
-        requests.post(url=url, data=data, headers=headers)
+        script_task(data)
 
     def client_deploy_cmd_delete(self, instance):
-        url = settings.INIT_SERVER + "api/v1/tasks/"
-        data = {"service_name": "node_delete",
-                "instance": instance.ip
-                }
-        headers = {
-            'Content-Type': "application/json"
-        }
-        data = json.dumps(data)
-        requests.post(url=url, data=data, headers=headers)
+        try:
+            data = {"service_name": "node_delete",
+                    "instance": instance.ip
+                    }
+            resp = script_task(data)
+            logger.info(resp.status_code, resp.data)
+            return resp.status_code, resp.data
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False, str(e)
 
 
 class ClusterViewSet(GenericViewSet,

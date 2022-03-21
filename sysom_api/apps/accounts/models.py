@@ -79,6 +79,7 @@ class HandlerLog(BaseModel):
     class Meta:
         db_table = 'sys_handler_log'
         verbose_name_plural = verbose_name = '操作日志'
+        ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.user.username}: 于{self.created_at} 通过{self.request_method}方式请求{self.request_url},' \

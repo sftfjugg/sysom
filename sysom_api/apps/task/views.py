@@ -54,44 +54,7 @@ class TaskAPIView(GenericViewSet,
     def create(self, request, *args, **kwargs):
         try:
             data = request.data
-            params = data.copy()
-            service_name = data.pop("service_name", None)
-            update_host_status = data.pop("update_host_status", False)
-            task_id = uuid_8()
-            username = data['username'] if data.get('username') else "admin"
-            user = User.objects.filter(username=username).first()
-            if service_name:
-                SCRIPTS_DIR = settings.SCRIPTS_DIR
-                service_path = os.path.join(SCRIPTS_DIR, service_name)
-                if not os.path.exists(service_path):
-                    return other_response(message="can not find script file, please check service name", code=400)
-                try:
-                    resp = subprocess.run([service_path, json.dumps(data)], stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE)
-                except Exception as e:
-                    JobModel.objects.create(command='', task_id=task_id,
-                                            created_by=user, result=str(e), status="Fail")
-                    logger.error(e, exc_info=True)
-                    return other_response(message=str(e), code=400, success=False)
-                if resp.returncode != 0:
-                    JobModel.objects.create(command='', task_id=task_id,
-                                            created_by=user, result=resp.stderr.decode('utf-8'), status="Fail")
-                    return other_response(message=str(resp.stderr.decode('utf-8')), code=400, success=False)
-                stdout = resp.stdout
-                stdout = stdout.decode('utf-8')
-                resp = ast.literal_eval(stdout)
-                resp_scripts = resp.get("commands")
-                if not resp_scripts:
-                    JobModel.objects.create(command='', task_id=task_id,
-                                            created_by=user, result="not find commands, Please check the script return",
-                                            status="Fail")
-                    return other_response(message="not find commands, Please check the script return", code=400)
-
-                self.ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
-                             service_name=service_name)
-                return success(result={"instance_id": task_id})
-            else:
-                return self.default_ssh_job(data, task_id)
+            return script_task(data)
         except Exception as e:
             logger.error(e, exc_info=True)
             return other_response(message=str(e), code=400, success=False)
@@ -102,36 +65,6 @@ class TaskAPIView(GenericViewSet,
             return success([])
         response = seriaizer.JobRetrieveSerializer(instance)
         return success(result=response.data)
-
-    def default_ssh_job(self, data, task_id):
-        try:
-            host_ids = data.get("host_ids")
-            commands = data.get("commands")
-            if not host_ids:
-                return other_response(message="请选择执行主机", code=400)
-            user = User.objects.filter(username='admin').first()
-            cmds = []
-            for i in range(len(host_ids)):
-                instance = {}
-                host = HostModel.objects.filter(pk=host_ids[i]).first()
-                instance["instance"] = host.ip
-                instance["cmd"] = commands[i]
-                cmds.append(instance)
-            self.ssh_job(cmds, task_id, user)
-            return success(result={"instance_id": task_id})
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return other_response(message=str(e), code=400, success=False)
-
-    def ssh_job(self, resp_scripts, task_id, user, data=None, **kwargs):
-        if not data:
-            job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
-                                                created_by=user)
-        else:
-            job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
-                                                created_by=user, params=data)
-        sch_job = SshJob(resp_scripts, job_model, **kwargs)
-        scheduler.add_job(sch_job.run)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -150,3 +83,84 @@ class TaskAPIView(GenericViewSet,
         instance.deleted_at = human_datetime()
         instance.deleted_by = self.request.user
         instance.save()
+
+
+def script_task(data):
+    try:
+        params = data.copy()
+        service_name = data.pop("service_name", None)
+        update_host_status = data.pop("update_host_status", False)
+        task_id = uuid_8()
+        username = data['username'] if data.get('username') else "admin"
+        user = User.objects.filter(username=username).first()
+        if service_name:
+            SCRIPTS_DIR = settings.SCRIPTS_DIR
+            service_path = os.path.join(SCRIPTS_DIR, service_name)
+            if not os.path.exists(service_path):
+                logger.error("can not find script file, please check service name")
+                return other_response(message="can not find script file, please check service name", code=400,
+                                      success=False)
+            try:
+                resp = subprocess.run([service_path, json.dumps(data)], stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+            except Exception as e:
+                JobModel.objects.create(command='', task_id=task_id,
+                                        created_by=user, result=str(e), status="Fail")
+                logger.error(e, exc_info=True)
+                return other_response(message=str(e), code=400, success=False)
+            if resp.returncode != 0:
+                logger.error(str(resp.stderr.decode('utf-8')))
+                JobModel.objects.create(command='', task_id=task_id,
+                                        created_by=user, result=resp.stderr.decode('utf-8'), status="Fail")
+                return other_response(message=str(resp.stderr.decode('utf-8')), code=400, success=False)
+            stdout = resp.stdout
+            stdout = stdout.decode('utf-8')
+            resp = ast.literal_eval(stdout)
+            resp_scripts = resp.get("commands")
+            if not resp_scripts:
+                logger.error("not find commands, Please check the script return")
+                JobModel.objects.create(command='', task_id=task_id,
+                                        created_by=user, result="not find commands, Please check the script return",
+                                        status="Fail")
+                return other_response(message="not find commands, Please check the script return", code=400,
+                                      success=False)
+            ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
+                    service_name=service_name)
+            return success(result={"instance_id": task_id})
+        else:
+            return default_ssh_job(data, task_id)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        return other_response(message=str(e), code=400, success=False)
+
+
+def default_ssh_job(data, task_id):
+    try:
+        host_ids = data.get("host_ids")
+        commands = data.get("commands")
+        if not host_ids:
+            return other_response(message="请选择执行主机", code=400)
+        user = User.objects.filter(username='admin').first()
+        cmds = []
+        for i in range(len(host_ids)):
+            instance = {}
+            host = HostModel.objects.filter(pk=host_ids[i]).first()
+            instance["instance"] = host.ip
+            instance["cmd"] = commands[i]
+            cmds.append(instance)
+        ssh_job(cmds, task_id, user)
+        return success(result={"instance_id": task_id})
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        return other_response(message=str(e), code=400, success=False)
+
+
+def ssh_job(resp_scripts, task_id, user, data=None, **kwargs):
+    if not data:
+        job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
+                                            created_by=user)
+    else:
+        job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
+                                            created_by=user, params=data)
+    sch_job = SshJob(resp_scripts, job_model, **kwargs)
+    scheduler.add_job(sch_job.run)

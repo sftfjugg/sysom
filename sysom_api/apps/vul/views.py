@@ -12,7 +12,7 @@ from apps.vul.vul import fix_cve, get_unfix_cve
 
 logger = logging.getLogger(__name__)
 
-scheduler = BackgroundScheduler(timezone=get_localzone())
+scheduler = BackgroundScheduler(timezone=f'{get_localzone()}')
 
 
 @register_job(scheduler, 'cron', id='update_vul', hour=0, minute=0)

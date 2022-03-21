@@ -39,7 +39,6 @@ MIDDLEWARE = [
 ]
 
 DEBUG = True
-INIT_SERVER = 'http://127.0.0.1:8001/'
 
 # Mysql数据库
 DATABASES = {

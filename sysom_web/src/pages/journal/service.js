@@ -16,6 +16,21 @@ export async function getAudit(params, options) {
     params: params,
     ...(options || {}),
   });
-  msg.data.reverse()
+  // msg.data.reverse()
   return msg
+}
+
+
+export async function get_response_code(params, options) {
+  const token = localStorage.getItem('token');
+  const result = await request('/api/v1/response_code/', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token
+    },
+    params: params,
+    ...(options || {}),
+  });
+  return result
 }
