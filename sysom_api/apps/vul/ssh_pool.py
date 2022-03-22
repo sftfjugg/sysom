@@ -81,6 +81,7 @@ class SshProcessQueueManager:
                     if host not in success:
                         logging.warning("get {}'s information failed".format(host))
                         fail.append(host)
+                    running[host].join()
 
             for host in success + fail:
                 if host in running:

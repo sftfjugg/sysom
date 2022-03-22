@@ -93,7 +93,24 @@ def get_unfix_cve_format():
 
 
 def update_sa():
-    cmd = 'dnf check-update cve *;cat /etc/os-release'
+    cmd = r'''
+#!/bin/bash
+# 获取errata信息
+dist=$(cat /etc/os-release | grep PLATFORM_ID | awk -F '"|:' '{print $3}')
+if [ -z $dist ]; then
+    dist="unknow"
+fi
+declare -a cve_array
+mapfile -t cve_array <<<$(dnf updateinfo list --with-cve 2>/dev/null | grep ^CVE | sort -k 1,1 -u | awk '{print $1 " " $3}')
+for i in "${cve_array[@]}"; do
+  cve_id=$(echo $i | awk '{print $1}')
+  rpm_pkg=$(echo $i | awk '{print $2}' | sed -e 's/^\(.*\)-\([^-]\{1,\}\)-\([^-]\{1,\}\)$/\1 \2 \3/' -e 's/\.\(el8\|el7\|an8\|oe\|uel20\|uelc20\).*$//g')
+  rpm_version=$(echo $rpm_pkg | awk '{print $2"-"$3}')
+  rpm_bin_name=$(echo $rpm_pkg | awk '{print $1}')
+  rpm_source_name=$(rpm -q $rpm_bin_name --queryformat "%{sourcerpm}" | awk -F "-$(rpm -q $rpm_bin_name --queryformat "%{version}")" '{print $1}')
+  echo $cve_id $rpm_source_name $rpm_version $dist
+done
+'''
     spqm = SshProcessQueueManager(list(HostModel.objects.all()))
     results = spqm.run(spqm.ssh_command, cmd)
     #
@@ -103,8 +120,8 @@ def update_sa():
     for result in results:
         host = result["host"]
         if result["ret"]['status'] == 0:
-            cves, software, version, os = parse_sa_result(result["ret"]['result'])
-            for cve in cves:
+            for cve_info in parse_sa_result(result["ret"]['result']):
+                cve, software, version, os = cve_info
                 if cve in cve2host_info.keys():
                     cve2host_info[cve].append((host, software, version, os))
                 else:
@@ -167,12 +184,14 @@ def update_sa_db(cveinfo):
 
 def parse_sa_result(result):
     """解析dnf获取的sa数据"""
-    # TODO
-    return result
+    cve_list = []
+    for i in result.split("\n"):
+        cve_list.append(i.split())
+    return cve_list
 
 
 def fix_cve(hosts, cve_id, user):
-    cmd = 'dnf install --cve {}'.format(cve_id)
+    cmd = 'dnf update --cve {}'.format(cve_id)
     spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
     results = spqm.run(spqm.ssh_command, cmd)
     fixed_time = human_datetime()
