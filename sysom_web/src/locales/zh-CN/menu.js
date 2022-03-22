@@ -74,5 +74,5 @@ export default {
   'menu.journal': '日志中心',
   'menu.journal.audit': '审计日志',
   'menu.security':'安全中心',
-  'menu.security.list':'安全列表'
+  'menu.security.list':'漏洞中心'
 };

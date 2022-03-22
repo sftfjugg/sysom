@@ -1,19 +1,15 @@
 import React ,{useState,useEffect}from 'react';
 import {Button,Card,Table,Col,Row} from 'antd'
 import './hist.less'
-import {histApi} from '../products'
-
-
-
-
+import {histApi} from '../service'
+import { PageContainer } from '@ant-design/pro-layout';
+ 
 function index(props) {
   const [dataSource,setdataSource]=useState([])
   const [total,setTotal]=useState(0)
-  useEffect(() => {
-    histApi().then((res) => {
-      console.log(res.data);
-      setdataSource(res.data)
-    });
+  useEffect(async() => {
+    const msg=await histApi()
+     setdataSource(msg.data)
   }, []);
   const columns=[
     
@@ -31,13 +27,13 @@ function index(props) {
       align: "center",
     },
     {
-      title:"恢复时间",
+      title:"修复时间",
       dataIndex:"fixed_time",
       key:"fixed_time",
       align: "center",
     },
     {
-      title:"恢复者",
+      title:"修复者",
       dataIndex:"fix_user",
       key:"fix_user",
       align: "center",
@@ -60,7 +56,7 @@ function index(props) {
         }
    },
     },{
-      title:"CVE恢复状态",
+      title:"CVE修复状态",
       dataIndex:"status",
       key:"status",
       align: "center",
@@ -92,18 +88,18 @@ function index(props) {
     showSizeChanger: true,
     showQuickJumper: true,
     total: total, // 数据总数
-    pageSizeOptions:	[4,6,8]	,
-    defaultPageSize:6,
+    pageSizeOptions:	[10,20,50,100]	,
+    defaultPageSize:20,
     // current: pageNum, // 当前页码
     showTotal: ((total,ranage) => `共 ${total} 条`),
-    position:["bottomLeft"],
+    position:["bottomRight"],
     // size:"small"
   };
   return (
     <div>
+      <PageContainer>
       <Card title="历史修复漏洞信息">
-        <Table  rowKey="id" columns={columns} dataSource={dataSource} pagination={ paginationProps}></Table>
-
+        <Table rowKey="id" size="small" columns={columns} dataSource={dataSource} pagination={ paginationProps}></Table>
       </Card>
       <Row>
       <Col span={20}></Col>
@@ -111,6 +107,7 @@ function index(props) {
          props.history.push("/security/list")
       }}>返回</Button></Col>
       </Row>
+      </PageContainer>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React,{useState} from 'react';
 import  {Button,Modal,Card} from 'antd'
+import './index.less';
 function agreem() {
     const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -21,11 +22,9 @@ function agreem() {
       </Button>
       </div>
       <Modal  visible={isModalVisible}  onCancel={handleCancel}  footer={null} width={1000} height={20}>
-          <Card className="cred-hei" > 
+          <Card className="Popup-crad" > 
 
-       
-
-          </Card>
+         </Card>
 
 
       </Modal>
