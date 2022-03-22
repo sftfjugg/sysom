@@ -189,12 +189,13 @@ def parse_sa_result(result):
     """解析dnf获取的sa数据"""
     cve_list = []
     for i in result.split("\n"):
-        cve_list.append(i.split())
+        if i:
+            cve_list.append(i.split())
     return cve_list
 
 
 def fix_cve(hosts, cve_id, user):
-    cmd = 'dnf update --cve {}'.format(cve_id)
+    cmd = 'dnf update --cve {} -y'.format(cve_id)
     spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
     results = spqm.run(spqm.ssh_command, cmd)
     fixed_time = human_datetime()
