@@ -95,18 +95,21 @@ def get_unfix_cve_format():
 def update_sa():
     cmd = r'''
 #!/bin/bash
-# 获取errata信息
+# 获取版本信息
 dist=$(cat /etc/os-release | grep PLATFORM_ID | awk -F '"|:' '{print $3}')
 if [ -z $dist ]; then
     dist="unknow"
 fi
+# 获取errata信息
 declare -a cve_array
 mapfile -t cve_array <<<$(dnf updateinfo list --with-cve 2>/dev/null | grep ^CVE | sort -k 1,1 -u | awk '{print $1 " " $3}')
 for i in "${cve_array[@]}"; do
   cve_id=$(echo $i | awk '{print $1}')
+  # 使用sed正则匹配rpm的包名，版本号，release
   rpm_pkg=$(echo $i | awk '{print $2}' | sed -e 's/^\(.*\)-\([^-]\{1,\}\)-\([^-]\{1,\}\)$/\1 \2 \3/' -e 's/\.\(el8\|el7\|an8\|oe\|uel20\|uelc20\).*$//g')
   rpm_version=$(echo $rpm_pkg | awk '{print $2"-"$3}')
   rpm_bin_name=$(echo $rpm_pkg | awk '{print $1}')
+  # 根据包名字获取source包名称
   rpm_source_name=$(rpm -q $rpm_bin_name --queryformat "%{sourcerpm}" | awk -F "-$(rpm -q $rpm_bin_name --queryformat "%{version}")" '{print $1}')
   echo $cve_id $rpm_source_name $rpm_version $dist
 done
