@@ -51,6 +51,7 @@ touch_env_rpms() {
     rpm -q --quiet supervisor || yum install -y supervisor
     rpm -q --quiet nginx || yum install -y nginx
     rpm -q --quiet gcc || yum install -y gcc
+    rpm -q --quiet make || yum install -y make
 }
 
 touch_virtualenv() {
