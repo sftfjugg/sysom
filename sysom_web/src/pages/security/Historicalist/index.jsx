@@ -1,28 +1,36 @@
 import React,{useEffect,useState} from 'react';
-import {Button,Card,Table} from 'antd'
+import {Button,Card,Table,Row,Col} from 'antd'
 import './historicalist.less'
-import {histidApi} from '../products'
+import { PageContainer } from '@ant-design/pro-layout';
+import {histidApi,} from '../service'
+import Headcard from "../components/Headcard";
 
 
 function index(props) {
   const [dataSource,setdataSource]=useState([])
   const [total,setTotal]=useState(0)
-  useEffect(()=>{
-    histidApi(props.match.params.id).then(res=>{
-      console.log(res.data)
-      setdataSource(res.data)
-     
-    })
+  const [title,setTitle]=useState("")
+  useEffect( async()=>{
+    const  msg=await histidApi(props.match.params.id)
+    setdataSource(msg.setdatasource)
+    setTitle(msg.title)
+   
   },[])
+  const fn = () => {
+    props.history.push("/security/historical");
+  };
+
+ 
+
   const paginationProps = {
     showSizeChanger: true,
     showQuickJumper: true,
     total: total, // 数据总数
-    pageSizeOptions: [10, 20, 50, 100],
-    defaultPageSize: 10,
+    pageSizeOptions:	[10,20,50,100],
+    defaultPageSize:20,
     // current: pageNum, // 当前页码
     showTotal: ((total,ranage) => `共 ${total} 条`),
-    position:["bottomLeft"],
+    position:["bottomRight"],
     // size:"small"
   };
   const columns=[
@@ -65,13 +73,13 @@ function index(props) {
     align: "center",
     render:(txt,record)=>{
       if(record.host_status==="running"){
-        return <div className="numbersuccess">on</div>
+        return <div className="numbersuccess">运行中</div>
       }else{
-        return <div className="numbererr">off</div>
+        return <div className="numbererr">离线</div>
       }
     }
   },{
-    title:"CVE恢复状态",
+    title:"CVE修复状态",
     dataIndex:"status",
     key:"status",
     align: "center",
@@ -92,7 +100,7 @@ function index(props) {
    onFilter: (value, record) => record.status.includes(value),
   },
   {
-    title:"操作",
+    title:"CVE修复详情",
     align: "center",
     render:(txt,record,index)=>{
       return (
@@ -107,13 +115,18 @@ function index(props) {
 ]
   return (
     <div>
-      <Card>200台主机存在被攻击风险，涉及CVE漏洞1000个，其中高危漏洞100个，请尽快修复。 </Card>
-      <Card className="list-table"
-      title="CVE-2021-2333">
-    
-     <Table className="hisTable" rowKey="id" columns={columns} dataSource={dataSource} pagination={ paginationProps}  />
-    
-     </Card>
+      <PageContainer>
+      <Headcard paren={fn} isShow={false} />
+      <Card className="list-table" title={title}>
+         <Table className="hisTable" size="small" rowKey="id" columns={columns} dataSource={dataSource} pagination={ paginationProps}  />
+      </Card>
+     <Row>
+      <Col span={20}></Col>
+      <Col  className="err_Button" span={4}> <Button type="primary" onClick={()=>{
+         props.history.go(-1)
+      }}>返回</Button></Col>
+      </Row>
+     </PageContainer>
     </div>
   );
 }

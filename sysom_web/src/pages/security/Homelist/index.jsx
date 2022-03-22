@@ -1,26 +1,30 @@
 import React ,{useState,useEffect}from 'react';
 import { Card, Table, Button,Progress,Row, Col} from "antd";
 import './homelist.less'
-import {getOneById,manyApi} from '../products'
+import { PageContainer } from '@ant-design/pro-layout';
 
+import {getOneById,manyApi} from '../service'
+import Headcard from "../components/Headcard";
 function index(props) {
   const [data,setdata]=useState([])
   const [lovodata,setlovodata]=useState([])
   const [total,setTotal]=useState(0)
   const [selectedRowKeys, setselectedRowKeys] = useState([]);
   const [selectedRows, setselectedRows] = useState([]);
-  
+  const [title,settitle]=useState("")
  
-  useEffect(()=>{
-    getOneById(props.match.params.id).then(res=>{
-      setlovodata(res.data.hosts)
-      setdata(res.data.software)
-    })
+  useEffect(async()=>{
+    const  msg=await  getOneById(props.match.params.id);
+    setlovodata(msg.setlovodata)
+    setdata(msg.setdata)
+    settitle(msg.title)
   },[])
   const[succesvisible,setsuccesvisible]=useState(false);
   const [errvisible,seterrvisible]=useState(false)
 
-
+  const fn = () => {
+    props.history.push("/security/historical");
+  };
   const rowSelection = {
     selectedRowKeys,
     onChange: (selectedRowKeys, selectedRows) => {
@@ -81,9 +85,9 @@ function index(props) {
     key:"status",
     render:(txt,record)=>{
       if(record.status==="running"){
-        return <div className="numbersuccess">on</div>
+        return <div className="numbersuccess">运行中</div>
       }else{
-        return <div className="numbererr">off</div>
+        return <div className="numbererr">离线</div>
       }
     }
    },{
@@ -91,23 +95,22 @@ function index(props) {
     render:(txt,record,index)=>{
       return (
         <div>
-            <Button type="link" onClick={()=>{
+            <Button type="link" onClick={async()=>{
               // console.log(record)
               const  arry=[];
               const id=props.match.params.id
               arry.push({"cve_id":id, "hostname":record.hostname })
-              manyApi({cve_id_list:arry}).then((res)=>{
-                console.log(res)
-                if(res.message=="fix cve failed"){
-                  seterrvisible(true)
-                }else{
-                  setsuccesvisible(true)
-                  setTimeout(() => {
-                    props.history.push("/security/list")                       
-                   
-                  }, 1000);
-                }
-              })
+            const msg=await manyApi({cve_id_list:arry});
+               console.log(msg)
+               if(msg.message=="fix cve failed"){
+                    seterrvisible(true)
+                  }else{
+                    setsuccesvisible(true)
+                    setTimeout(() => {
+                      props.history.push("/security/list")                       
+                     
+                    }, 1000);
+                  }
             }}>修复</Button>
            
         </div>
@@ -116,62 +119,64 @@ function index(props) {
   }
   ]
 
-const  repair=()=>{
+const  repair=async()=>{
   const  arry=[];
   const leght =selectedRows.length;
-  const id=props.match.params.id
-for(let i = 0; i < leght; i++){
-    arry.push({"cve_id":id, "hostname":selectedRows[i].hostname })
-}
+    
+    if(leght>0){
+      
+      const id=props.match.params.id
+      for(let i = 0; i < leght; i++){
+          arry.push({"cve_id":id, "hostname":selectedRows[i].hostname })
+      }
+      const msg=await manyApi({cve_id_list:arry});
+        if(msg.message=="fix cve failed"){
+              seterrvisible(true)
+            }else{
+              setsuccesvisible(true)
+              setTimeout(() => { 
+                props.history.push("/security/list")                       
+              }, 1000);
+            }
+        }else{
+          setsuccesvisible(false)
+        }    
 
-  manyApi({cve_id_list:arry}).then((res)=>{
-    console.log(res)
-    if(res.message=="fix cve failed"){
-      seterrvisible(true)
-    }else{
-      setsuccesvisible(true)
-      setTimeout(() => {
-        props.history.push("/security/list")                       
-       
-      }, 1000);
-    }
-  })
+
 }
   const paginationProps = {
     showSizeChanger: true,
     showQuickJumper: true,
     total: total, // 数据总数
-    pageSizeOptions:	[4,6,8]	,
-    defaultPageSize:6,
+    pageSizeOptions:	[10,20,50,100]	,
+    defaultPageSize:20,
     // current: pageNum, // 当前页码
     showTotal: ((total,ranage) => `共 ${total} 条`),
-    position:["bottomLeft"],
+    position:["bottomRight"],
     // size:"small"
   };
  return (
 
     <div>
-       <Card className="home-heard">200台主机存在被攻击风险，涉及CVE漏洞1000个，其中高危漏洞100个，请尽快修复。
-           <Button type="link" onClick={()=>props.history.push('/security/historical')}>历史修复</Button>
-       </Card>
-       <Card className="list-table"   title="cve-2021-2333">
+      <PageContainer>
+      <Headcard paren={fn} isShow={true}/>
+       <Card className="list-table"   title={title}>
     
-         <Table size={'small'}  pagination={false} scroll={{ y: 100 }}  rowKey="fixed_version" columns={columns} dataSource={data}  />
+         <Table size="small"  pagination={false} scroll={{ y: 100 }}  rowKey="fixed_version" columns={columns} dataSource={data}  />
        </Card>
        <Card title="涉及主机" className="lnvohost">
-              <Table rowKey="hostname" rowSelection={rowSelection} pagination={ paginationProps} columns={lnvohost} dataSource={lovodata}> </Table>
+              <Table rowKey="hostname" size="small" rowSelection={rowSelection} pagination={ paginationProps} columns={lnvohost} dataSource={lovodata}> </Table>
               <Row>
               <Col span={15}> 
                 {succesvisible?(< Progress width={150} percent={90} size="small" />):null}
                 {errvisible?(<p>恢复出错了，<Button type="link" size="small" onClick={()=>props.history.push('/security/historical')}>查看详情</Button></p>):null}
                </Col>
-             <Col span={7}></Col>
+              <Col span={7}></Col>
               <Col span={1}><Button >取消</Button></Col>
               <Col span={1}>  <Button type="primary" onClick={repair}>一键修复</Button></Col>
               </Row>
-              
-             
-     </Card>
+      </Card>
+     </PageContainer>
     </div>
   );
 }

@@ -48,7 +48,7 @@ const Welcome = () => {
             <Menu.Item key="audit"><a href="/journal/audit">审计日志</a></Menu.Item>
           </SubMenu>
           <SubMenu key="security" title="安全中心">
-            <Menu.Item key="List"><a href="/security/List">安全列表</a></Menu.Item>
+            <Menu.Item key="List"><a href="/security/List">漏洞中心</a></Menu.Item>
           </SubMenu>
         </Menu>
         <div className={styles.avatarRight}>
