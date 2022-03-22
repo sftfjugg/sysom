@@ -63,14 +63,14 @@ class VulListView(APIView):
         return success(result=data)
 
     def post(self, request, format=None):
-        logger.error(request.user)
+        logger.debug(request.user)
         failed = False
         data = []
         for cve in request.data.get("cve_id_list"):
             hosts = cve["hostname"]
             cve_id = cve["cve_id"]
             results = fix_cve(hosts, cve_id, user=request.user)
-            logger.warning(results)
+            logger.debug(results)
             sucess_host_list = []
             fail_host_list = []
             for ret in results:
@@ -88,7 +88,7 @@ class VulListView(APIView):
                 "sucess_host_list": sucess_host_list,
                 "fail_host_list": fail_host_list
             })
-        logger.error(data)
+        logger.debug(data)
         if failed:
             return other_response(message='fix cve failed', code=200, result=data)
         else:
