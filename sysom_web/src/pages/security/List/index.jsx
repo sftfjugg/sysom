@@ -123,7 +123,7 @@ function List(props) {
       },
       render: (text) => (
         <span placement="topLeft" title={text}>
-          {text}
+          {text.toString()}
         </span>
       ),
     },
