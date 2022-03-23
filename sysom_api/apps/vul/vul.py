@@ -148,11 +148,11 @@ def update_sa_db(cveinfo):
         sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id, software_name=software_name, os=os).first()
         sacve_obj.host.clear()
     add_cves = new_cves - current_cves
+    # [("cve_id", "software_name", "fixed_version", "os")]
     for cve in list(add_cves):
         cve_id, software_name, fixed_version, os = cve
         cve_obj_search = VulModel.objects.filter(cve_id=cve_id,
                                                  software_name=software_name)
-        hosts = [host[0] for host in new_cveinfo[cve_id]]
         # 增加需要新增的cve列表
         if len(cve_obj_search) == 0:
             sacve = SecurityAdvisoryModel.objects.create(cve_id=cve_id,
@@ -173,14 +173,25 @@ def update_sa_db(cveinfo):
                                                          fixed_version=fixed_version,
                                                          os=os,
                                                          update_time=timezone.now())
+
+        # (cve_id=cve_id,
+        # software_name=software_name,
+        # fixed_version=fixed_version,
+        # os=os,
+        # {"cve1":[(host,software,version,os)]}
+        hosts = [cve_detail[0] for cve_detail in new_cveinfo[cve_id] if
+                 cve_detail[1] == software_name and cve_detail[2] == fixed_version and cve_detail[3] == os]
         # 新增漏洞关联主机
         sacve.host.add(*HostModel.objects.filter(hostname__in=hosts))
 
+    # [("cve_id", "software_name", "fixed_version", "os")]
     update_cves = new_cves & current_cves
     for cve in list(update_cves):
-        cve_id, software_name, _, os = cve
-        hosts = [host[0] for host in new_cveinfo[cve_id]]
-        sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id, software_name=software_name, os=os).first()
+        cve_id, software_name, fixed_version, os = cve
+        hosts = [cve_detail[0] for cve_detail in new_cveinfo[cve_id] if
+                 cve_detail[1] == software_name and cve_detail[2] == fixed_version and cve_detail[3] == os]
+        sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id, software_name=software_name,
+                                                         fixed_version=fixed_version, os=os).first()
         sacve_obj.host.clear()
         sacve_obj.host.add(*HostModel.objects.filter(hostname__in=hosts))
 
