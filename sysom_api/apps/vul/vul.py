@@ -110,7 +110,7 @@ for i in "${cve_array[@]}"; do
   rpm_version=$(echo $rpm_pkg | awk '{print $2"-"$3}')
   rpm_bin_name=$(echo $rpm_pkg | awk '{print $1}')
   # 根据包名字获取source包名称
-  rpm_source_name=$(rpm -q $rpm_bin_name --queryformat "%{sourcerpm}" | awk -F "-$(rpm -q $rpm_bin_name --queryformat "%{version}")" '{print $1}')
+  rpm_source_name=$(rpm -q $rpm_bin_name --queryformat "%{sourcerpm}\n" | head -n 1 | awk -F "-$(rpm -q $rpm_bin_name --queryformat "%{version}\n" | head -n 1)" '{print $1}')
   echo $cve_id $rpm_source_name $rpm_version $dist
 done
 '''
