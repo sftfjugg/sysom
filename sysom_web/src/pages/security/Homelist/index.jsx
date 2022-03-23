@@ -12,7 +12,8 @@ function index(props) {
   const [selectedRowKeys, setselectedRowKeys] = useState([]);
   const [selectedRows, setselectedRows] = useState([]);
   const [title,settitle]=useState("")
- 
+  const [vlue,setCount]=useState(0)
+
   useEffect(async()=>{
     const  msg=await  getOneById(props.match.params.id);
     setlovodata(msg.setlovodata)
@@ -96,22 +97,31 @@ function index(props) {
       return (
         <div>
             <Button type="link" onClick={async()=>{
-              // console.log(record)
+                setsuccesvisible(true)
+                seterrvisible(false)
+               const  time =setInterval(()=>{
+                  setCount(vlue=>vlue+1);
+                 },2500)
               const  arry=[];
               const id=props.match.params.id
-              arry.push({"cve_id":id, "hostname":record.hostname })
+              arry.push({"cve_id":id, "hostname":[record.hostname ]})
             const msg=await manyApi({cve_id_list:arry});
-               console.log(msg)
-               if(msg.message=="fix cve failed"){
-                    seterrvisible(true)
-                  }else{
-                    setsuccesvisible(true)
-                    setTimeout(() => {
-                      props.history.push("/security/list")                       
-                     
-                    }, 1000);
-                  }
-            }}>修复</Button>
+             if(msg){
+                setsuccesvisible(true)
+                setCount(99);
+                clearInterval(time)
+              if(msg.message=="fix cve failed"){
+                seterrvisible(true)
+                setsuccesvisible(false);
+                setCount(0);
+              }else{
+                 setTimeout(() => {
+                  props.history.push("/security/list")                       
+                 }, 1000);
+               
+              }
+            }
+         }}>修复</Button>
            
         </div>
       )
@@ -124,23 +134,33 @@ const  repair=async()=>{
   const leght =selectedRows.length;
     
     if(leght>0){
-      
+      setsuccesvisible(true)
+      seterrvisible(false) 
+      const  time =setInterval(()=>{
+        setCount(vlue=>vlue+1);
+       
+      },2500)
       const id=props.match.params.id
       for(let i = 0; i < leght; i++){
-          arry.push({"cve_id":id, "hostname":selectedRows[i].hostname })
+          arry.push({"cve_id":id, "hostname":[selectedRows[i].hostname ]})
       }
       const msg=await manyApi({cve_id_list:arry});
-        if(msg.message=="fix cve failed"){
-              seterrvisible(true)
-            }else{
+      if(msg){
               setsuccesvisible(true)
-              setTimeout(() => { 
-                props.history.push("/security/list")                       
-              }, 1000);
+              setCount(99);
+              clearInterval(time)
+            if(msg.message=="fix cve failed"){
+              seterrvisible(true)
+              setsuccesvisible(false);
+              setCount(0);
+            }else{
+               setTimeout(() => { 
+                  props.history.push("/security/list")                       
+                }, 1000);
+            
             }
-        }else{
-          setsuccesvisible(false)
-        }    
+          }
+        } 
 
 
 }
@@ -168,7 +188,7 @@ const  repair=async()=>{
               <Table rowKey="hostname" size="small" rowSelection={rowSelection} pagination={ paginationProps} columns={lnvohost} dataSource={lovodata}> </Table>
               <Row>
               <Col span={15}> 
-                {succesvisible?(< Progress width={150} percent={90} size="small" />):null}
+                {succesvisible?( <p>修复中< Progress width={40} percent={vlue} size="small" /></p>):null}
                 {errvisible?(<p>恢复出错了，<Button type="link" size="small" onClick={()=>props.history.push('/security/historical')}>查看详情</Button></p>):null}
                </Col>
               <Col span={7}></Col>

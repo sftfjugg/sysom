@@ -14,14 +14,14 @@ function List(props) {
 
     setdata(msg.data);
   }, []);
- 
- const fn = () => {
+
+  const fn = () => {
     props.history.push("/security/historical");
   };
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [succesvisible, setsuccesvisible] = useState(false);
   const [errvisible, seterrvisible] = useState(false);
-  const [confirmLoading, setconfirmLoading] = useState(false);
+  const [vlue, setCount] = useState(0);
   const showModal = () => {
     const leght = selectedRows.length;
     if (leght > 0) {
@@ -29,8 +29,11 @@ function List(props) {
     }
   };
   const handleOk = async () => {
-    setconfirmLoading(true);
-   
+    const time = setInterval(() => {
+      setCount((vlue) => vlue + 1);
+    }, 2500);
+    setIsModalVisible(false);
+    setsuccesvisible(true);
     const arry = [];
     const leght = selectedRows.length;
     for (let i = 0; i < leght; i++) {
@@ -40,19 +43,20 @@ function List(props) {
       });
     }
     const msg = await manyApi({ cve_id_list: arry });
-    if(msg){
+    if (msg) {
       setIsModalVisible(false);
-      setconfirmLoading(false);
-      if (msg.message == "fix cve failed") {
-      seterrvisible(true);
-    } else {
       setsuccesvisible(true);
-      setTimeout(() => {
-        props.history.push("/security");
-      }, 1000);
+      setCount(99);
+      clearInterval(time);
+      if (msg.message == "fix cve failed") {
+        seterrvisible(true);
+        setsuccesvisible(false);
+      } else {
+        setTimeout(() => {
+          props.history.push("/security");
+        }, 1000);
+      }
     }
-    }
-   
   };
   const handleCancel = () => {
     setIsModalVisible(false);
@@ -92,8 +96,10 @@ function List(props) {
           return <div>中危</div>;
         } else if (record.vul_level == "critical") {
           return <div>严重</div>;
-        } else {
+        } else if (record.vul_level == "low") {
           return <div>低危</div>;
+        } else if (record.vul_level == "") {
+          return <div></div>;
         }
       },
       filters: [
@@ -123,7 +129,7 @@ function List(props) {
       },
       render: (text) => (
         <span placement="topLeft" title={text}>
-          {text}
+          {text.toString()}
         </span>
       ),
     },
@@ -193,7 +199,6 @@ function List(props) {
             visible={isModalVisible}
             onOk={handleOk}
             onCancel={handleCancel}
-            confirmLoading={confirmLoading}
             centered={true}
           >
             <p className="stop">确定修复吗</p>
@@ -205,7 +210,7 @@ function List(props) {
             centered={true}
           >
             <p> 正在修复中...</p>
-            <Progress percent={90} size="small" />
+            <Progress percent={vlue} size="small" />
           </Modal>
           <Modal width={320} visible={errvisible} footer={null} centered={true}>
             <p>
