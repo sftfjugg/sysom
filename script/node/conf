@@ -1,4 +1,5 @@
 APP_HOME=/usr/local/sysom
+NODE_HOME=/usr/local/sysom/node
 SERVER_LOCAL_IP=172.16.139.35
 SERVER_PUBLIC_IP=100.1.2.3
 NODE_IP=192.168.0.2
