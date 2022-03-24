@@ -3,7 +3,7 @@ yum install nfs-utils rpcbind -y
 systemctl start rpcbind && systemctl enable rpcbind
 systemctl start nfs && systemctl enable nfs
 
-VMCORE_HOME=${APP_HOME}/vmcore
+VMCORE_HOME=${NODE_HOME}/vmcore
 VMCORE_NFS_HOME=${APP_HOME}/vmcore/vmcore-nfs
 mkdir -p ${VMCORE_HOME}
 
