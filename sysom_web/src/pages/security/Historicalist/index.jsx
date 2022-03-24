@@ -105,7 +105,7 @@ function index(props) {
     render:(txt,record,index)=>{
       return (
         <div>
-            <Button type="link" onClick={()=>props.history.push(`/security/viewdetails/${record.id}/${record.hostname}`)}>查看详情</Button>
+            <Button type="link" onClick={()=>props.history.push(`/security/viewdetails/${props.match.params.id}/${record.hostname}`)}>查看详情</Button>
            
         </div>
       )
