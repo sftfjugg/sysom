@@ -34,6 +34,9 @@ const Welcome = () => {
           </SubMenu>
           <SubMenu key="diagnose" title="诊断中心">
             <Menu.Item key="oscheck"><a href="/diagnose/oscheck">系统健康检查</a></Menu.Item>
+            <SubMenu key="cpu" title="调度诊断中心">
+              <Menu.Item key="loadtask"><a href="/diagnose/cpu/">系统负载诊断</a></Menu.Item>
+            </SubMenu>
             <SubMenu key="storage" title="存储诊断中心">
               <Menu.Item key="io"><a href="/diagnose/storage/">IO延时诊断</a></Menu.Item>
             </SubMenu>

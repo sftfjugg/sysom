@@ -68,11 +68,13 @@ export default {
   'menu.diagnose.net': '网络诊断中心',
   'menu.diagnose.net.network': '网络延时诊断',
   'menu.diagnose.oscheck': '系统健康检查',
+  'menu.diagnose.cpu': '调度诊断中心',
+  'menu.diagnose.cpu.loadtask': '系统负载诊断',
   'menu.diagnose.memory': '内存诊断中心',
   'menu.diagnose.memory.market': '内存大盘',
   'menu.vmcore.analyse': '在线分析',
   'menu.journal': '日志中心',
   'menu.journal.audit': '审计日志',
-  'menu.security':'安全中心',
-  'menu.security.list':'漏洞中心'
+  'menu.security': '安全中心',
+  'menu.security.list': '漏洞中心'
 };

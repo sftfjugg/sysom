@@ -108,6 +108,21 @@ export default [
         component: './diagnose/oscheck',
       },
       {
+        path: '/diagnose/cpu',
+        name: 'cpu',
+        routes: [
+          {
+            path: '/diagnose/cpu',
+            redirect: '/diagnose/cpu/loadtask',
+          },
+          {
+            path: '/diagnose/cpu/loadtask',
+            name: 'loadtask',
+            component: './diagnose/cpu/loadtask',
+          }
+        ]
+      },
+      {
         path: '/diagnose/storage',
         name: 'storage',
         routes: [
