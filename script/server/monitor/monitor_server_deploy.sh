@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
-UPLOAD_DIR=${APP_HOME}/target/sysom_web/download/
-RESOURCE_DIR=${APP_HOME}/monitor
+UPLOAD_DIR=${SERVER_HOME}/target/sysom_web/download/
+RESOURCE_DIR=${SERVER_HOME}/monitor
 GRAFANA_PKG=grafana-8.2.5-1.x86_64.rpm
 PROMETHEUS_VER=2.29.1
 PROMETHEUS_ARCH=linux-amd64
@@ -140,12 +140,12 @@ configure_grafana()
 
 configure_cron()
 {
-    echo "* * * * * python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
-    echo "* * * * * sleep 10;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
-    echo "* * * * * sleep 20;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
-    echo "* * * * * sleep 30;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
-    echo "* * * * * sleep 40;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
-    echo "* * * * * sleep 50;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${APP_HOME} >> /var/spool/cron/root
+    echo "* * * * * python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 10;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 20;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 30;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 40;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
+    echo "* * * * * sleep 50;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
 }
 
 main()

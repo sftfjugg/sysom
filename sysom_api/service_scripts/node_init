@@ -12,7 +12,6 @@ import sys
 ###############################################################################
 server_local_ip=xxx
 server_public_ip=xxx
-app_home=xxx
 node_home=xxx
 arg = json.loads(sys.argv[1])
 host_ip = arg.get('instance')
