@@ -21,6 +21,11 @@ const PieCharts = (props) => {
       },
     ],
   };
+
+  if (props.customTooltips) {
+    config.tooltip = { customContent: props.customTooltips }
+  }
+
   return (
     <>
       <ProCard title={props.title} layout="center">
