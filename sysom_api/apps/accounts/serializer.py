@@ -23,7 +23,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class AddUserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(error_messages={'required': "用户名必填"})
-    password = serializers.CharField(error_messages={'required': "密码名必填"}, required=True)
+    password = serializers.CharField(error_messages={'required': "密码必填"}, required=True)
     role = serializers.ListField(required=False, write_only=True)
 
     class Meta:
@@ -85,14 +85,14 @@ class UserAuthSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = models.User.objects.get(username=attrs['username'])
         if not user.verify_password(attrs['password']):
-            raise serializers.ValidationError("用户密码不正确！")
+            raise serializers.ValidationError("用户名或密码不正确！")
         return attrs
 
     def validate_username(self, attr):
         try:
             models.User.objects.get(username=attr)
         except models.User.DoesNotExist:
-            raise serializers.ValidationError(f"用户名: {attr} 不存在!")
+            raise serializers.ValidationError("用户名或密码不正确！")
         return attr
 
     def create_token(self):
