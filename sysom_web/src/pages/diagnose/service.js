@@ -72,8 +72,8 @@ export async function getTask(id, params = {}, options) {
     msg.data.result = parseJsonString(msg.data.result);
     msg.data.metric = msg.data.result.seq.reduce((metric, item) => {
       metric.push({
-        x: item.meta.seq,
-        y: item.delays.filter((item) => item.delay === "total")[0].ts
+        x: String(item.meta.seq),
+        delay: item.delays.filter((item) => item.delay === "total")[0].ts
       }); return metric
     }, [])
   }
