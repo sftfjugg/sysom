@@ -19,15 +19,15 @@ const FlowPopover = (props) => {
 
     const metric = props.data.seq.reduce((metric, item) => {
         metric.push({
-            x: item.meta.seq,
-            y: item.delays.filter((item) => item.delay === props.tips?.delay)[0].ts
+            x: String(item.meta.seq),
+            delay: item.delays.filter((item) => item.delay === props.tips?.delay)[0].ts
         }); return metric
     }, [])
 
     const lineChartConfig = {
         data: metric,
         xField: "x",
-        yField: "y",
+        yField: "delay",
 
         slider: {
           start: 0,
