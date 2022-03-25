@@ -81,6 +81,12 @@ class HostModelViewSet(GenericViewSet,
         else:
             return serializer.AddHostSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super(HostModelViewSet, self).list(request, *args, **kwargs)
+
     def destroy(self, request, *args, **kwargs):
         instance = self.check_instance_exist(request, *args, **kwargs)
         if not instance:
@@ -144,6 +150,12 @@ class ClusterViewSet(GenericViewSet,
             return serializer.ClusterListSerializer
         else:
             return serializer.AddClusterSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super(ClusterViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         response = super().retrieve(request, *args, **kwargs)
