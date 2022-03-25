@@ -2,7 +2,9 @@ import os
 import ast
 import subprocess
 
+from django.http.response import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
@@ -83,6 +85,22 @@ class TaskAPIView(GenericViewSet,
         instance.deleted_at = human_datetime()
         instance.deleted_by = self.request.user
         instance.save()
+
+    def get_task_svg(self, request, task_id: str, etx: str, *args, **kwargs):
+        if etx != 'svg':
+            return not_found(message="请输入正确参数: SVG")
+
+        instance = get_object_or_404(JobModel, pk=task_id)
+        if instance.status == 'Success':
+            result = json.loads(instance.result)
+            svg_context = result.get('flamegraph', None)
+            if svg_context is None:
+                return success(success=False, message='Result 未包含 "flamegraph"字段')
+            return FileResponse(svg_context)
+        else:
+            return success(result={}, message=f"任务：{instance.status}", success=False)
+
+    
 
 
 def script_task(data):

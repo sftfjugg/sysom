@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-RESOURCE_DIR=${APP_HOME}/monitor
+RESOURCE_DIR=${NODE_HOME}/monitor
 
 main()
 {

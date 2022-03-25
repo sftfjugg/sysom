@@ -192,7 +192,7 @@ const  repair=async()=>{
                 {errvisible?(<p>恢复出错了，<Button type="link" size="small" onClick={()=>props.history.push('/security/historical')}>查看详情</Button></p>):null}
                </Col>
               <Col span={7}></Col>
-              <Col span={1}><Button >取消</Button></Col>
+              <Col span={1}  onClick={()=>{ props.history.push("/security/list") }}><Button >取消</Button></Col>
               <Col span={1}>  <Button type="primary" onClick={repair}>一键修复</Button></Col>
               </Row>
       </Card>

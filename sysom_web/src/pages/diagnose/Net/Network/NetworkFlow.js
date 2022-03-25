@@ -95,17 +95,11 @@ const NetworkFlow = (props) => {
                 <text style={{fontSize: 20}} fill="#FFFFFF" x="30" y="220">
                     内核态
                 </text>
-                <text style={{fontSize: 20}} fill="#FFFFFF" x="30" y="400">
-                    MOC
-                </text>
                 <text style={{fontSize: 20}} fill="#FFFFFF" x="1150" y="80">
                     用户态
                 </text>
                 <text style={{fontSize: 20}} fill="#FFFFFF" x="1150" y="220">
                     内核态
-                </text>
-                <text style={{fontSize: 20}} fill="#FFFFFF" x="1150" y="400">
-                    MOC
                 </text>
                 <polyline
                     fill="none"

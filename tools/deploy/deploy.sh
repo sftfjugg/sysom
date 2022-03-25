@@ -22,20 +22,22 @@ fi
 APP_HOME=$1
 SERVER_LOCAL_IP=$2
 SERVER_PUBLIC_IP=$3
+SERVER_HOME=${APP_HOME}/server
 
 export APP_HOME=${APP_HOME}
+export SERVER_HOME=${APP_HOME}/server
 export SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
 export SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
 
-VIRTUALENV_HOME="${APP_HOME}/virtualenv"
-TARGET_PATH="${APP_HOME}/target"
+VIRTUALENV_HOME="${SERVER_HOME}/virtualenv"
+TARGET_PATH="${SERVER_HOME}/target"
 
 if [ "$UID" -ne 0 ]; then
     echo "Please run as root"
     exit 1
 fi
 
-mkdir -p ${APP_HOME}
+mkdir -p ${SERVER_HOME}
 
 touch_env_rpms() {
     if [ -f /etc/alios-release ]; then
@@ -86,11 +88,11 @@ update_target() {
 check_requirements() {
     echo "INFO: begin install requirements..."
 
-    if ! [ -d ${APP_HOME}/logs/ ]; then
-        mkdir -p ${APP_HOME}/logs/ || exit 1
+    if ! [ -d ${SERVER_HOME}/logs/ ]; then
+        mkdir -p ${SERVER_HOME}/logs/ || exit 1
     fi
 
-    local requirements_log="${APP_HOME}/logs/${APP_NAME}_requirements.log"
+    local requirements_log="${SERVER_HOME}/logs/${APP_NAME}_requirements.log"
     local requirements="${API_DIR}/requirements.txt"
     python_version=$(python -V | cut -b 8-10)
     if [ ${python_version} == "3.6" ];then
@@ -121,11 +123,11 @@ init_conf() {
     mkdir -p /run/daphne
     cp tools/deploy/nginx.conf /etc/nginx/
     cp tools/deploy/sysom.conf /etc/nginx/conf.d/
-    sed -i "s;/home/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
+    sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/nginx/conf.d/sysom.conf
     cp tools/deploy/sysom.ini /etc/supervisord.d/
-    sed -i "s;/home/sysom;${APP_HOME};g" /etc/supervisord.d/sysom.ini
+    sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/supervisord.d/sysom.ini
     cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
-    sed -i "s;/home/sysom;${APP_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
+    sed -i "s;/home/sysom;${SERVER_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
     pushd ${TARGET_PATH}/${API_DIR}
     rm -f apps/*/migrations/00*.py
     python manage.py makemigrations accounts
@@ -173,7 +175,7 @@ deploy() {
     touch_virtualenv
     update_target
     check_requirements
-    setup_database > ${APP_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
+    setup_database > ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
     init_conf
     start_script_server
     start_script_node
