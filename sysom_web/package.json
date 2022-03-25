@@ -57,6 +57,8 @@
     "@umijs/route-utils": "^2.0.3",
     "antd": "4.17.0",
     "axios": "^0.26.1",
+    "browserslist": "^4.20.2",
+    "caniuse-lite": "^1.0.30001320",
     "classnames": "^2.2.6",
     "lodash": "^4.17.11",
     "moment": "^2.25.3",
