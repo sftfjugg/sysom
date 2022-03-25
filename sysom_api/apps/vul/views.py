@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 from rest_framework.views import APIView
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import register_job
@@ -249,3 +250,31 @@ class SaFixHistDetailHostView(APIView):
             "details": str(sa_fix_hist_details_host.details),
         }
         return success(result=data)
+
+
+# 因为sysom未使用redis等缓存，所以使用全局变量，在内存中存储上次更新时间
+LAST_UPDATE_SA_TIME = None
+
+
+class UpdateSaView(APIView):
+    authentication_classes = [Authentication]
+
+    def post(self, request):
+        """
+        检测最近更新时间，如果小于时间间隔，则直接返回成功
+        """
+        global LAST_UPDATE_SA_TIME
+        if LAST_UPDATE_SA_TIME is None:
+            upsa()
+            LAST_UPDATE_SA_TIME = time.time()
+            return success(result="Update security advisory data")
+        else:
+            # 默认间隔时间为10分
+            interval_time = 60 * 10
+            current_time = time.time()
+            if current_time - LAST_UPDATE_SA_TIME < interval_time:
+                return success(result="The data has been updated recently,no need to update it again")
+            else:
+                upsa()
+                LAST_UPDATE_SA_TIME = time.time()
+                return success(result="Update security advisory data")

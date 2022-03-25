@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/v1/vul/hist/<int:pk>/<str:hostname>/', views.SaFixHistDetailHostView.as_view()),
     path('api/v1/vul/hist/<int:pk>/', views.SaFixHistDetailsView.as_view()),
     path('api/v1/vul/summary/', views.VulSummaryView.as_view()),
+    path('api/v1/vul/updatesa/', views.UpdateSaView.as_view()),
     path('api/v1/vul/', views.VulListView.as_view()),
     path('api/v1/vul/<str:cve_id>/', views.VulDetailsView.as_view()),
 ]
