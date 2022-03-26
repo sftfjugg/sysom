@@ -66,6 +66,13 @@ export default (props) => {
     count: model.count,
     handleCount: model.handleCount,
   }));
+
+  //Find the index of The longest delay
+  const { maxIdx } = props.data[count].delays.reduce((max, currentValue, currentIndex) => {
+    return (parseFloat(currentValue.percent) < max.maxVal) ? max :
+      { maxVal: parseFloat(currentValue.percent), maxIdx: currentIndex }
+  }, { maxVal: -1, maxIdx: -1 })
+
   return (
     <RcResizeObserver
       key="resize-observer"
@@ -88,12 +95,16 @@ export default (props) => {
                   colSpan={{ md: 20 }}
                   key={index}
                   title={item.component}
+                  headStyle={{ justifyContent: 'center' }}
+                  bodyStyle={index == maxIdx ? { backgroundColor: "#CC0033" } : {}}
                   layout="center"
                   bordered
                   headerBordered
                   direction="column"
                 >
-                  <div className={styles.ostitle}>{item.percent}</div>
+                  <div className={styles.ioDeleyPercentage}>
+                    {item.percent}
+                  </div>
                   <div>Max: {item.max}</div>
                   <div>AVG: {item.avg}</div>
                   <div>MIN: {item.min}</div>
