@@ -1,7 +1,6 @@
 import { ArrowRightOutlined } from "@ant-design/icons";
 import ProForm, { ProFormSelect } from "@ant-design/pro-form";
 import { useState } from "react";
-import { useModel } from "umi";
 import ProCard from "@ant-design/pro-card";
 import RcResizeObserver from "rc-resize-observer";
 import styles from "../../diagnose.less";
@@ -14,10 +13,6 @@ const DiagTitle = (props) => {
       label: item.diskname,
     });
   });
-  const { count, handleCount } = useModel("diagnose", (model) => ({
-    count: model.count,
-    handleCount: model.handleCount,
-  }));
 
   return (
     <ProForm
@@ -40,7 +35,7 @@ const DiagTitle = (props) => {
       }}
     >
       <ProFormSelect
-        onChange={(val) => handleCount(val)}
+        onChange= {props.diskChange}
         options={opt}
         width="sm"
         name="useMode"
@@ -62,13 +57,9 @@ const DiagExtra = (props) => {
 
 export default (props) => {
   const [responsive, setResponsive] = useState(false);
-  const { count, handleCount } = useModel("diagnose", (model) => ({
-    count: model.count,
-    handleCount: model.handleCount,
-  }));
 
   //Find the index of The longest delay
-  const { maxIdx } = props.data[count].delays.reduce((max, currentValue, currentIndex) => {
+  const { maxIdx } = props.data[props.diskIdx].delays.reduce((max, currentValue, currentIndex) => {
     return (parseFloat(currentValue.percent) < max.maxVal) ? max :
       { maxVal: parseFloat(currentValue.percent), maxIdx: currentIndex }
   }, { maxVal: -1, maxIdx: -1 })
@@ -89,14 +80,14 @@ export default (props) => {
       }}
     >
       <ProCard
-        title={[<DiagTitle dataSour={props.data} key="diagtitle" />]}
+        title={[<DiagTitle dataSour={props.data} diskChange={props.diskChange} key="diagtitle" />]}
         extra={[<DiagExtra dataSour={props.recorded} key="diagextra" />]}
         split={responsive ? "horizontal" : "vertical"}
         headerBordered
       >
         <ProCard title="诊断链路" tooltip={tooltips["诊断链路"]} gutter={8}>
-          {props.data[count].delays.map((item, index) => {
-            const length = props.data[count].delays.length
+          {props.data[props.diskIdx].delays.map((item, index) => {
+            const length = props.data[props.diskIdx].delays.length
             return (
               <ProCard key={index + "wl"}>
                 <ProCard
