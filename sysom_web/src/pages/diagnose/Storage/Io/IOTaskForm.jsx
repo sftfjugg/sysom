@@ -49,7 +49,7 @@ export default (props) => {
                         name={"诊断时长"}
                         width="md"
                         label="诊断时长"
-                        tooltip="时间单位：ms"
+                        tooltip="持续诊断时长，时间单位：s"
                         initialValue={10}
                     />
 
