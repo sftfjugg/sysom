@@ -82,7 +82,7 @@ const IOList = () => {
     <PageContainer>    
       <IOTaskForm onSuccess={onPostTask} />
       <Divider />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
-      <IOTableList headerTitle="诊断列表" search={true} onClick = {(record) => onListClick(record)} onError={onError} ref={refIoTableList} />
+      <IOTableList headerTitle="诊断记录查看" search={true} onClick = {(record) => onListClick(record)} onError={onError} ref={refIoTableList} />
       <Divider />
       {
         data ?
