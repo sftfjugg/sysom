@@ -88,7 +88,12 @@ const IOList = () => {
         data ?
           <>
             <IOResults data={data.ioList} recorded={data.recorded} />
-            <MetricShow2 data={data.metric} title="IO 诊断各阶段延迟分析" xField="x" yField="y" category="category" slider="false" />
+            <MetricShow2 data={data.metric}
+              title="IO 诊断各阶段延迟分析"
+              xField="x" yField="y"
+              category="category" slider="false"
+              yAxisTitle="时延（us)"
+            />
           </>
           :
           <></>

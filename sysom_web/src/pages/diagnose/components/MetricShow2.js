@@ -5,8 +5,8 @@ import { Line } from '@ant-design/charts';
 
 const MetricShow = (props) => {
   const { count, handleCount } = useModel('diagnose', model => (
-    { 
-      count: model.count, 
+    {
+      count: model.count,
       handleCount: model.handleCount,
     }
   ))
@@ -16,9 +16,19 @@ const MetricShow = (props) => {
     xField: props.xField,
     yField: props.yField,
     seriesField: props.category,
+    yAxis: {
+      title:{
+        text: props.yAxisTitle || ''
+      },
+    },   
     xAxis: {
+      title:{
+        text: props.xAxisTitle || ''
+      },
       tickCount: 5,
     },
+    meta : props.meta || {},
+    tooltip: props.customTooltips ? { customContent: props.customTooltips } : {},
     slider: {
       start: 0,
       end: 1.0,
