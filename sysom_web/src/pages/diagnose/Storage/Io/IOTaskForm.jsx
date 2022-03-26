@@ -49,6 +49,7 @@ export default (props) => {
                         name={"诊断时长"}
                         width="md"
                         label="诊断时长"
+                        tooltip="时间单位：ms"
                         initialValue={10}
                     />
 
@@ -57,6 +58,7 @@ export default (props) => {
                         width="md"
                         label="时间阈值"
                         initialValue={5000}
+                        tooltip="保留IO延迟大于设定时间阈值的IO（时间单位：ms）"
                     />
 
                     <ProFormText

@@ -73,6 +73,14 @@ export default (props) => {
       { maxVal: parseFloat(currentValue.percent), maxIdx: currentIndex }
   }, { maxVal: -1, maxIdx: -1 })
 
+  const tooltips = {
+    "诊断链路": "IO在一个生命周期中，先后经历OS内核IO通用块层软件 —> OS内核磁盘驱动软件 —> 磁盘本身 —> OS内核中IO消亡流程",
+    "os(block)": "指IO在OS内核通用块层部分的耗时（时间单位：us）",
+    "os(driver)": "指IO在OS内核磁盘驱动部分的耗时（时间单位：us）",
+    "disk": "指IO在硬件磁盘侧的耗时（时间单位：us）",
+    "os(complete)": "指IO在OS内核中，IO消亡流程的耗时（时间单位：us）"
+  }
+
   return (
     <RcResizeObserver
       key="resize-observer"
@@ -86,7 +94,7 @@ export default (props) => {
         split={responsive ? "horizontal" : "vertical"}
         headerBordered
       >
-        <ProCard title="诊断链路" gutter={8}>
+        <ProCard title="诊断链路" tooltip={tooltips["诊断链路"]} gutter={8}>
           {props.data[count].delays.map((item, index) => {
             const length = props.data[count].delays.length
             return (
@@ -95,6 +103,7 @@ export default (props) => {
                   colSpan={{ md: 20 }}
                   key={index}
                   title={item.component}
+                  tooltip={tooltips[item.component]}
                   headStyle={{ justifyContent: 'center' }}
                   bodyStyle={index == maxIdx ? { backgroundColor: "#CC0033" } : {}}
                   layout="center"
