@@ -179,7 +179,7 @@ const  repair=async()=>{
 
     <div>
       <PageContainer>
-      <Headcard paren={fn} isShow={true}/>
+      <Headcard paren={fn} isShow={true} upData={false}/>
        <Card className="list-table"   title={title}>
     
          <Table size="small"  pagination={false} scroll={{ y: 100 }}  rowKey="fixed_version" columns={columns} dataSource={data}  />
