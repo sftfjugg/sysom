@@ -17,6 +17,14 @@ def iosdiagJoinData(raw):
                 data['stat'] = obj['summary']
             else:
                 data["seq"] = obj['summary']
+        for diskIdx in range(len(list(data["seq"]))):
+            seq = data["seq"][diskIdx]
+            for idx in range(len(list(seq["slow ios"]))-1, 0, -1):
+                if seq["slow ios"][idx]["time"] == seq["slow ios"][idx-1]["time"]:
+                    if seq["slow ios"][idx]["totaldelay"] <= seq["slow ios"][idx-1]["totaldelay"]:
+                        del seq["slow ios"][idx]
+                    else:
+                        del seq["slow ios"][idx-1]
     s = json.dumps(data, indent=4)
     print(s)
 
