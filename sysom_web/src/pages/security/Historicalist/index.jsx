@@ -116,7 +116,7 @@ function index(props) {
   return (
     <div>
       <PageContainer>
-      <Headcard paren={fn} isShow={false} />
+      <Headcard paren={fn} isShow={false}  upData={false}/>
       <Card className="list-table" title={title}>
          <Table className="hisTable" size="small" rowKey="id" columns={columns} dataSource={dataSource} pagination={ paginationProps}  />
       </Card>

@@ -114,6 +114,19 @@ const token = localStorage.getItem('token');
   }
 
 
+  export async function updataApi(options) {
+    const msg= await  request('/api/v1/vul/updatesa/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
+      ...(options || {}),
+    
+    });
+    return msg
+  }
+
 
 
 
