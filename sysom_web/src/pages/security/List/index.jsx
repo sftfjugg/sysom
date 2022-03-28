@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Table, Button, Progress, Modal, Tooltip, message } from "antd";
+import { Card, Table, Button, Progress, Modal, Tooltip, message,  } from "antd";
 import "./list.less";
 import { listApi, manyApi, updataApi } from "../service";
 import { PageContainer } from "@ant-design/pro-layout";
@@ -66,9 +66,13 @@ function List(props) {
   const geng=async()=>{
     sethuan(true)
     const msg = await updataApi();
+    console.log(msg)
     if(msg.message=="success"){
       sethuan(false)
       props.history.push("/security");
+    }else if(msg.message=="forbidden"){
+      sethuan(false)
+      message.warning('操作频率过快，请稍后再试!');
 }
   }
 
