@@ -274,7 +274,8 @@ class UpdateSaView(APIView):
             interval_time = 60 * 10
             current_time = time.time()
             if current_time - LAST_UPDATE_SA_TIME < interval_time:
-                return success(result="The data has been updated recently,no need to update it again")
+                return success(message="forbidden",
+                               result="The data has been updated recently,no need to update it again")
             else:
                 upsa()
                 LAST_UPDATE_SA_TIME = time.time()
