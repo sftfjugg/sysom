@@ -121,6 +121,7 @@ class VulDetailsView(APIView):
                     "vul_level": vul_level,
                     "fixed_version": fixed_version
                 })
+                cves_data["software"] = [dict(t) for t in set([tuple(d.items()) for d in cves_data["software"]])]
                 cves_data["hosts"] += hosts
 
             else:
