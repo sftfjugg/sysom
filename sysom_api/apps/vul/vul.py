@@ -152,8 +152,7 @@ def update_sa_db(cveinfo):
     # [("cve_id", "software_name", "fixed_version", "os")]
     for cve in list(add_cves):
         cve_id, software_name, fixed_version, os = cve
-        cve_obj_search = VulModel.objects.filter(cve_id=cve_id,
-                                                 software_name=software_name)
+        cve_obj_search = VulModel.objects.filter(cve_id=cve_id)
         # 增加需要新增的cve列表
         if len(cve_obj_search) == 0:
             sacve = SecurityAdvisoryModel.objects.create(cve_id=cve_id,
