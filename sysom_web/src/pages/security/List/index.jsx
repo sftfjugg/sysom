@@ -22,6 +22,8 @@ function List(props) {
   const [succesvisible, setsuccesvisible] = useState(false);
   const [errvisible, seterrvisible] = useState(false);
   const [vlue, setCount] = useState(0);
+  const [huan,sethuan]=useState(false)
+  
   const showModal = () => {
     const leght = selectedRows.length;
     if (leght > 0) {
@@ -61,6 +63,9 @@ function List(props) {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+  const geng=()=>{
+    sethuan(true)
+  }
 
   const columns = [
     {
@@ -177,7 +182,7 @@ function List(props) {
   return (
     <div>
       <PageContainer>
-        <Headcard paren={fn} isShow={true} />
+        <Headcard paren={fn} isShow={true} geng={geng} quan={huan}/>
         <Card
           className="list-table"
           extra={
