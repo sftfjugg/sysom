@@ -9,6 +9,7 @@
 import logging
 import requests
 import json
+import re
 from django.utils import timezone
 from rest_framework import status
 from apps.vul.models import *
@@ -200,7 +201,8 @@ def parse_sa_result(result):
     """解析dnf获取的sa数据"""
     cve_list = []
     for i in result.split("\n"):
-        if i:
+        sa_re = "CVE-\d{4}-\d{4,7}\s+\S+\s+\S+\s+\S+"
+        if re.match(sa_re, i, re.I):
             cve_list.append(i.split())
     return cve_list
 
