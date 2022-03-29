@@ -201,7 +201,7 @@ def parse_sa_result(result):
     """解析dnf获取的sa数据"""
     cve_list = []
     for i in result.split("\n"):
-        sa_re = "CVE-\d{4}-\d{4,7}\s+\S+\s+\S+\s+\S+"
+        sa_re = "CVE-\d{4}-\d{4,7}(\s+\S+){3}"
         if re.match(sa_re, i, re.I):
             cve_list.append(i.split())
     return cve_list
