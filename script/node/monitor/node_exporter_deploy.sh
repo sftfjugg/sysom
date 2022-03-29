@@ -16,6 +16,7 @@ After=network-online.target
 
 [Service]
 ExecStart=${RESOURCE_DIR}/node_exporter/node_exporter
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

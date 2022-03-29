@@ -1,12 +1,12 @@
 import { PageContainer } from '@ant-design/pro-layout';
 import { useState, useRef } from 'react';
 import { Modal } from "antd";
-import { request, useModel } from 'umi';
+import { request } from 'umi';
 import ProCard from '@ant-design/pro-card';
 import IOTableList from './IOTableList';
 import IOResults from './IOResults'
 import IOTaskForm from './IOTaskForm';
-import MetricShow2 from '../../components/MetricShow2'
+import MetricShow from '../../components/MetricShow'
 import { getTask } from '../../service'
 
 const { Divider } = ProCard;
@@ -14,12 +14,7 @@ const { Divider } = ProCard;
 const IOList = () => {
   const refIoTableList = useRef();
   const [data, setData] = useState();
-  const { count, handleCount } = useModel('diagnose', model => (
-    { 
-      count: model.count, 
-      handleCount: model.handleCount,
-    }
-  ))
+  const [diskIdx, setDiskIdx] = useState(0);
 
   const onListClick = async (record) => {
     const recorded = record;
@@ -82,13 +77,18 @@ const IOList = () => {
     <PageContainer>    
       <IOTaskForm onSuccess={onPostTask} />
       <Divider />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
-      <IOTableList headerTitle="诊断列表" search={true} onClick = {(record) => onListClick(record)} onError={onError} ref={refIoTableList} />
+      <IOTableList headerTitle="诊断记录查看" search={true} onClick = {(record) => onListClick(record)} onError={onError} ref={refIoTableList} />
       <Divider />
       {
         data ?
           <>
-            <IOResults data={data.ioList} recorded={data.recorded} />
-            <MetricShow2 data={data.metric} title="IO 诊断各阶段延迟分析" xField="x" yField="y" category="category" slider="false" />
+            <IOResults data={data.ioList} diskChange={setDiskIdx} diskIdx={diskIdx} recorded={data.recorded} />
+            <MetricShow data={data.metric[diskIdx]}
+              title="IO 诊断各阶段延迟分析"
+              xField="x" yField="y"
+              category="category" slider="false"
+              yAxisTitle="时延（us)"
+            />
           </>
           :
           <></>

@@ -62,11 +62,15 @@ const NetList = () => {
       {
         data ?
           <>
-            <PacketLoss data={data}/>
+            <PacketLoss data={data} />
             <Divider />
             <NetworkFlow data={data.result} />
             <Divider />
-            <MetricShow data={data.metric} title="Metric展示" xField="x" yField="y" />
+            <MetricShow data={data.metric}
+              title="Metric展示"
+              yAxisTitle="时延（us)"
+              xField="x"
+              yField="delay" />
           </>
           :
           <></>

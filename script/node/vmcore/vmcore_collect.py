@@ -52,12 +52,20 @@ def unmount_nfs():
         raise Exception('failed to unmount nfs at /tmp/vmcore-nfs')
 
 def upload_nfs(vmcore_dir):
-    hostname=socket.gethostname()
-    ip=socket.gethostbyname(hostname)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0)
+        s.connect(('10.255.255.255', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        hostname = socket.gethostname()
+        ip = socket.gethostbyname(hostname)
+    finally:
+        s.close()
     timelist = vmcore_dir.split('-')[1:]
     core_time = ''.join(timelist)
     core_time = core_time.replace(':','')
-    vmcore_name ='%s_%s'%(core_time,ip) 
+    vmcore_name ='%s_%s'%(core_time,ip)
 
     if os.path.exists("/tmp/vmcore-nfs") == False:
         cmd = 'mkdir -p /tmp/vmcore-nfs'

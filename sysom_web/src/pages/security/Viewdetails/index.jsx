@@ -31,7 +31,7 @@ function index(props) {
   return (
     <div>
       <PageContainer>
-      <Headcard paren={fn} isShow={false} />
+      <Headcard paren={fn} isShow={false} upData={false} />
 
         {Svisible ? ( <Card className="card_succ">
             <h3> <span>主机名称</span> {home} </h3>

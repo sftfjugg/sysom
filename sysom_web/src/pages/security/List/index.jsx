@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Card, Table, Button, Progress, Modal, Tooltip, message } from "antd";
+import { Card, Table, Button, Progress, Modal, Tooltip, message,  } from "antd";
 import "./list.less";
-import { listApi, manyApi, summaryApi } from "../service";
+import { listApi, manyApi, updataApi } from "../service";
 import { PageContainer } from "@ant-design/pro-layout";
 import Headcard from "../components/Headcard";
 
@@ -63,8 +63,17 @@ function List(props) {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const geng=()=>{
+  const geng=async()=>{
     sethuan(true)
+    const msg = await updataApi();
+    console.log(msg)
+    if(msg.message=="success"){
+      sethuan(false)
+      props.history.push("/security");
+    }else if(msg.message=="forbidden"){
+      sethuan(false)
+      message.warning('操作频率过快，请稍后再试!');
+}
   }
 
   const columns = [
@@ -182,7 +191,7 @@ function List(props) {
   return (
     <div>
       <PageContainer>
-        <Headcard paren={fn} isShow={true} geng={geng} quan={huan}/>
+        <Headcard paren={fn} isShow={true} geng={geng} quan={huan}  upData={true}/>
         <Card
           className="list-table"
           extra={

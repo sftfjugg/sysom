@@ -40,7 +40,7 @@ class VulModel(VulBaseModel):
 
     class Meta:
         db_table = "sys_vul"
-        unique_together = [['cve_id', 'software_name', 'os']]
+        unique_together = [['cve_id', 'software_name', 'fixed_version', 'os']]
 
     def __str__(self):
         return f'vul: {self.cve_id}  os: {self.os} software: {self.software_name}'
@@ -51,7 +51,7 @@ class SecurityAdvisoryModel(VulBaseModel):
 
     class Meta:
         db_table = "sys_sa"
-        unique_together = [['cve_id', 'software_name', 'os']]
+        unique_together = [['cve_id', 'software_name', 'fixed_version', 'os']]
 
     def __str__(self):
         return f'Fixed CVE with errata：{self.cve_id} os: {self.os} software: {self.software_name}'

@@ -19,15 +19,15 @@ const FlowPopover = (props) => {
 
     const metric = props.data.seq.reduce((metric, item) => {
         metric.push({
-            x: item.meta.seq,
-            y: item.delays.filter((item) => item.delay === props.tips?.delay)[0].ts
+            x: String(item.meta.seq),
+            delay: item.delays.filter((item) => item.delay === props.tips?.delay)[0].ts
         }); return metric
     }, [])
 
     const lineChartConfig = {
         data: metric,
         xField: "x",
-        yField: "y",
+        yField: "delay",
 
         slider: {
           start: 0,
@@ -546,15 +546,6 @@ const NetworkFlow = (props) => {
                 >
                     virtio ring驻留
                 </text>
-
-                <text
-                    style={{ fontSize: 14 }}
-                    fill="#FFFFFF"
-                    x="120"
-                    y="385"
-                >
-                    moc卡驻留
-                </text>
                 <FlowPopover tips={stats.l_tx_outlink} data={props.data}>
                     <text
                         style={{ fontSize: 14 }}
@@ -565,14 +556,6 @@ const NetworkFlow = (props) => {
                         外部链路
                     </text>
                 </FlowPopover>
-                <text
-                    style={{ fontSize: 14 }}
-                    fill="#FFFFFF"
-                    x="1010"
-                    y="385"
-                >
-                    moc卡驻留
-                </text>
 
                 <text
                     style={{ fontSize: 14 }}
@@ -600,15 +583,6 @@ const NetworkFlow = (props) => {
                 >
                     virtio ring驻留
                 </text>
-
-                <text
-                    style={{ fontSize: 14 }}
-                    fill="#FFFFFF"
-                    x="820"
-                    y="385"
-                >
-                    moc卡驻留
-                </text>
                 <FlowPopover tips={stats.l_rx_inlink} data={props.data}>
                     <text
                         style={{ fontSize: 14 }}
@@ -619,14 +593,6 @@ const NetworkFlow = (props) => {
                         外部链路
                     </text>
                 </FlowPopover>
-                <text
-                    style={{ fontSize: 14 }}
-                    fill="#FFFFFF"
-                    x="310"
-                    y="385"
-                >
-                    moc卡驻留
-                </text>
 
                 <text
                     style={{ fontSize: 14 }}
