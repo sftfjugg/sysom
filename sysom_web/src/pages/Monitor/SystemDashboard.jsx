@@ -74,7 +74,7 @@ const ServerList = (props) => {
 const GrafanaWrap = (props) => {
   return (
     <iframe
-      src = {`http://127.0.0.1:3000/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
+      src = {`/grafana/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
       width="100%"
       frameBorder="0"
       style={{ marginLeft: "8px", height:"calc(100vh - 80px)" }}

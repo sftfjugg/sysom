@@ -163,13 +163,6 @@ start_script_node() {
     popd
 }
 
-modify_grafana_url() {
-    pushd ${TARGET_PATH}/${WEB_DIR}
-    dashboard_file=`grep -nru "sysom-dashboard/sysom-dashboard" | awk -F":" '{print $1}'`
-    sed -i "s/127.0.0.1:3000/${SERVER_PUBLIC_IP}\/grafana/g" $dashboard_file
-    popd
-}
-
 deploy() {
     touch_env_rpms
     touch_virtualenv
@@ -179,7 +172,6 @@ deploy() {
     init_conf
     start_script_server
     start_script_node
-    modify_grafana_url
     start_app
 }
 
