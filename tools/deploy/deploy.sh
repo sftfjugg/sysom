@@ -13,11 +13,11 @@ API_DIR="sysom_api"
 WEB_DIR="sysom_web"
 SCRIPT_DIR="script"
 
-if [ $# != 3 ] ; then 
+if [ $# != 3 ] ; then
     echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP"
     echo " e.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx"
     exit 1
-fi 
+fi
 
 APP_HOME=$1
 SERVER_LOCAL_IP=$2
@@ -48,7 +48,7 @@ touch_env_rpms() {
         sed -i '/epel\/8\/Everything/{n;s/enabled=0/enabled=1/;}' /etc/yum.repos.d/AnolisOS-DDE.repo
     fi
     rpm -q --quiet python3 || yum install -y python3
-    rpm -q --quiet python3-virtualenv || yum install -y python3-virtualenv 
+    rpm -q --quiet python3-virtualenv || yum install -y python3-virtualenv
     rpm -q --quiet mariadb-server || yum install -y mariadb-server
     rpm -q --quiet supervisor || yum install -y supervisor
     rpm -q --quiet nginx || yum install -y nginx
@@ -109,9 +109,11 @@ check_requirements() {
 }
 
 setup_database() {
+    echo "INFO: begin create db..."
+
     systemctl restart mariadb.service
     systemctl enable mariadb.service
-    mysql -uroot -e "create user 'sysom'@'%' identified by 'sysom_admin';"
+    mysql -uroot -e "create user if not exists 'sysom'@'%' identified by 'sysom_admin';"
     mysql -uroot -e "grant usage on *.* to 'sysom'@'localhost' identified by 'sysom_admin'"
     mysql -uroot -e "drop database sysom;"
     mysql -uroot -e "create database sysom character set utf8;"
@@ -168,7 +170,7 @@ deploy() {
     touch_virtualenv
     update_target
     check_requirements
-    setup_database > ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
+    setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
     init_conf
     start_script_server
     start_script_node
