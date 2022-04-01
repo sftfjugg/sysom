@@ -8,6 +8,7 @@
 """
 import logging
 import requests
+import datetime
 import json
 import re
 from django.utils import timezone
@@ -21,7 +22,17 @@ from lib.utils import human_datetime
 
 
 def update_vul():
+    job_start_time = timezone.now()
+    job_id = "update_vul_{:%Y%m%d%H%M%S%f}".format(datetime.datetime.utcnow())
     update_vul_db()
+    job_end_time = timezone.now()
+    VulJobModel.objects.create(
+        job_id=job_id,
+        job_name="update_vul",
+        job_desc="Start updating the vulnerability database",
+        job_start_time=job_start_time,
+        job_end_time=job_end_time,
+    )
 
 
 def update_vul_db():
@@ -95,6 +106,8 @@ def get_unfix_cve_format():
 
 
 def update_sa():
+    job_start_time = timezone.now()
+    job_id = "update_vul_{:%Y%m%d%H%M%S%f}".format(datetime.datetime.utcnow())
     cmd = r'''
 #!/bin/bash
 # 获取版本信息
@@ -133,6 +146,14 @@ done
                     cve2host_info[cve] = [(host, software, version, os)]
 
     update_sa_db(cve2host_info)
+    job_end_time = timezone.now()
+    VulJobModel.objects.create(
+        job_id=job_id,
+        job_name="update_sa",
+        job_desc="Start updating the sa database",
+        job_start_time=job_start_time,
+        job_end_time=job_end_time,
+    )
 
 
 def update_sa_db(cveinfo):
