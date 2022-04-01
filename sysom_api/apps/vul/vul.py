@@ -11,6 +11,7 @@ import requests
 import json
 import re
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework import status
 from apps.vul.models import *
 from apps.host.models import HostModel
@@ -145,34 +146,22 @@ def update_sa_db(cveinfo):
     delete_cves = current_cves - new_cves
     # 删除无效的关联关系，用于更新客户手动修复漏洞后，导致的数据库不匹配问题
     for cve in list(delete_cves):
-        cve_id, software_name, _, os = cve
-        sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id, software_name=software_name, os=os).first()
+        cve_id, software_name, fixed_version, os = cve
+        sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id,
+                                                         software_name=software_name,
+                                                         fixed_version=fixed_version,
+                                                         os=os).first()
         sacve_obj.host.clear()
     add_cves = new_cves - current_cves
     # [("cve_id", "software_name", "fixed_version", "os")]
     for cve in list(add_cves):
         cve_id, software_name, fixed_version, os = cve
-        cve_obj_search = VulModel.objects.filter(cve_id=cve_id)
-        # 增加需要新增的cve列表
-        if len(cve_obj_search) == 0:
-            sacve = SecurityAdvisoryModel.objects.create(cve_id=cve_id,
-                                                         software_name=software_name,
-                                                         fixed_version=fixed_version,
-                                                         os=os,
-                                                         update_time=timezone.now())
-        else:
-            # 是用vul漏洞数据中的已知数据填充errata未获取到的数据
-            cve_obj = cve_obj_search.first()
-            sacve = SecurityAdvisoryModel.objects.create(cve_id=cve_id,
-                                                         score=cve_obj.score,
-                                                         description=cve_obj.description,
-                                                         pub_time=cve_obj.pub_time,
-                                                         vul_level=cve_obj.vul_level,
-                                                         detail=cve_obj.detail,
-                                                         software_name=software_name,
-                                                         fixed_version=fixed_version,
-                                                         os=os,
-                                                         update_time=timezone.now())
+
+        sacve = SecurityAdvisoryModel.objects.create(cve_id=cve_id,
+                                                     software_name=software_name,
+                                                     fixed_version=fixed_version,
+                                                     os=os,
+                                                     update_time=timezone.now())
 
         # (cve_id=cve_id,
         # software_name=software_name,
@@ -190,10 +179,27 @@ def update_sa_db(cveinfo):
         cve_id, software_name, fixed_version, os = cve
         hosts = [cve_detail[0] for cve_detail in new_cveinfo[cve_id] if
                  cve_detail[1] == software_name and cve_detail[2] == fixed_version and cve_detail[3] == os]
-        sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id, software_name=software_name,
-                                                         fixed_version=fixed_version, os=os).first()
+        sacve_obj = SecurityAdvisoryModel.objects.filter(cve_id=cve_id,
+                                                         software_name=software_name,
+                                                         fixed_version=fixed_version,
+                                                         os=os).first()
         sacve_obj.host.clear()
         sacve_obj.host.add(*HostModel.objects.filter(hostname__in=hosts))
+
+    # 更新漏洞数据库数据至sa
+    for sacve_obj in set(
+            SecurityAdvisoryModel.objects.filter(Q(pub_time='') | Q(score='') | Q(vul_level='')).values_list("cve_id")):
+        cve_obj_search = VulModel.objects.filter(cve_id=sacve_obj[0])
+        if len(cve_obj_search) != 0:
+            cve_obj = cve_obj_search.first()
+            SecurityAdvisoryModel.objects.filter(cve_id=sacve_obj[0]).update(
+                score=cve_obj.score,
+                description=cve_obj.description,
+                pub_time=cve_obj.pub_time,
+                vul_level=cve_obj.vul_level,
+                detail=cve_obj.detail,
+                update_time=timezone.now(),
+            )
 
 
 def parse_sa_result(result):
