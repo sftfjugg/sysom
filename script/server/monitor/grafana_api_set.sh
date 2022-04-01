@@ -11,18 +11,18 @@ sed 's/;root_url = %(protocol)s:\/\/%(domain)s:%(http_port)s\//root_url = %(prot
 
 ##login grafana, and get cookie
 curl --location --request POST 'http://127.0.0.1:3000/login' --header 'Content-Type: application/json' \
---data-raw '{"user": "admin", "password": "admin"}' -c cookie
+--data '{"user": "admin", "password": "admin"}' -c cookie
 
 ##api key
 #curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/auth/keys' --header 'Content-Type: application/json' \
-#--data-raw '{"name": "test_key", "role": "Admin", "secondsToLive": 120}' > api_key.json
+#--data '{"name": "test_key", "role": "Admin", "secondsToLive": 120}' > api_key.json
 
 #api_key=`cat api_key.json | awk -F"\"" '{print $(NF-1)}'`
 
 ##initial database
 curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
 --header 'Content-Type: application/json' \
---data-raw '{"name": "sysom-prometheus", "type": "prometheus", "url": "http://127.0.0.1:9090","access": "proxy", "isDefault": true}'
+--data '{"name": "sysom-prometheus", "type": "prometheus", "url": "http://127.0.0.1:9090","access": "proxy", "isDefault": true}'
 
 ##initial sysom-dashborad
 curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
