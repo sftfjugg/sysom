@@ -1,28 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { Card, Table, Button, Progress, Modal, Row, Col } from "antd";
+import { useState, useEffect } from "react";
+import { FormattedMessage } from 'umi';
+import { Button, Row, Col } from "antd";
 import "./Viewdetails.less";
 import { viewApi, summaryApi } from "../service";
 import { PageContainer } from "@ant-design/pro-layout";
 import Headcard from "../components/Headcard";
+import ProCard from "@ant-design/pro-card";
 
 function index(props) {
   const [home, sethome] = useState("");
   const [reason, setreason] = useState("");
   const [Svisible, setSvisible] = useState(false);
-  const [errvisible, seterrvisible] = useState(false);
   useEffect(async () => {
     const msg = await viewApi(
       props.match.params.id,
       props.match.params.homename
     );
-
+    sethome(msg.data.hostname);
     if (msg.data.status == "fail") {
-      seterrvisible(true);
-      sethome(msg.data.hostname);
+      setSvisible(false);
       setreason(msg.data.details);
     } else {
       setSvisible(true);
-      sethome(msg.data.hostname);
     }
   }, []);
   const fn = () => {
@@ -31,35 +30,24 @@ function index(props) {
   return (
     <div>
       <PageContainer>
-      <Headcard paren={fn} isShow={false} upData={false} />
-
-        {Svisible ? ( <Card className="card_succ">
-            <h3> <span>主机名称</span> {home} </h3>
-                     <p>CVE修复成功.</p>
-          </Card>
-        ) : null}
-        {errvisible ? (
-          <Card className="card_err">
-            <h3>
-              <span>主机名称</span>
-              {home}
-            </h3>
-
-            <p>CVE修复失败，失败原因：{reason}</p>
-          </Card>
-        ) : null}
-
+        {/* <Headcard paren={fn} isShow={false} upData={false} /> */}
+        <ProCard className="card_result">
+          <h3> <span>
+            <FormattedMessage id="pages.hostTable.hostname" defaultMessage="Hostname" />
+          </span> {home} </h3>
+          {Svisible ?
+            <p className="card_succ"><FormattedMessage id="pages.security.Historical.fix_success" defaultMessage="CVE repair is successful" />.</p>
+            : <p className="card_err"><FormattedMessage id="pages.security.Historical.fix_fail" defaultMessage="CVE repair failed, the cause of failure is" />{reason}</p>}
+        </ProCard>
+        <Row></Row>
         <Row>
-          <Col span={20}></Col>
-          <Col className="err_Button" span={4}>
-            {" "}
+          <Col className="err_Button">
             <Button
               type="primary"
               onClick={() => {
                 props.history.go(-1);
-              }}
-            >
-              返回
+              }}>
+              <FormattedMessage id="pages.security.Historical.back" defaultMessage="Back" />
             </Button>
           </Col>
         </Row>

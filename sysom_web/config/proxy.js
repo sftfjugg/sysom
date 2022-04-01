@@ -14,7 +14,7 @@ export default {
       //target: 'https://preview.pro.ant.design',
       // target: 'http://127.0.0.1:8001',
       // target: 'http://10.7.33.64/',
-      target: ' http://10.12.17.202:8000',
+      target: ' http://10.12.17.202:8001',
       // 配置了这个可以从 http 代理到 https
       // 依赖 origin 的功能可能需要这个，比如 cookie
       changeOrigin: true,
