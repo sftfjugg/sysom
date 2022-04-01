@@ -8,7 +8,7 @@ const { Header, Content } = Layout;
 
 const imgBanner = [
   {key:1,banner:"#1a2933",title:"主机管理",urls:'/host',des:""},
-  {key:2,banner:"#1a2933",title:"宕机分析",urls:'/vmcore',des:""},
+  {key:2,banner:"#1a2933",title:"宕机中心",urls:'/vmcore',des:""},
   {key:4,banner:"#1a2933",title:"监控中心",urls:'/monitor',des:""},
   {key:3,banner:"#1a2933",title:"诊断中心",urls:'/diagnose',des:""},
   {key:5,banner:"#1a2933",title:"安全中心",urls:'/security',des:""},
@@ -28,7 +28,7 @@ const Welcome = () => {
           <SubMenu key="monitor" title="监控中心">
             <Menu.Item key="dashboard"><a href="/monitor/dashboard">系统监控</a></Menu.Item>
           </SubMenu>
-          <SubMenu key="vmcore" title="宕机分析">
+          <SubMenu key="vmcore" title="宕机中心">
             <Menu.Item key="vmlist"><a href="/vmcore/list">宕机列表</a></Menu.Item>
             <Menu.Item key="vmmatch"><a href="/vmcore/match">宕机匹配</a></Menu.Item>
           </SubMenu>
