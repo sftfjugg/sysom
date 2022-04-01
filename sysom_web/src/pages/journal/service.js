@@ -34,3 +34,11 @@ export async function get_response_code(params, options) {
   });
   return result
 }
+
+export async function getTaskList(params, options) {
+  return request('/api/v1/tasks/', {
+    method: 'GET',
+    params: params,
+    ...(options || {}),
+  });
+}

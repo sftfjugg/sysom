@@ -66,5 +66,10 @@ export default {
   'pages.journal.audit.login': '登录行为',
   'pages.journal.audit.action': '操作行为',
   'pages.journal.audit.response_status': '返回状态',
+  'pages.journal.task.task_id': '任务ID',
+  'pages.journal.task.status': '状态',
+  'pages.journal.task.params': '参数列表',
+  'pages.journal.task.success': '成功',
+  'pages.journal.task.fail': '失败',
   
 };
