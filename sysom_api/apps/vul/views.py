@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import register_job
 from tzlocal import get_localzone
+from django.utils.timezone import localdate, localtime
 from lib.response import *
 from apps.accounts.authentication import Authentication
 from apps.vul.models import *
@@ -172,11 +173,25 @@ class VulSummaryView(APIView):
         unfix_vul = get_unfix_cve().exclude(host=None)
         vul_cve_count, vul_high_cve_count, vul_affect_host_count = self.get_vul_info(unfix_vul)
 
+        try:
+            latest_scan_time = localtime(
+                VulJobModel.objects.filter(job_name="update_sa").order_by(
+                    '-job_start_time').first().job_start_time).strftime(
+                '%Y-%m-%d %Z %H:%M:%S')
+        except Exception:
+            latest_scan_time = ""
+        cvefix_all = SecurityAdvisoryFixHistoryModel.objects.all().values_list("cve_id")
+        cvefix_all_count = len(set(cvefix_all))
+        cvefix_today = cvefix_all.filter(fixed_at__startswith=localdate().strftime("%Y-%m-%d"))
+        cvefix_today_count = len(set(cvefix_today))
         data = {
             "fixed_cve": {
                 "affect_host_count": sa_affect_host_count,
                 "cve_count": sa_cve_count,
                 "high_cve_count": sa_high_cve_count,
+                "cvefix_today_count": cvefix_today_count,
+                "cvefix_all_count": cvefix_all_count,
+                "latest_scan_time": latest_scan_time,
             },
 
             "unfixed_cve": {

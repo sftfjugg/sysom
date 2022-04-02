@@ -81,3 +81,19 @@ class SaFixHistToHost(models.Model):
 
     class Meta:
         db_table = "sys_sa_fix_hist_host"
+
+
+class VulJobModel(models.Model):
+    job_id = models.CharField(max_length=100)
+    job_name = models.CharField(max_length=100)
+    job_desc = models.TextField(null=True)
+    job_start_time = models.DateTimeField(verbose_name="", blank=True, null=True)
+    job_end_time = models.DateTimeField(verbose_name="", blank=True, null=True)
+    result = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, default="success", verbose_name="")
+
+    class Meta:
+        db_table = "sys_vul_job"
+
+    def __str__(self):
+        return f'Vulnerability scanning job：{self.job_name} in {self.job_time} '
