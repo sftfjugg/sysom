@@ -58,7 +58,6 @@ const token = localStorage.getItem('token');
       },
        ...(options || {}),
     });
-    // console.log('msg',msg)
    msg.data.data = [...msg.data.hosts_datail];
     return msg.data;
   };

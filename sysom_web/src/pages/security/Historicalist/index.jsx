@@ -1,21 +1,20 @@
-import { useIntl, FormattedMessage } from 'umi';
+import { useState } from 'react';
+import { FormattedMessage, } from 'umi';
 import { Button, Row, Col } from 'antd'
 import './historicalist.less'
 import { PageContainer } from '@ant-design/pro-layout';
 import { histidApi, } from '../service'
-import Headcard from "../components/Headcard";
 import ProTable from '@ant-design/pro-table';
 
-
 function index(props) {
-  console.log('props', props)
-  const intl = useIntl();
-  const fn = () => {
-    props.history.push("/security/historical");
-  };
+  const [cveId, setCveId] = useState('cve');
+  const getHist = async () => {
+    const res = await histidApi(props.match.params.id);
+    setCveId(res.cve_id);
+    return res;
+  }
 
   const columns = [
-
     {
       title: <FormattedMessage id="pages.security.Historical.id" defaultMessage="Serial number" />,
       key: "id",
@@ -109,15 +108,14 @@ function index(props) {
   return (
     <div>
       <PageContainer>
-        {/* <Headcard paren={fn} isShow={false} upData={false} /> */}
         <ProTable
-          headerTitle={props.location.query.title}
+          headerTitle={cveId}
           className="hisTable"
           search={false}
           size="small"
           rowKey="id"
           columns={columns}
-          request={() => { return histidApi(props.match.params.id); }}
+          request={getHist}
         />
         <Row></Row>
         <Row>

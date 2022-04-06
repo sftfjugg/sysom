@@ -72,7 +72,7 @@ function index(props) {
       render: (txt, record, index) => {
         return (
           <div>
-            <Button type="link" onClick={() => props.history.push(`/security/historicalist/${record.id}?title=${record.cve_id}`)}>
+            <Button type="link" onClick={() => props.history.push(`/security/historicalist/${record.id}`)}>
               <FormattedMessage id="pages.security.Historical.details" defaultMessage="View Details" />
             </Button>
           </div>

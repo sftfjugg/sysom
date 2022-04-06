@@ -187,13 +187,16 @@ const  repair=async()=>{
        <Card title="涉及主机" className="lnvohost">
               <Table rowKey="hostname" size="small" rowSelection={rowSelection} pagination={ paginationProps} columns={lnvohost} dataSource={lovodata}> </Table>
               <Row>
-              <Col span={15}> 
+              <Col span={13}> 
                 {succesvisible?( <p>修复中< Progress width={40} percent={vlue} size="small" /></p>):null}
                 {errvisible?(<p>恢复出错了，<Button type="link" size="small" onClick={()=>props.history.push('/security/historical')}>查看详情</Button></p>):null}
                </Col>
-              <Col span={7}></Col>
-              <Col span={1}  onClick={()=>{ props.history.push("/security/list") }}><Button >取消</Button></Col>
-              <Col span={1}>  <Button type="primary" onClick={repair}>一键修复</Button></Col>
+              <Col span={11}>
+              <Row className="allbtn">
+              <Col><Button type="primary" onClick={repair}>一键修复</Button></Col>
+              <Col style={{'line-height':'58px'}}><Button onClick={()=>{ props.history.push("/security/list") }} style={{'margin-right':'10px'}}>取消</Button></Col>
+              </Row>
+              </Col>
               </Row>
       </Card>
      </PageContainer>
