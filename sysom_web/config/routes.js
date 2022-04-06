@@ -182,6 +182,11 @@ export default [
         name: 'audit',
         component: './journal/Audit',
       },
+      {
+        path: '/journal/task',
+        name: 'task',
+        component: './journal/Task',
+      },
     ],
   },
   {

@@ -85,5 +85,10 @@ export default {
   'pages.security.Historical.fix_details': 'CVE修复详情',
   'pages.security.Historical.fix_success': 'CVE修复成功',
   'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：',
+  'pages.journal.task.task_id': '任务ID',
+  'pages.journal.task.status': '状态',
+  'pages.journal.task.params': '参数列表',
+  'pages.journal.task.success': '成功',
+  'pages.journal.task.fail': '失败',
   
 };
