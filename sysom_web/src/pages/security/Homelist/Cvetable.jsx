@@ -141,13 +141,16 @@ const Cvetable=(params)=> {
       />
       <ProCard>
      <Row>
-        <Col span={15}> 
+        <Col span={13}> 
         {succesvisible?( <p>修复中< Progress width={40} percent={vlue} size="small" /></p>):null}
         {errvisible?(<p>修复出错了，<Button type="link" size="small" href={"/security/historical" }>查看详情</Button></p>):null}
         </Col>
-        <Col span={7}></Col>
-        <Col span={1} ><Button disabled={flags} onClick={cancel}>返回</Button></Col>
-        <Col span={1}>  <Button type="primary" onClick={repair}>一键修复</Button></Col>
+        <Col span={11}>
+              <Row className="allbtn">
+              <Col><Button type="primary" onClick={repair}>一键修复</Button></Col>
+              <Col style={{'line-height':'58px'}}><Button onClick={()=>{ props.history.push("/security/list") }} style={{'margin-right':'10px'}}>取消</Button></Col>
+              </Row>
+              </Col>
     </Row>
       </ProCard>
      

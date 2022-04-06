@@ -58,11 +58,8 @@ const token = localStorage.getItem('token');
       },
        ...(options || {}),
     });
-   
-    return {
-      setdatasource:msg.data.hosts_datail,
-      title:msg.data.cve_id
-    }
+    msg.data.data = [...msg.data.hosts_datail];
+    return msg.data;
   };
 
 
