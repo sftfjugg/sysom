@@ -51,10 +51,8 @@ function index(props) {
            return  <div>中危</div>
         }else if(record.vul_level=="critical"){
           return  <div>严重</div>
-        }else if (record.vul_level == "low") {
-          return <div>低危</div>;
-        } else if (record.vul_level == "") {
-          return <div></div>;
+        }else{
+          return <div>低危</div>
         }
    },
     },{

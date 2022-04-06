@@ -2,26 +2,29 @@ import React,{useEffect,useState} from 'react';
 import {Button,Card,Table,Row,Col} from 'antd'
 import './historicalist.less'
 import { PageContainer } from '@ant-design/pro-layout';
-import {histidApi,} from '../service'
-import Headcard from "../components/Headcard";
-
+import {histidApi,summaryApi} from '../service'
+ 
 
 function index(props) {
   const [dataSource,setdataSource]=useState([])
   const [total,setTotal]=useState(0)
-  const [title,setTitle]=useState("")
   useEffect( async()=>{
     const  msg=await histidApi(props.match.params.id)
-    setdataSource(msg.setdatasource)
-    setTitle(msg.title)
+    console.log(msg)
+    setdataSource(msg.data)
    
   },[])
-  const fn = () => {
-    props.history.push("/security/historical");
-  };
-
+  const [affectcount,setaffectcount]=useState(0);
+  const [cvecount,setcvecount]=useState(0);
+  const [higtcount,sethigtcount]=useState(0)
  
-
+  useEffect(async() => {
+    const msg=await summaryApi();
+    console.log(msg)
+        setaffectcount(msg.affect)
+        setcvecount(msg.cvecount)
+        sethigtcount(msg.highcount)
+  }, []);
   const paginationProps = {
     showSizeChanger: true,
     showQuickJumper: true,
@@ -75,7 +78,7 @@ function index(props) {
       if(record.host_status==="running"){
         return <div className="numbersuccess">运行中</div>
       }else{
-        return <div className="numbererr">离线</div>
+        return <div className="numbererr">off</div>
       }
     }
   },{
@@ -105,7 +108,7 @@ function index(props) {
     render:(txt,record,index)=>{
       return (
         <div>
-            <Button type="link" onClick={()=>props.history.push(`/security/viewdetails/${props.match.params.id}/${record.hostname}`)}>查看详情</Button>
+            <Button type="link" onClick={()=>props.history.push(`/security/viewdetails/${record.id}/${record.hostname}`)}>查看详情</Button>
            
         </div>
       )
@@ -116,10 +119,13 @@ function index(props) {
   return (
     <div>
       <PageContainer>
-      <Headcard paren={fn} isShow={false}  upData={false}/>
-      <Card className="list-table" title={title}>
-         <Table className="hisTable" size="small" rowKey="id" columns={columns} dataSource={dataSource} pagination={ paginationProps}  />
-      </Card>
+      <Card>{affectcount}台主机存在被攻击风险，涉及CVE漏洞{cvecount}个，其中高危漏洞{higtcount}个，请尽快修复。 </Card>
+      <Card className="list-table"
+      title="CVE-2021-2333">
+    
+     <Table className="hisTable" size="small" rowKey="id" columns={columns} dataSource={dataSource} pagination={ paginationProps}  />
+    
+     </Card>
      <Row>
       <Col span={20}></Col>
       <Col  className="err_Button" span={4}> <Button type="primary" onClick={()=>{

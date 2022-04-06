@@ -3,8 +3,6 @@ import { Card, Table, Button, Progress, Modal, Row, Col } from "antd";
 import "./Viewdetails.less";
 import { viewApi, summaryApi } from "../service";
 import { PageContainer } from "@ant-design/pro-layout";
-import Headcard from "../components/Headcard";
-
 function index(props) {
   const [home, sethome] = useState("");
   const [reason, setreason] = useState("");
@@ -25,17 +23,30 @@ function index(props) {
       sethome(msg.data.hostname);
     }
   }, []);
-  const fn = () => {
-    props.history.push("/security/historical");
-  };
+  const [affectcount, setaffectcount] = useState(0);
+  const [cvecount, setcvecount] = useState(0);
+  const [higtcount, sethigtcount] = useState(0);
+  useEffect(async () => {
+    const msg = await summaryApi();
+    setaffectcount(msg.affect);
+    setcvecount(msg.cvecount);
+    sethigtcount(msg.highcount);
+  }, []);
   return (
     <div>
       <PageContainer>
-      <Headcard paren={fn} isShow={false} upData={false} />
+        <Card>
+          {affectcount}台主机存在被攻击风险，涉及CVE漏洞{cvecount}
+          个，其中高危漏洞{higtcount}个，请尽快修复。
+        </Card>
 
-        {Svisible ? ( <Card className="card_succ">
-            <h3> <span>主机名称</span> {home} </h3>
-                     <p>CVE修复成功.</p>
+        {Svisible ? (
+          <Card className="card_succ">
+            <h3>
+              <span>主机名称</span>
+              {home}
+            </h3>
+            <p>CVE修复成功.</p>
           </Card>
         ) : null}
         {errvisible ? (
