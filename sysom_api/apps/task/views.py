@@ -148,7 +148,7 @@ def script_task(data):
                                       success=False)
             for instance in resp_scripts:
                 ip = instance.get("instance", None)
-                task = JobModel.objects.filter(command__contains=ip, status__in=["Ready", "Running"]).first()
+                task = JobModel.objects.filter(command__contains=ip, status__in=["Running"]).first()
                 if task:
                     return other_response(message="有任务正在执行，请稍后！", code=400,
                                           success=False)
@@ -172,7 +172,7 @@ def default_ssh_job(data, task_id):
         cmds = []
         for i in range(len(host_ids)):
             instance = {}
-            task = JobModel.objects.filter(command__contains=host_ids[i], status__in=["Ready", "Running"]).first()
+            task = JobModel.objects.filter(command__contains=host_ids[i], status__in=["Running"]).first()
             if task:
                 return other_response(message="有任务正在执行，请稍后！", code=400,
                                       success=False)
