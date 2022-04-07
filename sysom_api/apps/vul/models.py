@@ -7,14 +7,26 @@ from apps.accounts.models import User
 # Create your models here.
 
 class VulAddrModel(models.Model):
-    vul_address = models.CharField(max_length=200)
+    REQUEST_METHOD_CHOICES = (
+        (0, 'GET'),
+        (1, 'POST'),
+    )
+    name = models.CharField(max_length=200, unique=True)
     description = models.TextField(default="")
+    method = models.SmallIntegerField(choices=REQUEST_METHOD_CHOICES, default=0, verbose_name="request method")
+    url = models.URLField()
+    headers = models.JSONField(default=dict)
+    params = models.JSONField(default=dict)
+    body = models.JSONField(default=dict)
+    authorization_type = models.CharField(max_length=30, blank=True)
+    authorization_body = models.JSONField(default=dict)
+    parser = models.JSONField(verbose_name="parse vul data structure")
 
     class Meta:
         db_table = "sys_vul_db"
 
     def __str__(self):
-        return f'vul addresS: {self.vul_address}'
+        return f'vul addres: {self.url}'
 
 
 class VulBaseModel(BaseModel):
@@ -97,3 +109,5 @@ class VulJobModel(models.Model):
 
     def __str__(self):
         return f'Vulnerability scanning job：{self.job_name} in {self.job_time} '
+
+

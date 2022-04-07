@@ -43,7 +43,7 @@ def update_vul_db():
     vul_addrs = VulAddrModel.objects.all()
     for vul_addr in vul_addrs:
         logging.info("Try to get vul db info")
-        resp = requests.get(vul_addr.vul_address)
+        resp = requests.get(vul_addr.url)
         if resp.status_code != status.HTTP_200_OK:
             logging.warning("update vul information failed")
             break
