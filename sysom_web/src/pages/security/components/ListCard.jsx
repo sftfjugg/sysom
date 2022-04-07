@@ -4,6 +4,8 @@ import ProCard from '@ant-design/pro-card';
 import RcResizeObserver from 'rc-resize-observer';
 import {summaryApi} from '../service'
 const { Divider } = ProCard;
+import '../List/list.less'
+import { size } from 'lodash-es';
 
 
 const  ListCard=()=> {
@@ -12,7 +14,7 @@ const  ListCard=()=> {
 
     useEffect(async() => {
         const   msg=await summaryApi();
-         console.log(msg)
+        //  console.log(msg)
          setStatisticList(msg)
         }, []);
   return (
@@ -27,23 +29,23 @@ const  ListCard=()=> {
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="需要修复的高危漏洞(CVE)" value={StatisticList?.vmcore_7days} valueStyle={{ color: "red" }} />
+          <Statistic title="需要修复的高危漏洞(CVE)" value={StatisticList?.cvecount} valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="存在漏洞的主机" value={StatisticList?.rate_30days}  valueStyle={{ color: "red" }} />
+          <Statistic title="存在漏洞的主机" value={StatisticList?.highcount}  valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="今日已修复漏洞" value={StatisticList?.rate_7days}   valueStyle={{ color: "red" }} />
+          <Statistic title="今日已修复漏洞" value={StatisticList?.cvefix}   valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="累计已修复的漏洞" value={StatisticList?.vmcore_30days} valueStyle={{ color: "red" }} />
+          <Statistic title="累计已修复的漏洞" value={StatisticList?.cvefix_all} valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="最新扫描时间" value={StatisticList?.vmcore_30days} valueStyle={{ color: "red" }} />
+          <Statistic title="最新扫描时间" className="fontsize" value={StatisticList?.last_time} valueStyle={{ color: "red",fontSize:22 }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>            
