@@ -7,7 +7,7 @@ import subprocess
 from apps.host.models import HostModel
 from lib.ssh import SSH
 from apps.task.models import JobModel
-from sysom import settings
+from django.conf import settings
 
 
 class SshJob:

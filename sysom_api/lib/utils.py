@@ -19,7 +19,11 @@ from lib.ssh import SSH
 
 logger = logging.getLogger(__name__)
 
-job_defaults = {'max_instances': 10}
+job_defaults = {
+    'max_instances': 10,
+    'misfire_grace_time': None,
+    'coalesce': True,
+}
 scheduler = BackgroundScheduler(job_defaults=job_defaults)
 scheduler.start()
 
