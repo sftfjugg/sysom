@@ -49,6 +49,22 @@ const Cvetable=(params)=> {
     {
         title:<FormattedMessage id="pages.security.Homelist.status" defaultMessage="status" />,
         dataIndex:"status",
+        align: "center",
+        render: (txt, record) => {
+            if (record.status === "running") {
+              return <div className="numbersuccess">
+                <FormattedMessage id="pages.hostTable.status.running" defaultMessage="Running" />
+              </div>
+            } else if(record.status === "offline"){
+              return <div className="numbererr">
+                <FormattedMessage id="pages.hostTable.status.offline" defaultMessage="Offline" />
+              </div>
+            }else{
+                return <div className="numbererr">
+                <FormattedMessage id="pages.hostTable.status.abnormal" defaultMessage="Offline" />
+              </div>
+            }
+          }
     },
     {
     title: <FormattedMessage id="pages.security.list.operation" defaultMessage="operation" />,

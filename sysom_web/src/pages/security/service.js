@@ -27,15 +27,7 @@ const token = localStorage.getItem('token');
       ...(options || {}),
     
     });
-    return {
-
-    affect:msg.data.fixed_cve.affect_host_count,
-    cvecount:msg.data.fixed_cve.cve_count,
-    highcount:msg.data.fixed_cve.high_cve_count,
-    cvefix:msg.data.fixed_cve.cvefix_today_count,
-    cvefix_all:msg.data.fixed_cve.cvefix_all_count,
-    last_time:msg.data.fixed_cve.latest_scan_time,
-    }
+    return msg;
   }
 //   {
 //     affect:msg.data.fixed_cve.affect_host_count,
@@ -67,11 +59,8 @@ const token = localStorage.getItem('token');
       },
        ...(options || {}),
     });
-   
-    return {
-      setdatasource:msg.data.hosts_datail,
-      title:msg.data.cve_id
-    }
+    msg.data.data = [...msg.data.hosts_datail];
+    return msg.data;
   };
 
 
@@ -133,16 +122,7 @@ const token = localStorage.getItem('token');
       ...(options || {}),
     
     });
-    return {
-
-  
-    affect:msg.data.fixed_cve.affect_host_count,
-    cvecount:msg.data.fixed_cve.cve_count,
-    highcount:msg.data.fixed_cve.high_cve_count,
-    cvefix:msg.data.fixed_cve.cvefix_today_count,
-    cvefix_all:msg.data.fixed_cve.cvefix_all_count,
-    last_time:msg.data.fixed_cve.latest_scan_time,
-    }
+    return msg;
   }
 
 

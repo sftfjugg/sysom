@@ -1,22 +1,39 @@
-import { Statistic ,Button} from 'antd';
+import { Statistic ,Button, message} from 'antd';
 import { useState, useEffect } from 'react';
+import { useIntl, FormattedMessage } from 'umi';
 import ProCard from '@ant-design/pro-card';
 import RcResizeObserver from 'rc-resize-observer';
-import {summaryApi} from '../service'
+import {summaryApi,updataApi} from '../service'
 const { Divider } = ProCard;
 import '../List/list.less'
 import { size } from 'lodash-es';
 
 
-const  ListCard=()=> {
+const  ListCard=(props)=> {
+  const intl = useIntl();
     const [responsive, setResponsive] = useState(false);
+    const [complete, setComplete] = useState(false);
     const [StatisticList, setStatisticList] = useState()
-
+    const getSummary = async() => {
+      setComplete(true);
+      let msg=await summaryApi();
+      if(msg){
+        setComplete(false);
+        if(msg.success){
+          message.success(intl.formatMessage({id:'component.ListCard.success',defaultMessage:'Scan success'}));
+          setStatisticList(msg.data.fixed_cve)
+          props.refreshTable();
+        }else{
+          message.error(intl.formatMessage({id:'component.ListCard.failed',defaultMessage:'Scan failed'}));
+        }
+      }
+    }
     useEffect(async() => {
-        const   msg=await summaryApi();
-        //  console.log(msg)
-         setStatisticList(msg)
-        }, []);
+      let msg=await summaryApi();
+      if(msg.success)
+       setStatisticList(msg.data.fixed_cve)
+      }, []);
+        
   return (
     <RcResizeObserver
     key="resize-observer"
@@ -25,31 +42,54 @@ const  ListCard=()=> {
     }}>
       <ProCard.Group  direction={responsive ? 'column' : 'row'}>
         <ProCard>
-          <Statistic title="需要修复的漏洞(CVE)" value={StatisticList?.affect} valueStyle={{ color: "red" }} />
+          <Statistic title={intl.formatMessage({
+          id: 'component.ListCard.needed_to_repair',
+          defaultMessage: 'Need to repair',
+        })}
+           value={StatisticList?.cve_count} valueStyle={{ color: "red", textAlign:'center' }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="需要修复的高危漏洞(CVE)" value={StatisticList?.cvecount} valueStyle={{ color: "red" }} />
+          <Statistic title={intl.formatMessage({
+          id: 'component.ListCard.high_needed_to_repair',
+          defaultMessage: 'High-risk need to Repair',
+        })}
+           value={StatisticList?.high_cve_count} valueStyle={{ color: "red", textAlign:'center' }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="存在漏洞的主机" value={StatisticList?.highcount}  valueStyle={{ color: "red" }} />
+          <Statistic title={intl.formatMessage({
+          id: 'component.ListCard.hosts_with_vul',
+          defaultMessage: 'Hosts with vulnerabilities',
+        })} 
+        value={StatisticList?.affect_host_count}  valueStyle={{ color: "red", textAlign:'center' }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="今日已修复漏洞" value={StatisticList?.cvefix}   valueStyle={{ color: "red" }} />
+          <Statistic title={intl.formatMessage({
+          id: 'component.ListCard.today_repaired',
+          defaultMessage: 'Today has been repaired',
+        })}
+           value={StatisticList?.cvefix_today_count}   valueStyle={{ color: "red", textAlign:'center' }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="累计已修复的漏洞" value={StatisticList?.cvefix_all} valueStyle={{ color: "red" }} />
+          <Statistic title={intl.formatMessage({
+          id: 'component.ListCard.cumulate_repaired',
+          defaultMessage: 'Cumulative revision',
+        })}
+           value={StatisticList?.cvefix_all_count} valueStyle={{ color: "red",textAlign:'center' }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="最新扫描时间" className="fontsize" value={StatisticList?.last_time} valueStyle={{ color: "red",fontSize:22 }} />
+          <Statistic title={intl.formatMessage({
+          id: 'component.ListCard.latest_scan_time',
+          defaultMessage: 'Latest scan time',
+        })}
+           value={StatisticList?.latest_scan_time} valueStyle={{ color: "white",fontSize:13,whiteSpace:'nowrap',textAlign:'center' }} />
         </ProCard>
-        <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>            
-             <Button >一键扫描</Button>
+            <Button onClick={getSummary} type="primary" loading={complete}>{complete ? <FormattedMessage id="component.ListCard.scanning" defaultMessage="Scanning" /> : <FormattedMessage id="component.ListCard.scan" defaultMessage="Scan" />}</Button>
         </ProCard>
       </ProCard.Group>
     </RcResizeObserver>

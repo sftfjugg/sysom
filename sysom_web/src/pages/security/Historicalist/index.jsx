@@ -10,6 +10,7 @@ function index(props) {
   const [cveId, setCveId] = useState('cve');
   const getHist = async () => {
     const res = await histidApi(props.match.params.id);
+    console.log('res',res)
     setCveId(res.cve_id);
     return res;
   }
