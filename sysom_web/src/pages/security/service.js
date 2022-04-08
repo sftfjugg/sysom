@@ -61,7 +61,7 @@ const token = localStorage.getItem('token');
     });
     msg.data.data = [...msg.data.hosts_datail];
     return msg.data;
-  };
+  }
 
 
   export async function getOneById(id,options) {
@@ -80,7 +80,7 @@ const token = localStorage.getItem('token');
       setdata:msg.data.software,
 
     };
-  };
+  }
 
  
 
@@ -95,7 +95,7 @@ const token = localStorage.getItem('token');
     });
    
     return msg;
-  };
+  }
 
 
   export async function manyApi(body, options) {

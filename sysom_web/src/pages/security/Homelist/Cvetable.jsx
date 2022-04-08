@@ -164,7 +164,7 @@ const Cvetable=(params)=> {
         <Col span={11}>
               <Row className="allbtn">
               <Col><Button type="primary" onClick={repair}>一键修复</Button></Col>
-              <Col style={{'line-height':'58px'}}><Button disabled={flags} onClick={cancel} style={{'margin-right':'10px'}}>取消</Button></Col>
+              <Col style={{'line-height':'58px'}}><Button disabled={flags} onClick={cancel} style={{'margin-right':'10px'}}>返回</Button></Col>
               </Row>
               </Col>
     </Row>
