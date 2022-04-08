@@ -32,7 +32,7 @@ const VmcoreCard = () => {
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="月宕机率" value={StatisticList?.rate_30days} suffix="%" valueStyle={{ color: "red" }} />
+          <Statistic title="月宕机率" value={StatisticList?.rate_30days} precision={2} suffix="%" valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
