@@ -1,3 +1,11 @@
+# -*- encoding: utf-8 -*-
+"""
+@File    : urls.py
+@Time    : 2022/4/8 下午1:49
+@Author  : weidongkl
+@Email   : weidong@uniontech.com
+@Software: PyCharm
+"""
 from rest_framework import serializers
 from apps.vul.models import VulAddrModel
 
@@ -8,7 +16,7 @@ class VulAddrListSerializer(serializers.ModelSerializer):
     class Meta:
         model = VulAddrModel
         fields = ["id", "name", "description", "method", "method_display", "url", "headers", "params", "body",
-                  "authorization_type", "parser"
+                  "authorization_type", "parser", "status"
                   ]
 
     def get_method_display(self, attr: VulAddrModel) -> int:

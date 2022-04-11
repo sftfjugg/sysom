@@ -1,14 +1,16 @@
 import logging
 import re
 import time
+import requests
 from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework import viewsets
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import register_job
 
 from tzlocal import get_localzone
 from django.utils.timezone import localdate, localtime
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
 from lib.response import *
 from apps.accounts.authentication import Authentication
 from apps.vul.models import *
@@ -302,6 +304,7 @@ class UpdateSaView(APIView):
 
 
 class VulAddrViewSet(viewsets.ModelViewSet):
+    authentication_classes = [Authentication]
     queryset = VulAddrModel.objects.all()
     serializer_class = VulAddrListSerializer
     filter_backends = [DjangoFilterBackend]
@@ -330,3 +333,37 @@ class VulAddrViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
+
+    @action(detail=True, methods=['get'])
+    def test_connect(self, request, *args, **kwargs):
+        vul = self.get_object()
+        url, method, headers, params, payload, auth = vul.get_req_arg()
+        req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
+        prepped = req.prepare()
+        data = {"request": self.get_req_struct(prepped),
+                "status": self.get_resp_result(prepped)}
+        return success(result=data, message="")
+
+    @staticmethod
+    def get_req_struct(req):
+        req_struct = '{}\n\n{}\n\n{}'.format(
+            req.method + ' ' + req.url,
+            '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+            req.body,
+        )
+        return req_struct
+
+    @staticmethod
+    def get_resp_result(req):
+        s = requests.Session()
+
+        try:
+            resp_status = s.send(req).status_code
+            if status.is_success(resp_status) or status == status.HTTP_304_NOT_MODIFIED:
+                msg = f"Status Code: {resp_status} OK"
+            else:
+                msg = f"Status Code: {resp_status} ERROR"
+        except Exception as e:
+            msg = f"Status Code: ERROR({e})"
+        finally:
+            return msg
