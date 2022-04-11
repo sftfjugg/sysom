@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 from lib import BaseModel, human_datetime
 from apps.host.models import HostModel
 from apps.accounts.models import User
@@ -7,14 +8,50 @@ from apps.accounts.models import User
 # Create your models here.
 
 class VulAddrModel(models.Model):
-    vul_address = models.CharField(max_length=200)
+    """
+    custom vul db config
+    """
+    REQUEST_METHOD_CHOICES = (
+        (0, 'GET'),
+        (1, 'POST'),
+    )
+    STATUS_CHOICES = (
+        (0, _("up")),
+        (1, _("down")),
+        (2, _("uninit")),
+    )
+
+    name = models.CharField(max_length=200, unique=True)
     description = models.TextField(default="")
+    method = models.SmallIntegerField(choices=REQUEST_METHOD_CHOICES, default=0, verbose_name="request method")
+    url = models.URLField()
+    headers = models.JSONField(default=dict)
+    params = models.JSONField(default=dict)
+    body = models.JSONField(default=dict)
+    authorization_type = models.CharField(max_length=30, blank=True)
+    authorization_body = models.JSONField(default=dict)
+    parser = models.JSONField(verbose_name="parse vul data structure",
+                              default={"cve_item_path": "", "cve_id_flag": "cve_id", "level_flag": "level",
+                                       "pub_time_flag": "pub_time"})
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=2, verbose_name="vul database status")
 
     class Meta:
         db_table = "sys_vul_db"
 
     def __str__(self):
-        return f'vul addresS: {self.vul_address}'
+        return f'vul addres: {self.url}'
+
+    def get_req_arg(self):
+        headers = self.headers
+        if "User-Agent" not in headers:
+            headers[
+                "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
+
+        if self.authorization_type.lower() == "basic" and self.authorization_body:
+            auth = self.authorization_body
+        else:
+            auth = {}
+        return self.url, self.get_method_display(), headers, self.params, self.body, auth
 
 
 class VulBaseModel(BaseModel):
