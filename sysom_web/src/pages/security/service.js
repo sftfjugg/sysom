@@ -18,7 +18,7 @@ const token = localStorage.getItem('token');
   }
 
   export async function summaryApi(options) {
-    const msg= await  request('/api/v1/vul/summary', {
+    const msg= await  request('/api/v1/vul/summary/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -27,12 +27,13 @@ const token = localStorage.getItem('token');
       ...(options || {}),
     
     });
-    return {
-       affect:msg.data.fixed_cve.affect_host_count,
-       cvecount:msg.data.fixed_cve.cve_count,
-       highcount:msg.data.fixed_cve.high_cve_count
-    }
+    return msg;
   }
+//   {
+//     affect:msg.data.fixed_cve.affect_host_count,
+//     cvecount:msg.data.fixed_cve.cve_count,
+//     highcount:msg.data.fixed_cve.high_cve_count
+//  }
 
 
 
@@ -58,9 +59,9 @@ const token = localStorage.getItem('token');
       },
        ...(options || {}),
     });
-   msg.data.data = [...msg.data.hosts_datail];
+    msg.data.data = [...msg.data.hosts_datail];
     return msg.data;
-  };
+  }
 
 
   export async function getOneById(id,options) {
@@ -79,7 +80,7 @@ const token = localStorage.getItem('token');
       setdata:msg.data.software,
 
     };
-  };
+  }
 
  
 
@@ -94,7 +95,7 @@ const token = localStorage.getItem('token');
     });
    
     return msg;
-  };
+  }
 
 
   export async function manyApi(body, options) {
@@ -121,7 +122,7 @@ const token = localStorage.getItem('token');
       ...(options || {}),
     
     });
-    return msg
+    return msg;
   }
 
 

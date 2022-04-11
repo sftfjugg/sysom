@@ -4,7 +4,6 @@ import { Button, Row, Col } from "antd";
 import "./Viewdetails.less";
 import { viewApi, summaryApi } from "../service";
 import { PageContainer } from "@ant-design/pro-layout";
-import Headcard from "../components/Headcard";
 import ProCard from "@ant-design/pro-card";
 
 function index(props) {
@@ -30,7 +29,6 @@ function index(props) {
   return (
     <div>
       <PageContainer>
-        {/* <Headcard paren={fn} isShow={false} upData={false} /> */}
         <ProCard className="card_result">
           <h3> <span>
             <FormattedMessage id="pages.hostTable.hostname" defaultMessage="Hostname" />
