@@ -96,4 +96,4 @@ class VulJobModel(models.Model):
         db_table = "sys_vul_job"
 
     def __str__(self):
-        return f'Vulnerability scanning job：{self.job_name} in {self.job_time} '
+        return f'Vulnerability scanning job：{self.job_name} in {self.job_start_time}'
