@@ -11,28 +11,29 @@ import { size } from 'lodash-es';
 
 const  ListCard=(props)=> {
   const intl = useIntl();
-    const [responsive, setResponsive] = useState(false);
-    const [complete, setComplete] = useState(false);
-    const [StatisticList, setStatisticList] = useState()
-    const getSummary = async() => {
-      setComplete(true);
-      let msg=await summaryApi();
-      if(msg){
-        setComplete(false);
-        if(msg.success){
-          message.success(intl.formatMessage({id:'component.ListCard.success',defaultMessage:'Scan success'}));
-          setStatisticList(msg.data.fixed_cve)
-          props.refreshTable();
-        }else{
-          message.error(intl.formatMessage({id:'component.ListCard.failed',defaultMessage:'Scan failed'}));
-        }
+  const [responsive, setResponsive] = useState(false);
+  const [complete, setComplete] = useState(false);
+  const [StatisticList, setStatisticList] = useState()
+  const Scan = async () => {
+    setComplete(true);
+    let res=await updataApi();
+    if(res){
+      setComplete(false);
+      if(res.success){
+        message.success(intl.formatMessage({id:'component.ListCard.success',defaultMessage:'Scan success'}));
+        setTimeout(()=>{
+          window.location.reload();
+        },1000)
+      }else{
+        message.error(intl.formatMessage({id:'component.ListCard.failed',defaultMessage:'Scan failed'}));
       }
     }
-    useEffect(async() => {
-      let msg=await summaryApi();
-      if(msg.success)
-       setStatisticList(msg.data.fixed_cve)
-      }, []);
+  }
+  useEffect(async() => {
+    let msg=await summaryApi();
+    if(msg.success)
+      setStatisticList(msg.data.fixed_cve)
+    }, []);
         
   return (
     <RcResizeObserver
@@ -89,7 +90,7 @@ const  ListCard=(props)=> {
            value={StatisticList?.latest_scan_time} valueStyle={{ color: "white",fontSize:13,whiteSpace:'nowrap',textAlign:'center' }} />
         </ProCard>
         <ProCard>            
-            <Button onClick={getSummary} type="primary" loading={complete}>{complete ? <FormattedMessage id="component.ListCard.scanning" defaultMessage="Scanning" /> : <FormattedMessage id="component.ListCard.scan" defaultMessage="Scan" />}</Button>
+            <Button onClick={Scan} type="primary" loading={complete}>{complete ? <FormattedMessage id="component.ListCard.scanning" defaultMessage="Scanning" /> : <FormattedMessage id="component.ListCard.scan" defaultMessage="Scan" />}</Button>
         </ProCard>
       </ProCard.Group>
     </RcResizeObserver>

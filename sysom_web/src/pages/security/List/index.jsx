@@ -165,7 +165,7 @@ const List=(props)=> {
   return (
     <div> 
      <PageContainer>
-       <ListCard refreshTable={listApi} />
+       <ListCard />
        <Divider />
       <ProTable  rowKey="cve_id"  columns={columns} search={false} request={listApi}   
        toolBarRender={() => [
