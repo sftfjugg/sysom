@@ -19,11 +19,13 @@ const  ListCard=(props)=> {
     let res=await updataApi();
     if(res){
       setComplete(false);
-      if(res.success){
+      if(res.message == 'success'){
         message.success(intl.formatMessage({id:'component.ListCard.success',defaultMessage:'Scan success'}));
         setTimeout(()=>{
           window.location.reload();
         },1000)
+      }else if(res.message == 'forbidden'){
+        message.success(intl.formatMessage({id:'component.ListCard.scan_recent',defaultMessage:res.data}));
       }else{
         message.error(intl.formatMessage({id:'component.ListCard.failed',defaultMessage:'Scan failed'}));
       }
@@ -42,52 +44,52 @@ const  ListCard=(props)=> {
       setResponsive(offset.width < 596);
     }}>
       <ProCard.Group  direction={responsive ? 'column' : 'row'}>
-        <ProCard>
+        <ProCard bodyStyle={{textAlign:'center'}}>
           <Statistic title={intl.formatMessage({
           id: 'component.ListCard.needed_to_repair',
           defaultMessage: 'Need to repair',
         })}
-           value={StatisticList?.cve_count} valueStyle={{ color: "red", textAlign:'center' }} />
+           value={StatisticList?.cve_count} valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
-        <ProCard>
+        <ProCard bodyStyle={{textAlign:'center'}}>
           <Statistic title={intl.formatMessage({
           id: 'component.ListCard.high_needed_to_repair',
           defaultMessage: 'High-risk need to Repair',
         })}
-           value={StatisticList?.high_cve_count} valueStyle={{ color: "red", textAlign:'center' }} />
+           value={StatisticList?.high_cve_count} valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
-        <ProCard>
+        <ProCard bodyStyle={{textAlign:'center'}}>
           <Statistic title={intl.formatMessage({
           id: 'component.ListCard.hosts_with_vul',
           defaultMessage: 'Hosts with vulnerabilities',
         })} 
-        value={StatisticList?.affect_host_count}  valueStyle={{ color: "red", textAlign:'center' }} />
+        value={StatisticList?.affect_host_count}  valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
-        <ProCard>
+        <ProCard bodyStyle={{textAlign:'center'}}>
           <Statistic title={intl.formatMessage({
           id: 'component.ListCard.today_repaired',
           defaultMessage: 'Today has been repaired',
         })}
-           value={StatisticList?.cvefix_today_count}   valueStyle={{ color: "red", textAlign:'center' }} />
+           value={StatisticList?.cvefix_today_count}   valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
-        <ProCard>
+        <ProCard bodyStyle={{textAlign:'center'}}>
           <Statistic title={intl.formatMessage({
           id: 'component.ListCard.cumulate_repaired',
           defaultMessage: 'Cumulative revision',
         })}
-           value={StatisticList?.cvefix_all_count} valueStyle={{ color: "red",textAlign:'center' }} />
+           value={StatisticList?.cvefix_all_count} valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
-        <ProCard>
+        <ProCard bodyStyle={{textAlign:'center'}}>
           <Statistic title={intl.formatMessage({
           id: 'component.ListCard.latest_scan_time',
           defaultMessage: 'Latest scan time',
         })}
-           value={StatisticList?.latest_scan_time} valueStyle={{ color: "white",fontSize:13,whiteSpace:'nowrap',textAlign:'center' }} />
+           value={StatisticList?.latest_scan_time} valueStyle={{ color: "red",fontSize:16,whiteSpace:'nowrap' }} />
         </ProCard>
         <ProCard>            
             <Button onClick={Scan} type="primary" loading={complete}>{complete ? <FormattedMessage id="component.ListCard.scanning" defaultMessage="Scanning" /> : <FormattedMessage id="component.ListCard.scan" defaultMessage="Scan" />}</Button>

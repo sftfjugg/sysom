@@ -11,5 +11,7 @@ export default {
   'component.ListCard.scan': '一键扫描',
   'component.ListCard.scanning': '扫描中',
   'component.ListCard.success': '扫描成功',
-  'component.ListCard.failed': '扫描失败'
+  'component.ListCard.failed': '扫描失败',
+  'component.ListCard.scan_recent': '数据最近已更新，无需再次更新',
+
 };
