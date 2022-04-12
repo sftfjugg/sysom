@@ -283,14 +283,10 @@ class UpdateSaView(APIView):
         """
         try:
             last_update_sa_time = VulJobModel.objects.filter(job_name="update_sa").order_by(
-                '-job_end_time').first().job_end_time
-        except AttributeError:
-            last_update_sa_time = None
-
-        if last_update_sa_time is None:
-            upsa()
-            return success(result="Update security advisory data")
-        else:
+                '-job_start_time').first().job_end_time
+            if last_update_sa_time is None:
+                return success(message="forbidden",
+                               result="The data has been updated recently,no need to update it again")
             # 默认间隔时间为10分
             interval_time = 60 * 10
             current_time = localtime()
@@ -300,6 +296,9 @@ class UpdateSaView(APIView):
             else:
                 upsa()
                 return success(result="Update security advisory data")
+        except AttributeError:
+            upsa()
+            return success(result="Update security advisory data")
 
 
 class VulAddrViewSet(viewsets.ModelViewSet):
