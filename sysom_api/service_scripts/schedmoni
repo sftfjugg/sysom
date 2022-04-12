@@ -43,7 +43,7 @@ if arg_app:
 
 dump_log_cmd = "cat /var/log/sysak/schedmoni/runslow.log;\
     echo \"\";cat /var/log/sysak/schedmoni/nosched.log;"
-schedmoni_cmd = "sysak schedmoni "+str(arg_tid)+" "+str(arg_app)+" "+str(arg_thresh)+" "+str(arg_time)+" 2>/dev/null"
+schedmoni_cmd = "sysak schedmoni "+str(arg_tid)+" "+str(arg_app)+" "+str(arg_thresh)+" "+str(arg_time)
 cmd0['cmd'] = schedmoni_cmd+" && "+dump_log_cmd
 
 result['commands'].append(cmd0)
