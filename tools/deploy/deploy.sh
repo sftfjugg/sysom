@@ -142,7 +142,6 @@ init_conf() {
     python manage.py migrate
     python manage.py loaddata ./apps/accounts/user.json
     python manage.py loaddata ./apps/vmcore/vmcore.json
-    python manage.py loaddata ./apps/vul/vuladdr.json
     popd
 }
 

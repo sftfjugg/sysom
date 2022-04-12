@@ -1,16 +1,22 @@
 import logging
 import re
 import time
+import requests
 from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework import viewsets
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import register_job
+
 from tzlocal import get_localzone
 from django.utils.timezone import localdate, localtime
+from django_filters.rest_framework import DjangoFilterBackend
 from lib.response import *
 from apps.accounts.authentication import Authentication
 from apps.vul.models import *
 from apps.vul.vul import update_sa as upsa, update_vul as upvul
 from apps.vul.vul import fix_cve, get_unfix_cve
+from apps.vul.serializer import VulAddrListSerializer, VulAddrModifySerializer
 
 logger = logging.getLogger(__name__)
 
@@ -295,3 +301,69 @@ class UpdateSaView(APIView):
                 upsa()
                 LAST_UPDATE_SA_TIME = time.time()
                 return success(result="Update security advisory data")
+
+
+class VulAddrViewSet(viewsets.ModelViewSet):
+    authentication_classes = [Authentication]
+    queryset = VulAddrModel.objects.all()
+    serializer_class = VulAddrListSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name']
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return VulAddrListSerializer
+        else:
+            return VulAddrModifySerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+        return success(result=response.data)
+
+    def create(self, request, *args, **kwargs):
+        super().create(request, *args, **kwargs)
+        return success(result={}, message="新增成功")
+
+    def update(self, request, *args, **kwargs):
+        super().update(request, *args, **kwargs)
+        return success(result={}, message="修改成功")
+
+    @action(detail=True, methods=['get'])
+    def test_connect(self, request, *args, **kwargs):
+        vul = self.get_object()
+        url, method, headers, params, payload, auth = vul.get_req_arg()
+        req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
+        prepped = req.prepare()
+        data = {"request": self.get_req_struct(prepped),
+                "status": self.get_resp_result(prepped)}
+        return success(result=data, message="")
+
+    @staticmethod
+    def get_req_struct(req):
+        req_struct = '{}\n\n{}\n\n{}'.format(
+            req.method + ' ' + req.url,
+            '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+            req.body,
+        )
+        return req_struct
+
+    @staticmethod
+    def get_resp_result(req):
+        s = requests.Session()
+
+        try:
+            resp_status = s.send(req).status_code
+            if status.is_success(resp_status) or status == status.HTTP_304_NOT_MODIFIED:
+                msg = f"Status Code: {resp_status} OK"
+            else:
+                msg = f"Status Code: {resp_status} ERROR"
+        except Exception as e:
+            msg = f"Status Code: ERROR({e})"
+        finally:
+            return msg
