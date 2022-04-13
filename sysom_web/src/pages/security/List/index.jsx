@@ -1,26 +1,30 @@
-import {  useRef ,useState} from 'react';
-import { useIntl, FormattedMessage } from 'umi';
+import { useRef, useState } from 'react';
+import { useIntl, FormattedMessage, Link } from 'umi';
 import ProCard from '@ant-design/pro-card';
 import { PageContainer } from '@ant-design/pro-layout';
-import { Button,Modal,Progress} from 'antd';
+import { Button, Modal, Progress } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import Restoration from "../components/restoration"
 import ListCard from '../components/ListCard'
 import "./list.less";
 import { listApi, manyApi } from "../service";
+import { connect } from 'dva';
 
 const { Divider } = ProCard;
-const List=(props)=> {
-
+const List = (props) => {
+  const [total, setTotal] = useState(0);
   const actionRef = useRef();
   const intl = useIntl();
+  const onChange = (onepa, twopa) => {
+    props.addMale(onepa.pageSize);
+  }
   const fn = () => {
     props.history.push("/security/historical");
   };
   const [selectedRowKeys, setselectedRowKeys] = useState(0);
-  const [selectedRows,setselectedRows]=useState(0)
+  const [selectedRows, setselectedRows] = useState(0)
   const rowSelection = {
-      onChange: (selectedRowKeys,selectedRows) => {
+    onChange: (selectedRowKeys, selectedRows) => {
       setselectedRowKeys(selectedRowKeys)
       setselectedRows(selectedRows)
     },
@@ -30,10 +34,10 @@ const List=(props)=> {
   const [errvisible, seterrvisible] = useState(false);
   const [vlue, setCount] = useState(0);
 
-  
+
   const showModal = () => {
-   const leght = selectedRows.length;
-   if (leght > 0) {
+    const leght = selectedRows.length;
+    if (leght > 0) {
       setIsModalVisible(true);
     }
   };
@@ -51,7 +55,7 @@ const List=(props)=> {
         hostname: selectedRows[i].hosts,
       });
     }
-  const msg = await manyApi({ cve_id_list: arry });
+    const msg = await manyApi({ cve_id_list: arry });
     if (msg) {
       setIsModalVisible(false);
       setsuccesvisible(true);
@@ -70,7 +74,7 @@ const List=(props)=> {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  
+
   const columns = [
     {
       title: <FormattedMessage id="pages.security.list.index" defaultMessage="index" />,
@@ -110,8 +114,8 @@ const List=(props)=> {
           text: (
             <FormattedMessage id="pages.security.list.medium" defaultMessage="medium" />
           ),
-         },
-         critical: {
+        },
+        critical: {
           text: (
             <FormattedMessage id="pages.security.list.critical" defaultMessage="critical" />
           ),
@@ -123,7 +127,7 @@ const List=(props)=> {
         },
       },
     },
- 
+
     {
       title: <FormattedMessage id="pages.security.list.hosts" defaultMessage="hosts" />,
       dataIndex: 'hosts',
@@ -142,9 +146,9 @@ const List=(props)=> {
           },
         };
       },
-      render: (_,record,text) => (
+      render: (_, record, text) => (
         <span placement="topLeft" title={record.hosts.toString()} >
-            {record.hosts.toString()}
+          {record.hosts.toString()}
         </span>
       ),
     },
@@ -154,52 +158,70 @@ const List=(props)=> {
       align: "center",
       valueType: "option",
       render: (_, record) => [
-        <a key="showDetail"  href={"/security/homelist/" + record.cve_id}>
+        <Link key="showDetail" to={"/security/homelist/" + record.cve_id}>
           {<FormattedMessage id="pages.security.list.repair" defaultMessage="repair" />}
-        </a>,
+        </Link>
       ],
     },
-   
-    
+
+
   ];
+  const paginationProps = {
+    showSizeChanger: true,
+    showQuickJumper: true,
+    total: total, // 数据总数
+    pageSizeOptions: [10, 20, 50, 100],
+    defaultPageSize: Number(props.maleList),
+    // current: pageNum, // 当前页码
+    showTotal: (total, ranage) => `共 ${total} 条`,
+    position: ["bottomRight"],
+    // size:"small"
+  };
   return (
-    <div> 
-     <PageContainer>
-       <ListCard />
-       <Divider />
-      <ProTable  rowKey="cve_id"  columns={columns} search={false} request={listApi}   
-       toolBarRender={() => [
-            <Restoration paren={fn}/>,
-            <Button type="primary"  key="primary" onClick={showModal}>
+    <div>
+      <PageContainer>
+        <ListCard />
+        <Divider />
+        <ProTable rowKey="cve_id" columns={columns} search={false} request={listApi}
+          toolBarRender={() => [
+            <Restoration paren={fn} />,
+            <Button type="primary" key="primary" onClick={showModal}>
               {<FormattedMessage id="pages.security.list.repair" defaultMessage="repair" />}
-              </Button>
-            ]}
-        rowSelection={rowSelection}
-       />
-         
-          <Modal width={320}  visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} centered={true}>
-               <p className="stop">
-                  {<FormattedMessage id="pages.security.list.confirm" defaultMessage="confirm" />}
-                  </p>
-          </Modal>
-          <Modal width={320} visible={succesvisible} footer={null} centered={true}
-          >
-              <p> {<FormattedMessage id="pages.security.list.re" defaultMessage="re" />}</p>
-            <Progress percent={vlue} size="small" />
-          </Modal>
-          <Modal width={320} visible={errvisible} footer={null} centered={true}>
-            <p> {<FormattedMessage id="pages.security.list.error" defaultMessage="error" />}
-              <Button type="link" size="small"
-                onClick={() => props.history.push("/security/historical")}
-              >
-               {<FormattedMessage id="pages.security.list.details" defaultMessage="details" />}
-              </Button>
-            </p>
-          </Modal>
-    </PageContainer>
-       
+            </Button>
+          ]}
+          pagination={paginationProps}
+          onChange={onChange}
+          rowSelection={rowSelection}
+        />
+
+        <Modal width={320} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} centered={true}>
+          <p className="stop">
+            {<FormattedMessage id="pages.security.list.confirm" defaultMessage="confirm" />}
+          </p>
+        </Modal>
+        <Modal width={320} visible={succesvisible} footer={null} centered={true}
+        >
+          <p> {<FormattedMessage id="pages.security.list.re" defaultMessage="re" />}</p>
+          <Progress percent={vlue} size="small" />
+        </Modal>
+        <Modal width={320} visible={errvisible} footer={null} centered={true}>
+          <p> {<FormattedMessage id="pages.security.list.error" defaultMessage="error" />}
+            <Button type="link" size="small"
+              onClick={() => props.history.push("/security/historical")}
+            >
+              {<FormattedMessage id="pages.security.list.details" defaultMessage="details" />}
+            </Button>
+          </p>
+        </Modal>
+      </PageContainer>
+
     </div>
   );
 }
 
-export default List;
+const actionCreator = {
+  addMale: (payload) => ({ type: 'store/addMale', payload })
+}
+
+//connect与react-redux类似
+export default connect((state) => ({ maleList: state.store.male }), actionCreator)(List)
