@@ -142,7 +142,7 @@ const Cvetable=(params)=> {
     }
     const [flags,setflags]=useState(false)
     const cancel=()=>{
-        history.push("/security/list") 
+        history.goBack();
     }
   return (
     <>
