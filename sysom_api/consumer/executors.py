@@ -8,6 +8,7 @@ from apps.host.models import HostModel
 from lib.ssh import SSH
 from apps.task.models import JobModel
 from django.conf import settings
+from django.db import connection
 
 
 class SshJob:
@@ -72,6 +73,8 @@ class SshJob:
             update_job(instance=job, status="Fail", result="socket time out")
         except Exception as e:
             update_job(instance=job, status="Fail", result=str(e))
+        finally:
+            connection.close()
 
 
 def update_job(instance, **kwargs):
