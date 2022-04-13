@@ -73,6 +73,7 @@ const Cvetable=(params)=> {
     valueType: "option",
     render: (_, record) => [
             <a key="showDetail" onClick={async()=>{
+                setflags(true)
                     setsuccesvisible(true)
                     seterrvisible(false)
                 const  time =setInterval(()=>{
@@ -104,6 +105,7 @@ const Cvetable=(params)=> {
     },
 ]
     const  repair=async()=>{
+        setflags(true)
     const  arry=[];
     const leght =selectedRows.length;
 
@@ -140,11 +142,7 @@ const Cvetable=(params)=> {
     }
     const [flags,setflags]=useState(false)
     const cancel=()=>{
-        if(succesvisible==true){
-            setflags(true)
-        }else{
-            history.push("/security/list") 
-        }
+        history.push("/security/list") 
     }
   return (
     <>
