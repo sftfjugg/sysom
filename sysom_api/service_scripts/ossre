@@ -21,7 +21,7 @@ result['commands'] = []
 
 cmd0 = {}
 cmd0['instance'] = args["实例IP"]
-cmd0['cmd'] = "sysak ossre_client -d > /dev/null 2>&1 " + " && " + "cat /var/log/sysak/ossre.log"
+cmd0['cmd'] = "sysak ossre_client -d > /dev/null " + " && " + "cat /var/log/sysak/ossre.log"
 
 result['commands'].append(cmd0)
 

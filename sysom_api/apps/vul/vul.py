@@ -140,6 +140,12 @@ def get_unfix_cve_format():
 def update_sa():
     job_start_time = timezone.now()
     job_id = "update_vul_{:%Y%m%d%H%M%S%f}".format(datetime.datetime.utcnow())
+    update_sa_job_obj = VulJobModel.objects.create(
+        job_id=job_id,
+        job_name="update_sa",
+        job_desc="Start updating the sa database",
+        job_start_time=job_start_time,
+    )
     cmd = r'''
 #!/bin/bash
 # 获取版本信息
@@ -179,13 +185,8 @@ done
 
     update_sa_db(cve2host_info)
     job_end_time = timezone.now()
-    VulJobModel.objects.create(
-        job_id=job_id,
-        job_name="update_sa",
-        job_desc="Start updating the sa database",
-        job_start_time=job_start_time,
-        job_end_time=job_end_time,
-    )
+    update_sa_job_obj.job_end_time = job_end_time
+    update_sa_job_obj.save()
 
 
 def update_sa_db(cveinfo):

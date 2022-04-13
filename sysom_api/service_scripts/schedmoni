@@ -12,13 +12,15 @@ import time
 ##	"采样阈值":"10000",
 ##	"诊断时长":"10",
 ##	"诊断线程":"10002"
+##	"诊断应用":"myApp"
 ## }
 ## '{"实例IP":"192.168.1.101", "诊断时长":10, "采样阈值":10000, "诊断线程":10002}'
 ## 解析参数方法:
 ## sysak schedmoni 10000  -s 10 -t 10002
 ##  10000 时间阈值, 捕获延迟10000 us的事件
 ##  -s 10 诊断时间10秒
-##  -t 10002 针对现场10002进行监控
+##  -t 10002 针对线程10002进行监控
+##  -c "myApp" 针对应用myApp进行监控
 ##
 ######################################################################
 args = json.loads(sys.argv[1], encoding="UTF-8")
@@ -35,9 +37,13 @@ arg_tid = args["诊断线程"]
 if arg_tid:
 	arg_tid = '-t ' + str(arg_tid)
 
+arg_app = args["诊断应用"]
+if arg_app:
+	arg_app = '-c ' + str(arg_app)
+
 dump_log_cmd = "cat /var/log/sysak/schedmoni/runslow.log;\
     echo \"\";cat /var/log/sysak/schedmoni/nosched.log;"
-schedmoni_cmd = "sysak schedmoni "+str(arg_tid)+" "+str(arg_thresh)+" "+str(arg_time)+" 2>/dev/null"
+schedmoni_cmd = "sysak schedmoni "+str(arg_tid)+" "+str(arg_app)+" "+str(arg_thresh)+" "+str(arg_time)
 cmd0['cmd'] = schedmoni_cmd+" && "+dump_log_cmd
 
 result['commands'].append(cmd0)

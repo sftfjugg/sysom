@@ -10,7 +10,7 @@ if [[ -f {vmcore_file} && -f {debug_vmlinux} ]];then
     crash -x {debug_vmlinux} {vmcore_file}
 else
     echo -e '\\033[31mVmcore Analyse Run Failed:\\n    Error: {debug_vmlinux} or {vmcore_file} Not exists!!! \\033[0m'
-    echo -e '\\033[32mTO Fix With:\\n    Please install kerenl-debuginfo of {kernel_version} and check {vmcore_file} exists!!! \\033[0m'
+    echo -e '\\033[32mTO Fix With:\\n    Please install kernel-debuginfo of {kernel_version} and check {vmcore_file} exists!!! \\033[0m'
     echo -e '\\033[32mAnd Then:\\n    Try again with Running command: "crash -x {debug_vmlinux} {vmcore_file}" \\033[0m'
 fi""".format(vmcore_file=vmcore_file, debug_vmlinux=debug_vmlinux, kernel_version=kernel_version)
 print(command)

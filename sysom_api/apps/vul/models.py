@@ -31,8 +31,7 @@ class VulAddrModel(models.Model):
     authorization_type = models.CharField(max_length=30, blank=True)
     authorization_body = models.JSONField(default=dict)
     parser = models.JSONField(verbose_name="parse vul data structure",
-                              default={"cve_item_path": "", "cve_id_flag": "cve_id", "level_flag": "level",
-                                       "pub_time_flag": "pub_time"})
+                              default=dict)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=2, verbose_name="vul database status")
 
     class Meta:
