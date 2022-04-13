@@ -108,7 +108,6 @@ const Cvetable=(params)=> {
         setflags(true)
     const  arry=[];
     const leght =selectedRows.length;
-
     if(leght>0){
         setsuccesvisible(true)
         seterrvisible(false) 
@@ -116,9 +115,10 @@ const Cvetable=(params)=> {
         setCount(vlue=>vlue+1);
         
         },2500)
-        const id=params.id
-        for(let i = 0; i < leght; i++){
-            arry.push({"cve_id":id, "hostname":[selectedRows[i].hostname ]})
+        const id=params.id;
+        arry.push({"cve_id":id, "hostname":[selectedRows[0].hostname ]})
+        for(let i = 1; i < leght; i++){
+            arry[0].hostname.push(selectedRows[i].hostname)
         }
         const msg=await manyApi({cve_id_list:arry});
         if(msg){
@@ -162,7 +162,7 @@ const Cvetable=(params)=> {
         <Col span={11}>
               <Row className="allbtn">
               <Col><Button type="primary" onClick={repair}>一键修复</Button></Col>
-              <Col style={{'line-height':'58px'}}><Button disabled={flags} onClick={cancel} style={{'margin-right':'10px'}}>返回</Button></Col>
+              <Col style={{lineHeight:'58px'}}><Button disabled={flags} onClick={cancel} style={{marginRight:'10px'}}>返回</Button></Col>
               </Row>
               </Col>
     </Row>

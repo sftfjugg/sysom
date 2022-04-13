@@ -85,7 +85,7 @@ export default {
   'pages.security.list.confirm':'确认修复吗',
   'pages.security.list.re':'正在修复中...',
   'pages.security.list.error':'修复出错了，',
-  'pages.security.list.details':'查看详情，',
+  'pages.security.list.details':'查看详情',
   'pages.security.Homelist.name':'软件名称',
   'pages.security.Homelist.vul_level':'严重程度',
   'pages.security.Homelist.fixed_version':'修复版本',
