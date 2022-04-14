@@ -20,8 +20,13 @@ import sys
 ##                如填写一个无效盘符，也会捕获系统所有磁盘的IO
 ##
 ###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
 
-args = json.loads(sys.argv[1])
+args = Param(json.loads(sys.argv[1]))
+
 result = {}
 result['commands'] = []
 
