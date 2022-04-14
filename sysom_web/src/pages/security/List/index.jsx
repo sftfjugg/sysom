@@ -37,9 +37,9 @@ const List = (props) => {
 
   const showModal = () => {
     const leght = selectedRows.length;
-    // if (leght > 0) {
+    if (leght > 0) {
       setIsModalVisible(true);
-    // }
+    }
   };
   const handleOk = async () => {
     const time = setInterval(() => {
