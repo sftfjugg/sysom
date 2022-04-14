@@ -44,7 +44,7 @@ const List = (props) => {
   const handleOk = async () => {
     const time = setInterval(() => {
       setCount((vlue) => vlue + 1);
-    }, 4500);
+    }, 18000);
     setIsModalVisible(false);
     setsuccesvisible(true);
     const arry = [];
