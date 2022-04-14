@@ -106,6 +106,7 @@ const token = localStorage.getItem('token');
         'Authorization': token,
       },
       data: body,
+      timeout:100,
       ...(options || {}),
     });
     return msg;

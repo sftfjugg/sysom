@@ -37,14 +37,14 @@ const List = (props) => {
 
   const showModal = () => {
     const leght = selectedRows.length;
-    if (leght > 0) {
+    // if (leght > 0) {
       setIsModalVisible(true);
-    }
+    // }
   };
   const handleOk = async () => {
     const time = setInterval(() => {
       setCount((vlue) => vlue + 1);
-    }, 4500);
+    }, 18000);
     setIsModalVisible(false);
     setsuccesvisible(true);
     const arry = [];
@@ -55,21 +55,30 @@ const List = (props) => {
         hostname: selectedRows[i].hosts,
       });
     }
-    const msg = await manyApi({ cve_id_list: arry });
-    if (msg) {
-      setIsModalVisible(false);
-      setsuccesvisible(true);
-      setCount(99);
-      clearInterval(time);
-      if (msg.message == "fix cve failed") {
+    await manyApi({ cve_id_list: arry }).then((msg)=>{
+      if (msg) {
+        setIsModalVisible(false);
+        setsuccesvisible(true);
+        setCount(99);
+        clearInterval(time);
+        if (msg.message == "fix cve failed") {
+          seterrvisible(true);
+          setsuccesvisible(false);
+        } else {
+          setTimeout(() => {
+            props.history.push("/security");
+          }, 1000);
+        }
+      }else{
         seterrvisible(true);
         setsuccesvisible(false);
-      } else {
-        setTimeout(() => {
-          props.history.push("/security");
-        }, 1000);
       }
-    }
+    }).catch((err)=>{
+      seterrvisible(true);
+        setsuccesvisible(false);
+    });
+    // console.log('msg',msg)
+    
   };
   const handleCancel = () => {
     setIsModalVisible(false);
