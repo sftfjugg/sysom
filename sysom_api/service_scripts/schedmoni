@@ -23,7 +23,13 @@ import time
 ##  -c "myApp" 针对应用myApp进行监控
 ##
 ######################################################################
-args = json.loads(sys.argv[1], encoding="UTF-8")
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+
 result = {}
 result['commands'] = []
 
