@@ -33,7 +33,11 @@ result['commands'] = []
 cmd0 = {}
 cmd0['instance'] = args["实例IP"]
 cmd0_arg_t = args.get("时间阈值","5000")
+if int(cmd0_arg_t) < 0:
+	cmd0_arg_t = 0
 cmd0_arg_T = args.get("诊断时长","10")
+if int(cmd0_arg_T) <= 0:
+	cmd0_arg_T = 10
 cmd0_arg_device = args.get("目标磁盘","")
 dump_log_cmd = "cat /var/log/sysak/iosdiag/latency/result.log.stat 2>/dev/null;\
     echo \"\";cat /var/log/sysak/iosdiag/latency/result.log.seq 2>/dev/null;"
