@@ -149,6 +149,12 @@ configure_cron()
     echo "* * * * * sleep 50;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" ${SERVER_HOME} >> /var/spool/cron/root
 }
 
+configure_requests()
+{
+    yum install -y python3-pip
+    pip3 install requests
+}
+
 main()
 {
     yum install -y wget
@@ -163,6 +169,7 @@ main()
     start_prometheus_service
 #    start_node_exporter_service
 
+    configure_requests
     configure_grafana
     configure_cron
 }
