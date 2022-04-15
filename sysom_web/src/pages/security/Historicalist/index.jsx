@@ -71,7 +71,7 @@ function index(props) {
       render: (txt, record) => {
 
         if (record.status == "success") {
-          return <div className="blue"></div>
+          return <div className="green"></div>
         } else {
           return <div className="red"></div>
         }
