@@ -23,6 +23,7 @@ After=network-online.target
 
 service_tail="
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
