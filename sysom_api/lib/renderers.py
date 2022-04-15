@@ -33,7 +33,7 @@ class SysomJsonRender(JSONRenderer):
             'request_browser_agent': request.headers.get('User-Agent', ''),
             'request_method': method,
             'handler_view': view.__class__.__name__,
-            'response_status': result.get('code')
+            'response_status': getattr(response, 'status_code', 200),
         }
         if 'auth' in request.path:
             kwargs['request_option'] = 0

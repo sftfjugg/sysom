@@ -32,7 +32,10 @@ def stack(name, file):
 def cpuflamegraph(file):
     fd = open(file,"r")
     graph = fd.read().split("####################################################################################")
-    return graph[2]
+    if len(graph) >= 3:
+        return graph[2]
+    else:
+        return "无法生成火焰图"
     fd.close()
 
 def parse_log(file):

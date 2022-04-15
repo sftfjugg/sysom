@@ -1,6 +1,8 @@
+import json
 import os
 import ast
 import subprocess
+import logging
 
 from django.http.response import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,8 +19,10 @@ from apps.host.models import HostModel
 from apps.accounts.models import User
 from apps.task.filter import TaskFilter
 from consumer.executors import SshJob
-from lib import *
+from lib.response import success, other_response, not_found
+from lib.utils import human_datetime, uuid_8, scheduler
 
+logger = logging.getLogger(__name__)
 
 
 class JobAPIView(GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
@@ -142,6 +146,12 @@ def script_task(data):
                                         status="Fail")
                 return other_response(message="not find commands, Please check the script return", code=400,
                                       success=False)
+            for instance in resp_scripts:
+                ip = instance.get("instance", None)
+                task = JobModel.objects.filter(command__contains=ip, status__in=["Running"]).first()
+                if task:
+                    return other_response(message="有任务正在执行，请稍后！", code=400,
+                                          success=False)
             ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
                     service_name=service_name)
             return success(result={"instance_id": task_id})
@@ -162,6 +172,10 @@ def default_ssh_job(data, task_id):
         cmds = []
         for i in range(len(host_ids)):
             instance = {}
+            task = JobModel.objects.filter(command__contains=host_ids[i], status__in=["Running"]).first()
+            if task:
+                return other_response(message="有任务正在执行，请稍后！", code=400,
+                                      success=False)
             host = HostModel.objects.filter(pk=host_ids[i]).first()
             instance["instance"] = host.ip
             instance["cmd"] = commands[i]
@@ -175,10 +189,10 @@ def default_ssh_job(data, task_id):
 
 def ssh_job(resp_scripts, task_id, user, data=None, **kwargs):
     if not data:
-        job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
-                                            created_by=user)
+        JobModel.objects.create(command=resp_scripts, task_id=task_id,
+                                created_by=user)
     else:
-        job_model = JobModel.objects.create(command=resp_scripts, task_id=task_id,
-                                            created_by=user, params=data)
-    sch_job = SshJob(resp_scripts, job_model, **kwargs)
+        JobModel.objects.create(command=resp_scripts, task_id=task_id,
+                                created_by=user, params=data)
+    sch_job = SshJob(resp_scripts, task_id, **kwargs)
     scheduler.add_job(sch_job.run)

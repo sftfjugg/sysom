@@ -1,27 +1,40 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, Table, Button, Progress, Modal, Tooltip, message } from "antd";
+import { useRef, useState } from 'react';
+import { useIntl, FormattedMessage, Link } from 'umi';
+import ProCard from '@ant-design/pro-card';
+import { PageContainer } from '@ant-design/pro-layout';
+import { Button, Modal, Progress } from 'antd';
+import ProTable from '@ant-design/pro-table';
+import Restoration from "../components/restoration"
+import ListCard from '../components/ListCard'
 import "./list.less";
-import { listApi, manyApi, summaryApi } from "../service";
-import { PageContainer } from "@ant-design/pro-layout";
-import Headcard from "../components/Headcard";
+import { listApi, manyApi } from "../service";
+import { connect } from 'dva';
 
-function List(props) {
-  // console.log(props)
-  const [data, setdata] = useState([]);
-
-  useEffect(async () => {
-    const msg = await listApi();
-
-    setdata(msg.data);
-  }, []);
-
+const { Divider } = ProCard;
+const List = (props) => {
+  const [total, setTotal] = useState(0);
+  const actionRef = useRef();
+  const intl = useIntl();
+  const onChange = (onepa, twopa) => {
+    props.addMale(onepa.pageSize);
+  }
   const fn = () => {
     props.history.push("/security/historical");
+  };
+  const [selectedRowKeys, setselectedRowKeys] = useState(0);
+  const [selectedRows, setselectedRows] = useState(0)
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      setselectedRowKeys(selectedRowKeys)
+      setselectedRows(selectedRows)
+    },
   };
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [succesvisible, setsuccesvisible] = useState(false);
   const [errvisible, seterrvisible] = useState(false);
   const [vlue, setCount] = useState(0);
+
+
   const showModal = () => {
     const leght = selectedRows.length;
     if (leght > 0) {
@@ -31,7 +44,7 @@ function List(props) {
   const handleOk = async () => {
     const time = setInterval(() => {
       setCount((vlue) => vlue + 1);
-    }, 2500);
+    }, 18000);
     setIsModalVisible(false);
     setsuccesvisible(true);
     const arry = [];
@@ -64,58 +77,64 @@ function List(props) {
 
   const columns = [
     {
-      title: "序号",
-      key: "index",
-      width: 80,
+      title: <FormattedMessage id="pages.security.list.index" defaultMessage="index" />,
+      dataIndex: 'index',
       align: "center",
-
+      hideInSearch: true,
       render: (txt, record, index) => index + 1,
     },
     {
-      title: "编号",
-      dataIndex: "cve_id",
-      key: "cve_id",
+      title: <FormattedMessage id="pages.security.list.cve_id" defaultMessage="cve_id" />,
+      dataIndex: 'cve_id',
       align: "center",
+      hideInSearch: true
     },
     {
-      title: "发布时间",
-      dataIndex: "pub_time",
-      key: "pub_time",
+      title: <FormattedMessage id="pages.security.list.pub_time" defaultMessage="pub_time" />,
+      dataIndex: 'pub_time',
+      valueType: 'dateTime',
       align: "center",
-      sorter: (a, b) => a.pub_time.length - b.pub_time.length,
+      hideInSearch: true,
+      sorter: (a, b) => a.pub_time - b.pub_time,
     },
     {
-      title: "漏洞等级",
-      dataIndex: "vul_level",
-      key: "vul_level",
+      title: <FormattedMessage id="pages.security.list.vul_level" defaultMessage="vul_level" />,
+      dataIndex: 'vul_level',
       align: "center",
-      render: (txt, record) => {
-        if (record.vul_level == "high") {
-          return <div>高危</div>;
-        } else if (record.vul_level == "medium") {
-          return <div>中危</div>;
-        } else if (record.vul_level == "critical") {
-          return <div>严重</div>;
-        } else if (record.vul_level == "low") {
-          return <div>低危</div>;
-        } else if (record.vul_level == "") {
-          return <div></div>;
-        }
+      filters: true,
+      onFilter: true,
+      hideInSearch: true,
+      valueEnum: {
+        high: {
+          text: (
+            <FormattedMessage id="pages.security.list.high" defaultMessage="high" />
+          ),
+        },
+        medium: {
+          text: (
+            <FormattedMessage id="pages.security.list.medium" defaultMessage="medium" />
+          ),
+        },
+        critical: {
+          text: (
+            <FormattedMessage id="pages.security.list.critical" defaultMessage="critical" />
+          ),
+        },
+        low: {
+          text: (
+            <FormattedMessage id="pages.security.list.low" defaultMessage="low" />
+          ),
+        },
       },
-      filters: [
-        { text: "严重", value: "critical" },
-        { text: "高危", value: "high" },
-        { text: "中危", value: "medium" },
-        { text: "低危", value: "low" },
-      ],
-      onFilter: (value, record) => record.vul_level.includes(value),
     },
+
     {
+      title: <FormattedMessage id="pages.security.list.hosts" defaultMessage="hosts" />,
+      dataIndex: 'hosts',
       width: "20%",
-      title: "涉及主机",
       align: "center",
-      dataIndex: "hosts",
-      key: "hosts",
+      valueType: 'select',
+      hideInSearch: true,
       onCell: () => {
         return {
           style: {
@@ -127,48 +146,32 @@ function List(props) {
           },
         };
       },
-      render: (text) => (
-        <span placement="topLeft" title={text}>
-          {text.toString()}
+      render: (_, record, text) => (
+        <span placement="topLeft" title={record.hosts.toString()} >
+          {record.hosts.toString()}
         </span>
       ),
     },
     {
-      title: "操作",
+      title: <FormattedMessage id="pages.security.list.operation" defaultMessage="operation" />,
+      dataIndex: "option",
       align: "center",
-      render: (txt, record, index) => {
-        return (
-          <div>
-            <Button
-              type="link"
-              onClick={() =>
-                props.history.push(`/security/homelist/${record.cve_id}`)
-              }
-            >
-              {" "}
-              修复{" "}
-            </Button>
-          </div>
-        );
-      },
+      valueType: "option",
+      render: (_, record) => [
+        <Link key="showDetail" to={"/security/homelist/" + record.cve_id}>
+          {<FormattedMessage id="pages.security.list.repair" defaultMessage="repair" />}
+        </Link>
+      ],
     },
+
+
   ];
-  const [selectedRowKeys, setselectedRowKeys] = useState(0);
-  const [selectedRows, setselectedRows] = useState(0);
-  const [total, setTotal] = useState(0);
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (selectedRowKeys, selectedRows) => {
-      setselectedRowKeys(selectedRowKeys);
-      setselectedRows(selectedRows);
-    },
-  };
   const paginationProps = {
     showSizeChanger: true,
     showQuickJumper: true,
     total: total, // 数据总数
     pageSizeOptions: [10, 20, 50, 100],
-    defaultPageSize: 20,
+    defaultPageSize: Number(props.maleList),
     // current: pageNum, // 当前页码
     showTotal: (total, ranage) => `共 ${total} 条`,
     position: ["bottomRight"],
@@ -177,57 +180,48 @@ function List(props) {
   return (
     <div>
       <PageContainer>
-        <Headcard paren={fn} isShow={true} />
-        <Card
-          className="list-table"
-          extra={
-            <Button type="primary" size="small" onClick={showModal}>
-              修复
+        <ListCard />
+        <Divider />
+        <ProTable rowKey="cve_id" columns={columns} search={false} request={listApi}
+          toolBarRender={() => [
+            <Restoration paren={fn} />,
+            <Button type="primary" key="primary" onClick={showModal}>
+              {<FormattedMessage id="pages.security.list.repair" defaultMessage="repair" />}
             </Button>
-          }
+          ]}
+          pagination={paginationProps}
+          onChange={onChange}
+          rowSelection={rowSelection}
+        />
+
+        <Modal width={320} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} centered={true}>
+          <p className="stop">
+            {<FormattedMessage id="pages.security.list.confirm" defaultMessage="confirm" />}
+          </p>
+        </Modal>
+        <Modal width={320} visible={succesvisible} footer={null} centered={true}
         >
-          <Table
-            rowSelection={rowSelection}
-            rowKey="cve_id"
-            columns={columns}
-            dataSource={data}
-            size="small"
-            pagination={paginationProps}
-          />
-          <Modal
-            width={320}
-            visible={isModalVisible}
-            onOk={handleOk}
-            onCancel={handleCancel}
-            centered={true}
-          >
-            <p className="stop">确定修复吗</p>
-          </Modal>
-          <Modal
-            width={320}
-            visible={succesvisible}
-            footer={null}
-            centered={true}
-          >
-            <p> 正在修复中...</p>
-            <Progress percent={vlue} size="small" />
-          </Modal>
-          <Modal width={320} visible={errvisible} footer={null} centered={true}>
-            <p>
-              恢复出错了，
-              <Button
-                type="link"
-                size="small"
-                onClick={() => props.history.push("/security/historical")}
-              >
-                查看详情
-              </Button>
-            </p>
-          </Modal>
-        </Card>
+          <p> {<FormattedMessage id="pages.security.list.re" defaultMessage="re" />}</p>
+          <Progress percent={vlue} size="small" />
+        </Modal>
+        <Modal width={320} visible={errvisible} footer={null} centered={true}>
+          <p> {<FormattedMessage id="pages.security.list.error" defaultMessage="error" />}
+            <Button type="link" size="small"
+              onClick={() => props.history.push("/security/historical")}
+            >
+              {<FormattedMessage id="pages.security.list.details" defaultMessage="details" />}
+            </Button>
+          </p>
+        </Modal>
       </PageContainer>
+
     </div>
   );
 }
 
-export default List;
+const actionCreator = {
+  addMale: (payload) => ({ type: 'store/addMale', payload })
+}
+
+//connect与react-redux类似
+export default connect((state) => ({ maleList: state.store.male }), actionCreator)(List)

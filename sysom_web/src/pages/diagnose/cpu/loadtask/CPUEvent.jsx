@@ -19,7 +19,6 @@ const DiagExtra = (props) => {
 
 export default (props) => {
   const [responsive, setResponsive] = useState(false);
-  console.log("props.data", props.data)
   return (
     <RcResizeObserver
       key="resize-observer"

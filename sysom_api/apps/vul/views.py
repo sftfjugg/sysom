@@ -1,14 +1,22 @@
 import logging
 import re
+import time
+import requests
 from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework import viewsets
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import register_job
+
 from tzlocal import get_localzone
+from django.utils.timezone import localdate, localtime
+from django_filters.rest_framework import DjangoFilterBackend
 from lib.response import *
 from apps.accounts.authentication import Authentication
 from apps.vul.models import *
 from apps.vul.vul import update_sa as upsa, update_vul as upvul
 from apps.vul.vul import fix_cve, get_unfix_cve
+from apps.vul.serializer import VulAddrListSerializer, VulAddrModifySerializer
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +128,7 @@ class VulDetailsView(APIView):
                     "vul_level": vul_level,
                     "fixed_version": fixed_version
                 })
+                cves_data["software"] = [dict(t) for t in set([tuple(d.items()) for d in cves_data["software"]])]
                 cves_data["hosts"] += hosts
 
             else:
@@ -170,11 +179,25 @@ class VulSummaryView(APIView):
         unfix_vul = get_unfix_cve().exclude(host=None)
         vul_cve_count, vul_high_cve_count, vul_affect_host_count = self.get_vul_info(unfix_vul)
 
+        try:
+            latest_scan_time = localtime(
+                VulJobModel.objects.filter(job_name="update_sa").order_by(
+                    '-job_start_time').first().job_start_time).strftime(
+                '%Y-%m-%d %Z %H:%M:%S')
+        except Exception:
+            latest_scan_time = ""
+        cvefix_all = SecurityAdvisoryFixHistoryModel.objects.all().values_list("cve_id")
+        cvefix_all_count = len(set(cvefix_all))
+        cvefix_today = cvefix_all.filter(fixed_at__startswith=localdate().strftime("%Y-%m-%d"))
+        cvefix_today_count = len(set(cvefix_today))
         data = {
             "fixed_cve": {
                 "affect_host_count": sa_affect_host_count,
                 "cve_count": sa_cve_count,
                 "high_cve_count": sa_high_cve_count,
+                "cvefix_today_count": cvefix_today_count,
+                "cvefix_all_count": cvefix_all_count,
+                "latest_scan_time": latest_scan_time,
             },
 
             "unfixed_cve": {
@@ -249,3 +272,96 @@ class SaFixHistDetailHostView(APIView):
             "details": str(sa_fix_hist_details_host.details),
         }
         return success(result=data)
+
+
+class UpdateSaView(APIView):
+    authentication_classes = [Authentication]
+
+    def post(self, request):
+        """
+        检测最近更新时间，如果小于时间间隔，则直接返回成功
+        """
+        try:
+            last_update_sa_time = VulJobModel.objects.filter(job_name="update_sa").order_by(
+                '-job_start_time').first().job_end_time
+            if last_update_sa_time is None:
+                return success(message="forbidden",
+                               result="The data has been updated recently,no need to update it again")
+            # 默认间隔时间为10分
+            interval_time = 60 * 10
+            current_time = localtime()
+            if (current_time - last_update_sa_time).seconds < interval_time:
+                return success(message="forbidden",
+                               result="The data has been updated recently,no need to update it again")
+            else:
+                upsa()
+                return success(result="Update security advisory data")
+        except AttributeError:
+            upsa()
+            return success(result="Update security advisory data")
+
+
+class VulAddrViewSet(viewsets.ModelViewSet):
+    authentication_classes = [Authentication]
+    queryset = VulAddrModel.objects.all()
+    serializer_class = VulAddrListSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name']
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return VulAddrListSerializer
+        else:
+            return VulAddrModifySerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super().retrieve(request, *args, **kwargs)
+        return success(result=response.data)
+
+    def create(self, request, *args, **kwargs):
+        super().create(request, *args, **kwargs)
+        return success(result={}, message="新增成功")
+
+    def update(self, request, *args, **kwargs):
+        super().update(request, *args, **kwargs)
+        return success(result={}, message="修改成功")
+
+    @action(detail=True, methods=['get'])
+    def test_connect(self, request, *args, **kwargs):
+        vul = self.get_object()
+        url, method, headers, params, payload, auth = vul.get_req_arg()
+        req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
+        prepped = req.prepare()
+        data = {"request": self.get_req_struct(prepped),
+                "status": self.get_resp_result(prepped)}
+        return success(result=data, message="")
+
+    @staticmethod
+    def get_req_struct(req):
+        req_struct = '{}\n\n{}\n\n{}'.format(
+            req.method + ' ' + req.url,
+            '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+            req.body,
+        )
+        return req_struct
+
+    @staticmethod
+    def get_resp_result(req):
+        s = requests.Session()
+
+        try:
+            resp_status = s.send(req).status_code
+            if status.is_success(resp_status) or status == status.HTTP_304_NOT_MODIFIED:
+                msg = f"Status Code: {resp_status} OK"
+            else:
+                msg = f"Status Code: {resp_status} ERROR"
+        except Exception as e:
+            msg = f"Status Code: ERROR({e})"
+        finally:
+            return msg

@@ -14,14 +14,19 @@ import sys
 ##  cat /var/log/sysak/ossre.log 是ossre诊断结果，json格式
 ##
 ###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
 
-args = json.loads(sys.argv[1])
+args = Param(json.loads(sys.argv[1]))
+
 result = {}
 result['commands'] = []
 
 cmd0 = {}
 cmd0['instance'] = args["实例IP"]
-cmd0['cmd'] = "sysak ossre_client -d > /dev/null 2>&1 " + " && " + "cat /var/log/sysak/ossre.log"
+cmd0['cmd'] = "sysak ossre_client -d > /dev/null " + " && " + "cat /var/log/sysak/ossre.log"
 
 result['commands'].append(cmd0)
 

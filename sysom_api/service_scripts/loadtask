@@ -16,8 +16,13 @@ import json
 ##  结果自动保存到/var/log/sysak/loadtask/loadtask-<time stamp>.log
 ##
 ###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
 
-args = json.loads(sys.argv[1])
+args = Param(json.loads(sys.argv[1]))
+
 result = {}
 result['commands'] = []
 

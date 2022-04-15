@@ -1,114 +1,109 @@
-import React ,{useState,useEffect}from 'react';
-import {Button,Card,Table,Col,Row} from 'antd'
+import { useState, useEffect } from 'react';
+import { useIntl, FormattedMessage } from 'umi';
+import { Button, Col, Row } from 'antd'
 import './hist.less'
-import {histApi} from '../service'
+import { histApi } from '../service'
 import { PageContainer } from '@ant-design/pro-layout';
- 
+import ProTable from '@ant-design/pro-table';
+
 function index(props) {
-  const [dataSource,setdataSource]=useState([])
-  const [total,setTotal]=useState(0)
-  useEffect(async() => {
-    const msg=await histApi()
-     setdataSource(msg.data)
-  }, []);
-  const columns=[
-    
-      {
-        title: "序号",
-        key: "id",
-        width: 80,
-        align: "center",
-        render: (txt, record, index) => index + 1,
-      },
+  const intl = useIntl();
+  const columns = [
     {
-      title:"cve编号",
-      dataIndex:'cve_id',
-      key:'cve_id',
+      title: <FormattedMessage id="pages.security.Historical.id" defaultMessage="Serial number" />,
+      key: "id",
+      width: 80,
+      align: "center",
+      render: (txt, record, index) => index + 1,
+    },
+    {
+      title: <FormattedMessage id="pages.security.Historical.cve_id" defaultMessage="cve ID" />,
+      dataIndex: 'cve_id',
+      key: 'cve_id',
       align: "center",
     },
     {
-      title:"修复时间",
-      dataIndex:"fixed_time",
-      key:"fixed_time",
+      title: <FormattedMessage id="pages.security.Historical.fixed_time" defaultMessage="Fixed Time" />,
+      dataIndex: "fixed_time",
+      key: "fixed_time",
       align: "center",
     },
     {
-      title:"修复者",
-      dataIndex:"fix_user",
-      key:"fix_user",
+      title: <FormattedMessage id="pages.security.Historical.fix_user" defaultMessage="Repairer" />,
+      dataIndex: "fix_user",
+      key: "fix_user",
       align: "center",
     },
     {
-      title:"漏洞等级",
-      dataIndex:"vul_level",
-      key:"vul_level",
+      title: <FormattedMessage id="pages.security.Historical.vul_level" defaultMessage="Level" />,
+      dataIndex: "vul_level",
+      key: "vul_level",
       align: "center",
-      render:(txt,record)=>{
-     
-        if(record.vul_level=="high"){
-          return  <div>高危</div>
-        }else if(record.vul_level=="medium"){
-           return  <div>中危</div>
-        }else if(record.vul_level=="critical"){
-          return  <div>严重</div>
-        }else if (record.vul_level == "low") {
-          return <div>低危</div>;
+      render: (txt, record) => {
+        if (record.vul_level == "high") {
+          return <div><FormattedMessage id="pages.security.Historical.high_risk" defaultMessage="High" /></div>
+        } else if (record.vul_level == "medium") {
+          return <div><FormattedMessage id="pages.security.Historical.medium_risk" defaultMessage="Medium" /></div>
+        } else if (record.vul_level == "critical") {
+          return <div><FormattedMessage id="pages.security.Historical.severe_risk" defaultMessage="Severe" /></div>
+        } else if (record.vul_level == "low") {
+          return <div><FormattedMessage id="pages.security.Historical.low_risk" defaultMessage="Low" /></div>;
         } else if (record.vul_level == "") {
           return <div></div>;
         }
-   },
-    },{
-      title:"CVE修复状态",
-      dataIndex:"status",
-      key:"status",
+      },
+    }, {
+      title: <FormattedMessage id="pages.security.Historical.fix_status" defaultMessage="CVE Repair Status" />,
+      dataIndex: "status",
+      key: "status",
       align: "center",
       width: 150,
-      render:(txt,record)=>{
-           if(record.status=="success"){
-             return   <div className="blue"></div>
-           }else{
-              return  <div className="red"></div>
-           }
+      render: (txt, record) => {
+        if (record.status == "success") {
+          return <div className="green"></div>
+        } else {
+          return <div className="red"></div>
+        }
       },
-
     },
     {
-      title:"操作",
+      title: <FormattedMessage id="pages.hostTable.hostOption" defaultMessage="Operating" />,
       align: "center",
-      render:(txt,record,index)=>{
+      render: (txt, record, index) => {
         return (
           <div>
-              <Button type="link"  onClick={()=>props.history.push(`/security/historicalist/${record.id}`)}>查看详情</Button>
-             
+            <Button type="link" onClick={() => props.history.push(`/security/historicalist/${record.id}`)}>
+              <FormattedMessage id="pages.security.Historical.details" defaultMessage="View Details" />
+            </Button>
           </div>
         )
       }
     }
-    
   ]
-  const paginationProps = {
-    showSizeChanger: true,
-    showQuickJumper: true,
-    total: total, // 数据总数
-    pageSizeOptions:	[10,20,50,100]	,
-    defaultPageSize:20,
-    // current: pageNum, // 当前页码
-    showTotal: ((total,ranage) => `共 ${total} 条`),
-    position:["bottomRight"],
-    // size:"small"
-  };
   return (
     <div>
       <PageContainer>
-      <Card title="历史修复漏洞信息">
-        <Table rowKey="id" size="small" columns={columns} dataSource={dataSource} pagination={ paginationProps}></Table>
-      </Card>
-      <Row>
-      <Col span={20}></Col>
-      <Col  className="err_Button" span={4}> <Button type="primary" onClick={()=>{
-         props.history.push("/security/list")
-      }}>返回</Button></Col>
-      </Row>
+        <ProTable headerTitle={intl.formatMessage({
+          id: 'pages.security.Historical.title',
+          defaultMessage: 'Historical repair',
+        })}
+          request={histApi}
+          search={false}
+          rowKey="id"
+          size="small"
+          columns={columns}
+        >
+        </ProTable>
+        <Row></Row>
+        <Row>
+          <Col className="err_Button">
+            <Button type="primary" onClick={() => {
+              props.history.go(-1);
+            }}>
+              <FormattedMessage id="pages.security.Historical.back" defaultMessage="Back" />
+            </Button>
+          </Col>
+        </Row>
       </PageContainer>
     </div>
   );

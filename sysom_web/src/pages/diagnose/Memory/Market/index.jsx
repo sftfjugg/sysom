@@ -70,7 +70,7 @@ const MarketList = () => {
     <PageContainer>    
       <MarketTaskForm onSuccess={onPostTask} />
       <Divider />
-      <MarketTableList headerTitle="内存列表" search={true} onClick = {(record) => onListClick(record)} onError={onError} ref={refIoTableList} />
+      <MarketTableList headerTitle="诊断记录查看" search={true} onClick = {(record) => onListClick(record)} onError={onError} ref={refIoTableList} />
       <Divider />
       {
         data ?
