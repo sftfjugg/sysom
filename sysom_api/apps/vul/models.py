@@ -33,6 +33,7 @@ class VulAddrModel(models.Model):
     parser = models.JSONField(verbose_name="parse vul data structure",
                               default=dict)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=2, verbose_name="vul database status")
+    is_edited = models.BooleanField(verbose_name="Is the vulnerability database editable", default=True)
 
     class Meta:
         db_table = "sys_vul_db"
