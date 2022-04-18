@@ -332,15 +332,44 @@ class VulAddrViewSet(viewsets.ModelViewSet):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
 
-    @action(detail=True, methods=['get'])
+    # @action(detail=True, methods=['get'])
+    # def test_connect(self, request, *args, **kwargs):
+    #     vul = self.get_object()
+    #     url, method, headers, params, payload, auth = vul.get_req_arg()
+    #     req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
+    #     prepped = req.prepare()
+    #     data = {"request": self.get_req_struct(prepped),
+    #             "status": self.get_resp_result(prepped)}
+    #     return success(result=data, message="")
+
+    @action(detail=False, methods=['post'])
     def test_connect(self, request, *args, **kwargs):
-        vul = self.get_object()
-        url, method, headers, params, payload, auth = vul.get_req_arg()
+        body = request.data
+        url, method, headers, params, payload, auth = self.get_req_arg(body)
         req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
         prepped = req.prepare()
         data = {"request": self.get_req_struct(prepped),
                 "status": self.get_resp_result(prepped)}
         return success(result=data, message="")
+
+    @staticmethod
+    def get_req_arg(body):
+        headers = body.get("headers")
+        if "User-Agent" not in headers:
+            headers[
+                "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
+
+        if body.get("authorization_type").lower() == "basic" and body.get("authorization_body"):
+            auth = body.get("authorization_body")
+        else:
+            auth = {}
+
+        for i in VulAddrModel.REQUEST_METHOD_CHOICES:
+            if i[0] == body.get("method"):
+                method = i[1]
+                break
+
+        return body.get("url"), method, headers, body.get("params"), body.get("body"), auth
 
     @staticmethod
     def get_req_struct(req):
