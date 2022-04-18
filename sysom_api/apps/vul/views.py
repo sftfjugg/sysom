@@ -332,16 +332,6 @@ class VulAddrViewSet(viewsets.ModelViewSet):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
 
-    # @action(detail=True, methods=['get'])
-    # def test_connect(self, request, *args, **kwargs):
-    #     vul = self.get_object()
-    #     url, method, headers, params, payload, auth = vul.get_req_arg()
-    #     req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
-    #     prepped = req.prepare()
-    #     data = {"request": self.get_req_struct(prepped),
-    #             "status": self.get_resp_result(prepped)}
-    #     return success(result=data, message="")
-
     @action(detail=False, methods=['post'])
     def test_connect(self, request, *args, **kwargs):
         body = request.data
@@ -390,7 +380,7 @@ class VulAddrViewSet(viewsets.ModelViewSet):
                 msg = f"Status Code: {resp_status} OK"
             else:
                 msg = f"Status Code: {resp_status} ERROR"
+            return msg
         except Exception as e:
             msg = f"Status Code: ERROR({e})"
-        finally:
             return msg
