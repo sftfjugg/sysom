@@ -41,18 +41,6 @@ class VulAddrModel(models.Model):
     def __str__(self):
         return f'vul addres: {self.url}'
 
-    def get_req_arg(self):
-        headers = self.headers
-        if "User-Agent" not in headers:
-            headers[
-                "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
-
-        if self.authorization_type.lower() == "basic" and self.authorization_body:
-            auth = self.authorization_body
-        else:
-            auth = {}
-        return self.url, self.get_method_display(), headers, self.params, self.body, auth
-
 
 class VulBaseModel(BaseModel):
     cve_id = models.CharField(max_length=100)
