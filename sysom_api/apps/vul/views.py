@@ -332,6 +332,10 @@ class VulAddrViewSet(viewsets.ModelViewSet):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
 
+    def destroy(self, request, *args, **kwargs):
+        super().destroy(request, *args, **kwargs)
+        return success(result={}, message="删除成功")
+
     @action(detail=False, methods=['post'])
     def test_connect(self, request, *args, **kwargs):
         body = request.data

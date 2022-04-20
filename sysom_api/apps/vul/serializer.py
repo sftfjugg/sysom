@@ -18,7 +18,7 @@ class VulAddrListSerializer(serializers.ModelSerializer):
     class Meta:
         model = VulAddrModel
         fields = ["id", "name", "description", "method", "method_display", "url", "headers", "params", "body",
-                  "authorization_type", "parser", "status", "is_edited"
+                  "authorization_type", "authorization_body","parser", "status", "is_edited"
                   ]
 
     def get_method_display(self, attr: VulAddrModel) -> int:
