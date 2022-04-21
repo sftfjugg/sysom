@@ -47,7 +47,7 @@ class VulBaseModel(BaseModel):
     score = models.CharField(max_length=20, verbose_name="cve score")
     description = models.TextField(default="")
     pub_time = models.CharField(max_length=100, verbose_name="publish time")
-    vul_level = models.CharField(max_length=100)
+    vul_level = models.CharField(max_length=100, blank=True)
     detail = models.TextField(default="")
     software_name = models.CharField(max_length=100)
     fixed_time = models.CharField(max_length=100)
