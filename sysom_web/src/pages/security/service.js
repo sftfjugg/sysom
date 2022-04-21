@@ -125,8 +125,55 @@ const token = localStorage.getItem('token');
     return msg;
   }
 
+  export async function getDBlist(options){
+    return await request('/api/v1/vul-config/', {
+      method: 'GET',
+      headers: {
+        'Authorization': token,
+      },
+      ...(options || {}),
+    });
+  }
 
+  export async function addDB(body, options) {
+    return request('/api/v1/vul-config/', {
+      method: 'POST',
+      headers: {
+        'Authorization': token,
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
 
+  export async function updateDB(body, id, options) {
+    return request(`/api/v1/vul-config/${id}/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': token,
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
 
+  export async function testConnect(body, options) {
+    return request('/api/v1/vul-config/test_connect/', {
+      method: 'POST',
+      headers: {
+        'Authorization': token,
+      },
+      data: body,
+      ...(options || {}),
+    });
+  }
 
-
+  export async function deleteDB(id, options) {
+    return request(`/api/v1/vul-config/${id}/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': token,
+      },
+      ...(options || {}),
+    });
+  }
