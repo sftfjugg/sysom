@@ -1,6 +1,6 @@
 import { Statistic ,Button, message} from 'antd';
 import { useState, useEffect } from 'react';
-import { useIntl, FormattedMessage } from 'umi';
+import { useIntl, FormattedMessage,history } from 'umi';
 import ProCard from '@ant-design/pro-card';
 import RcResizeObserver from 'rc-resize-observer';
 import {summaryApi,updataApi} from '../service'
@@ -31,6 +31,11 @@ const  ListCard=(props)=> {
       }
     }
   }
+
+  const Setting = () => {
+    history.push('/security/setting')
+  }
+
   useEffect(async() => {
     let msg=await summaryApi();
     if(msg.success)
@@ -91,8 +96,10 @@ const  ListCard=(props)=> {
         })}
            value={StatisticList?.latest_scan_time} valueStyle={{ color: "red",fontSize:16,whiteSpace:'nowrap' }} />
         </ProCard>
-        <ProCard>            
+        <ProCard bodyStyle={{textAlign:'center'}}>            
             <Button onClick={Scan} type="primary" loading={complete}>{complete ? <FormattedMessage id="component.ListCard.scanning" defaultMessage="Scanning" /> : <FormattedMessage id="component.ListCard.scan" defaultMessage="Scan" />}</Button>
+            <br/><br/>
+            <Button onClick={Setting} type="primary" style={{width:'100px'}}><FormattedMessage id="component.ListCard.setting" defaultMessage="Setting" /></Button>
         </ProCard>
       </ProCard.Group>
     </RcResizeObserver>

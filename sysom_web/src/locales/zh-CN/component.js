@@ -9,6 +9,7 @@ export default {
   'component.ListCard.cumulate_repaired': '累计已修复漏洞',
   'component.ListCard.latest_scan_time': '最新扫描时间',
   'component.ListCard.scan': '一键扫描',
+  'component.ListCard.setting': '漏洞库配置',
   'component.ListCard.scanning': '扫描中',
   'component.ListCard.success': '扫描成功',
   'component.ListCard.failed': '扫描失败',

@@ -40,7 +40,7 @@ const MarketTableList = React.forwardRef((props, ref) => {
       dataIndex: 'status',
       width: 150,
       valueEnum: {
-        Running: { text: '运行中', status: 'Processing' },
+        0: { text: '运行中', status: 'Processing' },
         Success: { text: '诊断完毕', status: 'Success' },
         Fail: { text: '异常', status: 'Error' },
       },
