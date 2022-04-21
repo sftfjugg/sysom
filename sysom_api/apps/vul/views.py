@@ -181,7 +181,7 @@ class VulSummaryView(APIView):
 
         try:
             latest_scan_time = localtime(
-                VulJobModel.objects.filter(job_name="update_sa").order_by(
+                VulJobModel.objects.filter(job_name="update_vul").order_by(
                     '-job_start_time').first().job_start_time).strftime(
                 '%Y-%m-%d %Z %H:%M:%S')
         except Exception:
@@ -210,7 +210,7 @@ class VulSummaryView(APIView):
 
     def get_vul_info(self, queryset):
         cve_count = len(set([cve[0] for cve in queryset.values_list("cve_id")]))
-        high_cve_count = len(set([cve[0] for cve in queryset.filter(score__gt=7.0).values_list("cve_id")]))
+        high_cve_count = len(set([cve[0] for cve in queryset.filter(vul_level='high').values_list("cve_id")]))
         affect_host = []
         for cve in queryset:
             affect_host.extend(list(cve.host.all()))
@@ -282,7 +282,7 @@ class UpdateSaView(APIView):
         检测最近更新时间，如果小于时间间隔，则直接返回成功
         """
         try:
-            last_update_sa_time = VulJobModel.objects.filter(job_name="update_sa").order_by(
+            last_update_sa_time = VulJobModel.objects.filter(job_name="update_vul").order_by(
                 '-job_start_time').first().job_end_time
             if last_update_sa_time is None:
                 return success(message="forbidden",
@@ -294,9 +294,11 @@ class UpdateSaView(APIView):
                 return success(message="forbidden",
                                result="The data has been updated recently,no need to update it again")
             else:
+                upvul()
                 upsa()
                 return success(result="Update security advisory data")
         except AttributeError:
+            upvul()
             upsa()
             return success(result="Update security advisory data")
 
