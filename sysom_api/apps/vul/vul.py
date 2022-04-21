@@ -88,13 +88,13 @@ class VulDataParse(object):
             pub_time = cve.get(self.vul_addr_obj.parser["pub_time_flag"], None)
             vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
             if len(cve_obj_search) == 0:
-                print(f"0 {cve_id}")
+                # print(f"0 {cve_id}")
                 VulModel.objects.create(cve_id=cve_id,
                                         pub_time=pub_time,
                                         vul_level=vul_level,
                                         update_time=timezone.now())
             else:
-                print(vul_level, cve_obj_search.first().vul_level, cve_obj_search.first().vul_level != vul_level)
+                # print(vul_level, cve_obj_search.first().vul_level, cve_obj_search.first().vul_level != vul_level)
                 if vul_level and cve_obj_search.first().vul_level != vul_level:
                     cve_obj_search.update(
                         pub_time=pub_time,
