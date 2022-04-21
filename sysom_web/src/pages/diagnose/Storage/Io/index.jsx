@@ -82,8 +82,8 @@ const IOList = () => {
       {
         data ?
           <>
-            <IOResults data={data.ioList} diskChange={setDiskIdx} diskIdx={diskIdx} recorded={data.recorded} />
-            <MetricShow data={data.metric[diskIdx]}
+            <IOResults data={data.ioList} diskChange={setDiskIdx} diskIdx={diskIdx ? diskIdx : 0} recorded={data.recorded} />
+            <MetricShow data={data.metric[diskIdx ? diskIdx : 0]}
               title="IO 诊断各阶段延迟分析"
               xField="x" yField="y"
               category="category" slider="false"
