@@ -18,19 +18,19 @@ export default function index() {
   );
     const columns = [
         {
-          title: '数据库名称',
+          title: <FormattedMessage id="pages.security.Setting.name" defaultMessage="DB" />,
           dataIndex: 'name',
           align: "center",
           hideInSearch: true,
         },
         {
-          title: 'url',
+          title: <FormattedMessage id="pages.security.Setting.url" defaultMessage="URL" />,
           dataIndex: 'url',
           align: "center",
           hideInSearch: true
         },
         {
-          title: '状态',
+          title: <FormattedMessage id="pages.journal.task.status" defaultMessage="Status" />,
           dataIndex: 'status',
           align: "center",
           hideInSearch: true,
@@ -54,7 +54,7 @@ export default function index() {
             record1.parser = JSON.stringify(record1.parser)
             return [
             <ModalForm isAdd={false} tableRefName={tableRef} rowData={JSON.parse(JSON.stringify(record1))} key="id" getDBlist={getDBlist} />,
-            renderRemoveUser('删除',record.id)
+            renderRemoveUser("删除",record.id)
           ]},
         },
     ];

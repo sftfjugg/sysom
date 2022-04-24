@@ -14,5 +14,5 @@ export default {
   'component.ListCard.success': '扫描成功',
   'component.ListCard.failed': '扫描失败',
   'component.ListCard.scan_recent': '数据最近已更新，无需再次更新',
-
+  'component.DBModal.create': '新建漏洞数据库'
 };
