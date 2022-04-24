@@ -92,10 +92,9 @@ const List = (props) => {
     {
       title: <FormattedMessage id="pages.security.list.pub_time" defaultMessage="pub_time" />,
       dataIndex: 'pub_time',
-      valueType: 'dateTime',
+      valueType: 'date',
       align: "center",
-      hideInSearch: true,
-      sorter: (a, b) => a.pub_time - b.pub_time,
+      hideInSearch: true
     },
     {
       title: <FormattedMessage id="pages.security.list.vul_level" defaultMessage="vul_level" />,

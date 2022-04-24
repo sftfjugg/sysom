@@ -113,5 +113,7 @@ export default {
   'pages.security.Historical.fail': '失败',
   'pages.security.Historical.fix_details': 'CVE修复详情',
   'pages.security.Historical.fix_success': 'CVE修复成功',
-  'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：'
+  'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：',
+  'pages.security.Setting.name': '漏洞库名称',
+  'pages.security.Setting.url': '地址',
 };
