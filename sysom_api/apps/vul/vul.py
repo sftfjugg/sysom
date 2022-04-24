@@ -59,10 +59,15 @@ class VulDataParse(object):
 
     def get_vul_data(self):
         try:
+            if self.vul_addr_obj.authorization_type.lower() == "basic" and self.vul_addr_obj.authorization_body:
+                auth = (
+                    self.vul_addr_obj.authorization_body["username"], self.vul_addr_obj.authorization_body["password"])
+            else:
+                auth = ()
             resp = requests.request(self.vul_addr_obj.get_method_display(), self.vul_addr_obj.url,
                                     headers=self.vul_addr_obj.headers,
                                     data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
-                                    auth=self.vul_addr_obj.authorization_body)
+                                    auth=auth)
             if status.is_success(resp.status_code):
                 self.set_vul_data_status_up()
             else:

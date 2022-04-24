@@ -356,9 +356,10 @@ class VulAddrViewSet(viewsets.ModelViewSet):
                 "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
 
         if body.get("authorization_type").lower() == "basic" and body.get("authorization_body"):
-            auth = body.get("authorization_body")
+            authorization_body = body.get("authorization_body")
+            auth = (authorization_body["username"], authorization_body["password"])
         else:
-            auth = {}
+            auth = ()
 
         for i in VulAddrModel.REQUEST_METHOD_CHOICES:
             if i[0] == body.get("method"):
