@@ -350,7 +350,7 @@ class VulAddrViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def get_req_arg(body):
-        headers = body.get("headers")
+        headers = body.get("headers", {})
         if "User-Agent" not in headers:
             headers[
                 "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
