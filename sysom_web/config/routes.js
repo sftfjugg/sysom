@@ -187,6 +187,11 @@ export default [
         name: 'task',
         component: './journal/Task',
       },
+      {
+        path: '/journal/alarm',
+        name: 'alarm',
+        component: './journal/Alarm',
+      },
     ],
   },
   {
@@ -217,10 +222,6 @@ export default [
       {
         path: "/security/viewdetails/:id?/:homename?",
         component: "./security/Viewdetails",
-      },
-      {
-        path: "/security/setting",
-        component: "./security/Setting",
       },
     ],
   },

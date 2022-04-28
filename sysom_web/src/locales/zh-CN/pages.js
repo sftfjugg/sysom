@@ -71,6 +71,13 @@ export default {
   'pages.journal.task.params': '参数列表',
   'pages.journal.task.success': '成功',
   'pages.journal.task.fail': '失败',
+  'pages.journal.alarm.collected_time': '告警时间',
+  'pages.journal.alarm.level': '告警级别',
+  'pages.journal.alarm.noticelcon_type': '类型',
+  'pages.journal.alarm.is_read': '是否已读',
+  'pages.journal.alarm.true': '已读',
+  'pages.journal.alarm.false': '未读',
+  'pages.journal.alarm.message': '告警内容',
   'pages.security.list.index':'序号',
   'pages.security.list.cve_id':'编号',
   'pages.security.list.pub_time':'发布时间',
@@ -113,7 +120,5 @@ export default {
   'pages.security.Historical.fail': '失败',
   'pages.security.Historical.fix_details': 'CVE修复详情',
   'pages.security.Historical.fix_success': 'CVE修复成功',
-  'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：',
-  'pages.security.Setting.name': '漏洞库名称',
-  'pages.security.Setting.url': '地址',
+  'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：'
 };
