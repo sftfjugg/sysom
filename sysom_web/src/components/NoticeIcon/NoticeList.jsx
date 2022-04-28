@@ -1,4 +1,10 @@
 import { Avatar, List } from 'antd';
+import { 
+  InfoCircleOutlined,
+  CheckCircleOutlined, 
+  CloseCircleOutlined, 
+  WarningOutlined 
+} from '@ant-design/icons';
 import React from 'react';
 import classNames from 'classnames';
 import styles from './NoticeList.less';
@@ -25,6 +31,12 @@ const NoticeList = ({
         <div>{emptyText}</div>
       </div>
     );
+  }
+  const statusManage = {
+    'success': <CheckCircleOutlined style={{fontSize: '32px', color: '#52c41a'}} />,
+    'info': <InfoCircleOutlined style={{fontSize: '32px', color: '#21A3E1'}} />,
+    'warning': <WarningOutlined style={{fontSize: '32px', color: '#CFC06E'}} />,
+    'error': <CloseCircleOutlined style={{fontSize: '32px', color: '#B03D2C'}} />,
   }
 
   return (
@@ -54,17 +66,17 @@ const NoticeList = ({
             >
               <List.Item.Meta
                 className={styles.meta}
-                avatar={leftIcon}
+                avatar={statusManage[item.level]}
                 title={
                   <div className={styles.title}>
-                    {item.title}
+                    {item.message}
                     <div className={styles.extra}>{item.extra}</div>
                   </div>
                 }
                 description={
                   <div>
                     <div className={styles.description}>{item.description}</div>
-                    <div className={styles.datetime}>{item.datetime}</div>
+                    <div className={styles.datetime}>{item.created_at}</div>
                   </div>
                 }
               />
