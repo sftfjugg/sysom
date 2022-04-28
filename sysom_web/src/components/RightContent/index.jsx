@@ -2,6 +2,7 @@ import { Space } from 'antd';
 import { useModel } from 'umi';
 import Avatar from './AvatarDropdown';
 import styles from './index.less';
+import NoticeIconView from '../NoticeIcon';
 
 const GlobalHeaderRight = () => {
   const { initialState } = useModel('@@initialState');
@@ -18,6 +19,7 @@ const GlobalHeaderRight = () => {
 
   return (
     <Space className={className}>
+      <NoticeIconView />
       <Avatar />
     </Space>
   );

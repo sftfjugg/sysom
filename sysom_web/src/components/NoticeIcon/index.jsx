@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Tag, message } from 'antd';
 import { groupBy } from 'lodash';
 import moment from 'moment';
-import { useModel, useRequest } from 'umi';
-import { getNotices } from '@/services/ant-design-pro/api';
+import { getNotices, changeAlarmIsReadHandler } from '@/pages/journal/service';
 import NoticeIcon from './NoticeIcon';
 import styles from './index.less';
 
@@ -44,11 +43,11 @@ const getNoticeData = (notices) => {
 
     return newNotice;
   });
-  return groupBy(newNotices, 'type');
+  return groupBy(newNotices, 'noticelcon_type');
 };
 
 const getUnreadData = (noticeData) => {
-  const unreadMsg = {};
+  const unreadMsg = {'sum': 0};
   Object.keys(noticeData).forEach((key) => {
     const value = noticeData[key];
 
@@ -57,46 +56,70 @@ const getUnreadData = (noticeData) => {
     }
 
     if (Array.isArray(value)) {
-      unreadMsg[key] = value.filter((item) => !item.read).length;
+      const count = value.filter((item) => !item?.read).length;
+      unreadMsg[key] = count;
+      unreadMsg['sum'] += count;
     }
   });
   return unreadMsg;
 };
 
 const NoticeIconView = () => {
-  const { initialState } = useModel('@@initialState');
-  const { currentUser } = initialState || {};
+  // const [socket, setSocket] = useState(null);
   const [notices, setNotices] = useState([]);
-  const { data } = useRequest(getNotices);
+ 
+  const initWebSocker = () => {
+    getNotices().then((res)=>{
+      setNotices(res.data)
+    }).catch((e) => {
+      console.log(e)
+    })
+    // const user_id = localStorage.getItem("userId")
+    // const con = new WebSocket(`ws:${location.host}/ws/noticelcon/?user_id=${user_id}`);
+    // setSocket(con)
+  }
   useEffect(() => {
-    setNotices(data || []);
-  }, [data]);
+    // if (socket) {socket.colse()}
+    initWebSocker()
+  }, []);
+  // if (socket) {
+  //   socket.onmessage = (e) => {
+  //     const {data: response} = e
+  //     const result = JSON.parse(response)
+  //     notices.push(result.message)
+  //     setNotices(notices)
+  //   }
+  // }
   const noticeData = getNoticeData(notices);
   const unreadMsg = getUnreadData(noticeData || {});
 
   const changeReadState = (id) => {
-    setNotices(
-      notices.map((item) => {
-        const notice = { ...item };
-
-        if (notice.id === id) {
-          notice.read = true;
-        }
-
-        return notice;
-      }),
-    );
+    changeAlarmIsReadHandler(id, { is_read: true }).then((res)=>{
+      setNotices(
+        notices.map((item) => {
+          const notice = { ...item };
+          if (notice.id === id) {
+            notice.read = true;
+          }
+          return notice;
+        }),
+      )
+      return true
+    }).catch((e) => {
+      message.error(e)
+      return false
+    })
+    
   };
 
   const clearReadState = (title, key) => {
     setNotices(
-      notices.map((item) => {
+      notices.map((item, i) => {
         const notice = { ...item };
-
-        if (notice.type === key) {
+        if (notice.noticelcon_type === key) {
+          changeAlarmIsReadHandler(notice.id, { is_read: true });
           notice.read = true;
         }
-
         return notice;
       }),
     );
@@ -106,15 +129,14 @@ const NoticeIconView = () => {
   return (
     <NoticeIcon
       className={styles.action}
-      count={currentUser && currentUser.unreadCount}
+      count = {unreadMsg.sum}
       onItemClick={(item) => {
         changeReadState(item.id);
       }}
       onClear={(title, key) => clearReadState(title, key)}
       loading={false}
       clearText="清空"
-      viewMoreText="查看更多"
-      onViewMore={() => message.info('Click on view more')}
+      viewMoreText={<a target="_blank" href={"/journal/alarm/"}>查看更多</a>}
       clearClose
     >
       <NoticeIcon.Tab
@@ -126,19 +148,11 @@ const NoticeIconView = () => {
         showViewMore
       />
       <NoticeIcon.Tab
-        tabKey="message"
-        count={unreadMsg.message}
-        list={noticeData.message}
-        title="消息"
+        tabKey="warning"
+        count={unreadMsg.warning}
+        list={noticeData.warning}
+        title="告警"
         emptyText="您已读完所有消息"
-        showViewMore
-      />
-      <NoticeIcon.Tab
-        tabKey="event"
-        title="待办"
-        emptyText="你已完成所有待办"
-        count={unreadMsg.event}
-        list={noticeData.event}
         showViewMore
       />
     </NoticeIcon>

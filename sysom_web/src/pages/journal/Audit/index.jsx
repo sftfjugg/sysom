@@ -2,11 +2,11 @@ import {  useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
-import { getAudit, get_response_code } from '../service';
+import { getAudit, getResponseCode } from '../service';
 
 
 const request = async (params) => {
-  const response = await get_response_code(params)
+  const response = await getResponseCode(params)
   return response.data;
 };
 
