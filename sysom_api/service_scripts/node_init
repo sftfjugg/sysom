@@ -10,9 +10,9 @@ import sys
 ## 2、下载主机初始化文件
 ## 3、执行主机初始化操作
 ###############################################################################
-server_local_ip=xxx
-server_public_ip=xxx
-node_home=xxx
+server_local_ip='xxx'
+server_public_ip='xxx'
+node_home='xxx'
 arg = json.loads(sys.argv[1])
 host_ip = arg.get('instance')
 
