@@ -75,6 +75,7 @@ export default {
   'menu.vmcore.analyse': '在线分析',
   'menu.journal': '日志中心',
   'menu.journal.audit': '审计日志',
+  'menu.journal.alarm': '告警日志',
   'menu.journal.task': '任务日志',
   'menu.security': '安全中心',
   'menu.security.list': '漏洞中心'
