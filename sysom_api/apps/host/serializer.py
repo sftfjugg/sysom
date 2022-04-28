@@ -43,7 +43,7 @@ class AddHostSerializer(serializers.ModelSerializer):
             HostModel.objects.get(hostname=attr)
         except HostModel.DoesNotExist:
             return attr
-        msg = _('主机名冲突!，请重新输入!\t')
+        msg = _(f'主机名:{attr} 冲突!，请重新输入!\t')
         raise serializers.ValidationError(msg)
 
     def validate_ip(self, attr):
@@ -51,7 +51,7 @@ class AddHostSerializer(serializers.ModelSerializer):
             HostModel.objects.get(ip=attr)
         except HostModel.DoesNotExist:
             return attr
-        msg = _('IP地址冲突!，请重新输入!')
+        msg = _(f'IP:{attr} 冲突!，请重新输入!')
         raise serializers.ValidationError(msg)
 
 
