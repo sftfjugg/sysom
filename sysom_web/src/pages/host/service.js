@@ -63,3 +63,14 @@ export async function deleteHost(id, token, options) {
     ...(options || {}),
   });
 }
+
+export async function addBulkImport(params, token, options) {
+  return request('/api/v1/host/batch_add/', {
+    method: 'post',
+    data: params,
+    headers: {
+      'Authorization': token
+    },
+    ...(options || {})
+  })
+}

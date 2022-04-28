@@ -1,25 +1,27 @@
 import logging
 import os
 import threading
-import requests
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import ValidationError
 from django.conf import settings
 
 from apps.host import serializer
 from apps.host.models import HostModel, Cluster
 from apps.accounts.authentication import Authentication
 from apps.task.views import script_task
-from consumer.executors import SshJob
-from apps.task.models import JobModel
 from lib import *
 from lib.exception import APIException
+from lib.excel import Excel
+from lib.validates import validate_ssh
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,26 +46,22 @@ class HostModelViewSet(GenericViewSet,
             return [auth() for auth in self.authentication_classes]
 
     def create(self, request, *args, **kwargs):
-        password = request.data.pop('host_password', None)
-        if not password:
-            return not_found(message=f'host_password required!')
+        context = request.data
+        self._thread_pool(tasks=[context], func=self._validate_and_initialize_host)
+        return success(result={})
 
-        b, k = generate_private_key(
-            hostname=request.data['ip'], port=request.data['port'], username=request.data['username'], password=password
-        )
-        if not b:
-            return other_response(code=400, message=f"主机验证失败：{k}")
-        request.data.update({'private_key': k})
-
-        create_serializer = self.get_serializer(data=request.data)
+    def _validate_and_initialize_host(self, context):
+        context = validate_ssh(context)
+        create_serializer = self.get_serializer(data=context)
         create_serializer.is_valid(raise_exception=True)
         self.perform_create(create_serializer)
         instance = create_serializer.instance
         # 检查输入client部署命令 更新host状态
-        thread = threading.Thread(target=self.client_deploy_cmd_init, args=(instance,))
+        thread = threading.Thread(
+            target=self.client_deploy_cmd_init, args=(instance,))
         thread.start()
-        host_list_serializer = serializer.HostListSerializer(instance=instance)
-        return success(result=host_list_serializer.data)
+        ser = serializer.HostListSerializer(instance=instance)
+        return ser
 
     def perform_create(self, ser):
         ser.save(created_by=self.request.user)
@@ -129,13 +127,73 @@ class HostModelViewSet(GenericViewSet,
             logger.error(e, exc_info=True)
             return False, str(e)
 
+    def _get_cluster_instance(self, cluster_name):
+        try:
+            instance = Cluster.objects.get(cluster_name=cluster_name)
+            return instance
+        except Cluster.DoesNotExist:
+            return None
+
+    def _thread_pool(self, tasks: list, func):
+        kwargs = {}
+        kwargs['sub'] = 1
+        kwargs['item'] = 'host'
+        pool = []
+        workers = len(tasks) if len(tasks) < os.cpu_count() else os.cpu_count() * 2
+
+        with ThreadPoolExecutor(max_workers=workers) as p:
+            for task in tasks:
+                t = p.submit(func, task)
+                pool.append(t)
+
+            for d in as_completed(pool):
+                try:
+                    response = d.result()
+                    kwargs['message'] = f"IP: {response.data.get('ip')} 添加成功!"
+                    kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    kwargs['level'] = 3
+
+                except ValidationError as e:
+                    kwargs['message'] = ','.join(
+                        [f'{k}: {v[0]}' for k, v in e.detail.items()])
+                    kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    kwargs['level'] = 2
+                except Exception as e:
+                    kwargs['message'] = e.message
+                    kwargs['level'] = 2
+                    kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    def batch_add_host(self, request: Request):
+        file = request.FILES.get('file', None)
+        if not file:
+            return other_response(message='Excel File Required!', code=400, success=False)
+        e = Excel(file.read())
+        tasks = []
+
+        kwargs = {
+            "item": "host",
+            "sub": 1
+        }
+        for row in e.values():
+            cluster = self._get_cluster_instance(row['cluster'])
+            if not cluster:
+                kwargs.update({'level': 2})
+                kwargs.update({'message': f"The cluster field {row['cluster']} of host {row['ip']} does not exist!"})
+                kwargs.update({'collected_time': human_datetime()})
+                continue
+            row['cluster'] = cluster.id
+            tasks.append(row)
+
+        self._thread_pool(tasks=tasks, func=self._validate_and_initialize_host)
+        return success(result={})
+
 
 class ClusterViewSet(GenericViewSet,
-                      mixins.ListModelMixin,
-                      mixins.RetrieveModelMixin,
-                      mixins.DestroyModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.UpdateModelMixin):
+                     mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.DestroyModelMixin,
+                     mixins.CreateModelMixin,
+                     mixins.UpdateModelMixin):
     queryset = Cluster.objects.filter(Q(deleted_at=None) | Q(deleted_at=""))
     serializer_class = serializer.ClusterListSerializer
 

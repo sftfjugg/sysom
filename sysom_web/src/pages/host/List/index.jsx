@@ -155,7 +155,7 @@ const HostList = () => {
           >
             <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
           </Button>,
-          <BulkImport/>,
+          <BulkImport actionRef={ actionRef } />,
         ]}
         request={getHost}
         columns={columns}
