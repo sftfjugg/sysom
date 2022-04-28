@@ -54,6 +54,7 @@ touch_env_rpms() {
     rpm -q --quiet nginx || yum install -y nginx
     rpm -q --quiet gcc || yum install -y gcc
     rpm -q --quiet make || yum install -y make
+    rpm -q --quiet redis || yum install -y redis
 }
 
 touch_virtualenv() {
@@ -147,8 +148,10 @@ init_conf() {
 
 start_app() {
     systemctl enable nginx.service
+    systemctl enable redis.service
     systemctl enable supervisord.service
     systemctl restart nginx.service
+    systemctl restart redis.service
     systemctl restart supervisord.service
 }
 

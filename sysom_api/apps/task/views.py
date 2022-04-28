@@ -50,7 +50,7 @@ class TaskAPIView(GenericViewSet,
                   mixins.DestroyModelMixin,
                   mixins.CreateModelMixin
                   ):
-    queryset = JobModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
+    queryset = JobModel.objects.all()
     serializer_class = seriaizer.JobListSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter, TaskFilter)
     search_fields = ('id', 'task_id', 'created_by__id', 'status', 'params')  # 模糊查询
@@ -84,11 +84,6 @@ class TaskAPIView(GenericViewSet,
             return not_found()
         self.perform_destroy(instance)
         return success(message="删除成功", code=200, result={})
-
-    def perform_destroy(self, instance: JobModel):
-        instance.deleted_at = human_datetime()
-        instance.deleted_by = self.request.user
-        instance.save()
 
     def get_task_svg(self, request, task_id: str, etx: str, *args, **kwargs):
         if etx != 'svg':
