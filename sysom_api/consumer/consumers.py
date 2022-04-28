@@ -1,10 +1,11 @@
 import logging
+import json
 from threading import Thread
 from urllib import parse
-
 from channels.generic.websocket import WebsocketConsumer
 from channels.exceptions import StopConsumer
 from django.conf import settings
+from django_redis import get_redis_connection
 
 import os
 
@@ -98,3 +99,41 @@ class SshConsumer(WebsocketConsumer):
 
     def websocket_disconnect(self, message):
         raise StopConsumer()
+
+
+class NoticelconConsumer(WebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._user = None
+        self._subs = None
+        self._pubsub = None
+        self.rds = get_redis_connection('noticelcon')
+    
+    def connect(self):
+        self._user = self.scope['user']
+        if self._user:
+            self.accept()
+            self._get_user_sub()
+            Thread(target=self.loop_message).start()
+        else:
+            self.close()
+    
+    def _get_user_sub(self):
+        self._subs = self._user.subs.filter(deleted_at=None).values('title')
+
+        self._pubsub = self.rds.pubsub()
+        for sub in self._subs:
+            self._pubsub.subscribe(sub['title'])
+        
+    def loop_message(self):
+        for item in self._pubsub.listen():
+            result = dict()
+            result['sub'] = str(item['channel'], encoding='gbk')
+            result['message'] = item['data'] if isinstance(item['data'], int) else json.loads(item['data'].decode())
+
+            self.send(text_data=result)
+
+    def send(self, text_data=None, bytes_data=None, close=False):
+        if isinstance(text_data, dict):
+            text_data = json.dumps(text_data)
+        return super().send(text_data, bytes_data, close)
