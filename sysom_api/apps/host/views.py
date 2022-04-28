@@ -21,6 +21,7 @@ from lib.exception import APIException
 from lib.excel import Excel
 from lib.validates import validate_ssh
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from apps.alarm.views import _create_alarm_message
 
 
 logger = logging.getLogger(__name__)
@@ -152,16 +153,19 @@ class HostModelViewSet(GenericViewSet,
                     kwargs['message'] = f"IP: {response.data.get('ip')} 添加成功!"
                     kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     kwargs['level'] = 3
+                    _create_alarm_message(kwargs)
 
                 except ValidationError as e:
                     kwargs['message'] = ','.join(
                         [f'{k}: {v[0]}' for k, v in e.detail.items()])
                     kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     kwargs['level'] = 2
+                    _create_alarm_message(kwargs)
                 except Exception as e:
                     kwargs['message'] = e.message
                     kwargs['level'] = 2
                     kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    _create_alarm_message(kwargs)
 
     def batch_add_host(self, request: Request):
         file = request.FILES.get('file', None)
@@ -180,6 +184,7 @@ class HostModelViewSet(GenericViewSet,
                 kwargs.update({'level': 2})
                 kwargs.update({'message': f"The cluster field {row['cluster']} of host {row['ip']} does not exist!"})
                 kwargs.update({'collected_time': human_datetime()})
+                _create_alarm_message(kwargs)
                 continue
             row['cluster'] = cluster.id
             tasks.append(row)
