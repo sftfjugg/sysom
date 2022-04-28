@@ -40,7 +40,7 @@ set_node_init_cmd()
     sed "s#server_local_ip=xxx#server_local_ip=\"${SERVER_LOCAL_IP}\"#" -i ${NODE_INIT_SCRIPT}
     sed "s#server_public_ip=xxx#server_public_ip=\"${SERVER_PUBLIC_IP}\"#" -i  ${NODE_INIT_SCRIPT}
     sed "s#node_home=xxx#node_home=\"${NODE_HOME}\"#" -i ${NODE_INIT_SCRIPT}
-    sed "s#node_home=xxx#node_home=\"${NODE_HOME}\"#" -i ${NODE_DELETE_SCRIPT}
+    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#" -i ${NODE_DELETE_SCRIPT}
 
 }
 
