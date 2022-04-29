@@ -31,7 +31,7 @@ class AlarmAPIView(GenericViewSet,
                    mixins.CreateModelMixin,
                    mixins.UpdateModelMixin
                    ):
-    queryset = AlarmModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
+    queryset = AlarmModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at='')).order_by("-created_at")
     serializer_class = serializer.AlarmSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ('id', 'host__id', 'receiver__id', 'level', 'noticelcon_type')  # 模糊查询
@@ -58,7 +58,7 @@ class AlarmAPIView(GenericViewSet,
         response = super().update(request, *args, **kwargs)
         return success(result=response.data, message="修改成功")
 
-    def get_user_alarm(self, request, *args, **kwargs):
+    def get_user_alarm(self, request):
         sub_ids = request.user.subs.all()
         alarms = [sub_id.alarms.filter(is_read=False) for sub_id in sub_ids]
         items = []

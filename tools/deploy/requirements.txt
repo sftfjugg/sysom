@@ -69,8 +69,8 @@ uWSGI==2.0.19.1
 webencodings==0.5.1
 zope.interface==5.4.0
 django-apscheduler==0.6.0
-numpy==1.22.3
-pandas==1.4.2
+numpy==1.19.5
+pandas==1.1.5
 python-dateutil==2.8.2
 pytz-deprecation-shim==0.1.0.post0
 tzdata==2021.5
