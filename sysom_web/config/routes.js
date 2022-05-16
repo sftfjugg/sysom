@@ -223,6 +223,10 @@ export default [
         path: "/security/viewdetails/:id?/:homename?",
         component: "./security/Viewdetails",
       },
+      {
+        path: "/security/setting",
+        component: "./security/Setting",
+      },      
     ],
   },
   {
