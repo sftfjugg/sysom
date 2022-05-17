@@ -118,7 +118,7 @@ def script_task(data):
                 return other_response(message="can not find script file, please check service name", code=400,
                                       success=False)
             try:
-                resp = subprocess.run([service_path, json.dumps(data)], stdout=subprocess.PIPE,
+                resp = subprocess.run([service_path, json.dumps(data, ensure_ascii=False)], stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
             except Exception as e:
                 JobModel.objects.create(command='', task_id=task_id,
@@ -147,7 +147,7 @@ def script_task(data):
                 if task:
                     return other_response(message="有任务正在执行，请稍后！", code=400,
                                           success=False)
-            ssh_job(resp_scripts, task_id, user, json.dumps(params), update_host_status=update_host_status,
+            ssh_job(resp_scripts, task_id, user, json.dumps(params, ensure_ascii=False), update_host_status=update_host_status,
                     service_name=service_name)
             return success(result={"instance_id": task_id})
         else:
