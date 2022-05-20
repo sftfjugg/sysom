@@ -122,5 +122,7 @@ export default {
   'pages.security.Historical.fix_success': 'CVE修复成功',
   'pages.security.Setting.name': '漏洞库名称',
   'pages.security.Setting.url': '地址',
-  'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：'
+  'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：',
+  'pages.security.notification.fix.success': '系统漏洞已修复',
+  'pages.security.notification.fix.success.content': '如您正在运行漏洞涉及到的服务，建议您重启相关服务使漏洞修复生效。',
 };

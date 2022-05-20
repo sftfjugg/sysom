@@ -65,9 +65,28 @@ const List = (props) => {
         seterrvisible(true);
         setsuccesvisible(false);
       } else {
-        setTimeout(() => {
-          props.history.push("/security");
-        }, 1000);
+        // 成功后弹出建议重启服务提示框
+        setsuccesvisible(false);
+        Modal.info({
+          title: intl.formatMessage({
+            id: 'pages.security.notification.fix.success',
+            // 系统漏洞已修复
+            defaultMessage: 'System vulnerability has been fixed',
+          }),
+          content: intl.formatMessage({
+            id: 'pages.security.notification.fix.success.content',
+            // 如您正在运行漏洞涉及到的服务，建议您重启相关服务使漏洞修复生效
+            defaultMessage: ('If you are running the service affected by the vulnerability,' +
+              ' please restart the service to make the vulnerability fix effective.'
+            ),
+          }),
+          onOk() {
+            props.history.push('/security/list');
+          },
+          onCancel() {
+            props.history.push('/security/list');
+          },
+        });
       }
     }
   };

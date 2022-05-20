@@ -5,7 +5,9 @@ import ProCard from '@ant-design/pro-card';
 import ProTable from '@ant-design/pro-table';
 import "./homelist.less";
 import {getOneById,manyApi} from '../service'
+
 const Cvetable=(params)=> {
+    const intl = useIntl();
     const  request=async()=>{
         const  msg=await  getOneById(params.id);
            msg.data = [...msg.setlovodata]
@@ -91,12 +93,30 @@ const Cvetable=(params)=> {
                     seterrvisible(true)
                     setsuccesvisible(false);
                     setCount(0);
-                }else{
-                    setTimeout(() => {
-                        history.push("/security/list")                      
-                    }, 1000);
-
-             }
+                } else {
+                    // 成功后弹出建议重启服务提示框
+                    setsuccesvisible(false);
+                    Modal.info({
+                        title: intl.formatMessage({
+                            id: 'pages.security.notification.fix.success',
+                            // 系统漏洞已修复
+                            defaultMessage: 'System vulnerability has been fixed',
+                        }),
+                        content: intl.formatMessage({
+                            id: 'pages.security.notification.fix.success.content',
+                            // 如您正在运行漏洞涉及到的服务，建议您重启相关服务使漏洞修复生效
+                            defaultMessage: ('If you are running the service affected by the vulnerability,' +
+                                ' please restart the service to make the vulnerability fix effective.'
+                            ),
+                        }),
+                        onOk() {
+                            history.push('/security/list');
+                        },
+                        onCancel() {
+                            history.push('/security/list');
+                        },
+                    });
+                }
             }
             }}>
         {<FormattedMessage id="pages.security.list.repair" defaultMessage="repair" />}
@@ -110,10 +130,10 @@ const Cvetable=(params)=> {
     const leght =selectedRows.length;
     if(leght>0){
         setsuccesvisible(true)
-        seterrvisible(false) 
+        seterrvisible(false)
         const  time =setInterval(()=>{
         setCount(vlue=>vlue+1);
-        
+
         },2500)
         const id=params.id;
         arry.push({"cve_id":id, "hostname":[selectedRows[0].hostname ]})
@@ -129,14 +149,32 @@ const Cvetable=(params)=> {
                 seterrvisible(true)
                 setsuccesvisible(false);
                 setCount(0);
-            }else{
-                setTimeout(() => { 
-                    history.push("/security/list")            
-                }, 1000);
-            
+            } else {
+                // 成功后弹出建议重启服务提示框
+                setsuccesvisible(false);
+                Modal.info({
+                    title: intl.formatMessage({
+                        id: 'pages.security.notification.fix.success',
+                        // 系统漏洞已修复
+                        defaultMessage: 'System vulnerability has been fixed',
+                    }),
+                    content: intl.formatMessage({
+                        id: 'pages.security.notification.fix.success.content',
+                        // 如您正在运行漏洞涉及到的服务，建议您重启相关服务使漏洞修复生效
+                        defaultMessage: ('If you are running the service affected by the vulnerability,' +
+                            ' please restart the service to make the vulnerability fix effective.'
+                        ),
+                    }),
+                    onOk() {
+                        history.push('/security/list');
+                    },
+                    onCancel() {
+                        history.push('/security/list');
+                    },
+                });
             }
             }
-        } 
+        }
 
 
     }
@@ -155,9 +193,9 @@ const Cvetable=(params)=> {
       />
       <ProCard>
      <Row>
-        <Col span={13}> 
-        {succesvisible?( <p>修复中< Progress width={40} percent={vlue} size="small" /></p>):null}
-        {errvisible?(<p>修复出错了，<Button type="link" size="small" href={"/security/historical" }>查看详情</Button></p>):null}
+        <Col span={13}>
+        {succesvisible?( <div>修复中< Progress width={40} percent={vlue} size="small" /></div>):null}
+        {errvisible?(<div>修复出错了，<Button type="link" size="small" href={"/security/historical" }>查看详情</Button></div>):null}
         </Col>
         <Col span={11}>
               <Row className="allbtn">
@@ -167,7 +205,7 @@ const Cvetable=(params)=> {
               </Col>
     </Row>
       </ProCard>
-     
+
     </>
   );
 }
