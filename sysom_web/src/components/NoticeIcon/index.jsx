@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Tag, message } from 'antd';
 import { groupBy } from 'lodash';
 import moment from 'moment';
+import lodash from 'lodash'
 import { getNotices, changeAlarmIsReadHandler } from '@/pages/journal/service';
 import NoticeIcon from './NoticeIcon';
 import styles from './index.less';
@@ -65,7 +66,7 @@ const getUnreadData = (noticeData) => {
 };
 
 const NoticeIconView = () => {
-  // const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState(null);
   const [notices, setNotices] = useState([]);
  
   const initWebSocker = () => {
@@ -74,22 +75,23 @@ const NoticeIconView = () => {
     }).catch((e) => {
       console.log(e)
     })
-    // const user_id = localStorage.getItem("userId")
-    // const con = new WebSocket(`ws:${location.host}/ws/noticelcon/?user_id=${user_id}`);
-    // setSocket(con)
+    const user_id = localStorage.getItem("userId")
+    const con = new WebSocket(`ws:${location.host}/ws/noticelcon/?user_id=${user_id}`);
+    setSocket(con)
   }
   useEffect(() => {
-    // if (socket) {socket.colse()}
+    if (socket) {socket.colse}
     initWebSocker()
   }, []);
-  // if (socket) {
-  //   socket.onmessage = (e) => {
-  //     const {data: response} = e
-  //     const result = JSON.parse(response)
-  //     notices.push(result.message)
-  //     setNotices(notices)
-  //   }
-  // }
+  if (socket) {
+    socket.onmessage = (e) => {
+      const {data: response} = e
+      const result = JSON.parse(response)
+      const newNotices = lodash.cloneDeep(notices)
+      newNotices.push(result.message)
+      setNotices(newNotices)
+    }
+  }
   const noticeData = getNoticeData(notices);
   const unreadMsg = getUnreadData(noticeData || {});
 
