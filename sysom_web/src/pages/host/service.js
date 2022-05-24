@@ -74,3 +74,14 @@ export async function addBulkImport(params, token, options) {
     ...(options || {})
   })
 }
+
+export async function delBulkHandler(body, token, options) {
+  return request('/api/v1/host/batch_del/', {
+    method: 'post',
+    data: body,
+    headers: {
+      'Authorization': token
+    },
+    ...(options || {})
+  })
+}

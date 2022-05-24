@@ -1,11 +1,11 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, message, Popconfirm, Table, Space } from 'antd';
+import { Button, message, Popconfirm, Table, Space, notification } from 'antd';
 import { useState, useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
-import { getCluster, getHost, addHost, deleteHost } from '../service';
+import { getCluster, getHost, addHost, deleteHost, delBulkHandler } from '../service';
 import Cluster from '../components/ClusterForm';
 import BulkImport from '../components/BulkImport';
 
@@ -132,6 +132,27 @@ const HostList = () => {
       ],
     },
   ];
+
+  const onDeleteHandler = async (e) => {
+    const val = e.selectedRows
+    const host_id_list = []
+    for (let i=0; i<val.length; i++) {
+      host_id_list.push(val[i].id)
+    }
+    const body = {'host_id_list': host_id_list}
+    console.log(body)
+    const token = localStorage.getItem('token')
+    await delBulkHandler(body, token).then((res)=>{
+      if (res.code === 200) {
+        notification.success({ duration: 2, description: '操作成功', message: '操作' })
+      } else {
+        notification.warn({ duration: 2, description: '操作失败', message: '操作' })
+      }
+    }).catch((e)=> {
+      notification.error({ duration: 2, description: e, message: '操作' })
+    })
+  }
+
   return (
     <PageContainer>
       <ProTable
@@ -176,10 +197,12 @@ const HostList = () => {
         tableAlertOptionRender={(selectedRowKeys, selectedRows) => {
           return (
             <Space size={16}>
-              <a>批量删除</a>
+              <a onClick={async () => {
+                await onDeleteHandler(selectedRowKeys)
+              }}>批量删除</a>
               {/* <a>导出数据</a> */}
             </Space>
-          );                                                                                                                                                                                                                   
+          );                                          
         }}
       />
       <ModalForm
