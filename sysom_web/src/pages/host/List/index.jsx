@@ -1,13 +1,34 @@
 import { PlusOutlined } from '@ant-design/icons';
 import { Button, message, Popconfirm, Table, Space, notification } from 'antd';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
+import ExportJsonExcel from 'js-export-excel';
+import lodash from 'lodash';
 import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
 import { getCluster, getHost, addHost, deleteHost, delBulkHandler } from '../service';
 import Cluster from '../components/ClusterForm';
 import BulkImport from '../components/BulkImport';
+
+const HostField = {
+  cluster: '所属集群',
+  created_at: '创建时间',
+  hostname: '主机别名',
+  ip: '主机地址',
+  port: '端口',
+  username: '登录用户',
+  description: '简介',
+  client_deploy_cmd: '初始化命令',
+  status: '状态',
+  host_password: '主机密码',
+};
+
+const HostStatus = {
+  0: 'running',
+  1: 'error',
+  2: 'offline',
+};
 
 const handleAddHost = async (fields) => {
   const hide = message.loading('正在添加');
@@ -41,8 +62,15 @@ const handleDeleteHost = async (record) => {
 
 const HostList = () => {
   const [createModalVisible, handleModalVisible] = useState(false);
+  const [clusterList, setClusterList] = useState([]);
   const actionRef = useRef();
   const intl = useIntl();
+
+  useEffect(() => {
+    getCluster().then((res) => {
+      setClusterList(res)
+    })
+  }, [])
 
   const columns = [
     {
@@ -51,7 +79,9 @@ const HostList = () => {
       filters: true,
       onFilter: true,
       valueType: 'select',
-      request: getCluster,
+      fieldProps: {
+        options: clusterList,
+      },
     },
     {
       title: <FormattedMessage id="pages.hostTable.hostname" defaultMessage="Hostname" />,
@@ -134,24 +164,70 @@ const HostList = () => {
   ];
 
   const onDeleteHandler = async (e) => {
-    const val = e.selectedRows
-    const host_id_list = []
-    for (let i=0; i<val.length; i++) {
-      host_id_list.push(val[i].id)
+    const selectDeleteHostList = lodash.cloneDeep(e);
+    const host_id_list = selectDeleteHostList.map((item) => item['id']);
+    const body = { host_id_list: host_id_list };
+    const token = localStorage.getItem('token');
+    await delBulkHandler(body, token)
+      .then((res) => {
+        if (res.code === 200) {
+          notification.success({
+            duration: 2,
+            description: '操作成功',
+            message: '操作',
+          });
+        } else {
+          notification.warn({
+            duration: 2,
+            description: '操作失败',
+            message: '操作'
+          });
+        }
+      })
+      .catch((e) => {
+        notification.error({ duration: 2, description: e, message: '操作' });
+      });
+  };
+
+  const onBulkExportHostHandler = async (e) => {
+    const headerlist = [];
+    const headerFilter = [];
+    const newDataList = lodash.cloneDeep(e);
+
+    if (newDataList.length === 0) {
+      return false;
     }
-    const body = {'host_id_list': host_id_list}
-    console.log(body)
-    const token = localStorage.getItem('token')
-    await delBulkHandler(body, token).then((res)=>{
-      if (res.code === 200) {
-        notification.success({ duration: 2, description: '操作成功', message: '操作' })
-      } else {
-        notification.warn({ duration: 2, description: '操作失败', message: '操作' })
+
+    for (let i in newDataList[0]) {
+      if (HostField[i]) {
+        headerFilter.push(i);
+        headerlist.push(HostField[i]);
       }
-    }).catch((e)=> {
-      notification.error({ duration: 2, description: e, message: '操作' })
-    })
-  }
+    }
+    headerlist.push(HostField['host_password']);
+    newDataList.map((item) => {
+      item['status'] = HostStatus[item['status']];
+      for (let i=0; i<clusterList.length; i++) {
+        if (item['cluster'] === clusterList[i]['value']) {
+          item['cluster'] = clusterList[i]['label']
+          break
+        }
+      }
+    });
+
+    const options = {};
+    options.fileName = 'host';
+    options.datas = [
+      {
+        sheetData: newDataList,
+        sheetName: 'sheet',
+        sheetFilter: headerFilter,
+        sheetHeader: headerlist,
+      },
+    ];
+    const excel = new ExportJsonExcel(options);
+    excel.saveExcel();
+  };
 
   return (
     <PageContainer>
@@ -174,7 +250,7 @@ const HostList = () => {
               handleModalVisible(true);
             }}
           >
-            <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
+           <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
           </Button>,
           <BulkImport actionRef={ actionRef } />,
         ]}
@@ -194,15 +270,27 @@ const HostList = () => {
             </span>
           </Space>
         )}
-        tableAlertOptionRender={(selectedRowKeys, selectedRows) => {
+        tableAlertOptionRender={({selectedRowKeys, selectedRows, onCleanSelected }) => {
           return (
             <Space size={16}>
-              <a onClick={async () => {
-                await onDeleteHandler(selectedRowKeys)
-              }}>批量删除</a>
-              {/* <a>导出数据</a> */}
+              <a
+                onClick={async () => {
+                  await onDeleteHandler(selectedRows);
+                  onCleanSelected();
+                }}
+              >
+                批量删除
+              </a>
+              <a
+                onClick={async () => {
+                  await onBulkExportHostHandler(selectedRows);
+                  onCleanSelected();
+                }}
+              >
+                导出数据
+              </a>
             </Space>
-          );                                          
+          );
         }}
       />
       <ModalForm
@@ -238,9 +326,10 @@ const HostList = () => {
               ),
             },
           ]}
+          fieldProps={{labelInValue:true}}
           width="md"
           name="cluster"
-          request={getCluster}
+          request={async ()=> clusterList}
           placeholder="请选择主机所属集群"
         />
         <ProFormText

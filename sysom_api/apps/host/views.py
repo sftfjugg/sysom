@@ -194,7 +194,8 @@ class HostModelViewSet(GenericViewSet,
             row['cluster'] = cluster.id
             tasks.append(row)
 
-        self._thread_pool('add', tasks=tasks, func=self._validate_and_initialize_host)
+        if len(tasks) > 0:
+            self._thread_pool('add', tasks=tasks, func=self._validate_and_initialize_host)
         return success(result={})
 
     def batch_del_host(self, request: Request):
