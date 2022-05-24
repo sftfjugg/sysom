@@ -19,7 +19,8 @@ const BulkImport = (props) => {
         actionRef.current.reload()
       }
     }).catch((e) => {
-      message.error(e)
+      // message.error(e)
+      console.log(e)
     })
   };
 
