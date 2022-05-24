@@ -48,7 +48,7 @@ class HostModelViewSet(GenericViewSet,
 
     def create(self, request, *args, **kwargs):
         context = request.data
-        self._thread_pool(tasks=[context], func=self._validate_and_initialize_host)
+        self._thread_pool('add', tasks=[context], func=self._validate_and_initialize_host)
         return success(result={})
 
     def _validate_and_initialize_host(self, context):
@@ -90,11 +90,16 @@ class HostModelViewSet(GenericViewSet,
         instance = self.check_instance_exist(request, *args, **kwargs)
         if not instance:
             return not_found()
+        self._thread_pool('del', [instance], func=self._destroy_host_tasks)
+        return success(message="operation success!", code=200, result={})
+
+    def _destroy_host_tasks(self, instance):
         status, content = self.client_deploy_cmd_delete(instance)
         if status != 200:
-            return other_response(message="删除失败，清除脚本执行失败，错误如下：{}".format(content.get("message")), code=400, success=False)
+            raise APIException(message=f'删除失败，清除脚本执行失败，错误如下：{content["message"]}')
         self.perform_destroy(instance)
-        return success(message="删除成功", code=200, result={})
+        ser = serializer.HostListSerializer(instance=instance)
+        return ser
 
     def perform_destroy(self, instance: HostModel):
         instance.deleted_at = human_datetime()
@@ -135,7 +140,7 @@ class HostModelViewSet(GenericViewSet,
         except Cluster.DoesNotExist:
             return None
 
-    def _thread_pool(self, tasks: list, func):
+    def _thread_pool(self, t_type: str, tasks: list, func):
         kwargs = {}
         kwargs['sub'] = 1
         kwargs['item'] = 'host'
@@ -150,7 +155,7 @@ class HostModelViewSet(GenericViewSet,
             for d in as_completed(pool):
                 try:
                     response = d.result()
-                    kwargs['message'] = f"IP: {response.data.get('ip')} 添加成功!"
+                    kwargs['message'] = f"IP: {response.data.get('ip')} {t_type} success!"
                     kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     kwargs['level'] = 3
                     _create_alarm_message(kwargs)
@@ -189,8 +194,33 @@ class HostModelViewSet(GenericViewSet,
             row['cluster'] = cluster.id
             tasks.append(row)
 
-        self._thread_pool(tasks=tasks, func=self._validate_and_initialize_host)
+        self._thread_pool('add', tasks=tasks, func=self._validate_and_initialize_host)
         return success(result={})
+
+    def batch_del_host(self, request: Request):
+        host_id_list = request.data.get('host_id_list', None)
+        if not host_id_list:
+            return other_response(message='host_id_list not found or list empty', code=400, success=False)
+        if not isinstance(host_id_list, list):
+            return other_response(message='host_id_list type is list', code=400)
+        querysets = HostModel.objects.filter(id__in=host_id_list)
+        self._thread_pool('del', querysets, func=self._destroy_host_tasks)
+        return other_response(message='operation success!')
+
+    def batch_export_host(self, request):
+        host_id_list = request.data.get('host_id_list', None)
+        if host_id_list is None:
+            return other_response(code=400, message='host_id_list field required!')
+
+        if not isinstance(host_id_list, list):
+            return other_response(code=400, message='host_id_list field type list!')
+
+        if len(host_id_list) == 0:
+            return other_response(code=400, message='host_id_list field cannot be empty')
+
+        queryset = HostModel.objects.filter(id__in=host_id_list)
+        ser = serializer.HostListSerializer(queryset, many=True)
+        return Excel.export(ser.data, excelname='hostlist')
 
 
 class ClusterViewSet(GenericViewSet,

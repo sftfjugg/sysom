@@ -1,4 +1,11 @@
+import logging
+from io import BytesIO
 import pandas as pd
+from xlwt import Workbook
+from django.http import StreamingHttpResponse, HttpResponse
+
+
+logger = logging.getLogger(__name__)
 
 class Excel:
     def __init__(self, file) -> None:
@@ -27,4 +34,29 @@ class Excel:
                 item[k] = row[v]
             content.append(item)
         return content
-    
+
+    @staticmethod    
+    def export(datalist: list=..., sheetname: str='sheet1', excelname:str='host'):
+        """
+        Export excel
+        Type xlsx
+        """
+        response = HttpResponse(content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename=%s' % excelname+'.xlsx'
+
+        workbook = Workbook(encoding='utf-8')
+        sheet = workbook.add_sheet(sheetname)
+
+        for i, k in enumerate([k for k in datalist[0].keys()]):
+            sheet.write(0, i, k)
+
+        for r, data in enumerate(datalist):
+            for i, key in enumerate([k for k in data.keys()]):
+                sheet.write(r+1, i, data[key])
+
+        io = BytesIO()
+        workbook.save(io)
+        io.seek(0)
+
+        response.write(io.getvalue())
+        return response
