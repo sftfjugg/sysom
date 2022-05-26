@@ -69,7 +69,7 @@ def get_column_value(column, line):
         column['func_name']=column['func_name'].split('.')[0]
         ripmod_match = ripmod_pattern.match(line.strip())
         if ripmod_match:
-            column['ripmod']=ripmod_match.group(3)
+            column['ripmod']=ripmod_match.group(1)
     match = rip_pattern_1.match(line)
     if column['func_name']=='NA' and column.get('func_name_1','') =='NA' and match:
         column['func_name_1']=match.group(1).split('+')[0]
@@ -150,6 +150,19 @@ def fix_func_name(column):
     if 'bugat' in column:
         column['bugon_file'] = column['bugat'].split(':')[0]
         column['crashkey_type'] = 3
+
+
+def parse_rawdmesg(column):
+    dmesgs = column['rawdmesg'].splitlines()
+    column['rawdmesg'] = ''
+    result = ''
+    for line in dmesgs:
+        if line.find('Modules linked in') >= 0:
+            column['modules'] = line[line.find(':')+1:]
+        result += line+'\n'
+        get_column_value(column, line)
+    column['dmesg'] = result
+    fix_func_name(column)
 
 def parse_file(name, column):
     f = open(name, 'r')
@@ -463,7 +476,7 @@ def init_column(column):
     column['title'] = 'NA'
     column['status'] = 0
     column['calltrace'] = 'NA'
-    column['bugon_file'] = ''
+    column['bugon_file'] = 'NA'
     column['crashkey_type'] = 1
     column['crashkey'] = 'NA'
     column['modules'] = 'NA'
