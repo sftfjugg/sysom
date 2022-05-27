@@ -302,11 +302,10 @@ const HostList = () => {
         visible={createModalVisible}
         onVisibleChange={handleModalVisible}
         onFinish={async (value) => {
+          value['cluster'] = value.cluster.value
           const success = await handleAddHost(value);
-
           if (success) {
             handleModalVisible(false);
-
             if (actionRef.current) {
               actionRef.current.reload();
             }
