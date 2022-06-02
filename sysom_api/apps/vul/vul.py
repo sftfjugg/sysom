@@ -69,8 +69,8 @@ class VulDataParse(object):
 
             flag = True
             url = self.vul_addr_obj.url
-            logging.critical(url)
             while flag:
+                logging.info(url)
                 resp = requests.request(self.vul_addr_obj.get_method_display(), url,
                                         headers=self.vul_addr_obj.headers,
                                         data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
@@ -113,7 +113,6 @@ class VulDataParse(object):
             cve_id = cve[self.vul_addr_obj.parser["cve_id_flag"]]
             cve_obj_search = VulModel.objects.filter(cve_id=cve_id)
             pub_time = cve.get(self.vul_addr_obj.parser["pub_time_flag"], None)
-            vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
             if "level_flag" in self.vul_addr_obj.parser:
                 vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
             else:
