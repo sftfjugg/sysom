@@ -36,7 +36,7 @@ export default (props) => {
       >
         <ProCard.Group title={props.subtitle} direction={responsive ? 'column' : 'row'}>
           <ProCard>
-            <Statistic title="内存利用率" value={props.data.event.util} suffix="%" valueStyle={{ color: (props.data.event.util) > "50" ? "red" : "green" }} />
+            <Statistic title="内存利用率" value={Math.round(props.data.event.util * 100) / 100} suffix="%" valueStyle={{ color: (props.data.event.util) > "50" ? "red" : "green" }} />
           </ProCard>
           <Divider type={responsive ? 'horizontal' : 'vertical'} />
           <ProCard>
