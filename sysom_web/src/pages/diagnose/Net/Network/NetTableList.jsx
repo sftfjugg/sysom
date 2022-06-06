@@ -67,7 +67,7 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
       valueType: "dateTime",
     },
     {
-      title: "PingTraceId",
+      title: "诊断ID",
       dataIndex: "task_id",
       valueType: "textarea",
     },
