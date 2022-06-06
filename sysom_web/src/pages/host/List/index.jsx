@@ -349,6 +349,7 @@ const HostList = () => {
         />
         <ProFormText
           label="用户名称"
+          value={'root'}
           rules={[
             {
               required: true,
@@ -397,6 +398,7 @@ const HostList = () => {
         />
         <ProFormText
           label="端口"
+          value={'22'}
           rules={[
             {
               required: true,
