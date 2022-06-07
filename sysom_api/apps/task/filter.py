@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 from rest_framework.filters import BaseFilterBackend
 from rest_framework.request import Request
