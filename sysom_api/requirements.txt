@@ -3,11 +3,11 @@ APScheduler==3.8.1
 asgiref==3.4.1
 async-timeout==3.0.1
 attrs==21.2.0
-autobahn==21.3.1
+autobahn>=21.2.1
 Automat==20.2.0
 autopep8==1.6.0
 bcrypt==3.2.0
-cairocffi==1.3.0
+cairocffi>=1.2.0
 CairoSVG==2.5.2
 certifi==2021.10.8
 cffi==1.15.0
@@ -39,10 +39,10 @@ itypes==1.2.0
 Jinja2==3.0.2
 MarkupSafe==2.0.1
 msgpack==1.0.2
-numpy==1.22.3
+numpy>=1.19.5
 openpyxl==3.0.9
 packaging==21.0
-pandas==1.4.2
+pandas>=1.1.5
 paramiko==2.8.0
 Pillow==8.4.0
 pyasn1==0.4.8
