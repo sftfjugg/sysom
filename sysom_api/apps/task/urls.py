@@ -11,7 +11,6 @@ from apps.task import views
 
 router = DefaultRouter()
 
-router.register('jobs', views.JobAPIView)
 router.register('tasks', views.TaskAPIView)
 
 urlpatterns = [

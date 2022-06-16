@@ -25,25 +25,6 @@ from lib.utils import human_datetime, uuid_8, scheduler
 logger = logging.getLogger(__name__)
 
 
-class JobAPIView(GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin):
-    queryset = JobModel.objects.all()
-    serializer_class = seriaizer.JobListSerializer
-    authentication_classes = []
-
-    def get_queryset(self):
-        queryset = self.queryset
-        queryset = queryset.filter(created_by=self.request.user)
-        queryset = queryset.filter(deleted_at=None)
-        return queryset
-
-    def get_object(self):
-        pass
-
-    def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        return success(result=response.data)
-
-
 class TaskAPIView(GenericViewSet,
                   mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
@@ -98,8 +79,6 @@ class TaskAPIView(GenericViewSet,
             return FileResponse(svg_context)
         else:
             return success(result={}, message=f"任务：{instance.status}", success=False)
-
-    
 
 
 def script_task(data):
