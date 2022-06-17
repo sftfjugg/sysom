@@ -1,5 +1,20 @@
 #!/bin/bash -x
 
+if [ "$SERVER_HOME" = "" ]
+then
+	export SERVER_HOME=/usr/local/sysom/server
+fi
+if [ "$SERVER_LOCAL_IP" = "" ]
+then
+	local_ip=`ip -4 route | grep "link src" | awk -F"link src " '{print $2}' | awk '{print $1}' | head -n 1`
+	export SERVER_LOCAL_IP=$local_ip
+fi
+
+if [ "$SERVER_PUBLIC_IP" = "" ]
+then
+	export SERVER_PUBLIC_IP=$SERVER_LOCAL_IP
+fi
+
 basedir=`dirname $0`
 
 cd $basedir
