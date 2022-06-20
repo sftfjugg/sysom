@@ -10,6 +10,10 @@ PROMETHEUS_TAR=$PROMETHEUS_PKG.tar.gz
 NODE_EXPORTER_VER=1.2.2
 NODE_EXPORTER_PKG=node_exporter-${NODE_EXPORTER_VER}.${PROMETHEUS_ARCH}
 NODE_EXPORTER_TAR=$NODE_EXPORTER_PKG.tar.gz
+OSS_URL=https://sysom.oss-cn-beijing.aliyuncs.com/monitor
+GRAFANA_DL_URL=https://dl.grafana.com/oss/release
+PROMETHEUS_DL_URL=https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VER}
+NODE_DL_URL=https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VER}
 
 service_head="
 [Unit]
@@ -46,7 +50,7 @@ install_grafana()
     ls | grep $GRAFANA_PKG 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
-        wget https://dl.grafana.com/oss/release/$GRAFANA_PKG
+        wget $OSS_URL/$GRAFANA_PKG || wget $GRAFANA_DL_URL/$GRAFANA_PKG
         ls
     fi
 
@@ -108,7 +112,7 @@ install_prometheus()
     ls | grep $PROMETHEUS_TAR 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
-        wget https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VER}/$PROMETHEUS_TAR
+        wget $OSS_URL/$PROMETHEUS_TAR || wget $PROMETHEUS_DL_URL/$PROMETHEUS_TAR
         ls
     fi
     tar -zxvf $PROMETHEUS_TAR
@@ -129,7 +133,7 @@ download_node_exporter()
     if [ $? -ne 0 ]
     then
         echo "wget node_exporter"
-        wget https://github.com/prometheus/node_exporter/releases/download/v$NODE_EXPORTER_VER/$NODE_EXPORTER_TAR
+        wget $OSS_URL/$NODE_EXPORTER_TAR || wget $NODE_DL_URL/$NODE_EXPORTER_TAR
     fi
     popd
 
