@@ -14,6 +14,12 @@ OSS_URL=https://sysom.oss-cn-beijing.aliyuncs.com/monitor
 GRAFANA_DL_URL=https://dl.grafana.com/oss/release
 PROMETHEUS_DL_URL=https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VER}
 NODE_DL_URL=https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VER}
+NODE_INIT_DIR=sysom_node_init
+NODE_INIT_PKG=sysom_node_init.tar.gz
+NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_api/service_scripts/node_init
+NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_api/service_scripts/node_delete
+
+BASE_DIR=`dirname $0`
 
 service_head="
 [Unit]
@@ -139,6 +145,25 @@ download_node_exporter()
 
 }
 
+prepare_node_init_tar()
+{
+    mkdir -p ${NODE_INIT_DIR}
+    cp -r ${BASE_DIR}/../../node/* ${NODE_INIT_DIR}
+    tar -zvcf ../${NODE_INIT_PKG} ../${NODE_INIT_DIR}
+    rm -rf ../${NODE_INIT_DIR}
+    mv ../${NODE_INIT_PKG} ${UPLOAD_DIR}
+}
+
+set_node_init_cmd()
+{
+    sed "s#server_local_ip='xxx'#server_local_ip=\"${SERVER_LOCAL_IP}\"#" -i ${NODE_INIT_SCRIPT}
+    sed "s#server_public_ip='xxx'#server_public_ip=\"${SERVER_PUBLIC_IP}\"#" -i  ${NODE_INIT_SCRIPT}
+    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#" -i ${NODE_INIT_SCRIPT}
+    sed "s#server_home='xxx'#server_home=\"${SERVER_HOME}\"#" -i ${NODE_INIT_SCRIPT}
+    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#" -i ${NODE_DELETE_SCRIPT}
+}
+
+
 configure_grafana()
 {
     bash -x grafana_api_set.sh
@@ -173,6 +198,9 @@ main()
     start_grafana_service
     start_prometheus_service
 #    start_node_exporter_service
+
+    set_node_init_cmd
+    prepare_node_init_tar
 
     configure_requests
     configure_grafana

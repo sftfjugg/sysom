@@ -26,6 +26,7 @@ SERVER_HOME=${APP_HOME}/server
 
 export APP_HOME=${APP_HOME}
 export SERVER_HOME=${APP_HOME}/server
+export NODE_HOME=${APP_HOME}/node
 export SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
 export SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
 
@@ -159,12 +160,6 @@ start_app() {
 start_script_server() {
     pushd ${SCRIPT_DIR}/server
     bash -x init.sh
-    popd
-}
-
-start_script_node() {
-    pushd ${SCRIPT_DIR}/node
-    bash -x pre_init.sh
     popd
 }
 
