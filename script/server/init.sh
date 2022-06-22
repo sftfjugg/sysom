@@ -1,8 +1,10 @@
 #!/bin/bash -x
 
-if [ "$SERVER_HOME" = "" ]
+if [ "$APP_HOME" = "" ]
 then
+	export APP_HOME=/usr/local/sysom/
 	export SERVER_HOME=/usr/local/sysom/server
+	export NODE_HOME=/usr/local/sysom/node
 fi
 if [ "$SERVER_LOCAL_IP" = "" ]
 then

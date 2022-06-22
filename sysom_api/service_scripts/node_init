@@ -12,6 +12,7 @@ import sys
 ###############################################################################
 server_local_ip='xxx'
 server_public_ip='xxx'
+server_home='xxx'
 node_home='xxx'
 arg = json.loads(sys.argv[1])
 host_ip = arg.get('instance')
@@ -23,8 +24,14 @@ cmd0 = {}
 cmd0['instance'] = host_ip
 mkdir_cmd = "rm -rf "+node_home+" && mkdir -p "+node_home+" && cd "+node_home
 download_res_cmd = "wget -T 3 -t 1 http://"+server_local_ip+"/download/sysom_node_init.tar.gz || wget -T 3 -t 1 http://"+server_public_ip+"/download/sysom_node_init.tar.gz"
-do_init_cmd = "if [ -e sysom_node_init.tar.gz ]; then tar -xf sysom_node_init.tar.gz && echo NODE_IP="+host_ip+" >> sysom_node_init/conf && bash -x sysom_node_init/init.sh; fi"
-cmd0['cmd'] = mkdir_cmd+" && "+download_res_cmd+" && "+do_init_cmd
+do_check_wget = "if [ ! -e sysom_node_init.tar.gz ];then  exit 1; fi && tar -xf sysom_node_init.tar.gz && cd sysom_node_init"
+do_init_conf = "echo SERVER_LOCAL_IP="+server_local_ip+" > conf"
+do_init_conf = do_init_conf + " && echo SERVER_PUBLIC_IP="+server_public_ip+" >> conf"
+do_init_conf = do_init_conf + " && echo SERVER_HOME="+server_home+" >> conf"
+do_init_conf = do_init_conf + " && echo NODE_HOME="+node_home+" >> conf"
+do_init_conf = do_init_conf + " && echo NODE_IP="+host_ip+" >> conf"
+do_init_cmd = "bash -x init.sh"
+cmd0['cmd'] = mkdir_cmd+" && "+download_res_cmd+" && "+do_check_wget+" && "+do_init_conf+" && "+do_init_cmd
 
 result['commands'].append(cmd0)
 
