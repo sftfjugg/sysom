@@ -149,9 +149,10 @@ prepare_node_init_tar()
 {
     mkdir -p ${NODE_INIT_DIR}
     cp -r ${BASE_DIR}/../../node/* ${NODE_INIT_DIR}
-    tar -zvcf ../${NODE_INIT_PKG} ../${NODE_INIT_DIR}
-    rm -rf ../${NODE_INIT_DIR}
-    mv ../${NODE_INIT_PKG} ${UPLOAD_DIR}
+    cp ${RESOURCE_DIR}/${NODE_EXPORTER_TAR} ${NODE_INIT_DIR}/monitor/
+    tar -zvcf ${NODE_INIT_PKG} ${NODE_INIT_DIR}
+    rm -rf ${NODE_INIT_DIR}
+    mv ${NODE_INIT_PKG} ${UPLOAD_DIR}
 }
 
 set_node_init_cmd()
@@ -190,14 +191,12 @@ main()
     yum install -y wget
     echo "perpare download resource packages: grafana, prometheus, node_exporter"
     mkdir -p $RESOURCE_DIR
-#    bash -x local_copy_pkg.sh
     install_grafana
     install_prometheus
     download_node_exporter
 
     start_grafana_service
     start_prometheus_service
-#    start_node_exporter_service
 
     set_node_init_cmd
     prepare_node_init_tar
