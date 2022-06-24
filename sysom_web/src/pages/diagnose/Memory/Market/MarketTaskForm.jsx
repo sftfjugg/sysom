@@ -40,7 +40,7 @@ export default (props) => {
                 />
                 <ProForm.Group>
                     <ProFormText
-                        name={"实例IP"}
+                        name={"instance"}
                         width="md"
                         label="实例IP"
                     />

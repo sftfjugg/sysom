@@ -33,27 +33,27 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
   const columns = [
     {
       title: "源实例IP",
-      dataIndex: "源实例IP",
+      dataIndex: "origin_instance",
       valueType: "textarea"
     },
     {
       title: "目标实例IP",
-      dataIndex: "目标实例IP",
+      dataIndex: "target_instance",
       valueType: "textarea"
     },
     {
       title: "追踪包数",
-      dataIndex: "追踪包数",
+      dataIndex: "pkg_num",
       valueType: "textarea",
     },
     {
       title: "间隔毫秒数",
-      dataIndex: "间隔毫秒数",
+      dataIndex: "time_gap",
       valueType: "textarea",
     },
     {
       title: "报文协议",
-      dataIndex: "报文协议",
+      dataIndex: "protocol",
       valueType: "select",
       valueEnum: {
         icmp: { text: 'ICMP', status: 'icmp' },

@@ -31,22 +31,22 @@ const IOTableList = React.forwardRef((props, ref) => {
   const columns = [
     {
       title: "实例IP",
-      dataIndex: "实例IP",
+      dataIndex: "instance",
       valueType: "textarea",
     },
     {
       title: "诊断时长",
-      dataIndex: "诊断时长",
+      dataIndex: "diag_time",
       valueType: "textarea",
     },
     {
       title: "时间阈值",
-      dataIndex: "时间阈值",
+      dataIndex: "thresh",
       valueType: "textarea",
     },
     {
       title: "目标磁盘",
-      dataIndex: "目标磁盘",
+      dataIndex: "disk",
       valueType: "textarea",
     },
     {

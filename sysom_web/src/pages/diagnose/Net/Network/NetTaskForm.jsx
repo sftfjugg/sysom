@@ -41,26 +41,26 @@ export default (props) => {
                 />
                 <ProForm.Group>
                     <ProFormText
-                        name={"源实例IP"}
+                        name={"origin_instance"}
                         width="md"
                         label="源实例IP"
                     />
 
                     <ProFormText
-                        name={"目标实例IP"}
+                        name={"target_instance"}
                         width="md"
                         label="目标实例IP"
                     />
 
                     <ProFormDigit
-                        name={"追踪包数"}
+                        name={"pkg_num"}
                         width="md"
                         label="追踪包数"
                         initialValue={100}
                     />
 
                     <ProFormDigit
-                        name={"间隔毫秒数"}
+                        name={"time_gap"}
                         width="md"
                         label="间隔毫秒数"
                         initialValue={1000}
@@ -82,7 +82,7 @@ export default (props) => {
                             },
                         ]}
                         initialValue={"ICMP"}
-                        name={"报文协议"}
+                        name={"protocol"}
                         width="md"
                         label="报文协议"
                     />

@@ -9,7 +9,7 @@ import json
 ##  输出数据：
 ##  {
 ##    "service_name":"loadtask",
-##    "实例IP":"192.168.1.101"
+##    "instance":"192.168.1.101"
 ##  }
 ##  解析参数方法：
 ##  sysak loadtask -s -g >> /dev/null && cat /var/log/sysak/loadtask/.tmplog 
@@ -27,7 +27,7 @@ result = {}
 result['commands'] = []
 
 cmd0 = {}
-cmd0['instance'] = args["实例IP"]
+cmd0['instance'] = args["instance"]
 cmd0['cmd'] = "sysak loadtask -s -g >> /dev/null && cat /var/log/sysak/loadtask/.tmplog"
 
 result['commands'].append(cmd0)
