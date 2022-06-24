@@ -34,7 +34,7 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
   const columns = [
     {
       title: "实例IP",
-      dataIndex: "实例IP",
+      dataIndex: "instance",
       valueType: "textarea"
     },
     {
