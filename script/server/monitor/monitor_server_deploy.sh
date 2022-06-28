@@ -148,6 +148,7 @@ download_node_exporter()
 prepare_node_init_tar()
 {
     mkdir -p ${NODE_INIT_DIR}
+    mkdir -p ${UPLOAD_DIR}
     cp -r ${BASE_DIR}/../../node/* ${NODE_INIT_DIR}
     cp ${RESOURCE_DIR}/${NODE_EXPORTER_TAR} ${NODE_INIT_DIR}/monitor/
     tar -zvcf ${NODE_INIT_PKG} ${NODE_INIT_DIR}
