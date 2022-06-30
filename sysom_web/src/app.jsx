@@ -92,7 +92,7 @@ let extraGrafanaRoutes = [];
 
 export function patchRoutes({ routes }) {
   //Insert the grafana dashboard item to monitor memu. 
-  routes[1].routes.find((item) => item.name == "monitor")
+  routes.find((item) => item.path == "/").routes.find((item) => item.name == "monitor")
     .routes.splice(-1, 0, ...extraGrafanaRoutes)
 }
 
