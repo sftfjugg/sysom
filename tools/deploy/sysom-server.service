@@ -1,0 +1,12 @@
+[Unit]
+Description=SysOM Server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=bash -x /usr/local/sysom/init_scripts/server/init.sh
+RemainAfterExit=yes
+ExecStop=bash -x /usr/local/sysom/init_scripts/server/stop.sh
+
+[Install]
+WantedBy=multi-user.target
