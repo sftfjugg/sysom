@@ -132,6 +132,7 @@ init_conf() {
     sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/supervisord.d/sysom.ini
     cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
     sed -i "s;/home/sysom;${SERVER_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
+    cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
 }
 
 start_app() {
@@ -144,9 +145,8 @@ start_app() {
 }
 
 start_script_server() {
-    pushd ${SCRIPT_DIR}/server
-    bash -x init.sh
-    popd
+   systemctl daemon-reload
+   systemctl start sysom-server.service
 }
 
 deploy() {
@@ -155,7 +155,7 @@ deploy() {
     update_target
 #    check_requirements
 #    setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
-#    init_conf
+    init_conf
     start_script_server
 #    start_app
 }
