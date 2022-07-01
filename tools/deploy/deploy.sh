@@ -84,7 +84,7 @@ update_target() {
     mkdir -p ${TARGET_PATH}
     echo "INFO: copy project file..."
     cp -r ${API_DIR} ${WEB_DIR} ${TARGET_PATH}
-
+    cp -r ${SCRIPT_DIR} ${APP_HOME}/init_scripts
 }
 
 check_requirements() {
