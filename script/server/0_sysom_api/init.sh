@@ -11,24 +11,6 @@ ALIYUN_MIRROR="https://mirrors.aliyun.com/pypi/simple/"
 APP_NAME="sysom"
 API_DIR="sysom_api"
 WEB_DIR="sysom_web"
-SCRIPT_DIR="script"
-
-if [ $# != 3 ] ; then
-    echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP"
-    echo " e.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx"
-    exit 1
-fi
-
-APP_HOME=$1
-SERVER_LOCAL_IP=$2
-SERVER_PUBLIC_IP=$3
-SERVER_HOME=${APP_HOME}/server
-
-export APP_HOME=${APP_HOME}
-export SERVER_HOME=${APP_HOME}/server
-export NODE_HOME=${APP_HOME}/node
-export SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
-export SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
 
 VIRTUALENV_HOME="${SERVER_HOME}/virtualenv"
 TARGET_PATH="${SERVER_HOME}/target"
@@ -60,7 +42,7 @@ touch_env_rpms() {
 
 touch_virtualenv() {
     mkdir -p ~/.pip
-	cp tools/deploy/pip.conf ~/.pip/
+    cp pip.conf ~/.pip/
     if [ -d ${VIRTUALENV_HOME} ]; then
         echo "virtualenv exists, skip"
     else
@@ -95,11 +77,7 @@ check_requirements() {
     fi
 
     local requirements_log="${SERVER_HOME}/logs/${APP_NAME}_requirements.log"
-    local requirements="${API_DIR}/requirements.txt"
-    python_version=$(python -V | cut -b 8-10)
-    if [ ${python_version} == "3.6" ];then
-        requirements="tools/deploy/requirements.txt"
-    fi
+    local requirements="requirements.txt"
     touch "$requirements_log" || exit
     pip install pytest-runner cffi
     pip install -r ${requirements} -i "${ALIYUN_MIRROR}" |tee -a "${requirements_log}" || exit 1
@@ -125,13 +103,20 @@ setup_database() {
 
 init_conf() {
     mkdir -p /run/daphne
-    cp tools/deploy/nginx.conf /etc/nginx/
-    cp tools/deploy/sysom.conf /etc/nginx/conf.d/
-    sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/nginx/conf.d/sysom.conf
-    cp tools/deploy/sysom.ini /etc/supervisord.d/
-    sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/supervisord.d/sysom.ini
-    cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
-    sed -i "s;/home/sysom;${SERVER_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
+    pushd ${TARGET_PATH}/${API_DIR}
+    rm -f apps/*/migrations/00*.py
+    python manage.py makemigrations accounts
+    python manage.py makemigrations host
+    python manage.py makemigrations vmcore
+    python manage.py makemigrations task
+    python manage.py makemigrations monitor
+    python manage.py makemigrations alarm
+    python manage.py makemigrations vul
+    python manage.py migrate
+    python manage.py loaddata ./apps/accounts/user.json
+    python manage.py loaddata ./apps/alarm/subscribe.json
+    python manage.py loaddata ./apps/vmcore/vmcore.json
+    popd
 }
 
 start_app() {
@@ -143,21 +128,14 @@ start_app() {
     systemctl restart supervisord.service
 }
 
-start_script_server() {
-    pushd ${SCRIPT_DIR}/server
-    bash -x init.sh
-    popd
-}
-
 deploy() {
-    touch_env_rpms
-#    touch_virtualenv
-    update_target
-#    check_requirements
-#    setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
-#    init_conf
-    start_script_server
-#    start_app
+#    touch_env_rpms
+    touch_virtualenv
+#    update_target
+    check_requirements
+    setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
+    init_conf
+    start_app
 }
 
 deploy

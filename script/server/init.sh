@@ -1,5 +1,7 @@
 #!/bin/bash -x
 
+FIRST_INIT_DONE=0
+
 if [ "$APP_HOME" = "" ]
 then
 	export APP_HOME=/usr/local/sysom/
@@ -21,12 +23,26 @@ basedir=`dirname $0`
 
 cd $basedir
 
-for dir in `ls`
-do
-	if [ -d $dir ]
-	then
-		pushd $dir
-		bash -x init.sh
-		popd
-	fi
-done
+if [ $FIRST_INIT_DONE = 0 ]
+then
+	for dir in `ls`
+	do
+		if [ -d $dir ]
+		then
+			pushd $dir
+			bash -x init.sh
+			popd
+		fi
+	done
+	sed -i 's/^FIRST_INIT_DONE=0/FIRST_INIT_DONE=1/g' $0
+else
+	for dir in `ls`
+	do
+		if [ -d $dir ]
+		then
+			pushd $dir
+			bash -x start.sh
+			popd
+		fi
+	done
+fi
