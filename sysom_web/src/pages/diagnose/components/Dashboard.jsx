@@ -5,7 +5,8 @@ import { Modal } from 'antd';
 import StatisticPannel from "./StatisticPannel"
 import PieChartPannel from "./PieChartPannel"
 import TablePannel from "./TablePannel"
-
+import TimeSeriesPannel from "./TimeSeriesPannel"
+import SvgPannel from "./SvgPannel"
 
 
 const templateReplace = (template, Vars = []) => {
@@ -22,9 +23,12 @@ const createPannel = (pannel, datas, globalVariables, showModalPannel, parentDat
     row: RowPannel,
     piechart: PieChartPannel,
     table: TablePannel,
+    timeseries: TimeSeriesPannel,
+    svg: SvgPannel,
+
   }
 
-  const newPannel = {...pannel} 
+  const newPannel = { ...pannel }
 
   //globalVars has higher priority
   let pannelDataIndex = templateReplace(pannel.datasource, globalVariables)
@@ -130,7 +134,7 @@ const Dashboard = (props) => {
   //parentData is for create local popup pannel  by parent pannel
   const showModalPannel = (pannel, parentData = {}) => {
     console.log("showModalPannel", parentData)
-    const PopupModalPannel = createPannel(pannel, datas, globalVariables, showModalPannel,parentData)
+    const PopupModalPannel = createPannel(pannel, datas, globalVariables, showModalPannel, parentData)
     setPannelModal({ visible: true, pannel: PopupModalPannel });
   }
   const handleOk = () => {
