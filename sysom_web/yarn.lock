@@ -867,6 +867,18 @@
     mousetrap "^1.6.5"
     utility-types "^3.10.0"
 
+"@antv/x6@^1.32.6":
+  version "1.32.6"
+  resolved "https://registry.npmmirror.com/@antv/x6/-/x6-1.32.6.tgz#ee9302fecafdc2f69d1ca4da40c6ff5ecefff276"
+  integrity sha512-HaEiiNl77ozHn9aQ1tFrl6776JOct4bt7z2MSC3fObRrA9aX0Lo9uUpJBpGmenhmPbr89k8JUjM89VTQ/3WvTw==
+  dependencies:
+    csstype "^3.0.3"
+    jquery "^3.5.1"
+    jquery-mousewheel "^3.1.13"
+    lodash-es "^4.17.15"
+    mousetrap "^1.6.5"
+    utility-types "^3.10.0"
+
 "@antv/xflow-core@1.0.10":
   version "1.0.10"
   resolved "https://registry.npmmirror.com/@antv/xflow-core/download/@antv/xflow-core-1.0.10.tgz#0d1c3b6b5f993a20065fb91c69f12b4cf0180626"

@@ -7,6 +7,8 @@ import PieChartPannel from "./PieChartPannel"
 import TablePannel from "./TablePannel"
 import TimeSeriesPannel from "./TimeSeriesPannel"
 import SvgPannel from "./SvgPannel"
+import FlowPannelPannel from "./FlowPannel"
+
 
 
 const templateReplace = (template, Vars = []) => {
@@ -25,7 +27,7 @@ const createPannel = (pannel, datas, globalVariables, showModalPannel, parentDat
     table: TablePannel,
     timeseries: TimeSeriesPannel,
     svg: SvgPannel,
-
+    flow: FlowPannelPannel
   }
 
   const newPannel = { ...pannel }
