@@ -3,6 +3,7 @@ import ProForm, { ProFormSelect } from '@ant-design/pro-form';
 import { useState } from 'react';
 import { Modal } from 'antd';
 import StatisticPannel from "./StatisticPannel"
+import PieChartPannel from "./PieChartPannel"
 
 
 
@@ -18,6 +19,7 @@ const createPannel = (pannel, datas, globalVariables, showModalPannel, parentDat
   const pannelMap = {
     stat: StatisticPannel,
     row: RowPannel,
+    piechart: PieChartPannel,
   }
 
   const newPannel = {...pannel} 
