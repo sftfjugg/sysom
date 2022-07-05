@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Modal } from 'antd';
 import StatisticPannel from "./StatisticPannel"
 import PieChartPannel from "./PieChartPannel"
+import TablePannel from "./TablePannel"
 
 
 
@@ -20,6 +21,7 @@ const createPannel = (pannel, datas, globalVariables, showModalPannel, parentDat
     stat: StatisticPannel,
     row: RowPannel,
     piechart: PieChartPannel,
+    table: TablePannel,
   }
 
   const newPannel = {...pannel} 
