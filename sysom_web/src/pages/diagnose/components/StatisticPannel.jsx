@@ -13,7 +13,7 @@ const StatisticPannel = (props) => {
         {
           Object.keys(datas).map((key) => {
             let data = datas[key]
-            let [value, color] = fieldModifier(props.configs?.fieldConfig, data.__value__, data, datas)
+            let [value, color] = fieldModifier(props.configs?.fieldConfig, data.value, data, datas)
   
             return (
               <ProCard key={key}>
