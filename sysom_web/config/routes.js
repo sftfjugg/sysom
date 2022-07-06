@@ -54,7 +54,7 @@ export default [
       {
         path: 'dashboard',
         name: 'dashboard',
-        hideInBreadcrumb:true,
+        hideInBreadcrumb: true,
         component: './Monitor/SystemDashboard',
       },
       {
@@ -158,12 +158,7 @@ export default [
         routes: [
           {
             path: '/diagnose/memory',
-            redirect: '/diagnose/memory/market',
-          },
-          {
-            path: '/diagnose/memory/market',
-            name: 'market',
-            component: './diagnose/Memory/Market',
+            redirect: '/diagnose/memory/memgraph',
           }
         ]
       },
