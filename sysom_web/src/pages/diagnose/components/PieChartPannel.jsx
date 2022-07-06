@@ -1,5 +1,8 @@
 import ProCard from '@ant-design/pro-card';
 import { Pie } from '@ant-design/plots';
+import { Empty } from 'antd';
+import { Typography } from 'antd';
+const { Text } = Typography;
 
 const PieChartPannel = (props) => {
   const configs = props.configs
@@ -26,8 +29,14 @@ const PieChartPannel = (props) => {
   };
 
   return (
-    <ProCard title={configs.title} style={{height:300}}>
-      <Pie {...pieTemplate} />
+    <ProCard title={configs.title} style={{ height: 300 }}>
+      {
+        data ? <Pie {...pieTemplate} />
+          : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <div>Datasource  <Text type="danger"> {configs?.datasource} </Text> no data</div>
+            } />
+      }
     </ProCard>
   )
 }
