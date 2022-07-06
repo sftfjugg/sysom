@@ -45,6 +45,20 @@ export async function getTaskList(params, options) {
   };
 }
 
+export async function getTaskListNew(params, options) {
+  let msg = await request('/api/v1/tasks/', {
+    method: 'GET',
+    params: { ...params },
+    ...(options || {}),
+  });
+  msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
+  return {
+    data: msg.data,
+    success: true,
+    total: msg.total,
+  };
+}
+
 
 //GET /api/vi/tasks/xxxxx/
 export async function _getTask(id, params = {}, options) {
@@ -54,6 +68,7 @@ export async function _getTask(id, params = {}, options) {
     ...(options || {}),
   });
   if (msg.data.status == "Success") {
+    msg.data.params = JSON.parse(msg.data.params);
     msg.data.result = JSON.parse(msg.data.result);
   }
   return msg.data;

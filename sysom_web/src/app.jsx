@@ -1,6 +1,7 @@
 import { PageLoading } from '@ant-design/pro-layout';
 import { history, addLocale, request as requestURL } from 'umi';
 import { extend } from 'umi-request';
+import _, { find } from "lodash";
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { currentUser as queryCurrentUser } from './pages/user/Login/service';
@@ -89,15 +90,38 @@ export const layout = ({ initialState }) => {
 
 
 let extraGrafanaRoutes = [];
+let extraDiagnoseRoute = [];
+
+function customizer(objValue, srcValue) {
+  if (_.isArray(objValue)) {
+    return objValue.concat(srcValue);
+  }
+}
 
 export function patchRoutes({ routes }) {
   //Insert the grafana dashboard item to monitor memu. 
   routes.find((item) => item.path == "/").routes.find((item) => item.name == "monitor")
     .routes.splice(-1, 0, ...extraGrafanaRoutes)
+
+  //Find the array of diagonse's children. ex: io, net, memory
+  let diagnoseRoute = routes.find((item) => item.path == "/")
+    .routes.find(item => item.name == "diagnose").routes
+
+  //Add The extraDiagnoseRoute in it.
+  diagnoseRoute.map(item => {
+    const new_routes = _.keyBy(extraDiagnoseRoute, 'path')[item.path]?.routes
+    if (item.routes && new_routes)
+      item.routes = item.routes.concat(new_routes)
+    if (!item.routes && new_routes)
+      item.routes = new_routes
+  })
 }
 
 import grafanaDash from './pages/Monitor/grafana'
+import diagnose from './pages/diagnose/diagnose';
+
 export function render(oldRender) {
+  //Add Grafana dashboard dynamically
   requestURL('/grafana/api/search').then((res) => {
     //Tranfrom from grafana folder&dashboard list to antd route tree.
     extraGrafanaRoutes = res.filter((i) => i.type == "dash-folder")
@@ -118,6 +142,29 @@ export function render(oldRender) {
             })
         }
       })
-    oldRender();
+
+    //Add diagnose dashboard dynamically
+    requestURL('/resource/diagnose/locales.json').then((res) => {
+      addLocale('zh-CN', res.folder)
+      addLocale('zh-CN', res.dashboard)
+      extraGrafanaRoutes = Object.entries(res.dashboard).map(item => {
+        let configPath = item[0].split('.')
+        configPath.shift()
+  
+        let path = []
+        path.push({
+          path: `/${configPath.join('/')}`,
+          name: configPath.pop(),
+          f_: `/${configPath.join('/')}`,
+          component: diagnose
+        })
+        extraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
+          .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
+          .value();
+
+        oldRender();
+
+      })
+    })
   })
 }
