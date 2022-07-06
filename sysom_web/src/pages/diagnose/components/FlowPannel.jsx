@@ -2,6 +2,9 @@ import { Graph, Shape } from '@antv/x6'
 import React, { useEffect } from 'react'
 import ProCard from '@ant-design/pro-card'
 import _, { find } from "lodash";
+import { Empty } from 'antd';
+import { Typography } from 'antd';
+const { Text } = Typography;
 
 const FlowPannelPannel = (props) => {
     const ref = React.useRef(null)
@@ -12,7 +15,7 @@ const FlowPannelPannel = (props) => {
     let graph = null
 
     useEffect(() => {
-        if (!graph) {
+        if (!graph && data) {
             graph = new Graph({
                 container: ref.current,
                 width: 800,
@@ -73,7 +76,7 @@ const FlowPannelPannel = (props) => {
                     value: {
                         text: '',
                         refX: '100%',
-                        x: -10, 
+                        x: -10,
                         refY: 14,
                         fill: '#FFFFFF',
                         fontSize: 12,
@@ -193,7 +196,7 @@ const FlowPannelPannel = (props) => {
                 }
             }
         )
-        graph.on('node:click', ({ e, x, y, node, view }) => {
+        graph?.on('node:click', ({ e, x, y, node, view }) => {
             if (configs?.links?.defalut?.pannel)
                 showModalPannel(configs.links.defalut.pannel, node.data)
         })
@@ -201,15 +204,21 @@ const FlowPannelPannel = (props) => {
 
     useEffect(() => {
         configs.flowconfigs.nodes = configs.flowconfigs.nodes.map(node => {
-            const nodeData = data.find((i) => i.key == node.id)
+            const nodeData = data?.find((i) => i.key == node.id)
             return { ...node, ...nodeData, data: nodeData }
         })
-        graph.fromJSON(configs.flowconfigs)
+        data && graph.fromJSON(configs.flowconfigs)
     }, [configs.flowconfigs, data])
 
     return (
         <ProCard title={configs.title} style={{ marginTop: 16 }} bordered collapsible>
-            <div ref={ref}></div>
+            {
+                data ? <div ref={ref}></div>
+                    : <Empty style={{ marginBottom: 20 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                            <div>Datasource  <Text type="danger"> {configs?.datasource} </Text> no data</div>
+                        } />
+            }
         </ProCard>
     )
 }
