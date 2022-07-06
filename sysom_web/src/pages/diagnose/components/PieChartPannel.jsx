@@ -8,8 +8,8 @@ const PieChartPannel = (props) => {
   const pieTemplate = {
     appendPadding: 10,
     data: data,
-    angleField: '__value__',
-    colorField: 'id',
+    angleField: 'value',
+    colorField: 'key',
     radius: 0.8,
     label: {
       type: 'outer',

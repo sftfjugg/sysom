@@ -4,7 +4,7 @@
 //OrgDatas: In which we want to  calculate the max or min value.
 const fieldModifier = (fieldConfig, OrgValue, OrgData, OrgDatas) => {
     let retValue;
-    let retColor = OrgData.__color__ //We had row Color setting
+    let retColor = OrgData.color //We had row Color setting
   
     //console.log("enter fieldModifier", OrgData, "fieldConfig", fieldConfig)
     //mapping
@@ -19,16 +19,16 @@ const fieldModifier = (fieldConfig, OrgValue, OrgData, OrgDatas) => {
     //thresholds
     if (typeof OrgValue == "number") {
       let threshold = fieldConfig?.thresholds?.steps?.find((i) => OrgValue > i.value)
-      retColor = threshold.color || retColor
+      retColor = threshold?.color || retColor
       retValue = OrgValue
       //console.log(`touch threshold for value ${OrgValue} by raw:`, threshold)
     }
   
     //unit
     if (typeof OrgValue == "number") {
-      retValue = OrgValue + (fieldConfig.unit || "")
+      retValue = OrgValue + (fieldConfig?.unit || "")
     }
-  
+
     return [retValue, retColor]
   }
   export default fieldModifier
