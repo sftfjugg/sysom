@@ -3,6 +3,6 @@
         "menu.diagnose.memory": "内存诊断中心"
     },
     "dashboard": {
-        "menu.diagnose.memory.memgraph": "新内存大盘"
+        "menu.diagnose.memory.memgraph": "内存大盘"
     }
 }
