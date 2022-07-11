@@ -23,8 +23,8 @@ BASE_DIR=`dirname $0`
 
 service_head="
 [Unit]
-Description=SysOM Monitor Promethues
-Documentation=SysOM Monitor Promethues
+Description=SysOM Monitor Prometheus
+Documentation=SysOM Monitor Prometheus
 Wants=network-online.target
 After=network-online.target
 

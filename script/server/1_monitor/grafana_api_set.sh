@@ -1,12 +1,12 @@
 #!/bin/bash -x
 
-GAFANA_CONFIG=/etc/grafana/grafana.ini
+GRAFANA_CONFIG=/etc/grafana/grafana.ini
 
 ##modify grafana.ini
-sed 's/;allow_embedding = false/allow_embedding = true/g' -i $GAFANA_CONFIG
-sed 's/;disable_login_form = false/disable_login_form = true/g' -i $GAFANA_CONFIG
-sed '/enable anonymous access/{n;s/;enabled = false/enabled = true/;}' -i $GAFANA_CONFIG
-sed 's/;root_url = %(protocol)s:\/\/%(domain)s:%(http_port)s\//root_url = %(protocol)s:\/\/%(domain)s\/grafana\//g' -i $GAFANA_CONFIG
+sed 's/;allow_embedding = false/allow_embedding = true/g' -i $GRAFANA_CONFIG
+sed 's/;disable_login_form = false/disable_login_form = true/g' -i $GRAFANA_CONFIG
+sed '/enable anonymous access/{n;s/;enabled = false/enabled = true/;}' -i $GRAFANA_CONFIG
+sed 's/;root_url = %(protocol)s:\/\/%(domain)s:%(http_port)s\//root_url = %(protocol)s:\/\/%(domain)s\/grafana\//g' -i $GRAFANA_CONFIG
 
 
 ##login grafana, and get cookie
