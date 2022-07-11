@@ -221,7 +221,7 @@ class VmcoreViewSet(GenericViewSet,
                 if last_name == None or last_name.name!=calltrace_set.name:
                     if fcnt > 1:
                         data = serializer.PanicListSerializer(last_name.vmcore).data
-                        data['rate'] = (fcnt*100/s2)+fpow
+                        data['rate'] = (fcnt*100/s2)
                         result.append(data)
                         #result[last_name]=(fcnt*100/s2)+fpow
                     last_idx=0
@@ -241,7 +241,7 @@ class VmcoreViewSet(GenericViewSet,
                 last_idx=calltrace_set.idx
             if fcnt > 1:
                 data = serializer.PanicListSerializer(calltrace_set.vmcore).data
-                data['rate'] = (fcnt*100/s2)+fpow
+                data['rate'] = (fcnt*100/s2)
                 result.append(data)
             if len(result) > 0:
                 break
