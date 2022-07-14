@@ -1,9 +1,9 @@
 {
     "folder": {
         "menu.diagnose.memory": "内存诊断中心",
-        "menu.diagnose.io": "内存诊断中心",
-        "menu.diagnose.net": "内存诊断中心",
-        "menu.diagnose.cpu": "内存诊断中心"
+        "menu.diagnose.storage": "存储诊断中心",
+        "menu.diagnose.net": "网络诊断中心",
+        "menu.diagnose.cpu": "调度诊断中心"
     },
     "dashboard": {
         "menu.diagnose.memory.memgraph": "内存大盘"
