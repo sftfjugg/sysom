@@ -66,10 +66,16 @@ const HostList = () => {
   const actionRef = useRef();
   const intl = useIntl();
 
-  useEffect(() => {
+  // 从服务器拉取最新的集群列表，并更新本地 state
+  const updateCluster = () => {
     getCluster().then((res) => {
-      setClusterList(res)
-    })
+      setClusterList(res);
+    });
+  }
+
+  useEffect(() => {
+    // 页面加载或变更时拉取最新的集群列表
+    updateCluster();
   }, [])
 
   const columns = [
@@ -242,7 +248,7 @@ const HostList = () => {
           labelWidth: 120,
         }}
         toolBarRender={() => [
-          <Cluster/>,
+          <Cluster onAddClusterSuccess={updateCluster}/>,
           <Button
             type="primary"
             key="primary"
