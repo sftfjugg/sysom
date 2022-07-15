@@ -1,5 +1,5 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, message, Popconfirm, Table, Space, notification } from 'antd';
+import { Button, message, Popconfirm, Table, Space, notification, Select } from 'antd';
 import { useState, useRef, useEffect } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
@@ -7,9 +7,11 @@ import ProTable from '@ant-design/pro-table';
 import ExportJsonExcel from 'js-export-excel';
 import lodash from 'lodash';
 import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
-import { getCluster, getHost, addHost, deleteHost, delBulkHandler } from '../service';
+import { getCluster, getHost, addHost, deleteHost, delBulkHandler, getHostName } from '../service';
 import Cluster from '../components/ClusterForm';
 import BulkImport from '../components/BulkImport';
+
+const { Option } = Select;
 
 const HostField = {
   cluster: '所属集群',
@@ -63,6 +65,7 @@ const handleDeleteHost = async (record) => {
 const HostList = () => {
   const [createModalVisible, handleModalVisible] = useState(false);
   const [clusterList, setClusterList] = useState([]);
+  const [hostnamelist, setHostnameList] = useState([]);
   const actionRef = useRef();
   const intl = useIntl();
 
@@ -76,6 +79,9 @@ const HostList = () => {
   useEffect(() => {
     // 页面加载或变更时拉取最新的集群列表
     updateCluster();
+    getHostName().then((res) => {
+      setHostnameList(res)
+    })
   }, [])
 
   const columns = [
@@ -88,11 +94,54 @@ const HostList = () => {
       fieldProps: {
         options: clusterList,
       },
+	  renderFormItem: (items)=>{
+        let list = Array.from(items.fieldProps.options);
+        const options = list.map((item) => {
+          <Option value={item.label}>{item.label}</Option>
+        })
+        return (
+          <Select
+            key="searchselect"
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => {
+              return option.label.includes(input)
+            }}
+            placeholder="请输入"
+          >
+            {options}
+          </Select>
+        )
+      }
     },
     {
       title: <FormattedMessage id="pages.hostTable.hostname" defaultMessage="Hostname" />,
       dataIndex: 'hostname',
-      valueType: 'textarea',
+      filters: true,
+      onFilter: true,
+      valueType: 'select',
+      fieldProps: {
+        options: hostnamelist,
+      },
+      renderFormItem: (items)=>{
+        let list = Array.from(items.fieldProps.options);
+        const options = list.map((item) => {
+          <Option value={item.hostname}>{item.hostname}</Option>
+        })
+        return (
+          <Select
+            key="searchselect"
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => {
+              return option.label.includes(input)
+            }}
+            placeholder="请输入"
+          >
+            {options}
+          </Select>
+        )
+      }
     },
     {
       title: (
@@ -283,6 +332,7 @@ const HostList = () => {
                 onClick={async () => {
                   await onDeleteHandler(selectedRows);
                   onCleanSelected();
+                  actionRef.current?.reload();
                 }}
               >
                 批量删除
