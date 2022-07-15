@@ -41,6 +41,22 @@ export async function getHost(params, options) {
   });
 }
 
+export async function getHostName(options) {
+  const msg = await request('/api/v1/host/', {
+    method: 'GET',
+    ...(options || {}),
+  });
+  const array = msg.data
+  console.log(msg,array);
+  const results = array?.map(item => {
+    return {
+      label: item.hostname,
+      value: item.id,
+    }
+  });
+  return results
+}
+
 export async function addHost(body, token, options) {
   return request('/api/v1/host/', {
     method: 'POST',
