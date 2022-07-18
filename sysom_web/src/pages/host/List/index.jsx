@@ -10,6 +10,7 @@ import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-des
 import { getCluster, getHost, addHost, deleteHost, delBulkHandler, getHostName } from '../service';
 import Cluster from '../components/ClusterForm';
 import BulkImport from '../components/BulkImport';
+import HostModalForm from '../components/HostModalForm';
 
 const { Option } = Select;
 
@@ -63,7 +64,7 @@ const handleDeleteHost = async (record) => {
 };
 
 const HostList = () => {
-  const [createModalVisible, handleModalVisible] = useState(false);
+  const [hostModalFormVisible, setHostModalFormVisible] = useState(false);
   const [clusterList, setClusterList] = useState([]);
   const [hostnamelist, setHostnameList] = useState([]);
   const actionRef = useRef();
@@ -302,7 +303,7 @@ const HostList = () => {
             type="primary"
             key="primary"
             onClick={() => {
-              handleModalVisible(true);
+              setHostModalFormVisible(true);
             }}
           >
            <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
@@ -349,128 +350,34 @@ const HostList = () => {
           );
         }}
       />
-      <ModalForm
+      {/* 用于添加主机和编辑主机信息的模态框 */}
+      <HostModalForm
         title={intl.formatMessage({
           id: 'pages.hostTable.createForm.newHost',
           defaultMessage: 'New host',
         })}
-        width="440px"
-        visible={createModalVisible}
-        onVisibleChange={handleModalVisible}
+        visible={hostModalFormVisible}
+        onVisibleChange={setHostModalFormVisible}
+        clusterList={clusterList}
         onFinish={async (value) => {
-          value['cluster'] = value.cluster.value
-          const success = await handleAddHost(value);
+          let success = false;
+          value['cluster'] = value.cluster.value;
+          // 针对不同的模式，执行不同的网络请求
+          if (value.model == 0) {
+            // 添加主机
+            success = await handleAddHost(value);
+          } else {
+            // 编辑主机信息
+          }
+
           if (success) {
-            handleModalVisible(false);
+            setHostModalFormVisible(false);
             if (actionRef.current) {
               actionRef.current.reload();
             }
           }
         }}
-      >
-        <ProFormSelect
-          label="选择集群"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.cluster_required"
-                  defaultMessage="Cluster is required"
-                />
-              ),
-            },
-          ]}
-          fieldProps={{labelInValue:true}}
-          width="md"
-          name="cluster"
-          request={async ()=> clusterList}
-          placeholder="请选择主机所属集群"
-        />
-        <ProFormText
-          label="主机名称"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.hostname_required"
-                  defaultMessage="Host name is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="hostname"
-        />
-        <ProFormText
-          label="用户名称"
-          initialValue={'root'}
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.username_required"
-                  defaultMessage="username is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="username"
-        />
-        <ProFormText.Password
-          label="用户密码"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.password_required"
-                  defaultMessage="password is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="host_password"
-        />
-        <ProFormText
-          label="IP地址"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.ip_required"
-                  defaultMessage="IP is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="ip"
-        />
-        <ProFormText
-          label="端口"
-          initialValue={'22'}
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.port_required"
-                  defaultMessage="Port number is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="port"
-        />
-        <ProFormTextArea label="备注信息" width="md" name="description" />
-      </ModalForm>
+      />
     </PageContainer>
   );
 };
