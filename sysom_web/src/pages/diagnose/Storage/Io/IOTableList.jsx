@@ -2,19 +2,10 @@ import React, { useRef } from "react";
 import ProTable from "@ant-design/pro-table";
 import { getTaskList } from "../../service";
 
-function parseJsonString(str) {
-  try {
-    return JSON.parse(str.replace(/\'/g, "\""));
-  }
-  catch (e) {
-    return {}
-  }
-}
-
 const getIODiagList = async () => {
   try {
     let msg = await getTaskList({ service_name: "iosdiag_latency" });
-    msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
+    msg.data = msg.data.map((item) => ({ ...item, ...item.params}))
     return {
       data: msg.data.reverse(),
       success: true,

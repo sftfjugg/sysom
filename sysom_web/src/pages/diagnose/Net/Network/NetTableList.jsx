@@ -3,19 +3,11 @@ import ProTable from "@ant-design/pro-table";
 import { getTaskList } from "../../service";
 import { Button } from "antd";
 
-function parseJsonString(str) {
-  try {
-    return JSON.parse(str.replace(/\'/g, "\""));
-  }
-  catch (e) {
-    return {}
-  }
-}
 
 const getPingTraceList = async () => {
   try {
     let msg = await getTaskList({ service_name: "pingtrace" });
-    msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
+    msg.data = msg.data.map((item) => ({ ...item, ...item.params}))
     return {
       data: msg.data.reverse(),
       success: true,

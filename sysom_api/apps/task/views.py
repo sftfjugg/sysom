@@ -33,9 +33,9 @@ class TaskAPIView(GenericViewSet,
                   ):
     queryset = JobModel.objects.all()
     serializer_class = seriaizer.JobListSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter, TaskFilter)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ('id', 'task_id', 'created_by__id', 'status', 'params')  # 模糊查询
-    filter_fields = ('id', 'task_id', 'created_by__id', 'status')  # 精确查询
+    filterset_class = TaskFilter #精确查询
     authentication_classes = []
 
     def create(self, request, *args, **kwargs):
@@ -72,7 +72,7 @@ class TaskAPIView(GenericViewSet,
 
         instance = get_object_or_404(JobModel, pk=task_id)
         if instance.status == 'Success':
-            result = json.loads(instance.result)
+            result = instance.result
             svg_context = result.get('flamegraph', None)
             if svg_context is None:
                 return success(success=False, message='Result 未包含 "flamegraph"字段')
@@ -126,7 +126,7 @@ def script_task(data):
                 if task:
                     return other_response(message="有任务正在执行，请稍后！", code=400,
                                           success=False)
-            ssh_job(resp_scripts, task_id, user, json.dumps(params, ensure_ascii=False), update_host_status=update_host_status,
+            ssh_job(resp_scripts, task_id, user, params, update_host_status=update_host_status,
                     service_name=service_name)
             return success(result={"instance_id": task_id})
         else:

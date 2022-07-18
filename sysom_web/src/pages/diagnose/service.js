@@ -8,15 +8,6 @@ import { request } from 'umi';
 
 
 
-function parseJsonString(str) {
-  try {
-    return JSON.parse(str.replace(/\'/g, "\""));
-  }
-  catch (e) {
-    return {}
-  }
-}
-
 
 //POST /api/v1/tasks
 //{service:"pingtrace",
@@ -51,7 +42,7 @@ export async function getTaskListNew(params, options) {
     params: { ...params },
     ...(options || {}),
   });
-  msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
+  msg.data = msg.data.map((item) => ({ ...item, ...item.params }))
   return {
     data: msg.data,
     success: true,
@@ -62,15 +53,11 @@ export async function getTaskListNew(params, options) {
 
 //GET /api/vi/tasks/xxxxx/
 export async function _getTask(id, params = {}, options) {
-  const msg = await request('/api/v1/tasks/' + id +'/', {
+  const msg = await request('/api/v1/tasks/' + id + '/', {
     method: 'GET',
     params: { ...params },
     ...(options || {}),
   });
-  if (msg.data.status == "Success") {
-    msg.data.params = JSON.parse(msg.data.params);
-    msg.data.result = JSON.parse(msg.data.result);
-  }
   return msg.data;
 };
 
@@ -84,7 +71,6 @@ export async function getTask(id, params = {}, options) {
   });
 
   if (msg.data.status == "Success") {
-    msg.data.result = parseJsonString(msg.data.result);
     msg.data.metric = msg.data.result.seq.reduce((metric, item) => {
       metric.push({
         x: String(item.meta.seq),
