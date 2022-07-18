@@ -5,17 +5,7 @@ import { Button } from "antd";
 
 
 const getPingTraceList = async () => {
-  try {
-    let msg = await getTaskList({ service_name: "pingtrace" });
-    msg.data = msg.data.map((item) => ({ ...item, ...item.params}))
-    return {
-      data: msg.data.reverse(),
-      success: true,
-      total: msg.total,
-    };
-  } catch (e) {
-    return { success: false }
-  }
+  return await getTaskList({ service_name: "pingtrace" });
 }
 
 

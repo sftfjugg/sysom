@@ -3,17 +3,7 @@ import ProTable from "@ant-design/pro-table";
 import { getTaskList } from "../../service";
 
 const getIODiagList = async () => {
-  try {
-    let msg = await getTaskList({ service_name: "iosdiag_latency" });
-    msg.data = msg.data.map((item) => ({ ...item, ...item.params}))
-    return {
-      data: msg.data.reverse(),
-      success: true,
-      total: msg.total,
-    };
-  } catch (e) {
-    return { success: false }
-  }
+  return await getTaskList({ service_name: "iosdiag_latency" });
 }
 
 const IOTableList = React.forwardRef((props, ref) => {
