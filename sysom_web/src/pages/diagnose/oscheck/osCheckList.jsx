@@ -5,17 +5,7 @@ import { getTaskList } from "../service";
 import { Button } from "antd";
 
 const getOsCheckList = async () => {
-  try {
-    let msg = await getTaskList({ service_name: "ossre" });
-    msg.data = msg.data.map((item) => ({ ...item, ...item.params}))
-    return {
-      data: msg.data.reverse(),
-      success: true,
-      total: msg.total,
-    };
-  } catch (e) {
-    return { success: false }
-  }
+  return await getTaskList({ service_name: "ossre" });
 }
 
 
