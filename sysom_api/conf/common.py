@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
         'lib.renderers.SysomJsonRender',
     ),
     'DEFAULT_PAGINATION_CLASS': 'lib.paginations.Pagination',
-    'UNICODE_JSON': False,
+    'UNICODE_JSON': True,
     'EXCEPTION_HANDLER': 'lib.exception.exception_handler'
 }
 

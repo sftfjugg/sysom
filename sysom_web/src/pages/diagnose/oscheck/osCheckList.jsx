@@ -4,19 +4,10 @@ import { getTaskList } from "../service";
 
 import { Button } from "antd";
 
-function parseJsonString(str) {
-  try {
-    return JSON.parse(str.replace(/\'/g, "\""));
-  }
-  catch (e) {
-    return {}
-  }
-}
-
 const getOsCheckList = async () => {
   try {
     let msg = await getTaskList({ service_name: "ossre" });
-    msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
+    msg.data = msg.data.map((item) => ({ ...item, ...item.params}))
     return {
       data: msg.data.reverse(),
       success: true,
