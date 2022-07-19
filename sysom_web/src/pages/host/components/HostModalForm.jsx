@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { useImperativeHandle, useRef, forwardRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 
+const MODE_ADD_HOST = 0
+const MODE_EDIT_HOST = 1
+
 /**
  * 主机信息模态表单
  * 1. 功能一：用于实现主机添加
@@ -19,7 +22,7 @@ import { useIntl, FormattedMessage } from 'umi';
  */
 let HostModalForm = (props, ref) => {
     const {
-        model,
+        model: mode,
         title,
         visible,
         modalWidth,
@@ -56,7 +59,7 @@ let HostModalForm = (props, ref) => {
             onVisibleChange={onVisibleChange}
             onFinish={value => {
                 onFinish({
-                    model: model,
+                    model: mode,
                     id: id,
                     ...value
                 })
@@ -75,6 +78,7 @@ let HostModalForm = (props, ref) => {
                         ),
                     },
                 ]}
+                showSearch
                 fieldProps={{ labelInValue: true }}
                 width="md"
                 name="cluster"
@@ -85,7 +89,7 @@ let HostModalForm = (props, ref) => {
                 label="主机名称"
                 rules={[
                     {
-                        required: true,
+                        required: mode == MODE_ADD_HOST,
                         message: (
                             <FormattedMessage
                                 id="pages.hostTable.hostname_required"
@@ -96,13 +100,14 @@ let HostModalForm = (props, ref) => {
                 ]}
                 width="md"
                 name="hostname"
+                disabled={mode == MODE_EDIT_HOST}
             />
             <ProFormText
                 label="用户名称"
                 initialValue={'root'}
                 rules={[
                     {
-                        required: true,
+                        required: mode == MODE_ADD_HOST,
                         message: (
                             <FormattedMessage
                                 id="pages.hostTable.username_required"
@@ -113,12 +118,13 @@ let HostModalForm = (props, ref) => {
                 ]}
                 width="md"
                 name="username"
+                disabled={mode == MODE_EDIT_HOST}
             />
             <ProFormText.Password
                 label="用户密码"
                 rules={[
                     {
-                        required: true,
+                        required: mode == MODE_ADD_HOST,
                         message: (
                             <FormattedMessage
                                 id="pages.hostTable.password_required"
@@ -129,12 +135,13 @@ let HostModalForm = (props, ref) => {
                 ]}
                 width="md"
                 name="host_password"
+                disabled={mode == MODE_EDIT_HOST}
             />
             <ProFormText
                 label="IP地址"
                 rules={[
                     {
-                        required: true,
+                        required: mode == MODE_ADD_HOST,
                         message: (
                             <FormattedMessage
                                 id="pages.hostTable.ip_required"
@@ -145,13 +152,14 @@ let HostModalForm = (props, ref) => {
                 ]}
                 width="md"
                 name="ip"
+                disabled={mode == MODE_EDIT_HOST}
             />
             <ProFormText
                 label="端口"
                 initialValue={'22'}
                 rules={[
                     {
-                        required: true,
+                        required: mode == MODE_ADD_HOST,
                         message: (
                             <FormattedMessage
                                 id="pages.hostTable.port_required"
@@ -162,6 +170,7 @@ let HostModalForm = (props, ref) => {
                 ]}
                 width="md"
                 name="port"
+                disabled={mode == MODE_EDIT_HOST}
             />
             <ProFormTextArea label="备注信息" width="md" name="description" />
         </ModalForm>
