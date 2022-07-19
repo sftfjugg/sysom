@@ -33,42 +33,24 @@ export async function getTaskList(params, options) {
       total: msg.total,
     };
   } catch (e) {
-    console.error('Fetch task list error. err:', error);
+    console.error('Fetch task list error. err:', e);
     return {
       success: false,
-    };    
+    };
   }
 }
 
 //GET /api/vi/tasks/xxxxx/
-export async function _getTask(id, params = {}, options) {
+export async function getTask(id, params = {}, options) {
+
   const msg = await request('/api/v1/tasks/' + id + '/', {
     method: 'GET',
     params: { ...params },
     ...(options || {}),
   });
   return msg.data;
+
 };
 
-
-//GET /api/vi/tasks/xxxxx/
-export async function getTask(id, params = {}, options) {
-  const msg = await request('/api/v1/tasks/' + id, {
-    method: 'GET',
-    params: { ...params },
-    ...(options || {}),
-  });
-
-  if (msg.data.status == "Success") {
-    msg.data.metric = msg.data.result.seq.reduce((metric, item) => {
-      metric.push({
-        x: String(item.meta.seq),
-        delay: item.delays.filter((item) => item.delay === "total")[0].ts
-      }); return metric
-    }, [])
-  }
-
-  return msg.data;
-}
 
 
