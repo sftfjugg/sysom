@@ -42,6 +42,7 @@ const TaskList = () => {
       title: <FormattedMessage id="pages.journal.task.params" defaultMessage="params" />,
       dataIndex: 'params',
       valueType: 'textarea',
+      renderText: (params) => JSON.stringify(params),
       hideInSearch: true
     },
   ];
