@@ -41,6 +41,7 @@ class HostModelViewSet(CommonModelViewSet,
     authentication_classes = [Authentication]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['ip', 'hostname', 'cluster', 'status']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_authenticators(self):
         if self.request.method == "GET":
@@ -78,9 +79,6 @@ class HostModelViewSet(CommonModelViewSet,
         return success(result=ser.data)
 
     def update(self, request, *args, **kwargs):
-        """
-        PUT方法触发，要求传递所有字段
-        """
         response = super().update(request, *args, **kwargs)
         return success(result=response.data, message="修改成功")
 
@@ -88,6 +86,11 @@ class HostModelViewSet(CommonModelViewSet,
         """
         部分更新，由PATCH方法触发，可以传递部分字段更新部分内容
         """
+
+        # 限制只能更新 cluster 和 description
+        res = self.extract_specific_params(request, ["cluster", "description"])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
         return super(HostModelViewSet, self).partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
@@ -174,10 +177,7 @@ class HostModelViewSet(CommonModelViewSet,
 
             for d in as_completed(pool):
                 try:
-                    print("begin")
                     response = d.result()
-                    print("end")
-                    print(response)
                     kwargs['message'] = f"IP: {response.data.get('ip')} {t_type} success!"
                     kwargs['collected_time'] = datetime.now().strftime(
                         '%Y-%m-%d %H:%M:%S')
