@@ -41,4 +41,3 @@
  	bash deploy.sh /usr/local/sysom 192.168.100.100 100.100.22.22
 	```
 
-bbbbbb
