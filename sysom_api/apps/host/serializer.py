@@ -6,53 +6,23 @@ from apps.host.models import HostModel, Cluster
 logger = logging.getLogger(__name__)
 
 
-class HostListSerializer(serializers.ModelSerializer):
-    cluster_id = serializers.SerializerMethodField()
+class HostSerializer(serializers.ModelSerializer):
+    # cluster_id = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
 
     class Meta:
         model = HostModel
         fields = [
-            'id', 'cluster', 'created_at', 'hostname', 'ip', 'port', 'username', 'description',
-            'cluster_id', 'client_deploy_cmd', 'status'
+            'id', 'cluster', 'created_at', 'hostname', 'ip', 'port', 'username', 'description', 'client_deploy_cmd', 'status', 'private_key'
         ]
-
-    def get_cluster(self, attr: HostModel) -> dict:
-        ser = ClusterListSerializer(instance=attr.cluster, many=False)
-        return ser.data
-
-    def get_cluster_id(self, attr: HostModel) -> int:
-        return attr.cluster.id
+        extra_kwargs = {
+            'private_key': {
+                'write_only': True
+            },
+        }
 
     def get_description(self, attr: HostModel) -> str:
         return attr.description or '暂未填写'
-
-
-class AddHostSerializer(serializers.ModelSerializer):
-    hostname = serializers.CharField(error_messages={'required': '该字段必填'})
-    ip = serializers.CharField(error_messages={'required': '该字段必填'})
-    port = serializers.IntegerField(error_messages={'required': '该字段必填'})
-    username = serializers.CharField(error_messages={'required': '该字段必填'})
-
-    class Meta:
-        model = HostModel
-        fields = ('hostname', 'cluster', 'ip', 'port', 'username', 'private_key', 'description', 'client_deploy_cmd')
-
-    def validate_hostname(self, attr):
-        try:
-            HostModel.objects.get(hostname=attr)
-        except HostModel.DoesNotExist:
-            return attr
-        msg = _(f'主机名:{attr} 冲突!，请重新输入!\t')
-        raise serializers.ValidationError(msg)
-
-    def validate_ip(self, attr):
-        try:
-            HostModel.objects.get(ip=attr)
-        except HostModel.DoesNotExist:
-            return attr
-        msg = _(f'IP:{attr} 冲突!，请重新输入!')
-        raise serializers.ValidationError(msg)
 
 
 class ClusterListSerializer(serializers.ModelSerializer):
