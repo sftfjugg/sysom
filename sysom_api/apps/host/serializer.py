@@ -7,8 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class HostSerializer(serializers.ModelSerializer):
-    # cluster_id = serializers.SerializerMethodField()
-    description = serializers.SerializerMethodField()
 
     class Meta:
         model = HostModel
@@ -20,9 +18,6 @@ class HostSerializer(serializers.ModelSerializer):
                 'write_only': True
             },
         }
-
-    def get_description(self, attr: HostModel) -> str:
-        return attr.description or '暂未填写'
 
 
 class ClusterListSerializer(serializers.ModelSerializer):

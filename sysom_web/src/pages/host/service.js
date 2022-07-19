@@ -72,6 +72,18 @@ export async function addHost(body, token, options) {
   });
 }
 
+export async function updateHost(body, token, options) {
+  return request(`${HOST_URL}${body.id}/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 export async function deleteHost(id, token, options) {
   return request(`${HOST_URL}${id}/`, {
     method: 'DELETE',
