@@ -47,6 +47,7 @@ class TaskAPIView(GenericViewSet,
             return other_response(message=str(e), code=400, success=False)
 
     def retrieve(self, request, *args, **kwargs):
+        kwargs["task_id"] = kwargs.pop("pk")
         instance = self.get_queryset().filter(**kwargs).first()
         if not instance:
             return success([])
