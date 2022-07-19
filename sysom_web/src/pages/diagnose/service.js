@@ -5,11 +5,6 @@ import { ConsoleSqlOutlined } from '@ant-design/icons';
 import { request } from 'umi';
 import _ from "lodash";
 
-/** 获取宕机列表 GET /api/vmcore */
-
-
-
-
 //POST /api/v1/tasks
 //{service:"pingtrace",
 //源IP:"xxx"}
@@ -74,50 +69,6 @@ export async function getTask(id, params = {}, options) {
   }
 
   return msg.data;
-}
-
-/** 获取IO延时诊断列表 GET /api/IO */
-export async function getIoTable(params, options) {
-  const msg = await request('/api/getable/', {
-    method: 'GET',
-    params: { ...params },
-    ...(options || {}),
-  });
-  return {
-    data: msg.data,
-    success: true,
-    total: msg.total,
-  };
-}
-/**io延时诊断 诊断 */
-export async function postIOTask(params, options) {
-  return request('/api/iotask/', {
-    method: 'POST',
-    data: params,
-    ...(options || {}),
-  });
-}
-
-/** 获取内存诊断大盘列表 GET /api/market */
-export async function getMarketTable(params, options) {
-  const msg = await request('/api/marketable/', {
-    method: 'GET',
-    params: { ...params },
-    ...(options || {}),
-  });
-  return {
-    data: msg.data,
-    success: true,
-    total: msg.total,
-  };
-}
-/** 内存诊断大盘 诊断 POST /api/marketask */
-export async function postMarketTask(params, options) {
-  return request('/api/marketask/', {
-    method: 'POST',
-    data: params,
-    ...(options || {}),
-  });
 }
 
 
