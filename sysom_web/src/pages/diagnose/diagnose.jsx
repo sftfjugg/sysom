@@ -6,7 +6,7 @@ import ProCard from '@ant-design/pro-card';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import Dashboard from './components/Dashboard';
-import { getTask, _getTask } from './service'
+import { getTask } from './service'
 import _ from "lodash";
 
 
@@ -25,7 +25,7 @@ const Diagnose = (props) => {
 
     const onListClick = async (record) => {
         const recorded = record;
-        const msg = await _getTask(record.id);
+        const msg = await getTask(record.id);
 
         setData({ ...msg, ...msg.result });
 

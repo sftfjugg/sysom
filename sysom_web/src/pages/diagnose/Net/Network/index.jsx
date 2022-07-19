@@ -23,6 +23,13 @@ const NetList = () => {
 
   const onListClick = async (record) => {
     const msg = await getTask(record.id);
+    console.log(msg)
+    msg.metric = msg.result.seq.reduce((metric, item) => {
+      metric.push({
+        x: String(item.meta.seq),
+        delay: item.delays.filter((item) => item.delay === "total")[0].ts
+      }); return metric
+    }, [])
     setData(msg);
   }
 
