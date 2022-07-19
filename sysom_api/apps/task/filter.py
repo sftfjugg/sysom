@@ -1,15 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from rest_framework.filters import BaseFilterBackend
-from rest_framework.request import Request
+import django_filters
 from apps.task.models import JobModel
 
+class TaskFilter(django_filters.FilterSet):
+    service_name = django_filters.CharFilter(field_name='params__service_name')
 
-class TaskFilter(BaseFilterBackend):
-    def filter_queryset(self, request: Request, queryset, view):
-        params = request.query_params.dict()
-        service_name = params.get('service_name', None)
-        if service_name:
-            service_name_all = '"service_name"'+': '+'"%s"' % service_name
-            queryset = queryset.filter(params__contains=service_name_all)
-        return queryset
+    class Meta:
+        model = JobModel
+        fields = ['id', 'task_id', 'created_by__id', 'status']

@@ -1,3 +1,4 @@
+import imp
 import logging
 import os
 import threading
@@ -5,7 +6,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
+# from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,6 +14,7 @@ from rest_framework.exceptions import ValidationError
 from django.conf import settings
 
 from apps.host import serializer
+from apps.common.common_model_viewset import CommonModelViewSet
 from apps.host.models import HostModel, Cluster
 from apps.accounts.authentication import Authentication
 from apps.task.views import script_task
@@ -27,7 +29,7 @@ from apps.alarm.views import _create_alarm_message
 logger = logging.getLogger(__name__)
 
 
-class HostModelViewSet(GenericViewSet,
+class HostModelViewSet(CommonModelViewSet,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
                        mixins.UpdateModelMixin,
@@ -35,10 +37,11 @@ class HostModelViewSet(GenericViewSet,
                        mixins.DestroyModelMixin
                        ):
     queryset = HostModel.objects.filter(deleted_at=None)
-    serializer_class = serializer.HostListSerializer
+    serializer_class = serializer.HostSerializer
     authentication_classes = [Authentication]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['ip', 'hostname', 'cluster', 'status']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_authenticators(self):
         if self.request.method == "GET":
@@ -46,10 +49,65 @@ class HostModelViewSet(GenericViewSet,
         else:
             return [auth() for auth in self.authentication_classes]
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super(HostModelViewSet, self).list(request, *args, **kwargs)
+
+    def perform_create(self, ser):
+        ser.save(created_by=self.request.user)
+
     def create(self, request, *args, **kwargs):
-        context = request.data
-        self._thread_pool('add', tasks=[context], func=self._validate_and_initialize_host)
-        return success(result={})
+        # 检查字段是否满足
+        res = self.require_param_validate(
+            request, ['hostname', 'ip', 'port', 'username'])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
+        res = self._thread_pool('add', tasks=[request.data],
+                                func=self._validate_and_initialize_host)
+        if res["success"]:
+            return success(result={})
+        else:
+            return ErrorResponse(msg=res["message"])
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.check_instance_exist(request, *args, **kwargs)
+        if not instance:
+            return not_found()
+        ser = self.get_serializer(instance)
+        return success(result=ser.data)
+
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        return success(result=response.data, message="修改成功")
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        部分更新，由PATCH方法触发，可以传递部分字段更新部分内容
+        """
+
+        # 限制只能更新 cluster 和 description
+        res = self.extract_specific_params(request, ["cluster", "description"])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
+        return super(HostModelViewSet, self).partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.check_instance_exist(request, *args, **kwargs)
+        if not instance:
+            return not_found()
+        res = self._thread_pool(
+            'del', [instance], func=self._destroy_host_tasks)
+        if res["success"]:
+            return success(message="operation success!", code=200, result={})
+        else:
+            return ErrorResponse(msg=res["message"])
+
+    def perform_destroy(self, instance: HostModel):
+        instance.deleted_at = human_datetime()
+        instance.deleted_by = self.request.user
+        instance.save()
 
     def _validate_and_initialize_host(self, context):
         context = validate_ssh(context)
@@ -61,54 +119,17 @@ class HostModelViewSet(GenericViewSet,
         thread = threading.Thread(
             target=self.client_deploy_cmd_init, args=(instance,))
         thread.start()
-        ser = serializer.HostListSerializer(instance=instance)
+        ser = serializer.HostSerializer(instance=instance)
         return ser
-
-    def perform_create(self, ser):
-        ser.save(created_by=self.request.user)
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.check_instance_exist(request, *args, **kwargs)
-        if not instance:
-            return not_found()
-        ser = self.get_serializer(instance)
-        return success(result=ser.data)
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return serializer.HostListSerializer
-        else:
-            return serializer.AddHostSerializer
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        if not queryset:
-            return success([], total=0)
-        return super(HostModelViewSet, self).list(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.check_instance_exist(request, *args, **kwargs)
-        if not instance:
-            return not_found()
-        self._thread_pool('del', [instance], func=self._destroy_host_tasks)
-        return success(message="operation success!", code=200, result={})
 
     def _destroy_host_tasks(self, instance):
         status, content = self.client_deploy_cmd_delete(instance)
         if status != 200:
-            raise APIException(message=f'删除失败，清除脚本执行失败，错误如下：{content["message"]}')
+            raise APIException(
+                message=f'删除失败，清除脚本执行失败，错误如下：{content["message"]}')
         self.perform_destroy(instance)
-        ser = serializer.HostListSerializer(instance=instance)
+        ser = serializer.HostSerializer(instance=instance)
         return ser
-
-    def perform_destroy(self, instance: HostModel):
-        instance.deleted_at = human_datetime()
-        instance.deleted_by = self.request.user
-        instance.save()
-
-    def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return success(result=response.data, message="修改成功")
 
     def check_instance_exist(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()
@@ -145,8 +166,10 @@ class HostModelViewSet(GenericViewSet,
         kwargs['sub'] = 1
         kwargs['item'] = 'host'
         pool = []
-        workers = len(tasks) if len(tasks) < os.cpu_count() else os.cpu_count() * 2
+        workers = len(tasks) if len(
+            tasks) < os.cpu_count() else os.cpu_count() * 2
 
+        errMsg = None
         with ThreadPoolExecutor(max_workers=workers) as p:
             for task in tasks:
                 t = p.submit(func, task)
@@ -156,21 +179,33 @@ class HostModelViewSet(GenericViewSet,
                 try:
                     response = d.result()
                     kwargs['message'] = f"IP: {response.data.get('ip')} {t_type} success!"
-                    kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    kwargs['collected_time'] = datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
                     kwargs['level'] = 3
                     _create_alarm_message(kwargs)
 
                 except ValidationError as e:
                     kwargs['message'] = ','.join(
                         [f'{k}: {v[0]}' for k, v in e.detail.items()])
-                    kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    errMsg = kwargs['message']
+                    kwargs['collected_time'] = datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
                     kwargs['level'] = 2
                     _create_alarm_message(kwargs)
                 except Exception as e:
                     kwargs['message'] = e.message
+                    errMsg = kwargs['message']
                     kwargs['level'] = 2
-                    kwargs['collected_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    kwargs['collected_time'] = datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
                     _create_alarm_message(kwargs)
+        return {
+            "success": True,
+            "message": ""
+        } if errMsg is None else {
+            "success": False,
+            "message": errMsg
+        }
 
     def batch_add_host(self, request: Request):
         file = request.FILES.get('file', None)
@@ -187,7 +222,8 @@ class HostModelViewSet(GenericViewSet,
             cluster = self._get_cluster_instance(row['cluster'])
             if not cluster:
                 kwargs.update({'level': 2})
-                kwargs.update({'message': f"The cluster field {row['cluster']} of host {row['ip']} does not exist!"})
+                kwargs.update(
+                    {'message': f"The cluster field {row['cluster']} of host {row['ip']} does not exist!"})
                 kwargs.update({'collected_time': human_datetime()})
                 _create_alarm_message(kwargs)
                 continue
@@ -195,7 +231,8 @@ class HostModelViewSet(GenericViewSet,
             tasks.append(row)
 
         if len(tasks) > 0:
-            self._thread_pool('add', tasks=tasks, func=self._validate_and_initialize_host)
+            self._thread_pool('add', tasks=tasks,
+                              func=self._validate_and_initialize_host)
         return success(result={})
 
     def batch_del_host(self, request: Request):
@@ -220,11 +257,11 @@ class HostModelViewSet(GenericViewSet,
             return other_response(code=400, message='host_id_list field cannot be empty')
 
         queryset = HostModel.objects.filter(id__in=host_id_list)
-        ser = serializer.HostListSerializer(queryset, many=True)
+        ser = serializer.HostSerializer(queryset, many=True)
         return Excel.export(ser.data, excelname='hostlist')
 
 
-class ClusterViewSet(GenericViewSet,
+class ClusterViewSet(CommonModelViewSet,
                      mixins.ListModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.DestroyModelMixin,

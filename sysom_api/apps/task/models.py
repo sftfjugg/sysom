@@ -1,4 +1,5 @@
 from django.db import models
+import json
 
 from lib import BaseModel
 from apps.accounts.models import User
@@ -15,8 +16,8 @@ class JobModel(BaseModel):
     task_id = models.CharField(max_length=64, default="", verbose_name="任务实例ID")
     status = models.CharField(max_length=32, choices=JOB_STATUS_CHOICES, default='Ready', verbose_name="任务状态")
     command = models.TextField(verbose_name="shell文本")
-    result = models.TextField(default="", verbose_name="shell结果")
-    params = models.TextField(default="", verbose_name="params")
+    result = models.JSONField(default=dict, verbose_name="shell结果")
+    params = models.JSONField(default=dict, verbose_name="params")
     host_by = models.TextField(max_length=64, default="", verbose_name="host_jobs")
     created_by = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="user_jobs")
 

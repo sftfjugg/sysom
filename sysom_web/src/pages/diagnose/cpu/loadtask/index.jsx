@@ -7,7 +7,7 @@ import CPUTaskForm from './CPUTaskForm';
 import CPUTaskList from './CPUTaskList';
 import CPUPieChart from './CPUPieChart';
 import CPUEvent from './CPUEvent';
-import { _getTask } from '../../service'
+import { getTask } from '../../service'
 
 const { Divider } = ProCard;
 
@@ -35,7 +35,7 @@ export default (props) => {
   }
 
   const onError = async (record) => {
-    const msg = await _getTask(record.id);
+    const msg = await getTask(record.id);
     Modal.error({
       title: '诊断失败',
       content: (
@@ -47,7 +47,7 @@ export default (props) => {
   }
 
   const onListClick = async (record) => {
-    const msg = await _getTask(record.id);
+    const msg = await getTask(record.id);
     setCPUTaskResult(msg);
   }
 

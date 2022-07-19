@@ -49,7 +49,6 @@ class SshJob:
                     if count == len(self.resp_scripts):
                         params = job.params
                         if params:
-                            params = json.loads(params)
                             service_name = params.get("service_name", None)
                             if service_name:
                                 SCRIPTS_DIR = settings.SCRIPTS_DIR
@@ -64,7 +63,7 @@ class SshJob:
                                                        result=resp.stderr.decode('utf-8'))
                                             break
                                         stdout = resp.stdout
-                                        result = stdout.decode('utf-8')
+                                        result = json.loads(stdout)
                                     except Exception as e:
                                         update_job(instance=job, status="Fail", result=str(e))
                                         break

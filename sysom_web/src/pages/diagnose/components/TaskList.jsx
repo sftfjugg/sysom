@@ -1,7 +1,7 @@
 import React from "react";
 import ProTable from "@ant-design/pro-table";
 import { useState, useRef, useImperativeHandle } from 'react';
-import { getTaskListNew } from "../service";
+import { getTaskList } from "../service";
 import { useRequest } from 'umi';
 import _ from "lodash";
 
@@ -10,10 +10,9 @@ const TaskList = React.forwardRef((props, ref) => {
   const actionRef = useRef([]);
   const [listData, SetListData] = useState([])
 
-  const { loading, error, refresh } = useRequest(getTaskListNew, {
+  const { loading, error, refresh } = useRequest(getTaskList, {
     defaultParams: { service_name: props.serviceName },
     onSuccess: (result, params) => {
-      result = _.orderBy(result, 'created_at', 'desc')
       SetListData(result)
     },
   });
