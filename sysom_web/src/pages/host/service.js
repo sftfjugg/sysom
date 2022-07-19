@@ -24,6 +24,18 @@ export async function getCluster(options) {
   return results
 }
 
+/**
+ * 获取集群列表
+ * @param {*} options 
+ * @returns 
+ */
+ export async function getClusterList(options) {
+  return request(CLUSTER_URL, {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
 export async function addCluster(body, token, options) {
   return request(CLUSTER_URL, {
     method: 'POST',
