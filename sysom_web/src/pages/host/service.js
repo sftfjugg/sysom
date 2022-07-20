@@ -48,6 +48,24 @@ export async function addCluster(body, token, options) {
   });
 }
 
+/**
+ * 删除单个集群
+ * @param {number} id 
+ * @param {string} token 
+ * @param {object} options 
+ * @returns 
+ */
+export async function delCluster(id, token, options) {
+  return request(`${CLUSTER_URL}${id}/`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
+    ...(options || {}),
+  })
+}
+
 export async function getHost(params, options) {
   return request(HOST_URL, {
     method: 'GET',
