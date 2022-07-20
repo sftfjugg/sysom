@@ -303,11 +303,6 @@ class ClusterViewSet(CommonModelViewSet,
         """
         instance = self.get_queryset().filter(**kwargs).first()
         hostInstance = HostModel.objects.filter(cluster=instance.id).first()
-        # ser = self.get_serializer(data=instance)
-        # ser.is_valid()
-        # print(ser)
-        # print(type(ser.data))
-        # print(ser.data['hosts'])
         if hostInstance is None:
             # 允许删除
             super().destroy(request, *args, **kwargs)
