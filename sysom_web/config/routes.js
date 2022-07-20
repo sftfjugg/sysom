@@ -38,6 +38,11 @@ export default [
         component: './host/List',
       },
       {
+        path: '/host/cluster',
+        name: 'cluster',
+        component: './host/cluster',
+      },
+      {
         path: '/host/terminal/:ip?',
         component: './host/Terminal',
       }

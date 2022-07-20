@@ -1,5 +1,5 @@
 import { Button, message } from "antd";
-import { ModalForm, ProFormText } from "@ant-design/pro-form";
+import { ModalForm, ProFormText, ProFormTextArea } from "@ant-design/pro-form";
 import { FormattedMessage } from 'umi';
 import { PlusOutlined } from "@ant-design/icons";
 import { addCluster } from "../service";
@@ -70,6 +70,8 @@ const Cluster = (props) => {
           },
         ]}
       />
+      <ProFormTextArea label="备注信息" width="md" name="cluster_description" />
+
     </ModalForm>
   );
 };
