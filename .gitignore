@@ -18,3 +18,4 @@ sysom_api/uploads/*
 sysom_api/doc/*
 sysom_api/conf/develop.py
 sysom_api/sysom/settings.py
+venv/

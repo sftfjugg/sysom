@@ -296,7 +296,21 @@ class ClusterViewSet(CommonModelViewSet,
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
-
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        判断当前集群是否包含主机，如果不包含主机则允许删除，如果包含主机则不允许删除
+        """
+        instance = self.get_queryset().filter(**kwargs).first()
+        hostInstance = HostModel.objects.filter(cluster=instance.id).first()
+        if hostInstance is None:
+            # 允许删除
+            super().destroy(request, *args, **kwargs)
+            return success(result={}, message="删除成功")
+            pass
+        else:
+            # 不允许删除
+            return ErrorResponse(msg="Cluster has hosts, not allow to be delete.")
 
 class SaveUploadFile(APIView):
     authentication_classes = []
