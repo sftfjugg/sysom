@@ -62,7 +62,7 @@ export default {
   'pages.clusterTable.clusterOption': '操作',
   'pages.clusterTable.delete': '删除',
   'pages.clusterTable.hostCount': '主机数量',
-  'pages.clusterTable.notAllowToBeDelete': '不允许删除包含集群的主机',
+  'pages.clusterTable.notAllowToBeDelete': '不允许删除包含主机的集群',
   'pages.IssueTable.createIssue': '新增方案',
   'pages.journal.audit.title': '日志列表',
   'pages.journal.audit.created_at': '时间',
