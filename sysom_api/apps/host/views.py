@@ -268,19 +268,13 @@ class ClusterViewSet(CommonModelViewSet,
                      mixins.CreateModelMixin,
                      mixins.UpdateModelMixin):
     queryset = Cluster.objects.filter(Q(deleted_at=None) | Q(deleted_at=""))
-    serializer_class = serializer.ClusterListSerializer
+    serializer_class = serializer.ClusterSerializer
 
     def get_authenticators(self):
         if self.request.method == "GET":
             return []
         else:
             return [auth() for auth in self.authentication_classes]
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return serializer.ClusterListSerializer
-        else:
-            return serializer.AddClusterSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -293,6 +287,9 @@ class ClusterViewSet(CommonModelViewSet,
         return success(result=response.data)
 
     def create(self, request, *args, **kwargs):
+        res = self.require_param_validate(request, ["cluster_name"])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
         super().create(request, *args, **kwargs)
         return success(result={}, message="新增成功")
 
