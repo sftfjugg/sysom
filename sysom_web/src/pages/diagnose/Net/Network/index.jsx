@@ -22,7 +22,7 @@ const NetList = () => {
   }
 
   const onListClick = async (record) => {
-    const msg = await getTask(record.id);
+    const msg = await getTask(record.task_id);
     console.log(msg)
     msg.metric = msg.result.seq.reduce((metric, item) => {
       metric.push({
@@ -34,7 +34,7 @@ const NetList = () => {
   }
 
   const onError = async (record) => {
-    const msg = await getTask(record.id);
+    const msg = await getTask(record.task_id);
     Modal.error({
       title: '诊断失败',
       content: (

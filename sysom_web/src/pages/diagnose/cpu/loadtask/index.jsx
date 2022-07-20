@@ -35,7 +35,7 @@ export default (props) => {
   }
 
   const onError = async (record) => {
-    const msg = await getTask(record.id);
+    const msg = await getTask(record.task_id);
     Modal.error({
       title: '诊断失败',
       content: (
@@ -47,7 +47,7 @@ export default (props) => {
   }
 
   const onListClick = async (record) => {
-    const msg = await getTask(record.id);
+    const msg = await getTask(record.task_id);
     setCPUTaskResult(msg);
   }
 

@@ -25,7 +25,7 @@ const Diagnose = (props) => {
 
     const onListClick = async (record) => {
         const recorded = record;
-        const msg = await getTask(record.id);
+        const msg = await getTask(record.task_id);
 
         setData({ ...msg, ...msg.result });
 
@@ -36,7 +36,7 @@ const Diagnose = (props) => {
     }
 
     const onError = async (record) => {
-        const msg = await getTask(record.id);
+        const msg = await getTask(record.task_id);
         Modal.error({
             title: '诊断失败',
             content: (
