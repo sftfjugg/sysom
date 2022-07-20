@@ -7,7 +7,6 @@ import ProTable from '@ant-design/pro-table';
 import ExportJsonExcel from 'js-export-excel';
 import lodash from 'lodash';
 import { getCluster, getHost, addHost, deleteHost, delBulkHandler, getHostName, updateHost } from '../service';
-import Cluster from '../components/ClusterForm';
 import BulkImport from '../components/BulkImport';
 import HostModalForm from '../components/HostModalForm';
 
@@ -354,7 +353,6 @@ const HostList = () => {
           labelWidth: 120,
         }}
         toolBarRender={() => [
-          <Cluster onAddClusterSuccess={updateCluster} />,
           <Button
             type="primary"
             key="primary"
