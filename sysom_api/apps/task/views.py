@@ -89,7 +89,7 @@ def script_task(data):
         update_host_status = data.pop("update_host_status", False)
         task_id = uuid_8()
         username = data['username'] if data.get('username') else "admin"
-        user = User.objects.filter(username=username).first()
+        user = User.objects.filter(username=username).first().pk
         if service_name:
             SCRIPTS_DIR = settings.SCRIPTS_DIR
             service_path = os.path.join(SCRIPTS_DIR, service_name)
