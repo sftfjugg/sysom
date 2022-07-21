@@ -98,7 +98,7 @@ def script_task(data):
                 return other_response(message="can not find script file, please check service name", code=400,
                                       success=False)
             try:
-                resp = subprocess.run(['python', service_path, json.dumps(data, ensure_ascii=False)], stdout=subprocess.PIPE,
+                resp = subprocess.run([service_path, json.dumps(data, ensure_ascii=False)], stdout=subprocess.PIPE,
                                       stderr=subprocess.PIPE)
             except Exception as e:
                 JobModel.objects.create(command='', task_id=task_id,
