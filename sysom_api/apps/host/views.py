@@ -268,19 +268,13 @@ class ClusterViewSet(CommonModelViewSet,
                      mixins.CreateModelMixin,
                      mixins.UpdateModelMixin):
     queryset = Cluster.objects.filter(Q(deleted_at=None) | Q(deleted_at=""))
-    serializer_class = serializer.ClusterListSerializer
+    serializer_class = serializer.ClusterSerializer
 
     def get_authenticators(self):
         if self.request.method == "GET":
             return []
         else:
             return [auth() for auth in self.authentication_classes]
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return serializer.ClusterListSerializer
-        else:
-            return serializer.AddClusterSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -293,13 +287,30 @@ class ClusterViewSet(CommonModelViewSet,
         return success(result=response.data)
 
     def create(self, request, *args, **kwargs):
+        res = self.require_param_validate(request, ["cluster_name"])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
         super().create(request, *args, **kwargs)
         return success(result={}, message="新增成功")
 
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
-
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        判断当前集群是否包含主机，如果不包含主机则允许删除，如果包含主机则不允许删除
+        """
+        instance = self.get_queryset().filter(**kwargs).first()
+        hostInstance = HostModel.objects.filter(cluster=instance.id).first()
+        if hostInstance is None:
+            # 允许删除
+            super().destroy(request, *args, **kwargs)
+            return success(result={}, message="删除成功")
+            pass
+        else:
+            # 不允许删除
+            return ErrorResponse(msg="Cluster has hosts, not allow to be delete.")
 
 class SaveUploadFile(APIView):
     authentication_classes = []
