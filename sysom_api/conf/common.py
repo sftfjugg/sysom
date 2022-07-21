@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'apps.task',
     'apps.vmcore',
     'apps.alarm',
+    'apps.channel',
     'consumer',
 
     'rest_framework',
