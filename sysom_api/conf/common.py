@@ -138,6 +138,8 @@ SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
 
 SERVER_IP = get_ip_address()
 
+IS_MICRO_SERVICES = False # 是否微服务
+
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
