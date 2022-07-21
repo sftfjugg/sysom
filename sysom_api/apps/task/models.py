@@ -19,7 +19,7 @@ class JobModel(BaseModel):
     result = models.JSONField(default=dict, verbose_name="shell结果")
     params = models.JSONField(default=dict, verbose_name="params")
     host_by = models.TextField(max_length=64, default="", verbose_name="host_jobs")
-    created_by = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="user_jobs")
+    created_by = models.IntegerField(verbose_name='创建人')
 
     def __str__(self):
         return f"Job: {self.task_id}"
