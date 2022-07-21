@@ -8,7 +8,6 @@ from .models import ExecuteResult
 from lib.response import other_response
 from lib.utils import uuid_8
 from .channels.ssh import SSHChannel
-from .channels.alios_helper import AliosChannel
 
 
 logger = logging.getLogger(__file__)
@@ -43,48 +42,14 @@ class ChannelAPIView(GenericViewSet):
                 result['state'] = state
             except Exception as e:
                 return other_response(code=400, message=f'Error: {e}', success=False)
-        elif channel == 'ali_help':
-            res, msg = self.validate_ali_help_channel_parames(data)
-            if not res:
-                return other_response(code=400, message=msg, success=False)
-
-            regionid = data.get('region')
-            ali = AliosChannel(regionid=regionid)
-            state, invoke_id = ali.run_command(cmd=data['cmd'], instance_id=data['instance'])
-            result['task_id'] = invoke_id
-            kwargs = { 'task_id': invoke_id, 'region': regionid }
-            Thread(target=self._loop_ali_help_restult, args=(kwargs,)).start()
         else:
             return other_response(code=400, message='channel 不存在!', success=False)
         return other_response(result=result, message='操作成功')
-    
-    def _loop_ali_help_restult(slef, kwargs, timeout=10):
-        EXEC_STATUS = { 'Failed': 1, 'Success': 0 }
-        alios = AliosChannel(regionid=kwargs['region'])
-
-        for _ in range(1, timeout+1):
-            status, output = alios.get_invoke_result(invoke_id=kwargs['task_id'])
-            if status not in ["Running", "Pending", "Stopping"]:
-                res = { 'state': EXEC_STATUS[status], 'result': output }
-                ExecuteResult.objects.get_or_create(task_id=kwargs['task_id'], result=json.dumps(res))
-                break
-            time.sleep(1)
-
 
     def validate_ssh_channel_parame(self, data):
         res, message = False, ''
         if not data.get('instance') or not self._validate_ip_format(data['instance']):
             message = 'instance: 检查instance字段'
-        else:
-            res = True
-        return res, message
-
-    def validate_ali_help_channel_parames(self, data):
-        res, message = False, ''
-        if not data.get('instance'):
-            message = 'instance: 检查 instance 字段'
-        elif not data.get('region', None):
-            message = 'region 不能为空'
         else:
             res = True
         return res, message
