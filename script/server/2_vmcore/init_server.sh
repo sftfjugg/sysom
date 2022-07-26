@@ -1,5 +1,4 @@
 #! /bin/sh
-yum install nfs-utils rpcbind -y
 systemctl start rpcbind && systemctl enable rpcbind
 systemctl start nfs && systemctl enable nfs
 if [ $? -ne 0 ];then

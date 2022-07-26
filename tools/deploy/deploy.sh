@@ -56,26 +56,11 @@ touch_env_rpms() {
     rpm -q --quiet gcc || yum install -y gcc
     rpm -q --quiet make || yum install -y make
     rpm -q --quiet redis || yum install -y redis
+    rpm -q --quiet wget || yum install -y wget
+    rpm -q --quiet rpcbind || yum install -y rpcbind
+    rpm -q --quiet nfs-utils || yum install -y nfs-utils
+    rpm -q --quiet python3-pip || yum install -y python3-pip
 }
-
-touch_virtualenv() {
-    mkdir -p ~/.pip
-	cp tools/deploy/pip.conf ~/.pip/
-    if [ -d ${VIRTUALENV_HOME} ]; then
-        echo "virtualenv exists, skip"
-    else
-        virtualenv-3  ${VIRTUALENV_HOME}
-        if [ "$?" = 0 ]; then
-            echo "INFO: create virtualenv success"
-        else
-            echo "ERROR: create virtualenv failed"
-            exit 1
-        fi
-    fi
-    echo "INFO: activate virtualenv..."
-    source ${VIRTUALENV_HOME}/bin/activate || exit 1
-}
-
 
 update_target() {
     if [ -d "${TARGET_PATH}" ]; then
@@ -85,42 +70,6 @@ update_target() {
     echo "INFO: copy project file..."
     cp -r ${API_DIR} ${WEB_DIR} ${TARGET_PATH}
     cp -r ${SCRIPT_DIR} ${APP_HOME}/init_scripts
-}
-
-check_requirements() {
-    echo "INFO: begin install requirements..."
-
-    if ! [ -d ${SERVER_HOME}/logs/ ]; then
-        mkdir -p ${SERVER_HOME}/logs/ || exit 1
-    fi
-
-    local requirements_log="${SERVER_HOME}/logs/${APP_NAME}_requirements.log"
-    local requirements="${API_DIR}/requirements.txt"
-    python_version=$(python -V | cut -b 8-10)
-    if [ ${python_version} == "3.6" ];then
-        requirements="tools/deploy/requirements.txt"
-    fi
-    touch "$requirements_log" || exit
-    pip install pytest-runner cffi
-    pip install -r ${requirements} -i "${ALIYUN_MIRROR}" |tee -a "${requirements_log}" || exit 1
-    local pip_res=$?
-    if [ $pip_res -ne 0 ]; then
-        echo "ERROR: requirements not satisfied and auto install failed, please check ${requirements_log}"
-        exit 1
-    fi
-}
-
-setup_database() {
-    echo "INFO: begin create db..."
-
-    systemctl restart mariadb.service
-    systemctl enable mariadb.service
-    mysql -uroot -e "create user if not exists 'sysom'@'%' identified by 'sysom_admin';"
-    mysql -uroot -e "grant usage on *.* to 'sysom'@'localhost' identified by 'sysom_admin'"
-    mysql -uroot -e "drop database if exists sysom;"
-    mysql -uroot -e "create database sysom character set utf8;"
-    mysql -uroot -e "grant all privileges on sysom.* to 'sysom'@'%';"
-    mysql -uroot -e "flush privileges;"
 }
 
 init_conf() {
@@ -135,15 +84,6 @@ init_conf() {
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
 }
 
-start_app() {
-    systemctl enable nginx.service
-    systemctl enable redis.service
-    systemctl enable supervisord.service
-    systemctl restart nginx.service
-    systemctl restart redis.service
-    systemctl restart supervisord.service
-}
-
 start_script_server() {
    systemctl daemon-reload
    systemctl start sysom-server.service
@@ -151,13 +91,9 @@ start_script_server() {
 
 deploy() {
     touch_env_rpms
-#    touch_virtualenv
     update_target
-#    check_requirements
-#    setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
     init_conf
     start_script_server
-#    start_app
 }
 
 deploy
