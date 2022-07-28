@@ -14,5 +14,6 @@ urlpatterns = [
     path('api/v1/host/batch_add/', views.HostModelViewSet.as_view({'post': 'batch_add_host'})),
     path('api/v1/host/batch_export/', views.HostModelViewSet.as_view({'post': 'batch_export_host'})),
     path('api/v1/host/batch_del/', views.HostModelViewSet.as_view({'post': 'batch_del_host'})),
+    path('api/v1/cluster/batch_add/', views.ClusterViewSet.as_view({'post': 'batch_add_cluster'})),
     path('api/v1/', include(router.urls)),
 ]
