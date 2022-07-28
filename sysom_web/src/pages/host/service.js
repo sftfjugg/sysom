@@ -29,7 +29,7 @@ export async function getCluster(options) {
  * @param {*} options 
  * @returns 
  */
- export async function getClusterList(options) {
+export async function getClusterList(options) {
   return request(CLUSTER_URL, {
     method: 'GET',
     ...(options || {}),
@@ -84,6 +84,24 @@ export async function batchAddCluster(params, token, options) {
   })
 }
 
+/**
+ * 批量删除集群
+ * @param {object} body 
+ * @param {string} token 
+ * @param {object} options 
+ * @returns 
+ */
+export async function batchDelCluster(body, token, options) {
+  return request(`${CLUSTER_URL}batch_del/`, {
+    method: 'post',
+    data: body,
+    headers: {
+      'Authorization': token
+    },
+    ...(options || {})
+  })
+}
+
 export async function getHost(params, options) {
   return request(HOST_URL, {
     method: 'GET',
@@ -98,7 +116,7 @@ export async function getHostName(options) {
     ...(options || {}),
   });
   const array = msg.data
-  console.log(msg,array);
+  console.log(msg, array);
   const results = array?.map(item => {
     return {
       label: item.hostname,
@@ -113,7 +131,7 @@ export async function getHostIP(options) {
     ...(options || {}),
   });
   const array = msg.data
-  console.log(msg,array);
+  console.log(msg, array);
   const results = array?.map(item => {
     return {
       label: item.ip,
