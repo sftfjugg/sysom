@@ -84,7 +84,22 @@ export async function getHostName(options) {
   const results = array?.map(item => {
     return {
       label: item.hostname,
-      value: item.id,
+      value: item.hostname,
+    }
+  });
+  return results
+}
+export async function getHostIP(options) {
+  const msg = await request(HOST_URL, {
+    method: 'GET',
+    ...(options || {}),
+  });
+  const array = msg.data
+  console.log(msg,array);
+  const results = array?.map(item => {
+    return {
+      label: item.ip,
+      value: item.ip,
     }
   });
   return results
