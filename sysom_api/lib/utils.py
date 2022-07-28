@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, date as datetime_date
 from decimal import Decimal
 
+import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from paramiko import BadAuthenticationType, AuthenticationException
 from lib.ssh import SSH
@@ -130,3 +131,36 @@ def generate_private_key(hostname, port, username, password=None, pkey=None):
         return False, "认证失败，请检查用户名密码或IP地址是否正确"
     except Exception as e:
         return False, e
+
+
+class HTTP:
+    @classmethod
+    def request(cls, method: str, url: str, token, data: dict, **kwargs):
+        status, result = 0, ''
+        headers = {
+            'Authorization': token,
+            'Content-Type': 'application/json'
+        }
+        method = method.upper()
+        methods = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']
+        if method not in methods:
+            raise Exception('请求方式不存在!')
+        data = json.dumps(data)
+        for _ in range(3):
+            try:
+                response = requests.request(method=method, url=url, json=None, headers=headers, data=data, **kwargs)
+                if response.status_code != 200:
+                    status = response.status_code
+                    data = response.json()
+                    result = data['message']
+                    break
+                else:
+                    resp = response.json()
+                    status, result = response.status_code, resp['data']
+                    break
+            except requests.exceptions.ConnectTimeout as e:
+                logger.info('Request Timeout, retry...')
+                status = 400
+                result = '请求超时, 重试三次'
+
+        return status, result
