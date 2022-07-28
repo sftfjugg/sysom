@@ -1,10 +1,11 @@
 import { PageContainer } from '@ant-design/pro-layout';
 import { Popconfirm, message } from 'antd';
-import { useState, useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import ProTable from '@ant-design/pro-table';
-import { getClusterList, delCluster } from '../service';
+import { getClusterList, delCluster, batchAddCluster } from '../service';
 import Cluster from '../components/ClusterForm';
+import BulkImport from '../components/BulkImport';
 
 const handleDelCluster = async (record) => {
     const hide = message.loading('正在删除');
@@ -107,6 +108,16 @@ const ClusterList = () => {
                 request={getClusterList}
                 toolBarRender={() => [
                     <Cluster onAddClusterSuccess={() => { clusterListTableActionRef.current.reload() }} />,
+                    <BulkImport uploadFun={batchAddCluster} templateUrl="/resource/集群导入模板.xls" successCallback={res => {
+                        if (clusterListTableActionRef.current) {
+                            clusterListTableActionRef.current.reload()
+                        }
+                        if (res.data.fail_list && res.data.fail_list.length > 0) {
+                            message.success(`导入成功${res.data.success_count}个，导入失败：${res.data.fail_list.join()}`)
+                        } else {
+                            message.success("导入成功")
+                        }
+                    }} />,
                 ]}
                 columns={columns}
             />
