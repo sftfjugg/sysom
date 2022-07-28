@@ -46,8 +46,13 @@ export async function getNotices(options) {
 }
 
 export async function getTaskList(params, options) {
+  const token = localStorage.getItem('token');
   return request('/api/v1/tasks/', {
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
     params: params,
     ...(options || {}),
   });
