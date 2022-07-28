@@ -112,7 +112,10 @@ class HostModelViewSet(CommonModelViewSet,
     def _validate_and_initialize_host(self, context):
         context = validate_ssh(context)
         create_serializer = self.get_serializer(data=context)
-        create_serializer.is_valid(raise_exception=True)
+        try:
+            create_serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            raise APIException(message=f"{self.get_format_err_msg_for_validation_error(context, e)}。主机添加失败")
         self.perform_create(create_serializer)
         instance = create_serializer.instance
         # 检查输入client部署命令 更新host状态

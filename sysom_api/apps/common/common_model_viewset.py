@@ -1,4 +1,6 @@
+from typing import Any
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.exceptions import ValidationError
 
 
 class CommonModelViewSet(GenericViewSet):
@@ -52,4 +54,17 @@ class CommonModelViewSet(GenericViewSet):
             "success": True,
             "message": "",
         }
-        
+
+    def get_format_err_msg_for_validation_error(self, data: dict, err: ValidationError) -> str:
+        """
+        对验证错误的错误信息进行转换，使得提示更易读懂
+        """
+        results = []
+        for k, v in err.detail.items():
+            if v[0].code == 'unique':
+                # 唯一性错误
+                results.append(f"{k}（{data[k]}）已存在")
+            else:
+                # 其它错误
+                results.append(v[0])
+        return "; ".join(results)
