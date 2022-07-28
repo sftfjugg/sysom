@@ -1,4 +1,5 @@
 import imp
+import re
 import logging
 import os
 import threading
@@ -21,9 +22,11 @@ from apps.task.views import script_task
 from lib import *
 from lib.exception import APIException
 from lib.excel import Excel
+from lib.utils import HTTP
 from lib.validates import validate_ssh
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
+from apps.channel.channels.ssh import SSHChannel
 
 
 logger = logging.getLogger(__name__)
@@ -60,6 +63,7 @@ class HostModelViewSet(CommonModelViewSet,
 
     def create(self, request, *args, **kwargs):
         # 检查字段是否满足
+        setattr(self, 'request', request)
         res = self.require_param_validate(
             request, ['hostname', 'ip', 'port', 'username'])
         if not res['success']:
@@ -88,12 +92,13 @@ class HostModelViewSet(CommonModelViewSet,
         """
 
         # 限制只能更新 cluster 和 description
-        res = self.extract_specific_params(request, ["cluster", "description"])
+        res = self.extract_specific_params(request, ["cluster", "description", "status"])
         if not res['success']:
             return ErrorResponse(msg=res['message'])
         return super(HostModelViewSet, self).partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
+        setattr(self, 'request', request)
         instance = self.check_instance_exist(request, *args, **kwargs)
         if not instance:
             return not_found()
@@ -110,12 +115,16 @@ class HostModelViewSet(CommonModelViewSet,
         instance.save()
 
     def _validate_and_initialize_host(self, context):
-        context = validate_ssh(context)
+        s, e = SSHChannel.validate_ssh_host(
+            ip=context['ip'],
+            password=context['host_password'],
+            username=context['username'],
+            port=int(context['port'])
+        )
+        if not s:
+            raise APIException(message=e)
         create_serializer = self.get_serializer(data=context)
-        try:
-            create_serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            raise APIException(message=f"{self.get_format_err_msg_for_validation_error(context, e)}。主机添加失败")
+        create_serializer.is_valid(raise_exception=True)
         self.perform_create(create_serializer)
         instance = create_serializer.instance
         # 检查输入client部署命令 更新host状态
@@ -139,22 +148,35 @@ class HostModelViewSet(CommonModelViewSet,
         return instance if instance else None
 
     def client_deploy_cmd_init(self, instance):
-        data = {"service_name": "node_init",
-                "instance": instance.ip,
-                "update_host_status": True
-                }
-        script_task(data)
+        request: Request = getattr(self, 'request')
+        data = {}
+        data['service_name'] = 'node_init'
+        data['instance'] = instance.ip
+        data['update_host_status'] = True
+
+        kwargs = {}
+        kwargs['data'] = data
+        kwargs['url'] = settings.TASK_API
+        kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
+        status, res = HTTP.request('post', **kwargs)
+        logger.info(f'node init task create success, res {res}')
 
     def client_deploy_cmd_delete(self, instance):
+        request: Request = getattr(self, 'request')
         try:
-            data = {"service_name": "node_delete",
-                    "instance": instance.ip
-                    }
-            resp = script_task(data)
-            logger.info(resp.status_code, resp.data)
-            return resp.status_code, resp.data
+            data = {}
+            data['service_name'] = "node_delete"
+            data['instance'] = instance.ip
+
+            kwargs = {}
+            kwargs['data'] = data
+            kwargs['url'] = settings.TASK_API
+            kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
+
+            status, res = HTTP.request('post', **kwargs)
+            logger.info(f'node delete task create success, res {res}')
+            return status, res
         except Exception as e:
-            logger.error(e, exc_info=True)
             return False, str(e)
 
     def _get_cluster_instance(self, cluster_name):
@@ -196,7 +218,7 @@ class HostModelViewSet(CommonModelViewSet,
                     kwargs['level'] = 2
                     _create_alarm_message(kwargs)
                 except Exception as e:
-                    kwargs['message'] = e.message
+                    kwargs['message'] = str(e)
                     errMsg = kwargs['message']
                     kwargs['level'] = 2
                     kwargs['collected_time'] = datetime.now().strftime(
@@ -263,6 +285,36 @@ class HostModelViewSet(CommonModelViewSet,
         ser = serializer.HostSerializer(queryset, many=True)
         return Excel.export(ser.data, excelname='hostlist')
 
+    def patch_host(self, request, host_ip, *args, **kwargs):
+        status = request.data.get('status', None)
+        if status is None:
+            raise APIException(message='status required params!')
+
+        if not self._validate_ip_format(host_ip):
+            return other_response(code=400, message='ip不合法!', success=False)
+
+        try:
+            instance: HostModel = HostModel.objects.get(ip=host_ip)
+            instance.status = status
+            instance.save()
+            return success(result={})
+        except HostModel.DoesNotExist as e:
+            raise APIException(message=f'Error: ip {host_ip} not exist!')
+
+    def del_host(self, request, host_ip, *args, **kwargs):
+        if not self._validate_ip_format(host_ip):
+            return other_response(code=400, message='ip不合法!', success=False)
+        try:
+            instance: HostModel = HostModel.objects.get(ip=host_ip)
+            instance.delete()
+            return success(result={})
+        except HostModel.DoesNotExist as e:
+            raise APIException(message=f'Error: ip {host_ip} not exist!')
+
+    def _validate_ip_format(self, ip) -> bool:
+        p = '((\d{1,2})|([01]\d{2})|(2[0-4]\d)|(25[0-5]))'
+        pattern = '^' + '\.'.join([p]*4) + '$'
+        return bool(re.match(pattern, ip))
 
 class ClusterViewSet(CommonModelViewSet,
                      mixins.ListModelMixin,
