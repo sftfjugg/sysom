@@ -7,7 +7,6 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 from rest_framework.views import APIView
-# from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
@@ -392,6 +391,13 @@ class ClusterViewSet(CommonModelViewSet,
             'cluster_description': '集群描述',
         }), [], 0
 
+
+        kwargs = {
+            "item": "cluster",
+            "sub": 1,
+            "level": 2
+        }
+
         for row in e.values():
             # 尝试创建并保存到数据库
             create_cluster_serializer = self.get_serializer(data=row)
@@ -402,6 +408,11 @@ class ClusterViewSet(CommonModelViewSet,
             except ValidationError as e:
                 # 创建失败，记录一下
                 fail_list.append(row['cluster_name'])
+        if len(fail_list) > 0:
+            kwargs.update(
+                    {'message': f"Batch import cluster [{', '.join(fail_list)}] failed!"})
+            kwargs.update({'collected_time': human_datetime()})
+            _create_alarm_message(kwargs)
         return success(result={
             "fail_list": fail_list,
             "success_count": success_count
