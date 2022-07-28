@@ -17,5 +17,6 @@ urlpatterns = [
     re_path(r'^api/v1/host/del/(?P<host_ip>.*)/$', views.HostModelViewSet.as_view({'delete': 'del_host'})),
     re_path(r'^api/v1/host/update/(?P<host_ip>.*)/$', views.HostModelViewSet.as_view({'patch': 'patch_host'})),
     path('api/v1/cluster/batch_add/', views.ClusterViewSet.as_view({'post': 'batch_add_cluster'})),
+    path('api/v1/cluster/batch_del/', views.ClusterViewSet.as_view({'post': 'batch_del_cluster'})),
     path('api/v1/', include(router.urls)),
 ]
