@@ -1,8 +1,5 @@
-import time
 import logging
 import re
-import json
-from threading import Thread
 from rest_framework.viewsets import GenericViewSet
 from .models import ExecuteResult
 from lib.response import other_response
@@ -10,7 +7,7 @@ from lib.utils import uuid_8
 from .channels.ssh import SSHChannel
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class ChannelAPIView(GenericViewSet):
@@ -22,12 +19,11 @@ class ChannelAPIView(GenericViewSet):
             instance = ExecuteResult.objects.get(task_id=request.data.get('task_id'))
         except ExecuteResult.DoesNotExist as e:
             return other_response(code=400, message='task_id 不存在!')
-        return other_response(message='操作成功', result=json.loads(instance.result))
+        return other_response(message='操作成功', result=instance.result)
 
     def channel_post(self, request, *args, **kwargs):
         data = getattr(request, 'data')
         result = dict()
-
         channel = data.get('channel', None)
         if channel is None or channel == 'ssh':
             res, msg = self.validate_ssh_channel_parame(data)
@@ -37,7 +33,7 @@ class ChannelAPIView(GenericViewSet):
                 ssh = SSHChannel(hostname=data['instance'])
                 state, res = ssh.run_command(data['cmd'])
                 task_id = uuid_8()
-                ExecuteResult.objects.create(task_id=task_id, result=json.dumps({'state': state, 'result': res}))
+                ExecuteResult.objects.create(task_id=task_id, result={'state': state, 'result': res})
                 result['task_id'] = task_id
                 result['state'] = state
             except Exception as e:
