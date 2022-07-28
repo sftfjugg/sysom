@@ -169,7 +169,7 @@ const HostList = () => {
       renderFormItem: (items) => {
         let list = Array.from(items.fieldProps.options);
         const options = list.map((item) => {
-          <Option value={item.hostname}>{item.hostname}</Option>
+          <Option value={item.label}>{item.label}</Option>
         })
         return (
           <Select
