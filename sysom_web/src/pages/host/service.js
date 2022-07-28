@@ -89,6 +89,21 @@ export async function getHostName(options) {
   });
   return results
 }
+export async function getHostIP(options) {
+  const msg = await request(HOST_URL, {
+    method: 'GET',
+    ...(options || {}),
+  });
+  const array = msg.data
+  console.log(msg,array);
+  const results = array?.map(item => {
+    return {
+      label: item.ip,
+      value: item.id,
+    }
+  });
+  return results
+}
 
 export async function addHost(body, token, options) {
   return request(HOST_URL, {

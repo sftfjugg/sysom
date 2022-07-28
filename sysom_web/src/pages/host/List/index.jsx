@@ -6,7 +6,7 @@ import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ExportJsonExcel from 'js-export-excel';
 import lodash from 'lodash';
-import { getCluster, getHost, addHost, deleteHost, delBulkHandler, getHostName, updateHost } from '../service';
+import { getCluster, getHost, addHost, deleteHost, delBulkHandler, getHostName, updateHost, getHostIP } from '../service';
 import BulkImport from '../components/BulkImport';
 import HostModalForm from '../components/HostModalForm';
 
@@ -88,6 +88,7 @@ const HostList = () => {
    */
   const [clusterListMap, setClusterListMap] = useState({});
   const [hostnamelist, setHostnameList] = useState([]);
+  const [hostiplist, setHostipList] = useState([]);
   const actionRef = useRef();
   const intl = useIntl();
   /**
@@ -120,6 +121,9 @@ const HostList = () => {
     updateCluster();
     getHostName().then((res) => {
       setHostnameList(res)
+    })
+	getHostIP().then((res) => {
+      setHostipList(res)
     })
   }, [])
 
@@ -190,6 +194,31 @@ const HostList = () => {
         />
       ),
       dataIndex: 'ip',
+	  filters: true,
+      onFilter: true,
+      valueType: 'select',
+      fieldProps: {
+        options: hostiplist,
+      },
+      renderFormItem: (items) => {
+        let list = Array.from(items.fieldProps.options);
+        const options = list.map((item) => {
+          <Option value={item.label}>{item.label}</Option>
+        })
+        return (
+          <Select
+            key="searchselectip"
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => {
+              return option.label.includes(input)
+            }}
+            placeholder="请输入"
+          >
+            {options}
+          </Select>
+        )
+      }
     },
     {
       title: <FormattedMessage id="pages.hostTable.status" defaultMessage="Status" />,
