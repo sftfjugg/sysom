@@ -7,18 +7,11 @@ from django.http import StreamingHttpResponse, HttpResponse
 
 logger = logging.getLogger(__name__)
 
+
 class Excel:
-    def __init__(self, file) -> None:
+    def __init__(self, file, row_dict: dict) -> None:
         self.file = file
-        self.row_dict = {
-            'host_password': '主机密码',
-            'hostname': '主机别名',
-            'ip': '主机地址',
-            'port': '端口',
-            'username': '登录用户',
-            'cluster': '所属集群',
-            'description': '简介',
-            }
+        self.row_dict = row_dict
         self._file_io = None
         self.open()
 
@@ -35,8 +28,8 @@ class Excel:
             content.append(item)
         return content
 
-    @staticmethod    
-    def export(datalist: list=..., sheetname: str='sheet1', excelname:str='host'):
+    @staticmethod
+    def export(datalist: list = ..., sheetname: str = 'sheet1', excelname: str = 'host'):
         """
         Export excel
         Type xlsx

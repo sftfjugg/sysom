@@ -1,10 +1,10 @@
 import { Button, message } from "antd";
 import { ModalForm, ProFormUploadButton } from "@ant-design/pro-form";
 import { ImportOutlined } from "@ant-design/icons";
-import { addBulkImport } from "../service";
+import HostModalForm from "./HostModalForm";
 
 const BulkImport = (props) => {
-  const { actionRef } = props
+  const {uploadFun, templateUrl, successCallback } = props
 
   const handlerBulkImport = async (fileObj) => {
     const hide = message.loading("正在创建");
@@ -12,12 +12,9 @@ const BulkImport = (props) => {
     const formData = new FormData();
     formData.append("file", fileObj);
 
-    await addBulkImport(formData, token).then((res) => {
-      message.success(res.message)
-
-      if (actionRef.current) {
-        actionRef.current.reload()
-      }
+    await uploadFun(formData, token).then((res) => {
+      hide()
+      successCallback(res)
     }).catch((e) => {
       // message.error(e)
       console.log(e)
@@ -53,9 +50,17 @@ const BulkImport = (props) => {
         max={2}
         extra="导入excel文件"
         beforeUpload={() => false}
-        addonAfter={<a href="/resource/主机导入模板.xls">模板下载</a>}
+        addonAfter={<a href={templateUrl}>模板下载</a>}
       />
     </ModalForm>
   );
 };
+
+HostModalForm.defaultProps = {
+  uploadFun: () => {},
+  templateUrl: "/resource/主机导入模板.xls",
+  successCallback: () => {}
+}
+
+
 export default BulkImport;

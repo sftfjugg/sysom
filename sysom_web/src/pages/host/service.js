@@ -66,6 +66,24 @@ export async function delCluster(id, token, options) {
   })
 }
 
+/**
+ * 批量导入集群
+ * @param {object} params 
+ * @param {str} token 
+ * @param {object} options 
+ * @returns 
+ */
+export async function batchAddCluster(params, token, options) {
+  return request(`${CLUSTER_URL}batch_add/`, {
+    method: 'post',
+    data: params,
+    headers: {
+      'Authorization': token
+    },
+    ...(options || {})
+  })
+}
+
 export async function getHost(params, options) {
   return request(HOST_URL, {
     method: 'GET',
@@ -140,7 +158,7 @@ export async function deleteHost(id, token, options) {
   });
 }
 
-export async function addBulkImport(params, token, options) {
+export async function batchAddHost(params, token, options) {
   return request(`${HOST_URL}batch_add/`, {
     method: 'post',
     data: params,
@@ -151,7 +169,7 @@ export async function addBulkImport(params, token, options) {
   })
 }
 
-export async function delBulkHandler(body, token, options) {
+export async function batchDelHost(body, token, options) {
   return request(`${HOST_URL}batch_del/`, {
     method: 'post',
     data: body,

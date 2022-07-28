@@ -6,7 +6,10 @@ import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
 import ExportJsonExcel from 'js-export-excel';
 import lodash from 'lodash';
-import { getCluster, getHost, addHost, deleteHost, delBulkHandler, getHostName, updateHost, getHostIP } from '../service';
+import {
+  getCluster, getHost, addHost, deleteHost, batchDelHost, getHostName, updateHost, getHostIP,
+  batchAddHost
+} from '../service';
 import BulkImport from '../components/BulkImport';
 import HostModalForm from '../components/HostModalForm';
 
@@ -122,7 +125,7 @@ const HostList = () => {
     getHostName().then((res) => {
       setHostnameList(res)
     })
-	getHostIP().then((res) => {
+    getHostIP().then((res) => {
       setHostipList(res)
     })
   }, [])
@@ -194,7 +197,7 @@ const HostList = () => {
         />
       ),
       dataIndex: 'ip',
-	  filters: true,
+      filters: true,
       onFilter: true,
       valueType: 'select',
       fieldProps: {
@@ -306,7 +309,7 @@ const HostList = () => {
     const host_id_list = selectDeleteHostList.map((item) => item['id']);
     const body = { host_id_list: host_id_list };
     const token = localStorage.getItem('token');
-    await delBulkHandler(body, token)
+    await batchDelHost(body, token)
       .then((res) => {
         if (res.code === 200) {
           notification.success({
@@ -396,7 +399,12 @@ const HostList = () => {
           >
             <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
           </Button>,
-          <BulkImport actionRef={actionRef} />,
+          <BulkImport uploadFun={batchAddHost} templateUrl="/resource/主机导入模板.xls" successCallback={res => {
+            if (actionRef.current) {
+              actionRef.current.reload()
+            }
+            message.success(res.message)
+          }} />,
         ]}
         request={getHost}
         columns={columns}
