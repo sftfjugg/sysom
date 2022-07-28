@@ -16,7 +16,7 @@ class SettingsModel(BaseModel):
 
 class ExecuteResult(BaseModel):
     task_id = models.CharField(max_length=64, verbose_name='任务ID')
-    result = models.TextField(verbose_name='执行结果')
+    result = models.JSONField(verbose_name='执行结果')
 
     def __str__(self) -> str:
         return self.task_id

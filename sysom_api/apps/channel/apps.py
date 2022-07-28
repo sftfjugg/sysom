@@ -13,7 +13,7 @@ class ChannelConfig(AppConfig):
 
     def ready(self) -> None:
         post_migrate.connect(initialization_settings, sender=self)
-        logger.info(">>> Accounts module loading success")
+        logger.info(">>> Channel module loading success")
 
 
 def initialization_settings(sender, **kwargs):
