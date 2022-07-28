@@ -14,6 +14,15 @@ const TaskList = () => {
       dataIndex: 'created_at',
       valueType: 'dateTime',
       hideInSearch: true,
+      sorter: (a, b) => {
+        const createA = a.created_at.replace(/\-/g,"");
+        const createAa = createA.replace(/\:/g,"");
+        const createAR = createAa.replace(/\ /g,"");
+        const createB = b.created_at.replace(/\-/g,"");
+        const createBb = createB.replace(/\:/g,"");
+        const createBR = createBb.replace(/\ /g,"");
+        return createAR - createBR
+      }
     },
     {
       title: <FormattedMessage id="pages.journal.task.task_id" defaultMessage="task_id" />,
