@@ -115,7 +115,8 @@ class HostModelViewSet(CommonModelViewSet,
         try:
             create_serializer.is_valid(raise_exception=True)
         except ValidationError as e:
-            raise APIException(message=f"{self.get_format_err_msg_for_validation_error(context, e)}。主机添加失败")
+            raise APIException(
+                message=f"{self.get_format_err_msg_for_validation_error(context, e)}。主机添加失败")
         self.perform_create(create_serializer)
         instance = create_serializer.instance
         # 检查输入client部署命令 更新host状态
@@ -214,7 +215,15 @@ class HostModelViewSet(CommonModelViewSet,
         file = request.FILES.get('file', None)
         if not file:
             return other_response(message='Excel File Required!', code=400, success=False)
-        e = Excel(file.read())
+        e = Excel(file.read(), {
+            'host_password': '主机密码',
+            'hostname': '主机别名',
+            'ip': '主机地址',
+            'port': '端口',
+            'username': '登录用户',
+            'cluster': '所属集群',
+            'description': '简介',
+        })
         tasks = []
 
         kwargs = {
@@ -299,7 +308,7 @@ class ClusterViewSet(CommonModelViewSet,
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
-    
+
     def destroy(self, request, *args, **kwargs):
         """
         判断当前集群是否包含主机，如果不包含主机则允许删除，如果包含主机则不允许删除
@@ -314,6 +323,34 @@ class ClusterViewSet(CommonModelViewSet,
         else:
             # 不允许删除
             return ErrorResponse(msg="Cluster has hosts, not allow to be delete.")
+
+    def batch_add_cluster(self, request: Request):
+        """
+        集群批量导入
+        """
+        file = request.FILES.get('file', None)
+        if not file:
+            return other_response(message='Excel File Required!', code=400, success=False)
+        e, fail_list, success_count = Excel(file.read(), {
+            'cluster_name': '集群名称',
+            'cluster_description': '集群描述',
+        }), [], 0
+
+        for row in e.values():
+            # 尝试创建并保存到数据库
+            create_cluster_serializer = self.get_serializer(data=row)
+            try:
+                create_cluster_serializer.is_valid(raise_exception=True)
+                create_cluster_serializer.save()
+                success_count += 1
+            except ValidationError as e:
+                # 创建失败，记录一下
+                fail_list.append(row['cluster_name'])
+        return success(result={
+            "fail_list": fail_list,
+            "success_count": success_count
+        })
+
 
 class SaveUploadFile(APIView):
     authentication_classes = []
