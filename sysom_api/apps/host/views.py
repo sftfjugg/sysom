@@ -91,7 +91,8 @@ class HostModelViewSet(CommonModelViewSet,
         """
 
         # 限制只能更新 cluster 和 description
-        res = self.extract_specific_params(request, ["cluster", "description", "status"])
+        res = self.extract_specific_params(
+            request, ["cluster", "description", "status"])
         if not res['success']:
             return ErrorResponse(msg=res['message'])
         return super(HostModelViewSet, self).partial_update(request, *args, **kwargs)
@@ -328,6 +329,7 @@ class HostModelViewSet(CommonModelViewSet,
         pattern = '^' + '\.'.join([p]*4) + '$'
         return bool(re.match(pattern, ip))
 
+
 class ClusterViewSet(CommonModelViewSet,
                      mixins.ListModelMixin,
                      mixins.RetrieveModelMixin,
@@ -374,7 +376,6 @@ class ClusterViewSet(CommonModelViewSet,
             # 允许删除
             super().destroy(request, *args, **kwargs)
             return success(result={}, message="删除成功")
-            pass
         else:
             # 不允许删除
             return ErrorResponse(msg="Cluster has hosts, not allow to be delete.")
@@ -390,7 +391,6 @@ class ClusterViewSet(CommonModelViewSet,
             'cluster_name': '集群名称',
             'cluster_description': '集群描述',
         }), [], 0
-
 
         kwargs = {
             "item": "cluster",
@@ -410,13 +410,42 @@ class ClusterViewSet(CommonModelViewSet,
                 fail_list.append(row['cluster_name'])
         if len(fail_list) > 0:
             kwargs.update(
-                    {'message': f"Batch import cluster [{', '.join(fail_list)}] failed!"})
+                {'message': f"Batch import cluster [{', '.join(fail_list)}] failed!"})
             kwargs.update({'collected_time': human_datetime()})
             _create_alarm_message(kwargs)
         return success(result={
             "fail_list": fail_list,
             "success_count": success_count
         })
+
+    def batch_del_cluster(self, request: Request):
+        """
+        集群批量删除
+        """
+        cluster_id_list = request.data.get('cluster_id_list', None)
+        if not cluster_id_list:
+            return other_response(message='host_id_list not found or list empty', code=400, success=False)
+        if not isinstance(cluster_id_list, list):
+            return other_response(message='host_id_list type is list', code=400)
+        querysets = Cluster.objects.filter(id__in=cluster_id_list)
+        kwargs = {
+            "item": "cluster",
+            "sub": 1,
+            "level": 2
+        }
+        for instance in querysets:
+            hostInstance = HostModel.objects.filter(
+                cluster=instance.id).first()
+            if hostInstance is None:
+                # 不包含主机，执行删除
+                self.perform_destroy(instance)
+            else:
+                # 包含主机不允许删除
+                kwargs.update(
+                {'message': f"Cluster（{instance.cluster_name}） contains hosts, delete failed!"})
+                kwargs.update({'collected_time': human_datetime()})
+                _create_alarm_message(kwargs)
+        return other_response(message='operation success!')
 
 
 class SaveUploadFile(APIView):
