@@ -1,9 +1,6 @@
 from django.db import models
-import json
 
 from lib import BaseModel
-from apps.accounts.models import User
-from apps.host.models import HostModel
 
 
 class JobModel(BaseModel):
