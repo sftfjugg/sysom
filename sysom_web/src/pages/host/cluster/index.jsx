@@ -1,9 +1,9 @@
 import { PageContainer } from '@ant-design/pro-layout';
-import { Popconfirm, message, Table, Space } from 'antd';
+import { Popconfirm, message, Table, Space, notification} from 'antd';
 import { useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import ProTable from '@ant-design/pro-table';
-import { getClusterList, delCluster, batchAddCluster } from '../service';
+import { getClusterList, delCluster, batchAddCluster, batchDelCluster } from '../service';
 import Cluster from '../components/ClusterForm';
 import BulkImport from '../components/BulkImport';
 import lodash from 'lodash';
@@ -27,6 +27,32 @@ const handleDelCluster = async (record) => {
         return false;
     }
 }
+
+const handleBatchDeleteCluster = async (e) => {
+    const selectDeleteHostList = lodash.cloneDeep(e);
+    const cluster_id_list = selectDeleteHostList.map((item) => item['id']);
+    const body = { cluster_id_list: cluster_id_list };
+    const token = localStorage.getItem('token');
+    await batchDelCluster(body, token)
+      .then((res) => {
+        if (res.code === 200) {
+          notification.success({
+            duration: 2,
+            description: '操作成功',
+            message: '操作',
+          });
+        } else {
+          notification.warn({
+            duration: 2,
+            description: '操作失败',
+            message: '操作'
+          });
+        }
+      })
+      .catch((e) => {
+        notification.error({ duration: 2, description: e, message: '操作' });
+      });
+  };
 
 const ClusterField = {
     cluster_name: '集群名称',
@@ -53,7 +79,7 @@ const batchExportClusterHandler = async (e) => {
         newDataList[i].hosts = newDataList[i].hosts.length
     }
 
-    for (let i in ClusterField)    {
+    for (let i in ClusterField) {
         if (ClusterField[i]) {
             headerFilter.push(i);
             headerlist.push(ClusterField[i]);
@@ -184,7 +210,17 @@ const ClusterList = () => {
                 )}
                 tableAlertOptionRender={({ selectedRowKeys, selectedRows, onCleanSelected }) => {
                     return (
+
                         <Space size={16}>
+                            <a
+                                onClick={async () => {
+                                    await handleBatchDeleteCluster(selectedRows);
+                                    onCleanSelected();
+                                    clusterListTableActionRef.current?.reload();
+                                }}
+                            >
+                                批量删除
+                            </a>
                             <a
                                 onClick={async () => {
                                     await batchExportClusterHandler(selectedRows);
