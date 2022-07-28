@@ -141,6 +141,18 @@ SERVER_IP = get_ip_address()
 
 IS_MICRO_SERVICES = False # 是否微服务
 
+# sysom service
+SYSOM_SERVICE = 'http://127.0.0.1:7001'
+TASK_SERVICE = 'http://127.0.0.1:7002'
+CHANNEL_SERVICE = 'http://127.0.0.1:7003'
+
+# API
+TASK_API = f'{TASK_SERVICE}/api/v1/tasks/'
+HOST_LIST_API = f'{SYSOM_SERVICE}/api/v1/host/'
+CHANNEL_VALIDATE_API = f'{CHANNEL_SERVICE}/api/v1/channel/validate/'
+CHANNEL_COMMAND_API = f'{CHANNEL_SERVICE}/api/v1/channel/'
+CHANNEL_RESULT_API = f'{CHANNEL_SERVICE}/api/v1/channel/exec_result/'
+
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
@@ -217,4 +229,3 @@ LOGGING = {
         },
     }
 }
-
