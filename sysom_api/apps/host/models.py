@@ -37,6 +37,7 @@ class HostModel(BaseModel):
 
 class Cluster(BaseModel):
     cluster_name = models.CharField(max_length=128, unique=True)
+    cluster_description = models.CharField(max_length=255, default="")
 
     class Meta:
         db_table = "sys_cluster"
