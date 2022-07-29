@@ -29,4 +29,4 @@ def init_model():
         ssh_key = json.dumps({"private_key": k, "public_key": v})
         SettingsModel.objects.create(key='ssh_key', value=ssh_key, description='系统自动生成公私匙')
     except Exception as e:
-        print(e)
+        pass
