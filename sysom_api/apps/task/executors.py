@@ -35,6 +35,8 @@ class SshJob:
             self.instance.save()
         except Exception as e:
             raise e
+        finally:
+            connection.close()
     
     def get_object(self):
         try:
