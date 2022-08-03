@@ -12,4 +12,5 @@ router.register('issue', views.IssueModelViewSet)
 urlpatterns = [
     path('api/v1/', include(router.urls)),
     path('api/v1/vmcore_detail/', views.VmcoreDetail.as_view()),
+    path('api/v1/vmcore_config_test/', views.VmcoreConfigTest.as_view()),
 ]

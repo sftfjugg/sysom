@@ -12,6 +12,7 @@ export default {
   'menu.vmcore.list': '宕机列表',
   'menu.vmcore.search': '宕机查询',
   'menu.vmcore.match': '宕机匹配',
+  'menu.vmcore.config': '宕机配置',
   'menu.newpage': '新叶',
   'menu.newpage.newPage': '新子叶',
   'menu.more-blocks': '更多区块',
