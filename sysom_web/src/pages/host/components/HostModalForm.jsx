@@ -1,8 +1,8 @@
 import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
 import { useState } from 'react';
 import { useImperativeHandle, useRef, forwardRef } from 'react';
+import * as PropTypes from 'prop-types';
 import { useIntl, FormattedMessage } from 'umi';
-
 const MODE_ADD_HOST = 0
 const MODE_EDIT_HOST = 1
 
@@ -11,7 +11,7 @@ const MODE_EDIT_HOST = 1
  * 1. 功能一：用于实现主机添加
  * 2. 功能二：用于实现主机信息编辑
  * @param {*} props 
- *      props.model => 模式:     0 => 添加主机
+ *      props.mode => 模式:     0 => 添加主机
  *                              1 => 修改主机信息 
  *      props.titl => 模态框顶部的标题  
  *      props.visible => 模态框是否可见
@@ -22,7 +22,7 @@ const MODE_EDIT_HOST = 1
  */
 let HostModalForm = (props, ref) => {
     const {
-        model: mode,
+        mode,
         title,
         visible,
         modalWidth,
@@ -30,6 +30,8 @@ let HostModalForm = (props, ref) => {
         onVisibleChange,
         onFinish
     } = props;
+
+    console.log('modal width: ', props, props.modalWidth, modalWidth)
 
     const modalFormRef = useRef();
     const intl = useIntl();
@@ -52,6 +54,17 @@ let HostModalForm = (props, ref) => {
 
     return (
         <ModalForm
+            style={{
+                margin: "auto"
+            }}
+            modalProps={{
+                centered: true,
+                bodyStyle: {
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "column"
+                }
+            }}
             formRef={modalFormRef}
             title={title}
             width={modalWidth}
@@ -59,7 +72,7 @@ let HostModalForm = (props, ref) => {
             onVisibleChange={onVisibleChange}
             onFinish={value => {
                 onFinish({
-                    model: mode,
+                    mode: mode,
                     id: id,
                     ...value
                 })
@@ -179,10 +192,22 @@ let HostModalForm = (props, ref) => {
 
 HostModalForm = forwardRef(HostModalForm);
 
+HostModalForm.displayName = "HostModalForm";
+
+HostModalForm.propTypes = {
+    mode: PropTypes.number,
+    title: PropTypes.string,
+    visible: PropTypes.bool,
+    modalWidth: PropTypes.string,
+    clusterList: PropTypes.array,
+    onVisibleChange: PropTypes.func,
+    onFinish: PropTypes.func
+}
+
 // Props 参数默认值
 HostModalForm.defaultProps = {
-    model: 0,
-    titla: "New host",
+    mode: 0,
+    title: "New host",
     visible: false,
     modalWidth: "440px",
     clusterList: [],
