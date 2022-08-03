@@ -79,8 +79,6 @@ init_conf() {
     sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/nginx/conf.d/sysom.conf
     cp tools/deploy/sysom.ini /etc/supervisord.d/
     sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/supervisord.d/sysom.ini
-    cp tools/deploy/uwsgi.ini  ${TARGET_PATH}/${API_DIR}
-    sed -i "s;/home/sysom;${SERVER_HOME};g" ${TARGET_PATH}/${API_DIR}/uwsgi.ini
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
 }
 
