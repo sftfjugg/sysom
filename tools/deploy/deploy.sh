@@ -83,8 +83,8 @@ init_conf() {
     cp tools/deploy/channel-service.ini /etc/supervisord.d/
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
     cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
-    sed -i "s/threads = 3/threads = $cpu_num" ${TARGET_PATH}/${API_DIR}/conf/task_gunicorn.py
-    sed -i "s/threads = 3/threads = $cpu_num" ${TARGET_PATH}/${API_DIR}/conf/channel_gunicorn.py
+    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${API_DIR}/conf/task_gunicorn.py
+    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${API_DIR}/conf/channel_gunicorn.py
 }
 
 start_script_server() {
