@@ -77,10 +77,15 @@ class VmcoreViewSet(GenericViewSet,
             vmcore = models.Panic.objects.get(name=vmcore_name)
             models.Calltrace.objects.create(idx=idx, name=vmcore_name, line=line, vmcore = vmcore)
             return other_response(result=data)
-        elif 'post_config' in data and 'name' in data and 'server_host' in data and 'mount_point' in data and 'days' in data:
+        elif 'post_config' in data and 'name' in data and 'server_host' in data and 'mount_point' in data:
             config = models.VmcoreConfig.objects.last()
-            if int(data['days']) >= 0:
+            if 'days' in data and int(data['days']) >= 0:
                 rmcmd = "/bin/mkdir -p /tmp/vmcore-nfs\nmount -t nfs %s:%s /tmp/vmcore-nfs\nfind /tmp/vmcore_nfs -name vmcore -mtime +%s -type f -delete\n/bin/umount /tmp/vmcore-nfs" %(data['server_host'], data['mount_point'], data['days'])
+                with open('/tmp/deletevmcore.sh','w') as fout:
+                    fout.write(rmcmd)
+            if 'days' not in data:
+                rmcmd = ""
+                data['days'] = -1 
                 with open('/tmp/deletevmcore.sh','w') as fout:
                     fout.write(rmcmd)
             if not config:
@@ -155,7 +160,10 @@ class VmcoreViewSet(GenericViewSet,
             return other_response(result=data)
         elif 'get_config' in data_get and data_get['get_config'] == '1':
             config = models.VmcoreConfig.objects.last()
-            return other_response(result=serializer.ConfigSerializer(config).data)
+            result=serializer.ConfigSerializer(config).data
+            if result['days'] == -1:
+                result['days'] = '永久保存'
+            return other_response(result=result)
         else:
             data = super().list(request, *args, **kwargs).data
 
