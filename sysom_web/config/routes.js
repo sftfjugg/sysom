@@ -97,6 +97,11 @@ export default [
         path: '/vmcore/analyse',
         component: './vmcore/Analyse',
       },
+      {
+        path: '/vmcore/config',
+        name: 'config',
+        component: './vmcore/Config',
+      },
     ],
   },
   {
