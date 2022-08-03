@@ -43,3 +43,11 @@ class Calltrace(BaseModel):
     vmcore = models.ForeignKey(to='Panic',on_delete=models.CASCADE, to_field='name', related_name='panic_call_trace',default='')
     class Meta:
         db_table = "call_trace"
+
+class VmcoreConfig(BaseModel):
+    name = models.CharField(max_length=128)
+    server_host = models.CharField(max_length=256)
+    mount_point = models.CharField(max_length=256)
+    days = models.IntegerField()
+    class Meta:
+        db_table = "vmcore_config"
