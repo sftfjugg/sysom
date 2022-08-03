@@ -99,7 +99,7 @@ const HostList = () => {
    * 0 => 添加主机模式
    * 1 => 编辑主机信息模式
    */
-  const [hostModalFormModel, setHostModalFormModel] = useState(0);
+  const [hostModalFormMode, setHostModalFormMode] = useState(0);
   const [hostModalFormTitle, setHostModalFormTitle] = useState(intl.formatMessage({
     id: 'pages.hostTable.createForm.newHost',
     defaultMessage: 'New host',
@@ -279,7 +279,7 @@ const HostList = () => {
               id: 'pages.hostTable.createForm.editHost',
               defaultMessage: 'Edit host',
             }));
-            setHostModalFormModel(1);                     // 设置 HostModalForm 的模式为 “编辑主机信息模式”
+            setHostModalFormMode(1);                     // 设置 HostModalForm 的模式为 “编辑主机信息模式”
             setHostModalFormVisible(true);                // 显示模态框
             hostModalFormRef.current.setFieldsValue({     // 将当前选中的主机信息填充到模态框表单中
               ...record,
@@ -393,7 +393,7 @@ const HostList = () => {
                 id: 'pages.hostTable.createForm.newHost',
                 defaultMessage: 'Edit host',
               }));
-              setHostModalFormModel(0);   // 设置主机模态框的模式为 “添加主机模式”
+              setHostModalFormMode(0);   // 设置主机模态框的模式为 “添加主机模式”
               setHostModalFormVisible(true);   // 显示模态框
             }}
           >
@@ -450,15 +450,16 @@ const HostList = () => {
       <HostModalForm
         ref={hostModalFormRef}
         title={hostModalFormTitle}
-        model={hostModalFormModel}
+        mode={hostModalFormMode}
         visible={hostModalFormVisible}
+        modalWidth="440px"
         onVisibleChange={setHostModalFormVisible}
         clusterList={clusterList}
         onFinish={async (value) => {
           let success = false;
           value['cluster'] = value.cluster.value;
           // 针对不同的模式，执行不同的网络请求
-          if (value.model == 0) {
+          if (value.mode == 0) {
             // 添加主机
             success = await handleAddHost(value);
           } else {
