@@ -69,3 +69,32 @@ export async function addIssue(data, options) {
     ...(options || {}),
   });
 }
+
+// export async function postConfig(params, options) {
+//   return request('/api/config', {
+//     method: 'POST',
+//     data: params,
+//     ...(options || {}),
+//   });
+// }
+
+export async function getConfig(params, options) {
+  return request('/api/v1/vmcore/', {
+    method: "GET",
+    params: { ...params },
+    ...(options || {}),
+  });
+  let data = msg.data;
+  const results = {
+    success: true,
+    data: data,
+  };
+  return results;
+}
+export async function postConfig(params, options) {
+  return request('/api/v1/vmcore/', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}
