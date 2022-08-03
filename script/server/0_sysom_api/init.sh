@@ -85,9 +85,6 @@ init_conf() {
     python manage.py makemigrations vul
     python manage.py makemigrations channel
     python manage.py migrate
-    python manage.py loaddata ./apps/accounts/user.json
-    python manage.py loaddata ./apps/alarm/subscribe.json
-    python manage.py loaddata ./apps/vmcore/vmcore.json
     popd
 }
 
