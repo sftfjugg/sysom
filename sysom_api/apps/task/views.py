@@ -36,10 +36,13 @@ class TaskAPIView(GenericViewSet,
     search_fields = ('id', 'task_id', 'created_by__id', 'status', 'params')  # 模糊查询
     filterset_class = TaskFilter #精确查询
     authentication_classes = [TaskAuthentication]
+    create_requird_fields = ['instance', 'service_name']
 
     def create(self, request, *args, **kwargs):
         try:
             data = request.data
+            for item in filter(lambda x: not x[1], [(field, data.get(field)) for field in self.create_requird_fields]):
+                return other_response(message=f'Field: {item[0]} is required!', code=400)
             if IS_MICRO_SERVICES:
                 data['user'] = getattr(request, 'user')
             return script_task(data)
@@ -100,6 +103,13 @@ def script_task(data):
             user = User.objects.filter(username=username).first()
             user_id = user.pk
 
+        task = JobModel.objects.filter(status__in=["Running"], params=params)
+        if task:
+            return other_response(
+                message=f"node:{params['instance']}, There are tasks in progress, {params['service_name']}",
+                code=400,
+                success=False
+            )
         if service_name:
             SCRIPTS_DIR = settings.SCRIPTS_DIR
             service_path = os.path.join(SCRIPTS_DIR, service_name)
@@ -132,12 +142,6 @@ def script_task(data):
                                         status="Fail")
                 return other_response(message="not find commands, Please check the script return", code=400,
                                       success=False)
-            for instance in resp_scripts:
-                ip = instance.get("instance", None)
-                task = JobModel.objects.filter(command__contains=ip, status__in=["Running"]).first()
-                if task:
-                    return other_response(message="有任务正在执行，请稍后！", code=400,
-                                          success=False)
             ssh_job(
                 resp_scripts,
                 task_id,
