@@ -150,7 +150,7 @@ export function render(oldRender) {
       extraGrafanaRoutes = Object.entries(res.dashboard).map(item => {
         let configPath = item[0].split('.')
         configPath.shift()
-  
+
         let path = []
         path.push({
           path: `/${configPath.join('/')}`,
@@ -158,12 +158,12 @@ export function render(oldRender) {
           f_: `/${configPath.join('/')}`,
           component: diagnose
         })
-        extraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
+
+        let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
           .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
           .value();
-
+        extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
         oldRender();
-
       })
     })
   })
