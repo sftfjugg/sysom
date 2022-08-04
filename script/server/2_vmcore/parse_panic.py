@@ -504,12 +504,38 @@ def parse_new_crash(crash_dir):
         import traceback
         traceback.print_exc()
 
+def mount_nfs():
+    global nfs_root
+    get_config={'get_config':'1'}
+    host_url = root_url+"/api/v1/vmcore/"
+    res = requests.get(host_url,params=get_config)
+    if res.status_code != 200 or res.text == '[]':
+        print("无法查询nfs配置")
+        return False
+    server_host = res.json()['data']['server_host']
+    mount_point = res.json()['data']['mount_point']
+
+    cmd = 'mount -t nfs %s:%s %s' % (server_host,mount_point,nfs_root)
+    ret = os.system(cmd)
+    if ret != 0:
+        print('failed to mount to nfs %s' % vmcore_dir)
+        return False
+    return True
+
+def unmount_nfs():
+    global nfs_root
+    cmd = 'umount %s' % nfs_root
+    ret = os.system(cmd)
+    if ret != 0:
+        print(f'failed to unmount nfs at {nfs_root}')
+
 def main():
     global nfs_root
     if len(sys.argv) > 1:
         nfs_root = sys.argv[1]
     dirs_list = []
     #while True:
+    hasnfs = mount_nfs()
     files = os.listdir(nfs_root)
     files_path = [f'{nfs_root}/{file}' for file in files]
     for file in files_path:
@@ -523,6 +549,8 @@ def main():
             break
         parse_new_crash(dir)
         #time.sleep(20)
+    if hasnfs:
+        umount_nfs()
 
 
 if __name__ == "__main__":
