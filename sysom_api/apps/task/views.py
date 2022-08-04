@@ -56,6 +56,10 @@ class TaskAPIView(GenericViewSet,
         if not instance:
             return success([])
         response = seriaizer.JobRetrieveSerializer(instance)
+        res = response.data
+        result = res['result']
+        if 'state' in result:
+            res['result'] = result['result']
         return success(result=response.data)
 
     def list(self, request, *args, **kwargs):
