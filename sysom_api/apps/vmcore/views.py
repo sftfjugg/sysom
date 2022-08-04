@@ -14,6 +14,7 @@ from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
 from lib import success, other_response
+from sysom import settings
 import datetime
 import re
 
@@ -103,6 +104,9 @@ class VmcoreViewSet(GenericViewSet,
                     logger.error("crontab error")
 
             config = models.VmcoreConfig.objects.create(name=data['name'], server_host=data['server_host'], mount_point=data['mount_point'], days=data['days'])
+            with open('%s/vmcore_nfs_config'%settings.DOWNLOAD_DIR,'w') as fout:
+                confline = "name=%(name)s\nserver_host=%(server_host)s\nmount_point=%(mount_point)s\ndays=%(days)s\n" % data
+                fout.write(confline)
             return success(result=serializer.ConfigSerializer(config).data, message="插入成功")
 
         response = super().create(request, *args, **kwargs)
