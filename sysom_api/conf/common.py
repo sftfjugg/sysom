@@ -141,6 +141,10 @@ SERVER_IP = get_ip_address()
 
 IS_MICRO_SERVICES = False # 是否微服务
 
+# sysom node resource download dir
+WEB_DIR = os.path.join(BASE_DIR.parent, 'sysom_web')
+DOWNLOAD_DIR = os.path.join(WEB_DIR, 'download')
+
 # sysom service
 SYSOM_SERVICE = 'http://127.0.0.1:7001'
 TASK_SERVICE = 'http://127.0.0.1:7002'
