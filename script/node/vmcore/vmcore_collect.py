@@ -101,7 +101,32 @@ def upload_nfs(vmcore_dir):
     with open('%s/.upload' % vmcore_dir,'w') as f:
         pass
 
+def nfs_config():
+    global nfs_ip, nfs_dir
+    server_local_ip = ""
+    with open("/usr/local/sysom/sysom_node_init/conf",'r') as fin:
+        line = fin.readline()
+        while len(line):
+            if line.startswith("SERVER_LOCAL_IP"):
+                server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
+            line = fin.readline()
+    if server_local_ip != "":
+        cmd = f'wget -T 3 -t 1 http://{server_local_ip}/download/vmcore_nfs_config'
+        ret = os.system(cmd)
+        if ret:
+            return False
+        with open("vmcore_nfs_config",'r') as fin:
+            line = fin.readline()
+            while len(line):
+                if line.startswith("server_host"):
+                    nfs_ip = line.split("server_host=")[1].strip()
+                if line.startswith("mount_point"):
+                    nfs_dir = line.split("mount_point=")[1].strip()
+                line = fin.readline()
+    return True
+
 def main():
+    nfs_config()
     crash_path = get_crash_path()
     dirs_list = []
     files = os.listdir(crash_path)
