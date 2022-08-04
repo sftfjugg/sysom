@@ -110,10 +110,12 @@ export function patchRoutes({ routes }) {
   //Add The extraDiagnoseRoute in it.
   diagnoseRoute.map(item => {
     const new_routes = _.keyBy(extraDiagnoseRoute, 'path')[item.path]?.routes
-    if (item.routes && new_routes)
-      item.routes = item.routes.concat(new_routes)
-    if (!item.routes && new_routes)
+    if (item.routes && new_routes){
+      item.routes = item.routes.concat(new_routes);
+    }
+    if (!item.routes && new_routes) {
       item.routes = new_routes
+    }
   })
 }
 
@@ -158,13 +160,18 @@ export function render(oldRender) {
           f_: `/${configPath.join('/')}`,
           component: diagnose
         })
-
+        
         let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
           .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
           .value();
-        extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
-        oldRender();
+        let route_item = _.keyBy(extraDiagnoseRoute, 'path')[currentExtraDiagnoseRoute[0].path]
+        if (!!route_item) {
+          route_item.routes = route_item.routes.concat(currentExtraDiagnoseRoute[0].routes)
+        } else {
+          extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
+        }
       })
+      oldRender();
     })
   })
 }
