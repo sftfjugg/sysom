@@ -433,19 +433,26 @@ class ClusterViewSet(CommonModelViewSet,
             "sub": 1,
             "level": 2
         }
+
+        fail_list, success_count = [], 0
         for instance in querysets:
             hostInstance = HostModel.objects.filter(
                 cluster=instance.id).first()
             if hostInstance is None:
                 # 不包含主机，执行删除
                 self.perform_destroy(instance)
+                success_count += 1
             else:
                 # 包含主机不允许删除
                 kwargs.update(
                 {'message': f"Cluster（{instance.cluster_name}） contains hosts, delete failed!"})
                 kwargs.update({'collected_time': human_datetime()})
                 _create_alarm_message(kwargs)
-        return other_response(message='operation success!')
+                fail_list.append(instance.cluster_name)
+        return other_response(message='operation success!', result={
+            "fail_list": fail_list,
+            "success_count": success_count
+        })
 
 
 class SaveUploadFile(APIView):
