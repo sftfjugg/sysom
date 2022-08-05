@@ -30,7 +30,7 @@ then
 		if [ -d $dir ]
 		then
 			pushd $dir
-			bash -x init.sh
+			bash -x init.sh || exit 1
 			popd
 		fi
 	done

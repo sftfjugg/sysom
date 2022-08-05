@@ -22,6 +22,25 @@ fi
 
 mkdir -p ${SERVER_HOME}
 
+check_selinux_status()
+{
+    ###check selinux rpm###
+    rpm -qa | grep selinux-policy
+    if [ $? -eq 0 ]
+    then
+        cat /etc/selinux/config  | grep "SELINUX=disabled"
+        if [ $? -eq 0 ]
+        then
+            echo "selinux disable..."
+        else
+            echo "selinux enable, please set selinux disable"
+            exit 1
+        fi
+    else
+        echo "selinux rpm package not install"
+    fi
+}
+
 touch_virtualenv() {
     mkdir -p ~/.pip
     cp pip.conf ~/.pip/
@@ -98,6 +117,7 @@ start_app() {
 }
 
 deploy() {
+    check_selinux_status
     touch_virtualenv
     check_requirements
     setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
