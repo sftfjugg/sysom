@@ -518,7 +518,7 @@ def mount_nfs():
     cmd = 'mount -t nfs %s:%s %s' % (server_host,mount_point,nfs_root)
     ret = os.system(cmd)
     if ret != 0:
-        print('failed to mount to nfs %s' % vmcore_dir)
+        print('failed to mount to nfs %s' % nfs_root)
         return False
     return True
 
@@ -550,7 +550,7 @@ def main():
         parse_new_crash(dir)
         #time.sleep(20)
     if hasnfs:
-        umount_nfs()
+        unmount_nfs()
 
 
 if __name__ == "__main__":
