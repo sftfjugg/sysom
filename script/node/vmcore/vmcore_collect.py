@@ -111,7 +111,7 @@ def nfs_config():
                 server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
             line = fin.readline()
     if server_local_ip != "":
-        cmd = f'wget -T 3 -t 1 http://{server_local_ip}/download/vmcore_nfs_config'
+        cmd = f'wget -T 3 -t 1 http://{server_local_ip}/download/vmcore_nfs_config -O vmcore_nfs_config'
         ret = os.system(cmd)
         if ret:
             return False
