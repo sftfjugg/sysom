@@ -60,7 +60,7 @@ class TaskAPIView(GenericViewSet,
         result = res['result']
         if 'state' in result:
             res['result'] = result['result']
-        return success(result=response.data)
+        return success(result=res)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
