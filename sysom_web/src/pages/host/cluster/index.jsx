@@ -1,5 +1,5 @@
 import { PageContainer } from '@ant-design/pro-layout';
-import { Popconfirm, message, Table, Space, notification} from 'antd';
+import { Popconfirm, message, Table, Space, notification } from 'antd';
 import { useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import ProTable from '@ant-design/pro-table';
@@ -34,25 +34,21 @@ const handleBatchDeleteCluster = async (e) => {
     const body = { cluster_id_list: cluster_id_list };
     const token = localStorage.getItem('token');
     await batchDelCluster(body, token)
-      .then((res) => {
-        if (res.code === 200) {
-          notification.success({
-            duration: 2,
-            description: '操作成功',
-            message: '操作',
-          });
-        } else {
-          notification.warn({
-            duration: 2,
-            description: '操作失败',
-            message: '操作'
-          });
-        }
-      })
-      .catch((e) => {
-        notification.error({ duration: 2, description: e, message: '操作' });
-      });
-  };
+        .then((res) => {
+            if (res.code === 200) {
+                if (res.data.fail_list && res.data.fail_list.length > 0) {
+                    message.success(`批量删除成功${res.data.success_count}个，失败：${res.data.fail_list.length}个`)
+                } else {
+                    message.success("批量删除操作成功")
+                }
+            } else {
+                message.warn("批量删除操作失败")
+            }
+        })
+        .catch((e) => {
+            notification.error({ duration: 2, description: e, message: '操作' });
+        });
+};
 
 const ClusterField = {
     cluster_name: '集群名称',
@@ -187,7 +183,7 @@ const ClusterList = () => {
                             clusterListTableActionRef.current.reload()
                         }
                         if (res.data.fail_list && res.data.fail_list.length > 0) {
-                            message.success(`导入成功${res.data.success_count}个，导入失败：${res.data.fail_list.join()}`)
+                            message.success(`导入成功${res.data.success_count}个，导入失败：${res.data.fail_list.length}个`)
                         } else {
                             message.success("导入成功")
                         }
