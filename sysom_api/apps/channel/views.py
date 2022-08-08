@@ -1,10 +1,10 @@
 import logging
 import re
+from importlib import import_module
 from rest_framework.viewsets import GenericViewSet
 from .models import ExecuteResult
 from lib.response import other_response
-from lib.utils import uuid_8
-from .channels.ssh import SSHChannel
+from .channels.ssh import SSH
 
 
 logger = logging.getLogger(__name__)
@@ -23,23 +23,11 @@ class ChannelAPIView(GenericViewSet):
 
     def channel_post(self, request, *args, **kwargs):
         data = getattr(request, 'data')
-        result = dict()
-        channel = data.get('channel', None)
-        if channel is None or channel == 'ssh':
-            res, msg = self.validate_ssh_channel_parame(data)
-            if not res:
-                return other_response(code=400, message=msg, success=False)
-            try:
-                ssh = SSHChannel(hostname=data['instance'])
-                state, res = ssh.run_command(data['cmd'])
-                task_id = uuid_8()
-                ExecuteResult.objects.create(task_id=task_id, result={'state': state, 'result': res})
-                result['task_id'] = task_id
-                result['state'] = state
-            except Exception as e:
-                return other_response(code=400, message=f'Error: {e}', success=False)
-        else:
-            return other_response(code=400, message='channel 不存在!', success=False)
+        channel_type = data.pop('channel', 'ssh')
+        package = import_module(f'apps.channel.channels.{channel_type}')
+
+        channel = package.Channel(**data)
+        result  = channel.run_command()
         return other_response(result=result, message='操作成功')
 
     def validate_ssh_channel_parame(self, data):
@@ -82,7 +70,7 @@ class ChannelAPIView(GenericViewSet):
         if 'port' in data:
             kwargs['port'] = data.get('port')
 
-        s, m = SSHChannel.validate_ssh_host(**kwargs)
+        s, m = SSH.validate_ssh_host(**kwargs)
         if s:
             return other_response(message=m)
         else:

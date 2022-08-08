@@ -25,7 +25,7 @@ from lib.utils import HTTP
 from lib.validates import validate_ssh
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
-from apps.channel.channels.ssh import SSHChannel
+from apps.channel.channels.ssh import SSH
 
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class HostModelViewSet(CommonModelViewSet,
         instance.save()
 
     def _validate_and_initialize_host(self, context):
-        s, e = SSHChannel.validate_ssh_host(
+        s, e = SSH.validate_ssh_host(
             ip=context['ip'],
             password=context['host_password'],
             username=context['username'],
