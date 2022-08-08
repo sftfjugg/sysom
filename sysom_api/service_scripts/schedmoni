@@ -11,16 +11,12 @@ import time
 ##	"instance":"192.168.1.101",
 ##	"thresh":"10000",
 ##	"diag_time":"10",
-##	"diag_thread":"10002"
-##	"诊断应用":"myApp"
 ## }
-## '{"instance":"192.168.1.101", "diag_time":10, "thresh":10000, "diag_thread":10002}'
+## '{"instance":"192.168.1.101", "diag_time":20, "thresh":50}'
 ## 解析参数方法:
-## sysak schedmoni 10000  -s 10 -t 10002
-##  10000 thresh, 捕获延迟10000 us的事件
-##  -s 10 诊断时间10秒
-##  -t 10002 针对线程10002进行监控
-##  -c "myApp" 针对应用myApp进行监控
+## sysak schedmoni -j -s 20 50
+##  50 门限, 捕获延迟超过50ms的事件
+##  -s 20 诊断时间20秒
 ##
 ######################################################################
 class Param(dict):
@@ -39,17 +35,9 @@ arg_time = args["diag_time"]
 if arg_time:
 	arg_time = '-s ' + str(arg_time)
 arg_thresh = args["thresh"]
-arg_tid = args["diag_thread"]
-if arg_tid:
-	arg_tid = '-t ' + str(arg_tid)
 
-arg_app = args["诊断应用"]
-if arg_app:
-	arg_app = '-c ' + str(arg_app)
-
-dump_log_cmd = "cat /var/log/sysak/schedmoni/runslow.log;\
-    echo \"\";cat /var/log/sysak/schedmoni/nosched.log;"
-schedmoni_cmd = "sysak schedmoni "+str(arg_tid)+" "+str(arg_app)+" "+str(arg_thresh)+" "+str(arg_time)
+dump_log_cmd = "cat /var/log/sysak/schedmoni/schedmoni.json;"
+schedmoni_cmd = "sysak schedmoni -j "+str(arg_time)+" "+str(arg_thresh)+" > /dev/null"
 cmd0['cmd'] = schedmoni_cmd+" && "+dump_log_cmd
 
 result['commands'].append(cmd0)
