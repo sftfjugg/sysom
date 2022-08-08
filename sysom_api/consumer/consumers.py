@@ -43,7 +43,7 @@ class SshConsumer(WebsocketConsumer):
     def _connect_host_init(self):
         """初始化host连接"""
         from apps.host.models import HostModel
-        from apps.channel.channels.ssh import SSHChannel
+        from apps.channel.channels.ssh import SSH
         instance = get_host_instance(model=HostModel, ip=self.host_ip, created_by=self.user.id)
         if not instance:
             self.send(bytes_data=b'Not Found host / No Permission\r\n')
@@ -55,7 +55,7 @@ class SshConsumer(WebsocketConsumer):
         self.send(bytes_data=b'Connecting ...\r\n')
         try:
             # self.ssh = self.host.get_host_client().get_client()
-            self.ssh = SSHChannel(hostname=instance.ip, username=instance.username, port=instance.port)._client
+            self.ssh = SSH(hostname=instance.ip, username=instance.username, port=instance.port)._client
         except Exception as e:
             self.send(bytes_data=f'Exception: {e}\r\n'.encode())
             self.close()
