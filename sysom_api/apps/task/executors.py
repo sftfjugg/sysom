@@ -3,7 +3,6 @@ import os
 import socket
 import subprocess
 import logging
-
 from apps.task.models import JobModel
 from django.conf import settings
 from django.db import connection
@@ -60,7 +59,6 @@ class SshJob:
             host_ips.append(ip)
 
             status_code, result = Channel.post_channel(data=script, token=self.user['token'])
-
             if status_code == 200:
                 task_id = result.get('task_id')
                 self.update_job(task_id=task_id)
@@ -121,7 +119,7 @@ class SshJob:
         
     def _import_service(self):
         from apps.host.models import HostModel
-        from apps.channel.channels.ssh import SSHChannel
+        from apps.channel.channels.ssh import SSH
 
         try:
             self.update_job(status="Running")
@@ -143,7 +141,7 @@ class SshJob:
                     self.update_job(status="Fail",
                                result="host not found by script return IP:%s" % ip)
                     break
-                ssh_cli = SSHChannel(
+                ssh_cli = SSH(
                     hostname=host.ip, port=host.port, username=host.username)
 
                 status, result = ssh_cli.run_command(cmd)
