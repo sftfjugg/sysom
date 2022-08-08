@@ -3,12 +3,17 @@ import logging
 import paramiko
 from io import StringIO
 from paramiko.client import SSHClient, AutoAddPolicy
-from paramiko.rsakey import RSAKey 
+from paramiko.rsakey import RSAKey
+from django.db import connection
 
 from .base import BaseChannel
-from ..models import SettingsModel
+from ..models import SettingsModel, ExecuteResult
+from lib.exception import APIException
+from lib.utils import uuid_8
 
-__all__ = ['SSH']
+
+logger = logging.getLogger(__name__)
+
 
 class ChannelError(paramiko.AuthenticationException):
     def __init__(self, code=400, message='后端异常', args=('后端异常',)) -> None:
@@ -20,7 +25,7 @@ class ChannelError(paramiko.AuthenticationException):
         return self.message
 
 
-class SSHChannel(BaseChannel):
+class SSH:
     """
     args: 
         - hostname         主机IP (必填) 
@@ -40,7 +45,9 @@ class SSHChannel(BaseChannel):
         if 'password' in kwargs:
             self.connect_args['password'] = kwargs.get('password')
         else:
-            self.connect_args['pkey'] = RSAKey.from_private_key(StringIO(self.get_ssh_key()['private_key']))
+            self.connect_args['pkey'] = RSAKey.from_private_key(
+                StringIO(self.get_ssh_key()['private_key']))
+
         self._client: SSHClient = self.client()
 
     def client(self):
@@ -55,7 +62,7 @@ class SSHChannel(BaseChannel):
             raise Exception('authorization fail!')
 
     @classmethod
-    def get_ssh_key(self) -> dict:
+    def get_ssh_key(cls) -> dict:
         instance = SettingsModel.objects.get(key='ssh_key')
         return json.loads(instance.value)
 
@@ -76,15 +83,64 @@ class SSHChannel(BaseChannel):
         command = f'mkdir -p -m 700 ~/.ssh && \
         echo {public_key!r} >> ~/.ssh/authorized_keys && \
         chmod 600 ~/.ssh/authorized_keys'
-        statue, _  = self.run_command(command)
+        statue, _ = self.run_command(command)
         if statue != 0:
             raise Exception('add public key faild!')
 
     @staticmethod
-    def validate_ssh_host(ip: str, password: str, port: int=22, username: str='root'):
+    def validate_ssh_host(ip: str, password: str, port: int = 22, username: str = 'root'):
         try:
-            ssh = SSHChannel(hostname=ip, password=password, port=port, username=username, timeout=2)
+            ssh = SSH(hostname=ip, password=password,
+                          port=port, username=username, timeout=2)
             ssh.add_public_key()
             return True, 'authorization success'
         except Exception as e:
             return False, f'error: {e}'
+
+
+class Channel(BaseChannel):
+    FIELDS = ('instance', 'cmd')
+
+    def __init__(self, *args, **kwargs) -> None:
+        self.kwargs = kwargs
+        self.ssh = None
+        self.shell_script = None
+
+        self.validate_kwargs()
+
+    def validate_kwargs(self):
+        for item in filter(
+            lambda x: not x[1], [(field, self.kwargs.get(field, None))
+                                 for field in self.FIELDS]
+        ):
+            raise APIException(message=f'parameter: {item[0]} not found!')
+
+        if not self.ssh:
+            self.ssh = SSH(hostname=self.kwargs['instance'])
+            self.shell_script = self.kwargs['cmd']
+
+    def client(self):
+        return self.ssh if self.ssh else SSH(hostname=self.kwargs['instance'])
+
+    def run_command(self):
+        kwargs = dict()
+        task_id = uuid_8()
+        kwargs['task_id'] = task_id
+
+        status, res = self.ssh.run_command(self.shell_script)
+        kwargs['result'] = {'state': status, 'result': res}
+        
+        self._save_execute_result(kwargs)
+        return {
+            'task_id': task_id,
+            'state': status
+        }
+
+    @classmethod
+    def _save_execute_result(cls, kwargs):
+        try:
+            ExecuteResult.objects.create(**kwargs)
+        except Exception as e:
+            raise APIException(message=str(e))
+        finally:
+            connection.close()
