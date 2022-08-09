@@ -6,6 +6,7 @@
         "menu.diagnose.cpu": "调度诊断中心"
     },
     "dashboard": {
-        "menu.diagnose.memory.memgraph": "内存大盘"
+        "menu.diagnose.memory.memgraph": "内存大盘",
+        "menu.diagnose.cpu.schedmoni": "调度抖动诊断"
     }
 }
