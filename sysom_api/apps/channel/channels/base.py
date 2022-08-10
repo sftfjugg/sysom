@@ -5,6 +5,10 @@
 文件中实现Channel类, 继承BaseChannel类, 必须实现client方法, run_command方法
 """
 from abc import ABCMeta, abstractmethod
+from django.db import connection
+
+from ..models import ExecuteResult
+from lib.exception import APIException
 
 
 class BaseChannel(metaclass=ABCMeta):
@@ -14,5 +18,14 @@ class BaseChannel(metaclass=ABCMeta):
         raise NotImplemented
 
     @abstractmethod
-    def run_command(self, cmd):
+    def run_command(self, **kwargs):
         raise NotImplemented
+
+    @classmethod
+    def _save_execute_result(cls, kwargs):
+        try:
+            ExecuteResult.objects.create(**kwargs)
+        except Exception as e:
+            raise APIException(message=str(e))
+        finally:
+            connection.close()

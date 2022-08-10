@@ -76,7 +76,7 @@ class SSH:
             output = stdout.read().decode()
             return statue, output
         else:
-            raise
+            raise Exception('No client!')
 
     def add_public_key(self):
         public_key = self.get_ssh_key()['public_key']
@@ -135,12 +135,3 @@ class Channel(BaseChannel):
             'task_id': task_id,
             'state': status
         }
-
-    @classmethod
-    def _save_execute_result(cls, kwargs):
-        try:
-            ExecuteResult.objects.create(**kwargs)
-        except Exception as e:
-            raise APIException(message=str(e))
-        finally:
-            connection.close()
