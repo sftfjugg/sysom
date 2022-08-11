@@ -39,6 +39,12 @@ class TaskAPIView(GenericViewSet,
     authentication_classes = [TaskAuthentication]
     create_requird_fields = ['instance', 'service_name']
 
+    def get_authenticators(self):
+        if self.request.path.endswith("svg/"):
+            return []
+        else:
+            return [auth() for auth in self.authentication_classes]
+
     def create(self, request, *args, **kwargs):
         try:
             data = request.data
@@ -80,7 +86,7 @@ class TaskAPIView(GenericViewSet,
         if etx != 'svg':
             return not_found(message="请输入正确参数: SVG")
 
-        instance = get_object_or_404(JobModel, pk=task_id)
+        instance = get_object_or_404(JobModel, task_id=task_id)
         if instance.status == 'Success':
             result = instance.result
             svg_context = result.get('flamegraph', None)
