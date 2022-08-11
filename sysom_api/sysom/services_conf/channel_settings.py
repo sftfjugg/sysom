@@ -26,6 +26,3 @@ REST_FRAMEWORK = {
     'UNICODE_JSON': False,
     'EXCEPTION_HANDLER': 'lib.exception.exception_handler'
 }
-
-ACCESS_KEY = 'LTAI5tECx9QCCg5cwcJgJTW4'                # 设置 AccessKey ID
-ACCESS_KEY_SECRET = '15rhOE4jX5zzQQXgcK9EPb714J0Xic'   # 设置 AccessKey Secret
