@@ -41,10 +41,7 @@
             "key": "jitterTable",
             "type": "table",
             "title": "调度抖动详情",
-            "datasource": "jitterTable",
-            "fieldConfig": {
-                "unit": "ms"
-            }
+            "datasource": "jitterTable"
         }
     ]
 

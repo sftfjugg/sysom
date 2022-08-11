@@ -19,4 +19,6 @@ if __name__ == "__main__":
 	str1 = sys.argv[1]
 	str2 = str1.replace('\n', "")
 	str3 = str2.replace('\t', "")
-	print(str3)
+	data3=json.loads(str3)
+	data=json.dumps(data3["datasources"],ensure_ascii=False)
+	print(data)
