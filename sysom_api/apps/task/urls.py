@@ -15,5 +15,5 @@ router.register('tasks', views.TaskAPIView)
 
 urlpatterns = [
     path('api/v1/', include(router.urls)),
-    re_path('^api/v1/tasks/(?P<task_id>\d+)/(?P<etx>[a-zA-Z]+)/$', views.TaskAPIView.as_view({'get': 'get_task_svg'})),
+    re_path('^api/v1/tasks/(?P<task_id>[a-zA-Z0-9]+)/(?P<etx>[a-zA-Z]+)/$', views.TaskAPIView.as_view({'get': 'get_task_svg'})),
 ]
