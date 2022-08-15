@@ -333,7 +333,6 @@ class HostModelViewSet(CommonModelViewSet,
         except HostModel.DoesNotExist:
             raise APIException(message=f'Error: ip {host_ip} not exist!') 
 
-
     def _validate_ip_format(self, ip) -> bool:
         p = '((\d{1,2})|([01]\d{2})|(2[0-4]\d)|(25[0-5]))'
         pattern = '^' + '\.'.join([p]*4) + '$'
