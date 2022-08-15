@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/v1/host/batch_add/', views.HostModelViewSet.as_view({'post': 'batch_add_host'})),
     path('api/v1/host/batch_export/', views.HostModelViewSet.as_view({'post': 'batch_export_host'})),
     path('api/v1/host/batch_del/', views.HostModelViewSet.as_view({'post': 'batch_del_host'})),
+    re_path(r'^api/v1/host/ip/(?P<host_ip>.*)/$', views.HostModelViewSet.as_view({'get': 'get_host'})),
     re_path(r'^api/v1/host/del/(?P<host_ip>.*)/$', views.HostModelViewSet.as_view({'delete': 'del_host'})),
     re_path(r'^api/v1/host/update/(?P<host_ip>.*)/$', views.HostModelViewSet.as_view({'patch': 'patch_host'})),
     path('api/v1/cluster/batch_add/', views.ClusterViewSet.as_view({'post': 'batch_add_cluster'})),
