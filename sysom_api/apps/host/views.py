@@ -324,6 +324,16 @@ class HostModelViewSet(CommonModelViewSet,
         except HostModel.DoesNotExist as e:
             raise APIException(message=f'Error: ip {host_ip} not exist!')
 
+    def get_host(self, request, host_ip):
+        if not self._validate_ip_format(host_ip):
+            return other_response(code=400, message='ip不合法!', success=False)
+        try:
+            HostModel.objects.get(ip=host_ip)
+            return success(result={})
+        except HostModel.DoesNotExist:
+            raise APIException(message=f'Error: ip {host_ip} not exist!') 
+
+
     def _validate_ip_format(self, ip) -> bool:
         p = '((\d{1,2})|([01]\d{2})|(2[0-4]\d)|(25[0-5]))'
         pattern = '^' + '\.'.join([p]*4) + '$'
