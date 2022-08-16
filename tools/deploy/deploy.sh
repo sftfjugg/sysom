@@ -12,16 +12,20 @@ APP_NAME="sysom"
 API_DIR="sysom_api"
 WEB_DIR="sysom_web"
 SCRIPT_DIR="script"
+APP_HOME=/usr/local/sysom
+SERVER_LOCAL_IP=""
+SERVER_PUBLIC_IP=""
 
 if [ $# != 3 ] ; then
     echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP"
-    echo " e.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx"
-    exit 1
+    echo "Or we use default install dir: /usr/local/sysom/"
+    echo "E.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx"
+else
+    APP_HOME=$1
+    SERVER_LOCAL_IP=$2
+    SERVER_PUBLIC_IP=$3
 fi
 
-APP_HOME=$1
-SERVER_LOCAL_IP=$2
-SERVER_PUBLIC_IP=$3
 SERVER_HOME=${APP_HOME}/server
 
 export APP_HOME=${APP_HOME}
@@ -74,13 +78,17 @@ update_target() {
 
 init_conf() {
     mkdir -p /run/daphne
+    mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
     cp tools/deploy/nginx.conf /etc/nginx/
     cp tools/deploy/sysom.conf /etc/nginx/conf.d/
-    sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/nginx/conf.d/sysom.conf
     cp tools/deploy/sysom.ini /etc/supervisord.d/
-    sed -i "s;/home/sysom;${SERVER_HOME};g" /etc/supervisord.d/sysom.ini
     cp tools/deploy/task-service.ini /etc/supervisord.d/
     cp tools/deploy/channel-service.ini /etc/supervisord.d/
+    ###change the install dir base on param $1###
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/sysom.ini
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/task-service.ini
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/channel-service.ini
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
     cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
     sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${API_DIR}/conf/task_gunicorn.py
