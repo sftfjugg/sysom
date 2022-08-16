@@ -104,13 +104,24 @@ export function patchRoutes({ routes }) {
     .routes.splice(-1, 0, ...extraGrafanaRoutes)
 
   //Find the array of diagonse's children. ex: io, net, memory
-  let diagnoseRoute = routes.find((item) => item.path == "/")
-    .routes.find(item => item.name == "diagnose").routes
+  let diagnose = routes.find((item) => item.path == "/")
+    .routes.find(item => item.name == "diagnose")
+
+  // Add forder
+  extraDiagnoseRoute.map(item => {
+    if (!_.keyBy(diagnose.routes, 'path')[item.path]) {
+      // Add forder if not exist
+      diagnose.routes = diagnose.routes.concat({
+        ...item,
+        routes: []
+      })
+    }
+  })
 
   //Add The extraDiagnoseRoute in it.
-  diagnoseRoute.map(item => {
+  diagnose.routes.map(item => {
     const new_routes = _.keyBy(extraDiagnoseRoute, 'path')[item.path]?.routes
-    if (item.routes && new_routes){
+    if (item.routes && new_routes) {
       item.routes = item.routes.concat(new_routes);
     }
     if (!item.routes && new_routes) {
@@ -160,7 +171,7 @@ export function render(oldRender) {
           f_: `/${configPath.join('/')}`,
           component: diagnose
         })
-        
+
         let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
           .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
           .value();
