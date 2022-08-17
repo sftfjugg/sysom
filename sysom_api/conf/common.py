@@ -149,6 +149,10 @@ SYSOM_SERVICE = 'http://127.0.0.1:7001'
 TASK_SERVICE = 'http://127.0.0.1:7002'
 CHANNEL_SERVICE = 'http://127.0.0.1:7003'
 
+# cec settings
+SYSOM_CEC_URL = "redis://localhost:6379"
+SYSOM_CEC_ALARM_MAXLEN = 1000
+
 # API
 TASK_API = f'{TASK_SERVICE}/api/v1/tasks/'
 HOST_LIST_API = f'{SYSOM_SERVICE}/api/v1/host/'
