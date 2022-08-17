@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'apps.vmcore',
     'apps.alarm',
     'apps.channel',
-    'consumer',
 
     'rest_framework',
     'corsheaders',
