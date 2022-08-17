@@ -2,12 +2,13 @@ import logging
 import json
 from threading import Thread
 from urllib import parse
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
 from channels.exceptions import StopConsumer
 from django.conf import settings
 from django_redis import get_redis_connection
-
 import os
+from django.conf import settings
+from sdk.cec_base.consumer import Consumer, dispatch_consumer
 
 
 logger = logging.getLogger(__name__)
@@ -107,40 +108,22 @@ class SshConsumer(WebsocketConsumer):
         raise StopConsumer()
 
 
-class NoticelconConsumer(WebsocketConsumer):
+class NoticelconConsumer(JsonWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._user = None
-        self._subs = None
-        self._pubsub = None
-        self.rds = get_redis_connection('noticelcon')
+        self.consumer = None
 
     def connect(self):
         self._user = self.scope['user']
         if self._user:
             self.accept()
-            self._get_user_sub()
+            self.consumer = dispatch_consumer(settings.SYSOM_CEC_URL, f"sysom_alarm-{self._user.username}",
+                                              consumer_id=Consumer.generate_consumer_id(), start_from_now=True)
             Thread(target=self.loop_message).start()
         else:
             self.close()
-
-    def _get_user_sub(self):
-        self._subs = self._user.subs.filter(deleted_at=None).values('title')
-
-        self._pubsub = self.rds.pubsub()
-        for sub in self._subs:
-            self._pubsub.subscribe(sub['title'])
-
+    
     def loop_message(self):
-        for item in self._pubsub.listen():
-            result = dict()
-            result['sub'] = str(item['channel'], encoding='gbk')
-            result['message'] = item['data'] if isinstance(
-                item['data'], int) else json.loads(item['data'].decode())
-
-            self.send(text_data=result)
-
-    def send(self, text_data=None, bytes_data=None, close=False):
-        if isinstance(text_data, dict):
-            text_data = json.dumps(text_data)
-        return super().send(text_data, bytes_data, close)
+        for message in self.consumer:
+            self.send_json(message.value)

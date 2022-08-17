@@ -8,11 +8,12 @@ from django_redis import get_redis_connection
 from rest_framework.filters import SearchFilter, OrderingFilter
 from apps.alarm.models import AlarmModel, SubscribeModel
 from lib import *
+from django.conf import settings
+from sdk.cec_base.producer import Producer, dispatch_producer
 
 
 logger = logging.getLogger(__name__)
-rds = get_redis_connection('noticelcon')
-
+producer: Producer = dispatch_producer(settings.SYSOM_CEC_URL, default_max_len=settings.SYSOM_CEC_ALARM_MAXLEN)
 
 def _create_alarm_message(kwargs):
     alarm_serializer = serializer.AddAlarmSerializer(data=kwargs)
@@ -20,8 +21,11 @@ def _create_alarm_message(kwargs):
     alarm_serializer.save()
     channel = alarm_serializer.instance.sub.title
     ser = serializer.AlarmSerializer(alarm_serializer.instance)
-    rds.publish(channel, json.dumps(ser.data))
-    rds.close()
+    producer.produce(f"sysom_alarm-{channel}", {
+        "sub": channel,
+        "message": ser.data
+    }, auto_mk_topic=True)
+    producer.flush()
     return alarm_serializer.data
 
 
