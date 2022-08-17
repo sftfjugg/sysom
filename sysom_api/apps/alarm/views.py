@@ -31,11 +31,14 @@ class AlarmAPIView(GenericViewSet,
                    mixins.CreateModelMixin,
                    mixins.UpdateModelMixin
                    ):
-    queryset = AlarmModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at='')).order_by("-created_at")
+    queryset = AlarmModel.objects.filter(
+        Q(deleted_at__isnull=True) | Q(deleted_at='')).order_by("-created_at")
     serializer_class = serializer.AlarmSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    search_fields = ('id', 'host__id', 'receiver__id', 'level', 'noticelcon_type')  # 模糊查询
-    filter_fields = ('id', 'host__id', 'receiver__id', 'level', 'noticelcon_type')  # 精确查询
+    search_fields = ('id', 'host__id', 'receiver__id',
+                     'level', 'noticelcon_type')  # 模糊查询
+    filter_fields = ('id', 'host__id', 'receiver__id',
+                     'level', 'noticelcon_type')  # 精确查询
 
     def create(self, request, *args, **kwargs):
         response = _create_alarm_message(request.data)
@@ -53,7 +56,7 @@ class AlarmAPIView(GenericViewSet,
         if not queryset:
             return success([], total=0)
         return super(AlarmAPIView, self).list(request, *args, **kwargs)
-    
+
     def update(self, request, *args, **kwargs):
         response = super().update(request, *args, **kwargs)
         return success(result=response.data, message="修改成功")
@@ -69,13 +72,14 @@ class AlarmAPIView(GenericViewSet,
 
 
 class SubAPIView(GenericViewSet,
-                   mixins.ListModelMixin,
-                   mixins.RetrieveModelMixin,
-                   mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.UpdateModelMixin
-                   ):
-    queryset = SubscribeModel.objects.filter(Q(deleted_at__isnull=True) | Q(deleted_at=''))
+                 mixins.ListModelMixin,
+                 mixins.RetrieveModelMixin,
+                 mixins.CreateModelMixin,
+                 mixins.DestroyModelMixin,
+                 mixins.UpdateModelMixin
+                 ):
+    queryset = SubscribeModel.objects.filter(
+        Q(deleted_at__isnull=True) | Q(deleted_at=''))
     serializer_class = serializer.SubSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
@@ -92,7 +96,7 @@ class SubAPIView(GenericViewSet,
         except Exception as e:
             logger.error(e)
             return other_response(message=str(e), code=400, success=False)
-    
+
     def destroy(self, request, *args, **kwargs):
         try:
             instance = self.get_queryset().filter(**kwargs).first()
