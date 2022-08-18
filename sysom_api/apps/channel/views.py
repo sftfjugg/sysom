@@ -1,10 +1,13 @@
 import logging
 import re
+import os
 from importlib import import_module
+from django.conf import settings
 from rest_framework.viewsets import GenericViewSet
 from .models import ExecuteResult
 from lib.response import other_response
 from .channels.ssh import SSH
+from lib.exception import APIException
 
 
 logger = logging.getLogger(__name__)
@@ -21,12 +24,37 @@ class ChannelAPIView(GenericViewSet):
             return other_response(code=400, message='task_id 不存在!')
         return other_response(message='操作成功', result=instance.result)
 
-    def channel_post(self, request, *args, **kwargs):
+    def valid_channel(self, request):
         data = getattr(request, 'data')
         channel_type = data.pop('channel', 'ssh')
         package = import_module(f'apps.channel.channels.{channel_type}')
+        try:
+            package.Channel(**request.data)
+            return import_module(f'apps.channel.channels.{channel_type}')
+        except Exception as e:
+            logger.error(e)
 
-        channel = package.Channel(**data)
+        channels_path = os.path.join(settings.BASE_DIR, 'apps', 'channel', 'channels')
+        packages = [dir.replace('.py', '') for dir in os.listdir(channels_path) if not dir.startswith('__')]
+        packages.remove('base')
+        packages.remove('ssh')
+
+        for i, pkg in enumerate(packages):
+            try:
+                package = import_module(f'apps.channel.channels.{pkg}')
+                package.Channel(**request.data)
+                channel_type = pkg
+                break
+            except Exception as e:
+                logger.error(e)
+                if i+1 == len(packages):
+                    raise APIException(message='No channels available!')
+                continue
+        return import_module(f'apps.channel.channels.{channel_type}')
+
+    def channel_post(self, request, *args, **kwargs):
+        package = self.valid_channel(request)
+        channel = package.Channel(**request.data)
         result  = channel.run_command()
         return other_response(result=result, message='操作成功')
 

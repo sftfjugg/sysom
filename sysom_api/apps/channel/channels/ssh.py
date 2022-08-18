@@ -4,12 +4,12 @@ import paramiko
 from io import StringIO
 from paramiko.client import SSHClient, AutoAddPolicy
 from paramiko.rsakey import RSAKey
-from django.db import connection
+from django.conf import settings
 
 from .base import BaseChannel
-from ..models import SettingsModel, ExecuteResult
+from ..models import SettingsModel
 from lib.exception import APIException
-from lib.utils import uuid_8
+from lib.utils import uuid_8, HTTP
 
 
 logger = logging.getLogger(__name__)
@@ -108,12 +108,19 @@ class Channel(BaseChannel):
 
         self.validate_kwargs()
 
+    def check_host_is_exist(self, instance: str) -> bool:
+        status, _ = HTTP.request('get', f'{settings.HOST_LIST_API}ip/{instance}/', '', {})
+        return True if status == 200 else False
+
     def validate_kwargs(self):
         for item in filter(
             lambda x: not x[1], [(field, self.kwargs.get(field, None))
                                  for field in self.FIELDS]
         ):
             raise APIException(message=f'parameter: {item[0]} not found!')
+        
+        if not self.check_host_is_exist(self.kwargs['instance']):
+            raise APIException(message=f'IP: {self.kwargs["instance"]} not exist')
 
         if not self.ssh:
             self.ssh = SSH(hostname=self.kwargs['instance'])
