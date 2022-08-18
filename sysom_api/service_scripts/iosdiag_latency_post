@@ -28,5 +28,12 @@ def iosdiagJoinData(raw):
     s = json.dumps(data, indent=4)
     print(s)
 
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
 if __name__ == "__main__":
-    iosdiagJoinData(sys.argv[1])
+    res, _ = extract_params()
+    iosdiagJoinData(res)

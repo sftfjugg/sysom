@@ -64,5 +64,12 @@ def memgraph_result(raw):
     print(json.dumps(newmemgraph, ensure_ascii=False))
 
 
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
 if __name__ == "__main__":
-    memgraph_result(sys.argv[1])
+    res, _ = extract_params()
+    memgraph_result(res)

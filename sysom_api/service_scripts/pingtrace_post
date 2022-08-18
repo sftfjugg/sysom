@@ -22,12 +22,6 @@ class CpingDeamon(object):
         print(s)
 
 if __name__ == "__main__":
-    fname="/tmp/pingtrace_argv_"+str(random.random())
-    f=open(fname,"w+")
-    f.write(sys.argv[1])
-    f.close()
-    f=open(fname,"r")
-    c = CpingDeamon(f)
-    c.proc()
-    f.close()
-    os.remove(fname)
+    with open(sys.argv[1], "r") as f:
+        c = CpingDeamon(f)
+        c.proc()

@@ -9,6 +9,7 @@ from django.db import connection
 from .channel import Channel
 from lib.response import ErrorResponse
 from lib.utils import HTTP
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +94,13 @@ class SshJob:
                         service_post_path = os.path.join(
                             SCRIPTS_DIR, service_post_name)
                         if os.path.exists(service_post_path):
-                            command_list = [service_post_path, res['result'], self.instance.task_id]
+                            # 创建一个临时文件，用于暂存中间结果
+                            fd, path = tempfile.mkstemp()
+                            command_list = [service_post_path, path, self.instance.task_id]
                             try:
+                                # 将要传递的中间结果写入到临时文件当中
+                                with os.fdopen(fd, 'w') as tmp:
+                                    tmp.write(res['result'])
                                 resp = subprocess.run(command_list, stdout=subprocess.PIPE,
                                                       stderr=subprocess.PIPE)
                                 if resp.returncode != 0:
@@ -107,12 +113,13 @@ class SshJob:
                                     result = stdout.decode('utf-8')
                                 except UnicodeDecodeError as e:
                                     result = stdout.decode('gbk')
-
                                 res = json.loads(result)
                             except Exception as e:
                                 logger.error(f'ERROR: {e}')
                                 self.update_job(status="Fail", result=str(e))
                                 break
+                            finally:
+                                os.remove(path)
                         
                 self.update_job(status="Success", result=res, host_by=host_ips)
                 
