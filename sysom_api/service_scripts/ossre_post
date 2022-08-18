@@ -169,14 +169,12 @@ def ossre_to_sysom_json(raw):
         print (json.dumps(retdata, indent=4,ensure_ascii=False))
         #traceback.print_exc()
 
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
 if __name__ == "__main__":
-    #iosdiagJoinData(sys.argv[1])
-    #cmd = "cat /var/log/sysak/ossre.log"
-    #cmd = "cat /tmp/ossre.log2"
-    #output = os.popen(cmd)
-    #rawdata = output.read()
-    #output.close()
-    #rawdata_json = json.loads(rawdata)
-    ##print (json.dumps(rawdata_json,ensure_ascii=False,indent=4))
-    ossre_to_sysom_json(sys.argv[1])
-    #ossre_to_sysom_json(rawdata)
+    res, _ = extract_params()
+    ossre_to_sysom_json(res)

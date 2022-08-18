@@ -15,8 +15,14 @@ class schedmoni(object):
 		tmp = self._file.readlines()
 		print(tmp);
 
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
 if __name__ == "__main__":
-	str1 = sys.argv[1]
+	str1, _ = extract_params()
 	str2 = str1.replace('\n', "")
 	str3 = str2.replace('\t', "")
 	data3=json.loads(str3)
