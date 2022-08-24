@@ -3,7 +3,6 @@ import os
 import socket
 import subprocess
 import logging
-import platform
 from apps.task.models import JobModel
 from django.conf import settings
 from django.db import connection
@@ -94,7 +93,7 @@ class SshJob:
                         service_post_path = os.path.join(
                             SCRIPTS_DIR, service_post_name)
                         if os.path.exists(service_post_path):
-                            command_list = ['python', service_post_path, res['result'], self.instance.task_id] if platform.system() == "Windows" else [service_post_path, res['result'], self.instance.task_id]
+                            command_list = [service_post_path, res['result'], self.instance.task_id]
                             try:
                                 resp = subprocess.run(command_list, stdout=subprocess.PIPE,
                                                       stderr=subprocess.PIPE)
