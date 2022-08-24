@@ -61,10 +61,10 @@ class SshJob:
 
             status_code, result = Channel.post_channel(data=script, token=self.user['token'])
             if status_code == 200:
-                task_id = result.get('task_id')
-                self.update_job(task_id=task_id)
-
-                _, r = Channel.get_channel_result(data={'task_id': task_id}, token=self.user['token'])
+                _, r = Channel.get_channel_result(
+                    data={'invoke_id': result['invoke_id']},
+                    token=self.user['token']
+                )
                 status = r['state']
                 result = r['result']
             else:
