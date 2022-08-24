@@ -3,6 +3,7 @@ import os
 import ast
 import subprocess
 import logging
+import platform
 from django.http.response import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
@@ -129,7 +130,7 @@ def script_task(data):
             return other_response(message="can not find script file, please check service name", code=400,
                                   success=False)
         try:
-            command_list = [service_path, json.dumps(data)]
+            command_list = ['python', service_path, json.dumps(data)] if platform.system() == "Windows" else [service_path, json.dumps(data)]
             resp = subprocess.run(command_list, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
         except Exception as e:

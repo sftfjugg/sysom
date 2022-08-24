@@ -19,9 +19,9 @@ class ChannelAPIView(GenericViewSet):
 
     def get_exec_result(self, request):
         try:
-            instance = ExecuteResult.objects.get(task_id=request.data.get('task_id'))
+            instance = ExecuteResult.objects.get(invoke_id=request.data.get('invoke_id'))
         except ExecuteResult.DoesNotExist as e:
-            return other_response(code=400, message='task_id 不存在!')
+            return other_response(code=400, message='invoke_id 不存在!')
         return other_response(message='操作成功', result=instance.result)
 
     def valid_channel(self, request):

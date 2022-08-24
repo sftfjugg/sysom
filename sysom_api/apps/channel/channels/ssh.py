@@ -131,14 +131,14 @@ class Channel(BaseChannel):
 
     def run_command(self):
         kwargs = dict()
-        task_id = uuid_8()
-        kwargs['task_id'] = task_id
+        invoke_id = uuid_8()
+        kwargs['invoke_id'] = invoke_id
 
         status, res = self.ssh.run_command(self.shell_script)
         kwargs['result'] = {'state': status, 'result': res}
         
         self._save_execute_result(kwargs)
         return {
-            'task_id': task_id,
+            'invoke_id': invoke_id,
             'state': status
         }
