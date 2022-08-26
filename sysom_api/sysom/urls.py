@@ -1,10 +1,18 @@
 from django.urls import path
 from django.urls.conf import include
+from django.http import HttpResponse
 from django.conf import settings
+
+def checkstatus(request):
+    """判断应用是否健康"""
+    return HttpResponse('success')
 
 app_urlpatterns = [path('', include(f'{app}.urls')) for app in settings.INSTALLED_APPS if app.startswith('apps')]
 
-urlpatterns = []
+urlpatterns = [
+    path('checkpreload.htm', checkstatus, name='checkstatus')
+]
+
 urlpatterns += app_urlpatterns
 
 if settings.DEBUG and not settings.IS_MICRO_SERVICES:

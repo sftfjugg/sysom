@@ -23,6 +23,12 @@ class BaseChannel(metaclass=ABCMeta):
 
     @classmethod
     def _save_execute_result(cls, kwargs):
+        """
+        执行Command信息添加到数据库
+        kwargs: 
+            invoke_id str 执行脚本ID
+            result    dict 执行脚本后的结果，例如：{'state': 0, 'result': 'xxxxxxxx'} 0为执行成功, 1位=为执行失败
+        """
         try:
             ExecuteResult.objects.create(**kwargs)
         except Exception as e:
