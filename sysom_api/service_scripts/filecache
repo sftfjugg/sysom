@@ -1,0 +1,51 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  {
+##    "service_name":"filecache",
+##    "instance":"192.168.1.101"
+##  }
+##  解析参数方法：
+##  sysak memgraph -j /var/log/sysak/memgraph.json -g -l -f -k -c 3 &&  cat /var/log/sysak/memgraph.json
+##  cat /var/log/sysak/memgraph.json 是memgraph诊断结果
+##
+###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+    args = Param(json.loads(sys.argv[1]))
+    result = {}
+    result['commands'] = []
+
+    cmd0 = {}
+    cmd0['instance'] = args["instance"]
+    cache_type = args['type']
+    value = args['value']
+    top = args['top']
+    cache_cmd = "sysak podmem "
+    if cache_type == "pod":
+        cache_cmd += " -p " + str(value)
+    elif cache_type == "container":
+        cache_cmd += " -c " + str(value)
+    elif cache_type == "all":
+        cache_cmd += " -a"
+    elif cache_type == "cgroup":
+        cache_cmd += " -f " + str(value)
+    elif cache_type == "host":
+        cache_cmd += " -s "
+    else:
+        sys.stderr.write("没有检查到诊断类型")
+        exit(1)
+    cache_cmd += " -t " + str(top)
+
+    cmd0['cmd'] = "mkdir -p /var/log/sysak && %s -j /var/log/sysak/podmem.json && cat /var/log/sysak/podmem.json"%(cache_cmd)
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)
