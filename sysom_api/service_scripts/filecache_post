@@ -12,11 +12,6 @@ def debug_log(msg):
     
 
 def filecache_result(raw):
-    outdata = {}
-    if raw.find("sort_file") == -1:
-        outdata = {"status": "fail"}
-        print(outdata)
-        return
     rawdata = json.loads(raw)
     cache = {"podmem":{"data":[]}}
     cache_type = rawdata['type']
@@ -31,15 +26,16 @@ def filecache_result(raw):
             for files in sort_file:
                 row = {}
                 row['key'] = i
-                row['容器组'] = key
-                row['容器'] = value["id"]
-                row['文件名'] = files['file']
-                row['文件大小'] = files['size']
-                row['缓存大小'] = files['cached']
-                row['活跃缓存'] = files['active']
-                row['非活跃缓存'] = files['inactive']
+                if 'id' in value.keys():
+                    row['POD'] = key
+                    row['Container'] = value["id"]
+                row['Filename'] = files['file']
+                row['Filesize'] = files['size']
+                row['Cached'] = files['cached']
+                row['ActiveCached'] = files['active']
+                row['InActiveCached'] = files['inactive']
                 ext = 's:'+str(files['shmem']) + ',d:'+str(files['delete'])
-                row['其他信息'] = ext
+                row['ext'] = ext
                 i = i + 1
                 cache['podmem']['data'].append(row)
     print(json.dumps(cache, ensure_ascii=False))
