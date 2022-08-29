@@ -4,6 +4,12 @@ import sys
 import json
 import random
 
+def debug_log(msg):
+    log_file = "/tmp/.file.txt"
+    fd = open(log_file, 'w+')
+    fd.write(str(msg))
+    fd.close()
+    
 
 def filecache_result(raw):
     outdata = {}
@@ -16,24 +22,25 @@ def filecache_result(raw):
     cache_type = rawdata['type']
     podid = cache_type
     data = rawdata['data']
-    for key, value in data.items():
-        if len(value['sort_file']) == 0:
-            continue
-        sort_file = value['sort_file']
-        i = 0
-        for files in sort_file:
-            row = {}
-            row['key'] = i
-            row['容器'] = key
-            row['文件名'] = files['file']
-            row['文件大小'] = files['size']
-            row['缓存大小'] = files['cached']
-            row['活跃缓存'] = files['active']
-            row['非活跃缓存'] = files['inactive']
-            ext = 's:'+str(files['shmem']) + ',d:'+str(files['delete'])
-            row['其他信息'] = ext
-            i = i + 1
-            cache['podmem']['data'].appent(row)
+    for key, _value in data.items():
+        for value in _value:
+            if len(value['sort_file']) == 0:
+                continue
+            sort_file = value['sort_file']
+            i = 0
+            for files in sort_file:
+                row = {}
+                row['key'] = i
+                row['容器'] = key
+                row['文件名'] = files['file']
+                row['文件大小'] = files['size']
+                row['缓存大小'] = files['cached']
+                row['活跃缓存'] = files['active']
+                row['非活跃缓存'] = files['inactive']
+                ext = 's:'+str(files['shmem']) + ',d:'+str(files['delete'])
+                row['其他信息'] = ext
+                i = i + 1
+                cache['podmem']['data'].append(row)
     print(json.dumps(cache, ensure_ascii=False))
 
 

@@ -16,13 +16,6 @@
             "tooltips": "请输入你要诊断的容器ID,Pod名,cgroup"
         },
         {
-            "type": "text",
-            "name": "top",
-            "initialValue": "10",
-            "label": "top",
-            "tooltips": "请输入需要返回的文件个数"
-        },
-        {
             "type": "select",
             "name": "type",
             "initialValue": "all",
