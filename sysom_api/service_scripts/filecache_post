@@ -31,7 +31,8 @@ def filecache_result(raw):
             for files in sort_file:
                 row = {}
                 row['key'] = i
-                row['容器'] = key
+                row['容器组'] = key
+                row['容器'] = value["id"]
                 row['文件名'] = files['file']
                 row['文件大小'] = files['size']
                 row['缓存大小'] = files['cached']
