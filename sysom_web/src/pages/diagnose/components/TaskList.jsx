@@ -26,11 +26,13 @@ const TaskList = React.forwardRef((props, ref) => {
       title: "诊断ID",
       dataIndex: "task_id",
       valueType: "textarea",
+      sorter: (a, b) => (a.task_id.localeCompare(b.task_id))
     },
     {
       title: "创建时间",
       dataIndex: "created_at",
       valueType: "dateTime",
+      sorter: (a, b) => (Date.parse(a.created_at) - Date.parse(b.created_at))
     },
     {
       title: '状态',
@@ -41,6 +43,7 @@ const TaskList = React.forwardRef((props, ref) => {
         Success: { text: '诊断完毕', status: 'Success' },
         Fail: { text: '异常', status: 'Error' },
       },
+      sorter: (a, b) => (a.status.localeCompare(b.status))
     },
     {
       title: "操作",
@@ -70,8 +73,33 @@ const TaskList = React.forwardRef((props, ref) => {
 
   const FixField = ["created_at", "created_by", "id", "params", "service_name", "status", "task_id"]
   if (listData[0]) {
+    console.log(listData[0])
     let optionField = Object.keys(listData[0]).filter(i => !FixField.includes(i))
-      .map(i => ({ title: i, dataIndex: i, valueType: "textarea", }))
+      .map(i => {
+        console.log(i, typeof(i))
+        let isNumber = typeof(listData[0][i]) === 'number'
+        let isString = typeof(listData[0][i]) == 'string'
+        let column = {
+          title: i, dataIndex: i, valueType: "textarea"
+        }
+        if (isNumber) {
+          return {
+            ...column,
+            sorter: (a, b) => {
+              return a[i] - b[i]
+            }
+          }
+        } else if (isString) {
+          return {
+            ...column,
+            sorter: (a, b) => {
+              return a[i].localeCompare(b[i])
+            }
+          }
+        } else {
+          return column
+        }
+      })
     columns = optionField.concat(columns)
   }
 

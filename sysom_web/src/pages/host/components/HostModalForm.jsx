@@ -31,8 +31,6 @@ let HostModalForm = (props, ref) => {
         onFinish
     } = props;
 
-    console.log('modal width: ', props, props.modalWidth, modalWidth)
-
     const modalFormRef = useRef();
     const intl = useIntl();
     const [id, setId] = useState(-1);
