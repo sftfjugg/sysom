@@ -29,8 +29,8 @@ class ChannelAPIView(GenericViewSet):
         channel_type = data.pop('channel', 'ssh')
         package = import_module(f'apps.channel.channels.{channel_type}')
         try:
-            package.Channel(**request.data)
-            return import_module(f'apps.channel.channels.{channel_type}')
+            package.Channel(**request.data, channel_name=channel_type)
+            return import_module(f'apps.channel.channels.{channel_type}'), channel_type
         except Exception as e:
             logger.error(e)
 
@@ -42,7 +42,7 @@ class ChannelAPIView(GenericViewSet):
         for i, pkg in enumerate(packages):
             try:
                 package = import_module(f'apps.channel.channels.{pkg}')
-                package.Channel(**request.data)
+                package.Channel(**request.data, channel_name=pkg)
                 channel_type = pkg
                 break
             except Exception as e:
@@ -50,11 +50,11 @@ class ChannelAPIView(GenericViewSet):
                 if i+1 == len(packages):
                     raise APIException(message='No channels available!')
                 continue
-        return import_module(f'apps.channel.channels.{channel_type}')
+        return import_module(f'apps.channel.channels.{channel_type}'), channel_type
 
     def channel_post(self, request, *args, **kwargs):
-        package = self.valid_channel(request)
-        channel = package.Channel(**request.data)
+        package, channel_name = self.valid_channel(request)
+        channel = package.Channel(**request.data, channel_name=channel_name)
         result  = channel.run_command()
         return other_response(result=result, message='操作成功')
 
