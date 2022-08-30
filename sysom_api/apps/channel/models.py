@@ -17,6 +17,7 @@ class SettingsModel(BaseModel):
 class ExecuteResult(BaseModel):
     invoke_id = models.CharField(max_length=64, verbose_name='任务ID')
     result = models.JSONField(verbose_name='执行结果')
+    channel_name = models.CharField(max_length=32, verbose_name='执行通道', default='')
 
     def __str__(self) -> str:
         return self.invoke_id
