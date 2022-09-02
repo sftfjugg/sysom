@@ -76,7 +76,8 @@ const NoticeIconView = () => {
       console.log(e)
     })
     const user_id = localStorage.getItem("userId")
-    const con = new WebSocket(`ws:${location.host}/ws/noticelcon/?user_id=${user_id}`);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const con = new WebSocket(`${protocol}//${location.host}/ws/noticelcon/?user_id=${user_id}`);
     setSocket(con)
   }
   useEffect(() => {

@@ -14,8 +14,9 @@ const WebConsole = (props) => {
 
   const initTerminal = () => {
     const user_id = props.user_id
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     if (props.host_ip) {
-      socket = new WebSocket(`ws:${location.host}/ws/ssh/?user_id=${user_id}&host_ip=${props.host_ip}`);
+      socket = new WebSocket(`${protocol}//${location.host}/ws/ssh/?user_id=${user_id}&host_ip=${props.host_ip}`);
     } else {
       const host_ip = '127.0.0.1'
       var start_obj = {
@@ -24,7 +25,7 @@ const WebConsole = (props) => {
         "vmcore_file": `${props.vmcore_file}`
       };
       const start = JSON.stringify(start_obj);
-      socket = new WebSocket(`ws:${location.host}/ws/ssh/?user_id=${user_id}&host_ip=${host_ip}&start=${start}`)
+      socket = new WebSocket(`${protocol}//${location.host}/ws/ssh/?user_id=${user_id}&host_ip=${host_ip}&start=${start}`)
     }
     socket.onopen = () => {
       terminal.focus();
