@@ -28,6 +28,9 @@ from lib.utils import uuid_8, HTTP
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_CONNENT_TIMEOUT = 5    # 默认ssh链接超时时间 5s
+DEFAULT_NODE_USER = 'root'     # 默认节点用户名 root
+
 
 class ChannelError(paramiko.AuthenticationException):
     def __init__(self, code=400, message='后端异常', args=('后端异常',)) -> None:
@@ -52,9 +55,9 @@ class SSH:
     def __init__(self, hostname: str, **kwargs) -> None:
         self.connect_args = {
             'hostname': hostname,
-            'username': kwargs.get('username', 'root'),
+            'username': kwargs.get('username', DEFAULT_NODE_USER),
             'port': kwargs.get('port', 22),
-            'timeout': kwargs.get('timeout', 5),
+            'timeout': kwargs.get('timeout', DEFAULT_CONNENT_TIMEOUT),
         }
         if 'password' in kwargs:
             self.connect_args['password'] = kwargs.get('password')
@@ -147,13 +150,9 @@ class Channel(BaseChannel):
         kwargs = dict()
         invoke_id = uuid_8()
         kwargs['invoke_id'] = invoke_id
-
         status, res = self.ssh.run_command(self.shell_script)
-        kwargs['result'] = {'state': status, 'result': res}
-        kwargs['channel_name'] = self.kwargs.get('channel_name', 'ssh')
-        
-        self._save_execute_result(kwargs)
         return {
             'invoke_id': invoke_id,
-            'state': status
+            'state': status,
+            'result': {'state': status, 'result': res},
         }
