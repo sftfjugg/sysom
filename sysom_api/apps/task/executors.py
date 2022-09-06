@@ -59,32 +59,28 @@ class SshJob:
                 break
             host_ips.append(ip)
 
-            status_code, result = Channel.post_channel(data=script, token=self.user['token'])
-            if status_code == 200:
-                _, r = Channel.get_channel_result(
-                    data={'invoke_id': result['invoke_id']},
-                    token=self.user['token']
-                )
-                status = r['state']
-                result = r['result']
-            else:
-                self.update_job(status="Fail", result={'state': 1, 'result': f'{ip}: {result}'})
+            status_code, res = Channel.post_channel(data=script, token=self.user['token'])
+            if status_code == 200 and res['state'] != 0:
+                self.update_job(status="Fail", result=res['result'])
                 break
+            else:
+                resp_status = res['state']
+                execute_result = res['result']
 
             if self.kwargs.get('update_host_status', None):
                 patch_host_url = f'{settings.HOST_LIST_API}update/{ip}/'
-                HTTP.request('patch', url=patch_host_url, data={'status': status if status == 0 else 1}, token=self.user['token'])
+                HTTP.request('patch', url=patch_host_url, data={'status': resp_status}, token=self.user['token'])
                 
             if self.kwargs.get('service_name', None) == "node_delete":
                 del_host_url = f'{settings.HOST_LIST_API}del/{ip}/'
                 HTTP.request('delete', url=del_host_url, token=self.user['token'], data={})
 
-            if status != 0:
-                self.update_job(status="Fail", result=r, host_by=host_ips)
+            if resp_status != 0:
+                self.update_job(status="Fail", result=execute_result, host_by=host_ips)
                 break
             
             if count == len(self.resp_scripts):
-                res = r
+                res = execute_result
                 params = self.instance.params
                 if params:
                     service_name = params.get("service_name", None)
