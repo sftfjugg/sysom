@@ -3,6 +3,7 @@ import re
 import os
 from importlib import import_module
 from django.conf import settings
+from django.db import connection
 from rest_framework.viewsets import GenericViewSet
 from .models import ExecuteResult
 from lib.response import other_response
@@ -29,8 +30,8 @@ class ChannelAPIView(GenericViewSet):
         channel_type = data.pop('channel', 'ssh')
         package = import_module(f'apps.channel.channels.{channel_type}')
         try:
-            package.Channel(**request.data, channel_name=channel_type)
-            return import_module(f'apps.channel.channels.{channel_type}'), channel_type
+            package.Channel(**data)
+            return import_module(f'apps.channel.channels.{channel_type}')
         except Exception as e:
             logger.error(e)
 
@@ -42,7 +43,7 @@ class ChannelAPIView(GenericViewSet):
         for i, pkg in enumerate(packages):
             try:
                 package = import_module(f'apps.channel.channels.{pkg}')
-                package.Channel(**request.data, channel_name=pkg)
+                package.Channel(**request.data)
                 channel_type = pkg
                 break
             except Exception as e:
@@ -50,13 +51,41 @@ class ChannelAPIView(GenericViewSet):
                 if i+1 == len(packages):
                     raise APIException(message='No channels available!')
                 continue
-        return import_module(f'apps.channel.channels.{channel_type}'), channel_type
+        return import_module(f'apps.channel.channels.{channel_type}')
 
     def channel_post(self, request, *args, **kwargs):
-        package, channel_name = self.valid_channel(request)
-        channel = package.Channel(**request.data, channel_name=channel_name)
+        channel_type = request.data.get('channel', 'ssh')
+        package = self.valid_channel(request)
+
+        data = request.data
+        data['channel_name'] = channel_type
+
+        channel = package.Channel(**data)
         result  = channel.run_command()
+
+        kwargs.update(result)
+        kwargs.pop('state')
+        kwargs['channel_name'] = channel_type
+        self._save_execute_result(kwargs)
+
         return other_response(result=result, message='操作成功')
+
+    def _save_execute_result(self, kwargs):
+        """
+        执行Command信息添加到数据库
+        kwargs: 
+            channel_name str 执行脚本通道文件名 默认 ssh
+            invoke_id str 执行脚本ID
+            result    dict 执行脚本后的结果，例如：{'state': 0, 'result': 'xxxxxxxx'} 0为执行成功, 1位=为执行失败
+        """
+        if not kwargs.get('channel_name', None):
+            kwargs['channel_name'] = 'ssh'
+        try:
+            ExecuteResult.objects.create(**kwargs)
+        except Exception as e:
+            raise APIException(message=str(e))
+        finally:
+            connection.close()
 
     def validate_ssh_channel_parame(self, data):
         res, message = False, ''
