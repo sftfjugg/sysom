@@ -176,7 +176,6 @@ const ClusterList = () => {
                 rowKey="id"
                 search={false}
                 request={getClusterList}
-                pagination={{keepDataSource: true}}
                 toolBarRender={() => [
                     <Cluster onAddClusterSuccess={() => { clusterListTableActionRef.current.reload() }} />,
                     <BulkImport uploadFun={batchAddCluster} templateUrl="/resource/集群导入模板.xls" successCallback={res => {
