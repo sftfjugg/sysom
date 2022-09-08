@@ -63,6 +63,12 @@ export default [
         component: './Monitor/SystemDashboard',
       },
       {
+        path: 'config',
+        name: 'config',
+        hideInBreadcrumb: true,
+        component: './Monitor/GrafanaConfig',
+      },
+      {
         path: 'dashboard/:host?',
         component: './Monitor/SystemDashboard',
       },
