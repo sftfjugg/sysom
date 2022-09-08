@@ -135,54 +135,59 @@ import diagnose from './pages/diagnose/diagnose';
 
 export function render(oldRender) {
   //Add Grafana dashboard dynamically
-  requestURL('/grafana/api/search').then((res) => {
-    //Tranfrom from grafana folder&dashboard list to antd route tree.
-    extraGrafanaRoutes = res.filter((i) => i.type == "dash-folder")
-      .map((folder) => {
-        //Add the title to locales to aviod initl FormattedMessage warning in antd core.
-        addLocale('zh-CN', { [`menu.monitor.${folder.title}`]: folder.title })
-        return {
-          path: `/monitor/${folder.uid}`,
-          name: folder.title,
-          routes: res.filter((i) => i.type == "dash-db" && i.folderId == folder.id)
-            .map((dash) => {
-              addLocale('zh-CN', { [`menu.monitor.${folder.title}.${dash.title}`]: dash.title })
-              return {
-                name: dash.title,
-                path: `/monitor/${folder.uid}${dash.url}`,
-                component: grafanaDash
-              }
-            })
-        }
-      })
-
-    //Add diagnose dashboard dynamically
-    requestURL('/resource/diagnose/locales.json').then((res) => {
-      addLocale('zh-CN', res.folder)
-      addLocale('zh-CN', res.dashboard)
-      Object.entries(res.dashboard).map(item => {
-        let configPath = item[0].split('.')
-        configPath.shift()
-
-        let path = []
-        path.push({
-          path: `/${configPath.join('/')}`,
-          name: configPath.pop(),
-          f_: `/${configPath.join('/')}`,
-          component: diagnose
+  requestURL('/grafana/api/search')
+    .then((res) => {
+      //Tranfrom from grafana folder&dashboard list to antd route tree.
+      extraGrafanaRoutes = res.filter((i) => i.type == "dash-folder")
+        .map((folder) => {
+          //Add the title to locales to aviod initl FormattedMessage warning in antd core.
+          addLocale('zh-CN', { [`menu.monitor.${folder.title}`]: folder.title })
+          return {
+            path: `/monitor/${folder.uid}`,
+            name: folder.title,
+            routes: res.filter((i) => i.type == "dash-db" && i.folderId == folder.id)
+              .map((dash) => {
+                addLocale('zh-CN', { [`menu.monitor.${folder.title}.${dash.title}`]: dash.title })
+                return {
+                  name: dash.title,
+                  path: `/monitor/${folder.uid}${dash.url}`,
+                  component: grafanaDash
+                }
+              })
+          }
         })
-
-        let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
-          .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
-          .value();
-        let route_item = _.keyBy(extraDiagnoseRoute, 'path')[currentExtraDiagnoseRoute[0].path]
-        if (!!route_item) {
-          route_item.routes = route_item.routes.concat(currentExtraDiagnoseRoute[0].routes)
-        } else {
-          extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
-        }
-      })
       oldRender();
     })
+    .catch(err => {
+      message.error("Grafana doesn't work!")
+    })
+
+  //Add diagnose dashboard dynamically
+  requestURL('/resource/diagnose/locales.json').then((res) => {
+    addLocale('zh-CN', res.folder)
+    addLocale('zh-CN', res.dashboard)
+    Object.entries(res.dashboard).map(item => {
+      let configPath = item[0].split('.')
+      configPath.shift()
+
+      let path = []
+      path.push({
+        path: `/${configPath.join('/')}`,
+        name: configPath.pop(),
+        f_: `/${configPath.join('/')}`,
+        component: diagnose
+      })
+
+      let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
+        .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
+        .value();
+      let route_item = _.keyBy(extraDiagnoseRoute, 'path')[currentExtraDiagnoseRoute[0].path]
+      if (!!route_item) {
+        route_item.routes = route_item.routes.concat(currentExtraDiagnoseRoute[0].routes)
+      } else {
+        extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
+      }
+    })
+    oldRender();
   })
 }
