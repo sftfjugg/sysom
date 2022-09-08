@@ -160,7 +160,7 @@ export function render(oldRender) {
     requestURL('/resource/diagnose/locales.json').then((res) => {
       addLocale('zh-CN', res.folder)
       addLocale('zh-CN', res.dashboard)
-      extraGrafanaRoutes = Object.entries(res.dashboard).map(item => {
+      Object.entries(res.dashboard).map(item => {
         let configPath = item[0].split('.')
         configPath.shift()
 
