@@ -37,7 +37,7 @@ class TaskAPIView(GenericViewSet,
                      'status', 'params')  # 模糊查询
     filterset_class = TaskFilter  # 精确查询
     authentication_classes = [TaskAuthentication]
-    create_requird_fields = ['instance', 'service_name']
+    create_requird_fields = ['service_name']
 
     def get_authenticators(self):
         if self.request.path.endswith("svg/"):
