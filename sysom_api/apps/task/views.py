@@ -162,7 +162,7 @@ def script_task(data):
             service_name=service_name,
             user=user
         )
-        return success(result={"instance_id": task_id})
+        return success(result={"task_id": task_id})
     except Exception as e:
         logger.error(e, exc_info=True)
         return other_response(message=str(e), code=400, success=False)
