@@ -16,7 +16,7 @@ const PacketLoss = (props) => {
     >
       <ProCard.Group title="丢包统计" direction={responsive ? 'column' : 'row'}>
         <ProCard>
-          <Statistic title="诊断ID" value={props.data.id} valueStyle={{ color: "red" }} />
+          <Statistic title="诊断ID" value={props.data.task_id} valueStyle={{ color: "red" }} />
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
