@@ -21,7 +21,6 @@ from paramiko.rsakey import RSAKey
 from django.conf import settings
 
 from .base import BaseChannel
-from ..models import SettingsModel
 from lib.exception import APIException
 from lib.utils import uuid_8, HTTP
 
@@ -50,7 +49,6 @@ class SSH:
         - port             主机开放端口, 默认 22
         - connect_timeout  连接超时时间 默认 5s
     """
-    SSH_KEY = ''
 
     def __init__(self, hostname: str, **kwargs) -> None:
         self.connect_args = {
@@ -80,8 +78,13 @@ class SSH:
 
     @classmethod
     def get_ssh_key(cls) -> dict:
-        instance = SettingsModel.objects.get(key='ssh_key')
-        return json.loads(instance.value)
+        try:
+            with open(settings.KEY_PATH, 'r') as f:
+                return json.loads(f.read())
+        except Exception as e:
+            logger.error(e)
+        return {}
+
 
     def run_command(self, command):
         if self._client:
