@@ -152,9 +152,11 @@ CHANNEL_SERVICE = 'http://127.0.0.1:7003'
 # key path
 KEY_PATH=os.path.join(BASE_DIR, 'conf', 'ssh-key')
 
-# cec settings
-SYSOM_CEC_URL = "redis://localhost:6379"
-SYSOM_CEC_ALARM_MAXLEN = 1000
+##################################################################
+# Cec settings
+##################################################################
+SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000"
+SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
 
 # API
 TASK_API = f'{TASK_SERVICE}/api/v1/tasks/'

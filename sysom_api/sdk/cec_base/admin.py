@@ -5,12 +5,47 @@ Created:            2022/07/24
 Description:
 """
 import importlib
+import json
 from abc import ABCMeta, abstractmethod
 from .base import Connectable, Disconnectable
 from .base import Registrable, ProtoAlreadyExistsException
-from .base import ProtoNotExistsException
+from .base import ProtoNotExistsException, CecException
+from .event import Event
+from .meta import TopicMeta, \
+    ConsumerGroupMemberMeta
 from .url import CecUrl
 from loguru import logger
+
+
+class ConsumeStatusItem(object):
+    """
+    消费状态 => 表征了单个消费者组对特定主题的消费情况
+
+    1. 最小ID（最小 offset）
+    2. 最大ID（最大 offset）
+    3. 分区中存储的事件总数（包括已消费的和未消费的）
+    4. 最后一个当前消费组在该分区已确认的事件ID（最后一次消费者确认的事件的ID）
+    5. 分区的消息堆积数量 LAG（已经提交到该分区，但是没有被当前消费者消费或确认的事件数量）
+    """
+
+    def __init__(self, topic: str, consumer_group_id: str, partition: int,
+                 min_id: str = "", max_id: str = "",
+                 total_event_count: int = 0, last_ack_id: str = "",
+                 lag: int = 0):
+        self.topic = topic
+        self.consumer_group_id = consumer_group_id
+        self.partition = partition
+        self.min_id = min_id
+        self.max_id = max_id
+        self.total_event_count = total_event_count
+        self.last_ack_id = last_ack_id
+        self.lag = lag
+
+    def tojson(self):
+        return json.dumps(self.__dict__)
+
+    def __repr__(self):
+        return self.tojson()
 
 
 class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
@@ -111,7 +146,7 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_topic_list(self) -> [str]:
+    def get_topic_list(self) -> [TopicMeta]:
         """Get topic list
 
         获取主题列表
@@ -124,7 +159,7 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         Examples:
             >>> admin = dispatch_admin("redis://localhost:6379")
             >>> admin.get_topic_list()
-            ['test_topic']
+            [TopicMeta(faeec676-60db-4418-a775-c5f1121d5331, 1)]
         """
         pass
 
@@ -197,7 +232,7 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_consumer_group_list(self) -> [str]:
+    def get_consumer_group_list(self) -> [ConsumerGroupMemberMeta]:
         """Get consumer group list
 
         获取消费组列表
@@ -208,7 +243,81 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         Examples:
             >>> admin = dispatch_admin("redis://localhost:6379")
             >>> admin.get_consumer_group_list()
-            ['test_group']
+        """
+        pass
+
+    @abstractmethod
+    def get_consume_status(self, topic: str, consumer_group_id: str = "",
+                           partition: int = 0) -> [ConsumeStatusItem]:
+        """Get consumption info for specific <topic, consumer_group, partition>
+
+        获取特定消费者组对某个主题下的特定分区的消费情况，应包含以下数据
+        1. 最小ID（最小 offset）
+        2. 最大ID（最大 offset）
+        3. 分区中存储的事件总数（包括已消费的和未消费的）
+        4. 最后一个当前消费组在该分区已确认的事件ID（最后一次消费者确认的事件的ID）
+        5. 分区的消息堆积数量 LAG（已经提交到该分区，但是没有被当前消费者消费或确认的事件数量）
+
+        Args:
+            topic: 主题名字
+            consumer_group_id: 消费组ID
+                1. 如果 consumer_group_id 为空字符串或者None，则返回订阅了该主题的所有
+                   消费组的消费情况；=> 此时 partition 参数无效（将获取所有分区的消费数据）
+                2. 如果 consumer_group_id 为无效的组ID，则抛出异常；
+                3. 如果 consumer_group_id 为有效的组ID，则只获取该消费组的消费情况。
+            partition: 分区ID
+                1. 如果 partition 指定有效非负整数 => 返回指定分区的消费情况
+                2. 如果 partition 指定无效非负整数 => 抛出异常
+                3. 如果 partition 指定负数 => 返回当前主题下所有分区的消费情况
+
+        Raises:
+            CecException
+
+        Examples:
+            >>> admin = dispatch_admin("redis://localhost:6379")
+            >>> admin.get_consume_status("topic1")
+            [
+                {
+                    "topic":"topic1",
+                    "consumer_group_id":"c78e8b71-45b9-4e11-8f8e-05a98b534cc0",
+                    "min_id":"1661516434003-0",
+                    "max_id":"1661516434004-4",
+                    "total_event_count":10,
+                    "last_ack_id":"1661516434003-4",
+                    "lag":5
+                },
+                {
+                    "topic":"topic1",
+                    "consumer_group_id":"d1b39ec3-6ae9-42a6-83b5-257d875788e6",
+                    "min_id":"1661516434003-0",
+                    "max_id":"1661516434004-4",
+                    "total_event_count":10,
+                    "last_ack_id":"1661516434003-1",
+                    "lag":8
+                }
+            ]
+
+        Returns:
+
+        """
+        pass
+
+    @abstractmethod
+    def get_event_list(self, topic: str, partition: int, offset: str,
+                       count: int) -> [Event]:
+        """ Get event list for specific <topic, partition>
+
+        获取特定主题在指定分区下的消息列表
+        1. offset 和 count 用于分页
+
+        Args:
+            topic: 主题名字
+            partition: 分区ID
+            offset: 偏移（希望读取在该 ID 之后的消息）
+            count: 最大读取数量
+
+        Returns:
+
         """
         pass
 
@@ -309,21 +418,21 @@ def dispatch_admin(url: str, **kwargs) -> Admin:
     return admin_instance
 
 
-class TopicAlreadyExistsException(Exception):
+class TopicAlreadyExistsException(CecException):
     """在创建 Topic 的过程中，如果当前 Topic 已经存在，则应当抛出本异常"""
     pass
 
 
-class TopicNotExistsException(Exception):
+class TopicNotExistsException(CecException):
     """在删除 Topic 的过程中，如果不存在目标 Topic，则应当抛出本异常"""
     pass
 
 
-class ConsumerGroupAlreadyExistsException(Exception):
+class ConsumerGroupAlreadyExistsException(CecException):
     """在创建消费组的过程中，如果当前消费组已经存在，则应当抛出本异常"""
     pass
 
 
-class ConsumerGroupNotExistsException(Exception):
+class ConsumerGroupNotExistsException(CecException):
     """在删除消费组的过程中，如果不存在目标消费组，则应当抛出本异常"""
     pass

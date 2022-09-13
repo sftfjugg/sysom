@@ -57,7 +57,11 @@ class Dispatchable(metaclass=ABCMeta):
         pass
 
 
-class ProtoAlreadyExistsException(Exception):
+class CecException(Exception):
+    pass
+
+
+class ProtoAlreadyExistsException(CecException):
     """协议已经存在异常
 
     1. 在注册一个新的协议时，该协议名已经被注册，则会抛出本异常
@@ -65,7 +69,7 @@ class ProtoAlreadyExistsException(Exception):
     pass
 
 
-class ProtoNotExistsException(Exception):
+class ProtoNotExistsException(CecException):
     """协议不存在异常
 
     1. 使用URL分发方式创建实例时，如果对应的协议并没有被注册，则会抛出本异常
