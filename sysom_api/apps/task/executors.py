@@ -60,7 +60,10 @@ class SshJob:
             host_ips.append(ip)
 
             status_code, res = Channel.post_channel(data=script, token=self.user['token'])
-            if status_code == 200 and res['state'] != 0:
+            if status_code != 200:
+                self.update_job(status="Fail")
+                break
+            elif res['state'] != 0:
                 self.update_job(status="Fail", result=res['result'])
                 break
             else:
