@@ -70,7 +70,7 @@ class Consumer(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             self.consume_mode = ConsumeMode.CONSUME_FROM_NOW
 
     @abstractmethod
-    def consume(self, timeout: int = 0, auto_ack: bool = False,
+    def consume(self, timeout: int = -1, auto_ack: bool = False,
                 batch_consume_limit: int = 0) -> [Event]:
         """Start to consume the event from event center according to the
         corresponding ConsumeMode
@@ -78,7 +78,7 @@ class Consumer(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         根据对应消费模式的行为，开始从事件中心消费事件
 
         Args:
-            timeout(int): 超时等待时间（单位：ms），0 表示阻塞等待
+            timeout(int): 超时等待时间（单位：ms），<= 表示阻塞等待
             auto_ack(bool): 是否开启自动确认（组消费模式有效）
 
                 1. 一旦开启自动确认，每成功读取到一个事件消息就会自动确认；
@@ -110,14 +110,16 @@ class Consumer(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def ack(self, event_id: str) -> int:
+    def ack(self, event: Event) -> int:
         """Confirm that the specified event has been successfully consumed
 
         对指定的事件进行消费确认
         1. 通常应当在取出事件，并成功处理之后对该事件进行确认；
 
         Args:
-            event_id: 事件ID
+            event(Event): 要确认的事件
+                1. 必须是通过 Consumer 消费获得的 Event 实例；
+                2. 自行构造的 Event 传递进去不保证结果符合预期
 
         Returns:
             int: 1 if successfully, 0 otherwise
@@ -130,7 +132,7 @@ class Consumer(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             ... , start_from_now=False)
             >>> msgs = consumer.consume(200, auto_ack=False, batch_consume_limit=1)
             >>> msg = msgs[0]
-            >>> consumer.ack(msg.event_id)
+            >>> consumer.ack(msg)
         """
         pass
 

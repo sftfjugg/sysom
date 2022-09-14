@@ -26,8 +26,8 @@ class Producer(Connectable, Disconnectable, Registrable,
 
     @abstractmethod
     def produce(self, topic_name: str, message_value: dict,
-                auto_mk_topic: bool = False,
                 callback: Callable[[Exception, Event], None] = None,
+                partition: int = -1,
                 **kwargs):
         """Generate one new event, then put it to event center
 
@@ -37,8 +37,12 @@ class Producer(Connectable, Disconnectable, Registrable,
         Args:
             topic_name: 主题名称
             message_value: 事件内容
-            auto_mk_topic: 是否在主题不存在的时候自动创建
             callback(Callable[[Exception, Event], None]): 事件成功投递到事件中心回调
+            partition(int): 分区号
+                1. 如果指定了有效分区号，消息投递给指定的分区（不建议）；
+                2. 传递了一个正数分区号，但是无此分区，将抛出异常；
+                3. 传递了一个负数分区号（比如-1），则消息将使用内建的策略均衡的投
+                   递给所有的分区（建议）。
 
         Examples:
             >>> producer = dispatch_producer(
@@ -48,10 +52,13 @@ class Producer(Connectable, Disconnectable, Registrable,
         pass
 
     @abstractmethod
-    def flush(self):
+    def flush(self, timeout: int = -1):
         """Flush all cached event to event center
 
         将在缓存中还未提交的所有事件都注入到事件中心当中（这是一个阻塞调用）
+
+        Args:
+            timeout: 超时等待时间（单位：ms），<= 表示阻塞等待
 
         Examples:
             >>> producer = dispatch_producer(
@@ -118,10 +125,7 @@ def dispatch_producer(url: str, **kwargs) -> Producer:
                 f"Proto '{cec_url.proto}' not exists in Cec-base-Producer."
             )
             raise err
-    producer_instance = Producer.protoDict[cec_url.proto](
-        cec_url,
-        **kwargs
-    )
+    producer_instance = Producer.protoDict[cec_url.proto](cec_url, **kwargs)
     logger.success(
         f"Cec-base-Producer dispatch one producer instance success. "
         f"proto={cec_url.proto}, url={url}")

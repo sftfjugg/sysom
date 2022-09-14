@@ -15,29 +15,89 @@ class TopicMeta:
 
     Args:
         topic_name(str): 主题名字
-        num_partitions(int): 分区数目
-        replication_factor(int): 冗余系数
-        expire_time(int): 事件有效时间
 
     Attributes:
         topic_name(str): 主题名字
-        num_partitions(int): 分区数目
-        replication_factor(int): 冗余系数
-        expire_time(int): 事件有效时间
     """
 
-    def __init__(self, topic_name: str = "", num_partitions: int = 1,
-                 replication_factor: int = 1,
-                 expire_time: int = 24 * 60 * 60 * 1000):
+    def __init__(self, topic_name: str = ""):
         self.topic_name = topic_name
-        self.num_partitions = int(num_partitions)
-        self.replication_factor = int(replication_factor)
-        self.expire_time = int(expire_time)
+        # example: 0 -> PartitionMeta(partition_id=xxx)
+        self.partitions = {}
+        self.error = None
 
-    def to_dict(self):
-        """Convert TopicMeta to dict
+    def __repr__(self):
+        if self.error is not None:
+            return f"TopicMeta({self.topic_name}, {len(self.partitions)} " \
+                   f"partitions, {self.error})"
+        else:
+            return f"TopicMeta({self.topic_name}, {len(self.partitions)} " \
+                   f"partitions)"
 
-        Returns:
-            dict: A dict contains topic meta info
-        """
-        return self.__dict__
+    def __str__(self):
+        return self.topic_name
+
+
+class PartitionMeta:
+    """Common Partition meta info definition
+
+    通用 Partition 元数据定义
+
+    Args:
+
+    """
+
+    def __init__(self, partition_id: int = -1):
+        self.partition_id = partition_id
+        self.error = None
+
+    def __repr__(self):
+        if self.error is not None:
+            return f"PartitionMeta({self.partition_id}, {self.error})"
+        else:
+            return f"PartitionMeta({self.partition_id})"
+
+    def __str__(self):
+        return f"{self.partition_id}"
+
+
+class ConsumerGroupMeta:
+    """Common Consumer Group meta info definition
+
+    通用 ConsumerGroup 元数据定义
+
+    """
+
+    def __init__(self, group_id: str = ""):
+        self.group_id = group_id
+        self.members: [ConsumerGroupMemberMeta] = []
+        self.error = None
+
+    def __repr__(self):
+        if self.error is not None:
+            return f"ConsumerGroupMeta({self.group_id}, {len(self.members)} " \
+                   f"members, {self.error})"
+        else:
+            return f"ConsumerGroupMeta({self.group_id}, {len(self.members)} " \
+                   f"members)"
+
+    def __str__(self):
+        return self.group_id
+
+
+class ConsumerGroupMemberMeta:
+    """Common Consumer Group Member meta info definition
+
+    通用 ConsumerGroupMember 元数据定义
+
+    """
+
+    def __init__(self, client_id: str = ""):
+        self.client_id = client_id
+        self.error = None
+
+    def __repr__(self):
+        if self.error is not None:
+            return f"ConsumerGroupMemberMeta({self.client_id}, {self.error})"
+        else:
+            return f"ConsumerGroupMemberMeta({self.client_id})"

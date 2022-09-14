@@ -10,21 +10,31 @@ from apps.alarm.models import AlarmModel, SubscribeModel
 from lib import *
 from django.conf import settings
 from sdk.cec_base.producer import Producer, dispatch_producer
+from sdk.cec_base.admin import Admin, dispatch_admin
 
 
 logger = logging.getLogger(__name__)
-producer: Producer = dispatch_producer(settings.SYSOM_CEC_URL, default_max_len=settings.SYSOM_CEC_ALARM_MAXLEN)
+producer: Producer = dispatch_producer(settings.SYSOM_CEC_URL)
+admin: Admin = dispatch_admin(settings.SYSOM_CEC_URL)
+
+# 存储当前模块全局状态
+storage = {
+    'alarm_topic_exist': False
+}
 
 def _create_alarm_message(kwargs):
     alarm_serializer = serializer.AddAlarmSerializer(data=kwargs)
     alarm_serializer.is_valid(raise_exception=True)
     alarm_serializer.save()
-    channel = alarm_serializer.instance.sub.title
+    subscriber = alarm_serializer.instance.sub.title
     ser = serializer.AlarmSerializer(alarm_serializer.instance)
-    producer.produce(f"sysom_alarm-{channel}", {
-        "sub": channel,
+    if not storage['alarm_topic_exist']:
+        storage['alarm_topic_exist'] = admin.is_topic_exist(
+            settings.SYSOM_CEC_ALARM_TOPIC) or admin.create_topic(settings.SYSOM_CEC_ALARM_TOPIC)
+    producer.produce(settings.SYSOM_CEC_ALARM_TOPIC, {
+        "sub": subscriber,
         "message": ser.data
-    }, auto_mk_topic=True)
+    })
     producer.flush()
     return alarm_serializer.data
 

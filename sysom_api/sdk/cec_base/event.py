@@ -25,3 +25,18 @@ class Event(object):
             value = dict()
         self.value = value
         self.event_id = event_id
+
+        # cache 用于底层实现缓存数据，用户代码不应当依赖该属性
+        self._cache = dict()
+
+    def put(self, key: str, value):
+        self._cache[key] = value
+
+    def get(self, key):
+        return self._cache.get(key)
+
+    def __repr__(self):
+        return f"Event({self.event_id}, {self.value}) "
+
+    def __str__(self):
+        return self.event_id

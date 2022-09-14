@@ -118,7 +118,7 @@ class NoticelconConsumer(JsonWebsocketConsumer):
         self._user = self.scope['user']
         if self._user:
             self.accept()
-            self.consumer = dispatch_consumer(settings.SYSOM_CEC_URL, f"sysom_alarm-{self._user.username}",
+            self.consumer = dispatch_consumer(settings.SYSOM_CEC_URL, settings.SYSOM_CEC_ALARM_TOPIC,
                                               consumer_id=Consumer.generate_consumer_id(), start_from_now=True)
             Thread(target=self.loop_message).start()
         else:

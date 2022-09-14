@@ -6,7 +6,6 @@ Email               mfeng@linux.alibaba.com
 File                utils.py
 Description:
 """
-import uuid
 from redis import Redis
 from ..cec_base.url import CecUrl
 from ..cec_base.base import ConnectException
@@ -27,9 +26,6 @@ def do_connect_by_cec_url(cec_url: CecUrl) -> Redis:
     try:
         redis_client = Redis(host=host, port=port, db=0, decode_responses=True,
                              **cec_url.params)
-        # 执行一个简单的get命令，使得客户端连接上redis服务器，如果连接失败
-        # 会抛出异常
-        # redis_client.get(str(uuid.uuid4()))
     except ConnectionError as e:
         raise ConnectException(e)
     return redis_client
