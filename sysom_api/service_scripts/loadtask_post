@@ -46,6 +46,7 @@ def parse_log(file):
     task_stack = {}
     d_task_list = []
     r_task_list = []
+    cpuflamegraph_str = ""
 
     fd = open(file,"r")
     for line in fd.readlines():
