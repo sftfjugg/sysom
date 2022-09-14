@@ -18,8 +18,8 @@ const IOList = () => {
 
   const onListClick = async (record) => {
     const recorded = record;
-    const msg = await request('/api/v1/tasks/' + record.id);
-    if (msg.data.result.status == "success" && msg.data.result["IO timeout"] == "false") {
+    const msg = await getTask(record.task_id);
+    if (msg.result.status == "success" && msg.result["IO timeout"] == "false") {
         Modal.success({
           title: '诊断成功',
           content: (
@@ -31,7 +31,7 @@ const IOList = () => {
         return
     }
     const metlist = [];
-    const ioList = msg.data.result.seq.reduce((ioList, item, index, arr) => {
+    const ioList = msg.result.seq.reduce((ioList, item, index, arr) => {
       const block = item["slow ios"].filter((item2,index2) => {
         const block2 = item2.delays.filter((item3,index3) => {
           metlist.push({
