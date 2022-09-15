@@ -1,12 +1,14 @@
 import logging
+import json
 from threading import Thread
 from urllib import parse
-
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
 from channels.exceptions import StopConsumer
 from django.conf import settings
-
+from django_redis import get_redis_connection
 import os
+from django.conf import settings
+from sdk.cec_base.consumer import Consumer, dispatch_consumer
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +44,9 @@ class SshConsumer(WebsocketConsumer):
     def _connect_host_init(self):
         """初始化host连接"""
         from apps.host.models import HostModel
-        instance = get_host_instance(model=HostModel, ip=self.host_ip, created_by=self.user.id)
+        from apps.channel.channels.ssh import SSH
+        instance = get_host_instance(
+            model=HostModel, ip=self.host_ip, created_by=self.user.id)
         if not instance:
             self.send(bytes_data=b'Not Found host / No Permission\r\n')
             self.close()
@@ -52,7 +56,9 @@ class SshConsumer(WebsocketConsumer):
         self.send(bytes_data=b'\r\n')
         self.send(bytes_data=b'Connecting ...\r\n')
         try:
-            self.ssh = self.host.get_host_client().get_client()
+            # self.ssh = self.host.get_host_client().get_client()
+            self.ssh = SSH(
+                hostname=instance.ip, username=instance.username, port=instance.port)._client
         except Exception as e:
             self.send(bytes_data=f'Exception: {e}\r\n'.encode())
             self.close()
@@ -69,12 +75,14 @@ class SshConsumer(WebsocketConsumer):
                 vmcore_file = start_dict.get("vmcore_file")
                 service_path = os.path.join(SCRIPTS_DIR, option)
                 if os.path.exists(service_path):
-                    command = "%s  %s %s" % (service_path, kernel_version, vmcore_file)
+                    command = "%s  %s %s" % (
+                        service_path, kernel_version, vmcore_file)
                     output = os.popen(command)
                     start_cmd = output.read()
                     self.xterm.send(start_cmd)
                 else:
-                    self.xterm.send("echo 'Can not find {} script file, please check script name'\n".format(option))
+                    self.xterm.send(
+                        "echo 'Can not find {} script file, please check script name'\n".format(option))
             else:
                 try:
                     self.xterm.send(eval(parse.unquote(start_cmd))+'\n')
@@ -98,3 +106,25 @@ class SshConsumer(WebsocketConsumer):
 
     def websocket_disconnect(self, message):
         raise StopConsumer()
+
+
+class NoticelconConsumer(JsonWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._user = None
+        self.consumer = None
+
+    def connect(self):
+        self._user = self.scope['user']
+        if self._user:
+            self.accept()
+            self.consumer = dispatch_consumer(settings.SYSOM_CEC_URL, settings.SYSOM_CEC_ALARM_TOPIC,
+                                              consumer_id=Consumer.generate_consumer_id(), start_from_now=True)
+            Thread(target=self.loop_message).start()
+        else:
+            self.close()
+    
+    def loop_message(self):
+        for message in self.consumer:
+            if message.value.get('sub', '') == self._user.username:
+                self.send_json(message.value)

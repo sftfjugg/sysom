@@ -3,27 +3,9 @@ import ProTable from "@ant-design/pro-table";
 import { getTaskList } from "../../service";
 import { Button } from "antd";
 
-function parseJsonString(str) {
-  try {
-    return JSON.parse(str.replace(/\'/g, "\""));
-  }
-  catch (e) {
-    return {}
-  }
-}
 
 const getPingTraceList = async () => {
-  try {
-    let msg = await getTaskList({ service_name: "pingtrace" });
-    msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
-    return {
-      data: msg.data.reverse(),
-      success: true,
-      total: msg.total,
-    };
-  } catch (e) {
-    return { success: false }
-  }
+  return await getTaskList({ service_name: "pingtrace" });
 }
 
 
@@ -33,27 +15,27 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
   const columns = [
     {
       title: "源实例IP",
-      dataIndex: "源实例IP",
+      dataIndex: "origin_instance",
       valueType: "textarea"
     },
     {
       title: "目标实例IP",
-      dataIndex: "目标实例IP",
+      dataIndex: "target_instance",
       valueType: "textarea"
     },
     {
       title: "追踪包数",
-      dataIndex: "追踪包数",
+      dataIndex: "pkg_num",
       valueType: "textarea",
     },
     {
       title: "间隔毫秒数",
-      dataIndex: "间隔毫秒数",
+      dataIndex: "time_gap",
       valueType: "textarea",
     },
     {
       title: "报文协议",
-      dataIndex: "报文协议",
+      dataIndex: "protocol",
       valueType: "select",
       valueEnum: {
         icmp: { text: 'ICMP', status: 'icmp' },
@@ -67,7 +49,7 @@ const DiagnoTableList = React.forwardRef((props, ref) => {
       valueType: "dateTime",
     },
     {
-      title: "PingTraceId",
+      title: "诊断ID",
       dataIndex: "task_id",
       valueType: "textarea",
     },

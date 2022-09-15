@@ -1,20 +1,45 @@
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, message, Popconfirm, Table, Space } from 'antd';
-import { useState, useRef } from 'react';
+import { Button, message, Popconfirm, Table, Space, notification, Select } from 'antd';
+import { useState, useRef, useEffect } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
-import { ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
-import { getCluster, getHost, addHost, deleteHost } from '../service';
-import Cluster from '../components/ClusterForm';
+import ExportJsonExcel from 'js-export-excel';
+import lodash from 'lodash';
+import {
+  getCluster, getHost, addHost, deleteHost, batchDelHost, getHostName, updateHost, getHostIP,
+  batchAddHost
+} from '../service';
 import BulkImport from '../components/BulkImport';
+import HostModalForm from '../components/HostModalForm';
+
+const { Option } = Select;
+
+const HostField = {
+  cluster: '所属集群',
+  created_at: '创建时间',
+  hostname: '主机别名',
+  ip: '主机地址',
+  port: '端口',
+  username: '登录用户',
+  description: '简介',
+  client_deploy_cmd: '初始化命令',
+  status: '状态',
+  host_password: '主机密码',
+};
+
+const HostStatus = {
+  0: 'running',
+  1: 'error',
+  2: 'offline',
+};
 
 const handleAddHost = async (fields) => {
   const hide = message.loading('正在添加');
   const token = localStorage.getItem('token');
 
   try {
-    await addHost({ ...fields}, token);
+    await addHost({ ...fields }, token);
     hide();
     message.success('添加成功');
     return true;
@@ -23,6 +48,25 @@ const handleAddHost = async (fields) => {
     return false;
   }
 };
+
+const handleUpdateHost = async (fields) => {
+  const hide = message.loading('正在更新');
+  const token = localStorage.getItem('token');
+
+  try {
+    let res = await updateHost({ ...fields }, token);
+    hide();
+    if (res.code == 200) {
+      message.success('更新成功');
+    } else {
+      message.error(`更新失败：${res.message}`)
+    }
+    return true;
+  } catch (error) {
+    hide();
+    return false;
+  }
+}
 
 const handleDeleteHost = async (record) => {
   const hide = message.loading('正在删除');
@@ -40,9 +84,51 @@ const handleDeleteHost = async (record) => {
 };
 
 const HostList = () => {
-  const [createModalVisible, handleModalVisible] = useState(false);
+  const [hostModalFormVisible, setHostModalFormVisible] = useState(false);
+  const [clusterList, setClusterList] = useState([]);
+  /**
+   * Cluster list map => 记录 cluster_id => 对应的 Cluster 在 clusterList 列表中的下标索引
+   */
+  const [clusterListMap, setClusterListMap] = useState({});
+  const [hostnamelist, setHostnameList] = useState([]);
+  const [hostiplist, setHostipList] = useState([]);
   const actionRef = useRef();
   const intl = useIntl();
+  /**
+   * HostModalForm 的模式
+   * 0 => 添加主机模式
+   * 1 => 编辑主机信息模式
+   */
+  const [hostModalFormMode, setHostModalFormMode] = useState(0);
+  const [hostModalFormTitle, setHostModalFormTitle] = useState(intl.formatMessage({
+    id: 'pages.hostTable.createForm.newHost',
+    defaultMessage: 'New host',
+  }));
+
+  // 从服务器拉取最新的集群列表，并更新本地 state
+  const updateCluster = () => {
+    getCluster().then((res) => {
+      setClusterList(res);
+      // 更新 clusterListMap
+      let newClusterListMap = {};
+      for (let i = 0; i < res.length; i++) {
+        newClusterListMap[res[i].value] = i;
+      }
+
+      setClusterListMap(newClusterListMap);
+    });
+  }
+
+  useEffect(() => {
+    // 页面加载或变更时拉取最新的集群列表
+    updateCluster();
+    getHostName().then((res) => {
+      setHostnameList(res)
+    })
+    getHostIP().then((res) => {
+      setHostipList(res)
+    })
+  }, [])
 
   const columns = [
     {
@@ -51,12 +137,57 @@ const HostList = () => {
       filters: true,
       onFilter: true,
       valueType: 'select',
-      request: getCluster,
+      fieldProps: {
+        options: clusterList,
+      },
+      renderFormItem: (items) => {
+        let list = Array.from(items.fieldProps.options);
+        const options = list.map((item) => {
+          <Option value={item.label}>{item.label}</Option>
+        })
+        return (
+          <Select
+            key="searchselect"
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => {
+              return option.label.includes(input)
+            }}
+            placeholder="请输入"
+          >
+            {options}
+          </Select>
+        )
+      }
     },
     {
       title: <FormattedMessage id="pages.hostTable.hostname" defaultMessage="Hostname" />,
       dataIndex: 'hostname',
-      valueType: 'textarea',
+      filters: true,
+      onFilter: true,
+      valueType: 'select',
+      fieldProps: {
+        options: hostnamelist,
+      },
+      renderFormItem: (items) => {
+        let list = Array.from(items.fieldProps.options);
+        const options = list.map((item) => {
+          <Option value={item.label}>{item.label}</Option>
+        })
+        return (
+          <Select
+            key="searchselect"
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => {
+              return option.label.includes(input)
+            }}
+            placeholder="请输入"
+          >
+            {options}
+          </Select>
+        )
+      }
     },
     {
       title: (
@@ -66,6 +197,31 @@ const HostList = () => {
         />
       ),
       dataIndex: 'ip',
+      filters: true,
+      onFilter: true,
+      valueType: 'select',
+      fieldProps: {
+        options: hostiplist,
+      },
+      renderFormItem: (items) => {
+        let list = Array.from(items.fieldProps.options);
+        const options = list.map((item) => {
+          <Option value={item.label}>{item.label}</Option>
+        })
+        return (
+          <Select
+            key="searchselectip"
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => {
+              return option.label.includes(input)
+            }}
+            placeholder="请输入"
+          >
+            {options}
+          </Select>
+        )
+      }
     },
     {
       title: <FormattedMessage id="pages.hostTable.status" defaultMessage="Status" />,
@@ -116,13 +272,28 @@ const HostList = () => {
       dataIndex: 'option',
       valueType: 'option',
       render: (_, record) => [
+        <span key='edit'>
+          <a onClick={() => {
+            // 触发编辑主机信息
+            setHostModalFormTitle(intl.formatMessage({
+              id: 'pages.hostTable.createForm.editHost',
+              defaultMessage: 'Edit host',
+            }));
+            setHostModalFormMode(1);                     // 设置 HostModalForm 的模式为 “编辑主机信息模式”
+            setHostModalFormVisible(true);                // 显示模态框
+            hostModalFormRef.current.setFieldsValue({     // 将当前选中的主机信息填充到模态框表单中
+              ...record,
+              cluster: clusterList[clusterListMap[record.cluster]]
+            });
+          }}><FormattedMessage id="pages.hostTable.edit" defaultMessage="host delete" /></a>
+        </span>,
         <span key='delete'>
-        <Popconfirm title="是否要删除该主机?" onConfirm={ async () => {
+          <Popconfirm title="是否要删除该主机?" onConfirm={async () => {
             await handleDeleteHost(record);
-            actionRef.current?.reload(); 
+            actionRef.current?.reload();
           }}>
-          <a><FormattedMessage id="pages.hostTable.delete" defaultMessage="host delete" /></a>
-        </Popconfirm>
+            <a><FormattedMessage id="pages.hostTable.delete" defaultMessage="host delete" /></a>
+          </Popconfirm>
         </span>,
         <span key='terminal'>
           <a href={"/host/terminal/" + record.ip} target="_blank">
@@ -132,6 +303,75 @@ const HostList = () => {
       ],
     },
   ];
+
+  const onDeleteHandler = async (e) => {
+    const selectDeleteHostList = lodash.cloneDeep(e);
+    const host_id_list = selectDeleteHostList.map((item) => item['id']);
+    const body = { host_id_list: host_id_list };
+    const token = localStorage.getItem('token');
+    await batchDelHost(body, token)
+      .then((res) => {
+        if (res.code === 200) {
+          notification.success({
+            duration: 2,
+            description: '操作成功',
+            message: '操作',
+          });
+        } else {
+          notification.warn({
+            duration: 2,
+            description: '操作失败',
+            message: '操作'
+          });
+        }
+      })
+      .catch((e) => {
+        notification.error({ duration: 2, description: e, message: '操作' });
+      });
+  };
+
+  const onBulkExportHostHandler = async (e) => {
+    const headerlist = [];
+    const headerFilter = [];
+    const newDataList = lodash.cloneDeep(e);
+
+    if (newDataList.length === 0) {
+      return false;
+    }
+
+    for (let i in newDataList[0]) {
+      if (HostField[i]) {
+        headerFilter.push(i);
+        headerlist.push(HostField[i]);
+      }
+    }
+    headerlist.push(HostField['host_password']);
+    newDataList.map((item) => {
+      item['status'] = HostStatus[item['status']];
+      for (let i = 0; i < clusterList.length; i++) {
+        if (item['cluster'] === clusterList[i]['value']) {
+          item['cluster'] = clusterList[i]['label']
+          break
+        }
+      }
+    });
+
+    const options = {};
+    options.fileName = 'host';
+    options.datas = [
+      {
+        sheetData: newDataList,
+        sheetName: 'sheet',
+        sheetFilter: headerFilter,
+        sheetHeader: headerlist,
+      },
+    ];
+    const excel = new ExportJsonExcel(options);
+    excel.saveExcel();
+  };
+
+  const hostModalFormRef = useRef();
+
   return (
     <PageContainer>
       <ProTable
@@ -145,17 +385,26 @@ const HostList = () => {
           labelWidth: 120,
         }}
         toolBarRender={() => [
-          <Cluster/>,
           <Button
             type="primary"
             key="primary"
             onClick={() => {
-              handleModalVisible(true);
+              setHostModalFormTitle(intl.formatMessage({
+                id: 'pages.hostTable.createForm.newHost',
+                defaultMessage: 'Edit host',
+              }));
+              setHostModalFormMode(0);   // 设置主机模态框的模式为 “添加主机模式”
+              setHostModalFormVisible(true);   // 显示模态框
             }}
           >
             <PlusOutlined /> <FormattedMessage id="pages.hostTable.newHost" defaultMessage="New host" />
           </Button>,
-          <BulkImport/>,
+          <BulkImport uploadFun={batchAddHost} templateUrl="/resource/主机导入模板.xls" successCallback={res => {
+            if (actionRef.current) {
+              actionRef.current.reload()
+            }
+            message.success(res.message)
+          }} />,
         ]}
         request={getHost}
         columns={columns}
@@ -173,135 +422,59 @@ const HostList = () => {
             </span>
           </Space>
         )}
-        tableAlertOptionRender={(selectedRowKeys, selectedRows) => {
+        tableAlertOptionRender={({ selectedRowKeys, selectedRows, onCleanSelected }) => {
           return (
             <Space size={16}>
-              <a>批量删除</a>
-              {/* <a>导出数据</a> */}
+              <a
+                onClick={async () => {
+                  await onDeleteHandler(selectedRows);
+                  onCleanSelected();
+                  actionRef.current?.reload();
+                }}
+              >
+                批量删除
+              </a>
+              <a
+                onClick={async () => {
+                  await onBulkExportHostHandler(selectedRows);
+                  onCleanSelected();
+                }}
+              >
+                导出数据
+              </a>
             </Space>
-          );                                                                                                                                                                                                                   
+          );
         }}
       />
-      <ModalForm
-        title={intl.formatMessage({
-          id: 'pages.hostTable.createForm.newHost',
-          defaultMessage: 'New host',
-        })}
-        width="440px"
-        visible={createModalVisible}
-        onVisibleChange={handleModalVisible}
+      {/* 用于添加主机和编辑主机信息的模态框 */}
+      <HostModalForm
+        ref={hostModalFormRef}
+        title={hostModalFormTitle}
+        mode={hostModalFormMode}
+        visible={hostModalFormVisible}
+        modalWidth="440px"
+        onVisibleChange={setHostModalFormVisible}
+        clusterList={clusterList}
         onFinish={async (value) => {
-          const success = await handleAddHost(value);
+          let success = false;
+          value['cluster'] = value.cluster.value;
+          // 针对不同的模式，执行不同的网络请求
+          if (value.mode == 0) {
+            // 添加主机
+            success = await handleAddHost(value);
+          } else {
+            // 编辑主机信息
+            success = await handleUpdateHost(value);
+          }
 
           if (success) {
-            handleModalVisible(false);
-
+            setHostModalFormVisible(false);
             if (actionRef.current) {
               actionRef.current.reload();
             }
           }
         }}
-      >
-        <ProFormSelect
-          label="选择集群"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.cluster_required"
-                  defaultMessage="Cluster is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="cluster"
-          request={getCluster}
-          placeholder="请选择主机所属集群"
-        />
-        <ProFormText
-          label="主机名称"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.hostname_required"
-                  defaultMessage="Host name is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="hostname"
-        />
-        <ProFormText
-          label="用户名称"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.username_required"
-                  defaultMessage="username is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="username"
-        />
-        <ProFormText.Password
-          label="用户密码"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.password_required"
-                  defaultMessage="password is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="host_password"
-        />
-        <ProFormText
-          label="IP地址"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.ip_required"
-                  defaultMessage="IP is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="ip"
-        />
-        <ProFormText
-          label="端口"
-          rules={[
-            {
-              required: true,
-              message: (
-                <FormattedMessage
-                  id="pages.hostTable.port_required"
-                  defaultMessage="Port number is required"
-                />
-              ),
-            },
-          ]}
-          width="md"
-          name="port"
-        />
-        <ProFormTextArea label="备注信息" width="md" name="description" />
-      </ModalForm>
+      />
     </PageContainer>
   );
 };

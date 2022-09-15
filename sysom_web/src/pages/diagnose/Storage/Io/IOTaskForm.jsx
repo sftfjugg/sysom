@@ -40,13 +40,13 @@ export default (props) => {
                 />
                 <ProForm.Group>
                     <ProFormText
-                        name={"实例IP"}
+                        name={"instance"}
                         width="md"
                         label="实例IP"
                     />
 
                     <ProFormDigit
-                        name={"诊断时长"}
+                        name={"diag_time"}
                         width="md"
                         label="诊断时长"
                         tooltip="持续诊断时长，时间单位：s"
@@ -54,7 +54,7 @@ export default (props) => {
                     />
 
                     <ProFormDigit
-                        name={"时间阈值"}
+                        name={"thresh"}
                         width="md"
                         label="时间阈值"
                         initialValue={5000}
@@ -62,7 +62,7 @@ export default (props) => {
                     />
 
                     <ProFormText
-                        name={"目标磁盘"}
+                        name={"disk"}
                         width="md"
                         label="目标磁盘"
                         tooltip="如果为空, 检测所有磁盘!"

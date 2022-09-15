@@ -1,32 +1,34 @@
-import { Button, message  } from "antd";
-import ProForm, { ModalForm, ProFormText, ProFormUploadButton } from "@ant-design/pro-form";
-import { FormattedMessage } from 'umi';
+import { Button, message } from "antd";
+import { ModalForm, ProFormUploadButton } from "@ant-design/pro-form";
 import { ImportOutlined } from "@ant-design/icons";
-import { addCluster } from "../service";
+import HostModalForm from "./HostModalForm";
 
-const handleAddCluster = async (fields) => {
-  const hide = message.loading('正在创建');
-  const token = localStorage.getItem('token');
-  
-  try {
-    await addCluster({ ...fields}, token);
-    hide();
-    message.success('创建成功');
-    return true;
-  } catch (error) {
-    hide()
-    return false;
-  }
-};
+const BulkImport = (props) => {
+  const {uploadFun, templateUrl, successCallback } = props
 
-const BulkImport = () => {
+  const handlerBulkImport = async (fileObj) => {
+    const hide = message.loading("正在创建");
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("file", fileObj);
+
+    await uploadFun(formData, token).then((res) => {
+      hide()
+      successCallback(res)
+    }).catch((e) => {
+      // message.error(e)
+      console.log(e)
+    })
+  };
+
   return (
     <ModalForm
       title="批量导入"
       width="440px"
       trigger={
         <Button type="primary">
-          <ImportOutlined />批量导入
+          <ImportOutlined />
+          批量导入
         </Button>
       }
       submitter={{
@@ -36,23 +38,29 @@ const BulkImport = () => {
         },
       }}
       onFinish={async (values) => {
-        await handleAddCluster(values);
+        const fileObj = values.file[0].originFileObj
+        await handlerBulkImport(fileObj);
         return true;
       }}
     >
       <ProFormUploadButton
-        name="upload"
+        accept=".xls, .xlsx"
+        name="file"
         label="批量导入："
-        // labelCol={ span: 4 }
-        // wrapperCol={ span: 14 }
         max={2}
-        fieldProps={{
-          name: 'file',
-        }}
-        action="/upload.do"
         extra="导入excel文件"
+        beforeUpload={() => false}
+        addonAfter={<a href={templateUrl}>模板下载</a>}
       />
     </ModalForm>
   );
 };
-export default BulkImport
+
+HostModalForm.defaultProps = {
+  uploadFun: () => {},
+  templateUrl: "/resource/主机导入模板.xls",
+  successCallback: () => {}
+}
+
+
+export default BulkImport;

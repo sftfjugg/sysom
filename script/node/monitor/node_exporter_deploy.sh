@@ -9,8 +9,8 @@ NODE_EXPORTER_TAR=${NODE_EXPORTER_PKG}.tar.gz
 ##设置node_exporter开机自动启动
 cat << EOF > node_exporter.service
 [Unit]
-Description=SysOM Monitor Promethues
-Documentation=SysOM Monitor Promethues
+Description=SysOM Monitor Prometheus
+Documentation=SysOM Monitor Prometheus
 Wants=network-online.target
 After=network-online.target
 

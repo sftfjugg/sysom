@@ -2,27 +2,8 @@ import React, { useRef } from "react";
 import ProTable from "@ant-design/pro-table";
 import { getTaskList } from "../../service";
 
-function parseJsonString(str) {
-  try {
-    return JSON.parse(str.replace(/\'/g, "\""));
-  }
-  catch (e) {
-    return {}
-  }
-}
-
 const getIODiagList = async () => {
-  try {
-    let msg = await getTaskList({ service_name: "iosdiag_latency" });
-    msg.data = msg.data.map((item) => ({ ...item, ...parseJsonString(item.params) }))
-    return {
-      data: msg.data.reverse(),
-      success: true,
-      total: msg.total,
-    };
-  } catch (e) {
-    return { success: false }
-  }
+  return await getTaskList({ service_name: "iosdiag_latency" });
 }
 
 const IOTableList = React.forwardRef((props, ref) => {
@@ -31,22 +12,22 @@ const IOTableList = React.forwardRef((props, ref) => {
   const columns = [
     {
       title: "实例IP",
-      dataIndex: "实例IP",
+      dataIndex: "instance",
       valueType: "textarea",
     },
     {
       title: "诊断时长",
-      dataIndex: "诊断时长",
+      dataIndex: "diag_time",
       valueType: "textarea",
     },
     {
       title: "时间阈值",
-      dataIndex: "时间阈值",
+      dataIndex: "thresh",
       valueType: "textarea",
     },
     {
       title: "目标磁盘",
-      dataIndex: "目标磁盘",
+      dataIndex: "disk",
       valueType: "textarea",
     },
     {

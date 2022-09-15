@@ -1,34 +1,21 @@
-"""sysom URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/3.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.urls import path, re_path
+from django.urls import path
 from django.urls.conf import include
+from django.http import HttpResponse
 from django.conf import settings
 
+def checkstatus(request):
+    """判断应用是否健康"""
+    return HttpResponse('success')
+
+app_urlpatterns = [path('', include(f'{app}.urls')) for app in settings.INSTALLED_APPS if app.startswith('apps')]
 
 urlpatterns = [
-    path('', include("apps.host.urls")),
-    path('', include("apps.accounts.urls")),
-    path('', include("apps.monitor.urls")),
-    path('', include("apps.task.urls")),
-    path('', include("apps.vmcore.urls")),
-    path('', include("apps.alarm.urls")),
-    path('', include("apps.vul.urls")),
+    path('checkpreload.htm', checkstatus, name='checkstatus')
 ]
 
-if settings.DEBUG:
+urlpatterns += app_urlpatterns
+
+if settings.DEBUG and not settings.IS_MICRO_SERVICES:
     from drf_yasg.views import get_schema_view
     from drf_yasg import openapi
 

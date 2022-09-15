@@ -33,6 +33,7 @@ class VulAddrModel(models.Model):
     parser = models.JSONField(verbose_name="parse vul data structure",
                               default=dict)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=2, verbose_name="vul database status")
+    is_edited = models.BooleanField(verbose_name="Is the vulnerability database editable", default=True)
 
     class Meta:
         db_table = "sys_vul_db"
@@ -40,25 +41,13 @@ class VulAddrModel(models.Model):
     def __str__(self):
         return f'vul addres: {self.url}'
 
-    def get_req_arg(self):
-        headers = self.headers
-        if "User-Agent" not in headers:
-            headers[
-                "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
-
-        if self.authorization_type.lower() == "basic" and self.authorization_body:
-            auth = self.authorization_body
-        else:
-            auth = {}
-        return self.url, self.get_method_display(), headers, self.params, self.body, auth
-
 
 class VulBaseModel(BaseModel):
     cve_id = models.CharField(max_length=100)
     score = models.CharField(max_length=20, verbose_name="cve score")
     description = models.TextField(default="")
     pub_time = models.CharField(max_length=100, verbose_name="publish time")
-    vul_level = models.CharField(max_length=100)
+    vul_level = models.CharField(max_length=100, blank=True)
     detail = models.TextField(default="")
     software_name = models.CharField(max_length=100)
     fixed_time = models.CharField(max_length=100)

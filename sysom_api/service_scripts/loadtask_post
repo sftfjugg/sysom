@@ -46,6 +46,7 @@ def parse_log(file):
     task_stack = {}
     d_task_list = []
     r_task_list = []
+    cpuflamegraph_str = ""
 
     fd = open(file,"r")
     for line in fd.readlines():
@@ -123,11 +124,4 @@ def parse_log(file):
     print(out)
 
 if __name__ == '__main__':
-    fname="/tmp/loadtask_argv_"+str(random.random())
-    #fname="/var/log/sysak/loadtask/.tmplog"
-    f=open(fname,"w+")
-    #f=open(fname,"r")
-    f.write(sys.argv[1])
-    f.close()
-    parse_log(fname)
-    os.remove(fname)
+    parse_log(sys.argv[1])

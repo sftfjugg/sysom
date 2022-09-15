@@ -114,7 +114,6 @@ const Login = () => {
                   size: 'large',
                   prefix: <UserOutlined className={styles.prefixIcon} />,
                 }}
-                initialValue={"admin"}
                 placeholder={intl.formatMessage({
                   id: 'pages.login.username.placeholder',
                   defaultMessage: '用户名: admin or user',
@@ -132,7 +131,6 @@ const Login = () => {
                 ]}
               />
               <ProFormText.Password
-              initialValue={"123456"}
                 name="password"
                 fieldProps={{
                   size: 'large',

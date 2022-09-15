@@ -56,50 +56,99 @@ def update_vul_db():
 class VulDataParse(object):
     def __init__(self, vul_addr_obj: VulAddrModel):
         self.vul_addr_obj = vul_addr_obj
+        self.cve_data_path = list(filter(None, self.vul_addr_obj.parser["cve_item_path"].split('/')))
 
     def get_vul_data(self):
+        vul_data = []
         try:
-            resp = requests.request(self.vul_addr_obj.get_method_display(), self.vul_addr_obj.url,
-                                    headers=self.vul_addr_obj.headers,
-                                    data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
-                                    auth=self.vul_addr_obj.authorization_body)
+            if self.vul_addr_obj.authorization_type.lower() == "basic" and self.vul_addr_obj.authorization_body:
+                auth = (
+                    self.vul_addr_obj.authorization_body["username"], self.vul_addr_obj.authorization_body["password"])
+            else:
+                auth = ()
+
+            flag = True
+            url = self.vul_addr_obj.url
+            while flag:
+                logging.info(url)
+                resp = requests.request(self.vul_addr_obj.get_method_display(), url,
+                                        headers=self.vul_addr_obj.headers,
+                                        data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
+                                        auth=auth)
+                body = json.loads(resp.text)
+                cve_path = self.cve_data_path
+                cve_data = body
+                next_url_data = body
+                if len(cve_path) >= 1:
+                    for i in cve_path:
+                        cve_data = cve_data.get(i)
+                    if len(cve_path) >= 2:
+                        for i in cve_path[:-1]:
+                            next_url_data = next_url_data.get(i)
+                    if "next" in next_url_data:
+                        url = next_url_data["next"]
+                        if url is None:
+                            flag = False
+                        else:
+                            flag = True
+                    else:
+                        flag = False
+                else:
+                    flag = False
+                vul_data.extend(cve_data)
             if status.is_success(resp.status_code):
                 self.set_vul_data_status_up()
             else:
                 self.set_vul_data_status_down()
-            body = json.loads(resp.text)
-            return body
+            return vul_data
         except Exception as e:
             self.set_vul_data_status_down()
             logging.warning(e)
-            return None
+            return vul_data
 
     def parse_and_store_vul_data(self, body):
-        cvd_data = body
-        cve_path = list(filter(None, self.vul_addr_obj.parser["cve_item_path"].split('/')))
-        if len(cve_path) >= 1:
-            for i in self.vul_addr_obj.parser["cve_item_path"].split('/'):
-                cvd_data = cvd_data.get(i)
-
-        for cve in cvd_data:
-            logging.info("Update sys_vul vul data")
-            cve_obj_search = VulModel.objects.filter(cve_id=cve['cveid'])
+        cve_data = body
+        logging.info("Update sys_vul vul data")
+        for cve in cve_data:
             cve_id = cve[self.vul_addr_obj.parser["cve_id_flag"]]
+            cve_obj_search = VulModel.objects.filter(cve_id=cve_id)
             pub_time = cve.get(self.vul_addr_obj.parser["pub_time_flag"], None)
-            vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
-            if len(cve_obj_search) == 0:
-                print(f"0 {cve_id}")
-                VulModel.objects.create(cve_id=cve_id,
-                                        pub_time=pub_time,
-                                        vul_level=vul_level,
-                                        update_time=timezone.now())
+            if "level_flag" in self.vul_addr_obj.parser:
+                vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
             else:
-                print(vul_level, cve_obj_search.first().vul_level, cve_obj_search.first().vul_level != vul_level)
-                if vul_level and cve_obj_search.first().vul_level != vul_level:
-                    cve_obj_search.update(
-                        pub_time=pub_time,
-                        vul_level=vul_level,
-                        update_time=timezone.now())
+                vul_level = None
+            if vul_level is None:
+                vul_score = cve.get(self.vul_addr_obj.parser["score_flag"], None)
+                if vul_score is None:
+                    vul_level = ""
+                else:
+                    if int(vul_score) < 4:
+                        vul_level = "low"
+                    elif int(vul_score) < 7:
+                        vul_level = "medium"
+                    elif int(vul_score) < 9:
+                        vul_level = "high"
+                    else:
+                        vul_level = "critical"
+
+            logging.debug(f"Update sys_vul {cve_id} data")
+            try:
+                if len(cve_obj_search) == 0:
+                    # print(f"0 {cve_id}")
+                    VulModel.objects.create(cve_id=cve_id,
+                                            pub_time=pub_time,
+                                            vul_level=vul_level,
+                                            update_time=timezone.now())
+                else:
+                    # print(vul_level, cve_obj_search.first().vul_level, cve_obj_search.first().vul_level != vul_level)
+                    if vul_level and cve_obj_search.first().vul_level != vul_level:
+                        cve_obj_search.update(
+                            pub_time=pub_time,
+                            vul_level=vul_level,
+                            update_time=timezone.now())
+            except Exception as e:
+                logging.warning(e)
+                logging.warning(f"Create or update {cve_id} failed")
 
     def set_vul_data_status(self, status):
         self.vul_addr_obj.status = status
@@ -242,7 +291,7 @@ def update_sa_db(cveinfo):
 
     # 更新漏洞数据库数据至sa
     for sacve_obj in set(
-            SecurityAdvisoryModel.objects.filter(Q(pub_time='') | Q(score='') | Q(vul_level='')).values_list("cve_id")):
+            SecurityAdvisoryModel.objects.filter(Q(pub_time='') | Q(vul_level='')).values_list("cve_id")):
         cve_obj_search = VulModel.objects.filter(cve_id=sacve_obj[0])
         if len(cve_obj_search) != 0:
             cve_obj = cve_obj_search.first()

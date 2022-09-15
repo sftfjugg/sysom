@@ -6,7 +6,7 @@ import sys
 ###############################################################################
 ##  {
 ##    "service_name":"ossre",
-##    "实例IP":"192.168.1.101"
+##    "instance":"192.168.1.101"
 ##  }
 ##  解析参数方法：
 ##  sysak ossre_client -d > /dev/null 2>&1  &&  cat /var/log/sysak/ossre.log
@@ -25,7 +25,7 @@ result = {}
 result['commands'] = []
 
 cmd0 = {}
-cmd0['instance'] = args["实例IP"]
+cmd0['instance'] = args["instance"]
 cmd0['cmd'] = "sysak ossre_client -d > /dev/null " + " && " + "cat /var/log/sysak/ossre.log"
 
 result['commands'].append(cmd0)

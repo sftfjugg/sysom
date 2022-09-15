@@ -24,13 +24,18 @@ const Welcome = () => {
         </div>
         <Menu className={styles.menuCenter} selectedKeys='home' mode="horizontal">
           <Menu.Item key="home"><a href="/">首页</a></Menu.Item>
-          <Menu.Item key="host"><a href="/host">主机管理</a></Menu.Item>
+          {/* <Menu.Item key="host"><a href="/host">主机管理</a></Menu.Item> */}
+          <SubMenu key="host" title="主机管理">
+            <Menu.Item key="hostlist"><a href="/host/list">主机列表</a></Menu.Item>
+            <Menu.Item key="cluster"><a href="/host/cluster">集群列表</a></Menu.Item>
+          </SubMenu>
           <SubMenu key="monitor" title="监控中心">
             <Menu.Item key="dashboard"><a href="/monitor/dashboard">系统监控</a></Menu.Item>
           </SubMenu>
           <SubMenu key="vmcore" title="宕机中心">
             <Menu.Item key="vmlist"><a href="/vmcore/list">宕机列表</a></Menu.Item>
             <Menu.Item key="vmmatch"><a href="/vmcore/match">宕机匹配</a></Menu.Item>
+            <Menu.Item key="vmconfig"><a href="/vmcore/config">宕机配置</a></Menu.Item>
           </SubMenu>
           <SubMenu key="diagnose" title="诊断中心">
             <Menu.Item key="oscheck"><a href="/diagnose/oscheck">系统健康检查</a></Menu.Item>
@@ -50,6 +55,7 @@ const Welcome = () => {
           <SubMenu key="journal" title="日志中心">
             <Menu.Item key="audit"><a href="/journal/audit">审计日志</a></Menu.Item>
             <Menu.Item key="task"><a href="/journal/task">任务日志</a></Menu.Item>
+            <Menu.Item key="alarm"><a href="/journal/alarm">告警日志</a></Menu.Item>
           </SubMenu>
           <SubMenu key="security" title="安全中心">
             <Menu.Item key="List"><a href="/security/List">漏洞中心</a></Menu.Item>

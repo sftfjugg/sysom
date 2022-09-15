@@ -1,30 +1,37 @@
+import imp
+import re
 import logging
 import os
 import threading
-import requests
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.request import Request
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import ValidationError
 from django.conf import settings
 
 from apps.host import serializer
+from apps.common.common_model_viewset import CommonModelViewSet
 from apps.host.models import HostModel, Cluster
 from apps.accounts.authentication import Authentication
 from apps.task.views import script_task
-from consumer.executors import SshJob
-from apps.task.models import JobModel
 from lib import *
 from lib.exception import APIException
+from lib.excel import Excel
+from lib.utils import HTTP
+from lib.validates import validate_ssh
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from apps.alarm.views import _create_alarm_message
+from apps.channel.channels.ssh import SSH
+
 
 logger = logging.getLogger(__name__)
 
 
-class HostModelViewSet(GenericViewSet,
+class HostModelViewSet(CommonModelViewSet,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
                        mixins.UpdateModelMixin,
@@ -32,10 +39,11 @@ class HostModelViewSet(GenericViewSet,
                        mixins.DestroyModelMixin
                        ):
     queryset = HostModel.objects.filter(deleted_at=None)
-    serializer_class = serializer.HostListSerializer
+    serializer_class = serializer.HostSerializer
     authentication_classes = [Authentication]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['ip', 'hostname', 'cluster', 'status']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_authenticators(self):
         if self.request.method == "GET":
@@ -43,30 +51,28 @@ class HostModelViewSet(GenericViewSet,
         else:
             return [auth() for auth in self.authentication_classes]
 
-    def create(self, request, *args, **kwargs):
-        password = request.data.pop('host_password', None)
-        if not password:
-            return not_found(message=f'host_password required!')
-
-        b, k = generate_private_key(
-            hostname=request.data['ip'], port=request.data['port'], username=request.data['username'], password=password
-        )
-        if not b:
-            return other_response(code=400, message=f"主机验证失败：{k}")
-        request.data.update({'private_key': k})
-
-        create_serializer = self.get_serializer(data=request.data)
-        create_serializer.is_valid(raise_exception=True)
-        self.perform_create(create_serializer)
-        instance = create_serializer.instance
-        # 检查输入client部署命令 更新host状态
-        thread = threading.Thread(target=self.client_deploy_cmd_init, args=(instance,))
-        thread.start()
-        host_list_serializer = serializer.HostListSerializer(instance=instance)
-        return success(result=host_list_serializer.data)
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset:
+            return success([], total=0)
+        return super(HostModelViewSet, self).list(request, *args, **kwargs)
 
     def perform_create(self, ser):
         ser.save(created_by=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        # 检查字段是否满足
+        setattr(self, 'request', request)
+        res = self.require_param_validate(
+            request, ['hostname', 'ip', 'port', 'username'])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
+        res = self._thread_pool('add', tasks=[request.data],
+                                func=self._validate_and_initialize_host)
+        if res["success"]:
+            return success(result={})
+        else:
+            return ErrorResponse(msg=res["message"])
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.check_instance_exist(request, *args, **kwargs)
@@ -75,81 +81,278 @@ class HostModelViewSet(GenericViewSet,
         ser = self.get_serializer(instance)
         return success(result=ser.data)
 
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return serializer.HostListSerializer
-        else:
-            return serializer.AddHostSerializer
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        return success(result=response.data, message="修改成功")
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        if not queryset:
-            return success([], total=0)
-        return super(HostModelViewSet, self).list(request, *args, **kwargs)
+    def partial_update(self, request, *args, **kwargs):
+        """
+        部分更新，由PATCH方法触发，可以传递部分字段更新部分内容
+        """
+
+        # 限制只能更新 cluster 和 description
+        res = self.extract_specific_params(
+            request, ["cluster", "description", "status"])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
+        return super(HostModelViewSet, self).partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
+        setattr(self, 'request', request)
         instance = self.check_instance_exist(request, *args, **kwargs)
         if not instance:
             return not_found()
-        status, content = self.client_deploy_cmd_delete(instance)
-        if status != 200:
-            return other_response(message="删除失败，清除脚本执行失败，错误如下：{}".format(content.get("message")), code=400, success=False)
-        self.perform_destroy(instance)
-        return success(message="删除成功", code=200, result={})
+        res = self._thread_pool(
+            'del', [instance], func=self._destroy_host_tasks)
+        if res["success"]:
+            return success(message="operation success!", code=200, result={})
+        else:
+            return ErrorResponse(msg=res["message"])
 
     def perform_destroy(self, instance: HostModel):
         instance.deleted_at = human_datetime()
         instance.deleted_by = self.request.user
         instance.save()
 
-    def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return success(result=response.data, message="修改成功")
+    def _validate_and_initialize_host(self, context):
+        s, e = SSH.validate_ssh_host(
+            ip=context['ip'],
+            password=context['host_password'],
+            username=context['username'],
+            port=int(context['port'])
+        )
+        if not s:
+            raise APIException(message=e)
+        create_serializer = self.get_serializer(data=context)
+
+        try:
+            create_serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            raise APIException(
+                message=f"{self.get_format_err_msg_for_validation_error(context, e)}。主机添加失败")
+        self.perform_create(create_serializer)
+        instance = create_serializer.instance
+        # 检查输入client部署命令 更新host状态
+        thread = threading.Thread(
+            target=self.client_deploy_cmd_init, args=(instance,))
+        thread.start()
+        ser = serializer.HostSerializer(instance=instance)
+        return ser
+
+    def _destroy_host_tasks(self, instance):
+        status, content = self.client_deploy_cmd_delete(instance)
+        if status != 200:
+            raise APIException(
+                message=f'删除失败，清除脚本执行失败，错误如下：{content["message"]}')
+        self.perform_destroy(instance)
+        ser = serializer.HostSerializer(instance=instance)
+        return ser
 
     def check_instance_exist(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()
         return instance if instance else None
 
     def client_deploy_cmd_init(self, instance):
-        data = {"service_name": "node_init",
-                "instance": instance.ip,
-                "update_host_status": True
-                }
-        script_task(data)
+        request: Request = getattr(self, 'request')
+        data = {}
+        data['service_name'] = 'node_init'
+        data['instance'] = instance.ip
+        data['update_host_status'] = True
+
+        kwargs = {}
+        kwargs['data'] = data
+        kwargs['url'] = settings.TASK_API
+        kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
+        status, res = HTTP.request('post', **kwargs)
+        logger.info(f'node init task create success, res {res}')
 
     def client_deploy_cmd_delete(self, instance):
+        request: Request = getattr(self, 'request')
         try:
-            data = {"service_name": "node_delete",
-                    "instance": instance.ip
-                    }
-            resp = script_task(data)
-            logger.info(resp.status_code, resp.data)
-            return resp.status_code, resp.data
+            data = {}
+            data['service_name'] = "node_delete"
+            data['instance'] = instance.ip
+
+            kwargs = {}
+            kwargs['data'] = data
+            kwargs['url'] = settings.TASK_API
+            kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
+
+            status, res = HTTP.request('post', **kwargs)
+            logger.info(f'node delete task create success, res {res}')
+            return status, res
         except Exception as e:
-            logger.error(e, exc_info=True)
             return False, str(e)
 
+    def _get_cluster_instance(self, cluster_name):
+        try:
+            instance = Cluster.objects.get(cluster_name=cluster_name)
+            return instance
+        except Cluster.DoesNotExist:
+            return None
 
-class ClusterViewSet(GenericViewSet,
-                      mixins.ListModelMixin,
-                      mixins.RetrieveModelMixin,
-                      mixins.DestroyModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.UpdateModelMixin):
+    def _thread_pool(self, t_type: str, tasks: list, func):
+        kwargs = {}
+        kwargs['sub'] = 1
+        kwargs['item'] = 'host'
+        pool = []
+        workers = len(tasks) if len(
+            tasks) < os.cpu_count() else os.cpu_count() * 2
+
+        errMsg = None
+        with ThreadPoolExecutor(max_workers=workers) as p:
+            for task in tasks:
+                t = p.submit(func, task)
+                pool.append(t)
+
+            for d in as_completed(pool):
+                try:
+                    response = d.result()
+                    kwargs['message'] = f"IP: {response.data.get('ip')} {t_type} success!"
+                    kwargs['collected_time'] = datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
+                    kwargs['level'] = 3
+                    _create_alarm_message(kwargs)
+
+                except ValidationError as e:
+                    kwargs['message'] = ','.join(
+                        [f'{k}: {v[0]}' for k, v in e.detail.items()])
+                    errMsg = kwargs['message']
+                    kwargs['collected_time'] = datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
+                    kwargs['level'] = 2
+                    _create_alarm_message(kwargs)
+                except Exception as e:
+                    kwargs['message'] = str(e)
+                    errMsg = kwargs['message']
+                    kwargs['level'] = 2
+                    kwargs['collected_time'] = datetime.now().strftime(
+                        '%Y-%m-%d %H:%M:%S')
+                    _create_alarm_message(kwargs)
+        return {
+            "success": True,
+            "message": ""
+        } if errMsg is None else {
+            "success": False,
+            "message": errMsg
+        }
+
+    def batch_add_host(self, request: Request):
+        file = request.FILES.get('file', None)
+        if not file:
+            return other_response(message='Excel File Required!', code=400, success=False)
+        e = Excel(file.read(), {
+            'host_password': '主机密码',
+            'hostname': '主机别名',
+            'ip': '主机地址',
+            'port': '端口',
+            'username': '登录用户',
+            'cluster': '所属集群',
+            'description': '简介',
+        })
+        tasks = []
+
+        kwargs = {
+            "item": "host",
+            "sub": 1
+        }
+        for row in e.values():
+            cluster = self._get_cluster_instance(row['cluster'])
+            if not cluster:
+                kwargs.update({'level': 2})
+                kwargs.update(
+                    {'message': f"The cluster field {row['cluster']} of host {row['ip']} does not exist!"})
+                kwargs.update({'collected_time': human_datetime()})
+                _create_alarm_message(kwargs)
+                continue
+            row['cluster'] = cluster.id
+            tasks.append(row)
+
+        if len(tasks) > 0:
+            self._thread_pool('add', tasks=tasks,
+                              func=self._validate_and_initialize_host)
+        return success(result={})
+
+    def batch_del_host(self, request: Request):
+        host_id_list = request.data.get('host_id_list', None)
+        if not host_id_list:
+            return other_response(message='host_id_list not found or list empty', code=400, success=False)
+        if not isinstance(host_id_list, list):
+            return other_response(message='host_id_list type is list', code=400)
+        querysets = HostModel.objects.filter(id__in=host_id_list)
+        self._thread_pool('del', querysets, func=self._destroy_host_tasks)
+        return other_response(message='operation success!')
+
+    def batch_export_host(self, request):
+        host_id_list = request.data.get('host_id_list', None)
+        if host_id_list is None:
+            return other_response(code=400, message='host_id_list field required!')
+
+        if not isinstance(host_id_list, list):
+            return other_response(code=400, message='host_id_list field type list!')
+
+        if len(host_id_list) == 0:
+            return other_response(code=400, message='host_id_list field cannot be empty')
+
+        queryset = HostModel.objects.filter(id__in=host_id_list)
+        ser = serializer.HostSerializer(queryset, many=True)
+        return Excel.export(ser.data, excelname='hostlist')
+
+    def patch_host(self, request, host_ip, *args, **kwargs):
+        status = request.data.get('status', None)
+        if status is None:
+            raise APIException(message='status required params!')
+
+        if not self._validate_ip_format(host_ip):
+            return other_response(code=400, message='ip不合法!', success=False)
+
+        try:
+            instance: HostModel = HostModel.objects.get(ip=host_ip)
+            instance.status = status
+            instance.save()
+            return success(result={})
+        except HostModel.DoesNotExist as e:
+            raise APIException(message=f'Error: ip {host_ip} not exist!')
+
+    def del_host(self, request, host_ip, *args, **kwargs):
+        if not self._validate_ip_format(host_ip):
+            return other_response(code=400, message='ip不合法!', success=False)
+        try:
+            instance: HostModel = HostModel.objects.get(ip=host_ip)
+            instance.delete()
+            return success(result={})
+        except HostModel.DoesNotExist as e:
+            raise APIException(message=f'Error: ip {host_ip} not exist!')
+
+    def get_host(self, request, host_ip):
+        if not self._validate_ip_format(host_ip):
+            return other_response(code=400, message='ip不合法!', success=False)
+        try:
+            HostModel.objects.get(ip=host_ip)
+            return success(result={})
+        except HostModel.DoesNotExist:
+            raise APIException(message=f'Error: ip {host_ip} not exist!') 
+
+    def _validate_ip_format(self, ip) -> bool:
+        p = '((\d{1,2})|([01]\d{2})|(2[0-4]\d)|(25[0-5]))'
+        pattern = '^' + '\.'.join([p]*4) + '$'
+        return bool(re.match(pattern, ip))
+
+
+class ClusterViewSet(CommonModelViewSet,
+                     mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.DestroyModelMixin,
+                     mixins.CreateModelMixin,
+                     mixins.UpdateModelMixin):
     queryset = Cluster.objects.filter(Q(deleted_at=None) | Q(deleted_at=""))
-    serializer_class = serializer.ClusterListSerializer
+    serializer_class = serializer.ClusterSerializer
 
     def get_authenticators(self):
         if self.request.method == "GET":
             return []
         else:
             return [auth() for auth in self.authentication_classes]
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return serializer.ClusterListSerializer
-        else:
-            return serializer.AddClusterSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -162,12 +365,103 @@ class ClusterViewSet(GenericViewSet,
         return success(result=response.data)
 
     def create(self, request, *args, **kwargs):
+        res = self.require_param_validate(request, ["cluster_name"])
+        if not res['success']:
+            return ErrorResponse(msg=res['message'])
         super().create(request, *args, **kwargs)
         return success(result={}, message="新增成功")
 
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        判断当前集群是否包含主机，如果不包含主机则允许删除，如果包含主机则不允许删除
+        """
+        instance = self.get_queryset().filter(**kwargs).first()
+        hostInstance = HostModel.objects.filter(cluster=instance.id).first()
+        if hostInstance is None:
+            # 允许删除
+            super().destroy(request, *args, **kwargs)
+            return success(result={}, message="删除成功")
+        else:
+            # 不允许删除
+            return ErrorResponse(msg="Cluster has hosts, not allow to be delete.")
+
+    def batch_add_cluster(self, request: Request):
+        """
+        集群批量导入
+        """
+        file = request.FILES.get('file', None)
+        if not file:
+            return other_response(message='Excel File Required!', code=400, success=False)
+        e, fail_list, success_count = Excel(file.read(), {
+            'cluster_name': '集群名称',
+            'cluster_description': '集群描述',
+        }), [], 0
+
+        kwargs = {
+            "item": "cluster",
+            "sub": 1,
+            "level": 2
+        }
+
+        for row in e.values():
+            # 尝试创建并保存到数据库
+            create_cluster_serializer = self.get_serializer(data=row)
+            try:
+                create_cluster_serializer.is_valid(raise_exception=True)
+                create_cluster_serializer.save()
+                success_count += 1
+            except ValidationError as e:
+                # 创建失败，记录一下
+                fail_list.append(row['cluster_name'])
+        if len(fail_list) > 0:
+            kwargs.update(
+                {'message': f"Batch import cluster [{', '.join(fail_list)}] failed!"})
+            kwargs.update({'collected_time': human_datetime()})
+            _create_alarm_message(kwargs)
+        return success(result={
+            "fail_list": fail_list,
+            "success_count": success_count
+        })
+
+    def batch_del_cluster(self, request: Request):
+        """
+        集群批量删除
+        """
+        cluster_id_list = request.data.get('cluster_id_list', None)
+        if not cluster_id_list:
+            return other_response(message='host_id_list not found or list empty', code=400, success=False)
+        if not isinstance(cluster_id_list, list):
+            return other_response(message='host_id_list type is list', code=400)
+        querysets = Cluster.objects.filter(id__in=cluster_id_list)
+        kwargs = {
+            "item": "cluster",
+            "sub": 1,
+            "level": 2
+        }
+
+        fail_list, success_count = [], 0
+        for instance in querysets:
+            hostInstance = HostModel.objects.filter(
+                cluster=instance.id).first()
+            if hostInstance is None:
+                # 不包含主机，执行删除
+                self.perform_destroy(instance)
+                success_count += 1
+            else:
+                # 包含主机不允许删除
+                kwargs.update(
+                {'message': f"Cluster（{instance.cluster_name}） contains hosts, delete failed!"})
+                kwargs.update({'collected_time': human_datetime()})
+                _create_alarm_message(kwargs)
+                fail_list.append(instance.cluster_name)
+        return other_response(message='operation success!', result={
+            "fail_list": fail_list,
+            "success_count": success_count
+        })
 
 
 class SaveUploadFile(APIView):

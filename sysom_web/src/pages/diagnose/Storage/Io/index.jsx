@@ -18,8 +18,8 @@ const IOList = () => {
 
   const onListClick = async (record) => {
     const recorded = record;
-    const msg = await request('/api/v1/tasks/' + record.id);
-    if (msg.data.result == '{\n    \"status\": \"success\",\n    \"IO timeout\": \"false\"\n}\n') {
+    const msg = await getTask(record.task_id);
+    if (msg.result.status == "success" && msg.result["IO timeout"] == "false") {
         Modal.success({
           title: '诊断成功',
           content: (
@@ -31,8 +31,7 @@ const IOList = () => {
         return
     }
     const metlist = [];
-    msg.data.result = JSON.parse(msg.data.result)
-    const ioList = msg.data.result.seq.reduce((ioList, item, index, arr) => {
+    const ioList = msg.result.seq.reduce((ioList, item, index, arr) => {
       const block = item["slow ios"].filter((item2,index2) => {
         const block2 = item2.delays.filter((item3,index3) => {
           metlist.push({
@@ -63,7 +62,7 @@ const IOList = () => {
   }
 
   const onError = async (record) => {
-    const msg = await getTask(record.id);
+    const msg = await getTask(record.task_id);
     Modal.error({
       title: '诊断失败',
       content: (
@@ -82,8 +81,8 @@ const IOList = () => {
       {
         data ?
           <>
-            <IOResults data={data.ioList} diskChange={setDiskIdx} diskIdx={diskIdx} recorded={data.recorded} />
-            <MetricShow data={data.metric[diskIdx]}
+            <IOResults data={data.ioList} diskChange={setDiskIdx} diskIdx={diskIdx ? diskIdx : 0} recorded={data.recorded} />
+            <MetricShow data={data.metric[diskIdx ? diskIdx : 0]}
               title="IO 诊断各阶段延迟分析"
               xField="x" yField="y"
               category="category" slider="false"

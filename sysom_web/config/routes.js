@@ -38,6 +38,11 @@ export default [
         component: './host/List',
       },
       {
+        path: '/host/cluster',
+        name: 'cluster',
+        component: './host/cluster',
+      },
+      {
         path: '/host/terminal/:ip?',
         component: './host/Terminal',
       }
@@ -54,7 +59,7 @@ export default [
       {
         path: 'dashboard',
         name: 'dashboard',
-        hideInBreadcrumb:true,
+        hideInBreadcrumb: true,
         component: './Monitor/SystemDashboard',
       },
       {
@@ -91,6 +96,11 @@ export default [
       {
         path: '/vmcore/analyse',
         component: './vmcore/Analyse',
+      },
+      {
+        path: '/vmcore/config',
+        name: 'config',
+        component: './vmcore/Config',
       },
     ],
   },
@@ -158,12 +168,7 @@ export default [
         routes: [
           {
             path: '/diagnose/memory',
-            redirect: '/diagnose/memory/market',
-          },
-          {
-            path: '/diagnose/memory/market',
-            name: 'market',
-            component: './diagnose/Memory/Market',
+            redirect: '/diagnose/memory/memgraph',
           }
         ]
       },
@@ -187,37 +192,46 @@ export default [
         name: 'task',
         component: './journal/Task',
       },
+      {
+        path: '/journal/alarm',
+        name: 'alarm',
+        component: './journal/Alarm',
+      },
     ],
   },
   {
-    path: "/security",
-    name: "security",
+    path: '/security',
+    name: 'security',
     routes: [
       {
-        path: "/security",
-        redirect: "/security/list",
+        path: '/security',
+        redirect: '/security/list',
       },
       {
-        path: "/security/list",
-        name: "list",
-        component: "./security/List",
+        path: '/security/list',
+        name: 'list',
+        component: './security/List',
       },
       {
-        path: "/security/homelist/:id?",
-        component: "./security/Homelist",
+        path: '/security/homelist/:id?',
+        component: './security/Homelist',
       },
       {
-        path: "/security/historical",
-        component: "./security/Historical",
+        path: '/security/historical',
+        component: './security/Historical',
       },
       {
-        path: "/security/historicalist/:id?",
-        component: "./security/Historicalist",
+        path: '/security/historicalist/:id?',
+        component: './security/Historicalist',
       },
       {
-        path: "/security/viewdetails/:id?/:homename?",
-        component: "./security/Viewdetails",
+        path: '/security/viewdetails/:id?/:homename?',
+        component: './security/Viewdetails',
       },
+      {
+        path: '/security/setting',
+        component: './security/Setting',
+      },      
     ],
   },
   {

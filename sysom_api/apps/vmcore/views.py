@@ -14,8 +14,11 @@ from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
 from lib import success, other_response
+from sysom import settings
 import datetime
 import re
+
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +78,37 @@ class VmcoreViewSet(GenericViewSet,
             vmcore = models.Panic.objects.get(name=vmcore_name)
             models.Calltrace.objects.create(idx=idx, name=vmcore_name, line=line, vmcore = vmcore)
             return other_response(result=data)
+        elif 'post_config' in data and 'name' in data and 'server_host' in data and 'mount_point' in data:
+            config = models.VmcoreConfig.objects.last()
+            if 'days' in data and int(data['days']) >= 0:
+                rmcmd = "/bin/mkdir -p /tmp/vmcore-nfs\nmount -t nfs %s:%s /tmp/vmcore-nfs\nfind /tmp/vmcore_nfs -name vmcore -mtime +%s -type f -delete\n/bin/umount /tmp/vmcore-nfs" %(data['server_host'], data['mount_point'], data['days'])
+                with open('/tmp/deletevmcore.sh','w') as fout:
+                    fout.write(rmcmd)
+            if 'days' not in data:
+                rmcmd = ""
+                data['days'] = -1 
+                with open('/tmp/deletevmcore.sh','w') as fout:
+                    fout.write(rmcmd)
+            if not config:
+                cronsh = "1 0 * * * bash /tmp/deletevmcore.sh\n"
+                with open('/tmp/crondelete.sh','w') as fout:
+                    fout.write(cronsh)
+            
+                croncmd = "/bin/crontab -l >> /tmp/crondelete.sh"
+                ret = os.system(croncmd)
+                if ret != 0:
+                    logger.error("crontab list error")
+                croncmd = "/bin/crontab /tmp/crondelete.sh"
+                ret = os.system(croncmd)
+                if ret != 0:
+                    logger.error("crontab error")
+
+            config = models.VmcoreConfig.objects.create(name=data['name'], server_host=data['server_host'], mount_point=data['mount_point'], days=data['days'])
+            with open('%s/vmcore_nfs_config'%settings.DOWNLOAD_DIR,'w') as fout:
+                confline = "name=%(name)s\nserver_host=%(server_host)s\nmount_point=%(mount_point)s\ndays=%(days)s\n" % data
+                fout.write(confline)
+            return success(result=serializer.ConfigSerializer(config).data, message="插入成功")
+
         response = super().create(request, *args, **kwargs)
         data = response.data
         vmcore_id = data['id']
@@ -128,6 +162,12 @@ class VmcoreViewSet(GenericViewSet,
                 for i in vmcores:
                     data['calltrace_1'].append(serializer.PanicListSerializer(i).data)
             return other_response(result=data)
+        elif 'get_config' in data_get and data_get['get_config'] == '1':
+            config = models.VmcoreConfig.objects.last()
+            result=serializer.ConfigSerializer(config).data
+            if result['days'] == -1:
+                result['days'] = '永久保存'
+            return other_response(result=result)
         else:
             data = super().list(request, *args, **kwargs).data
 
@@ -221,7 +261,7 @@ class VmcoreViewSet(GenericViewSet,
                 if last_name == None or last_name.name!=calltrace_set.name:
                     if fcnt > 1:
                         data = serializer.PanicListSerializer(last_name.vmcore).data
-                        data['rate'] = (fcnt*100/s2)+fpow
+                        data['rate'] = (fcnt*100/s2)
                         result.append(data)
                         #result[last_name]=(fcnt*100/s2)+fpow
                     last_idx=0
@@ -241,7 +281,7 @@ class VmcoreViewSet(GenericViewSet,
                 last_idx=calltrace_set.idx
             if fcnt > 1:
                 data = serializer.PanicListSerializer(calltrace_set.vmcore).data
-                data['rate'] = (fcnt*100/s2)+fpow
+                data['rate'] = (fcnt*100/s2)
                 result.append(data)
             if len(result) > 0:
                 break
@@ -368,6 +408,34 @@ class VmcoreDetail(APIView):
                 return other_response(code=200)
             vmcores_data = serializer.PanicDetailSerializer(vmcore[0]).data
             return success(result=vmcores_data)
+        except Exception as e:
+            logger.error(e)
+            return other_response(message=str(e), code=400)
+
+class VmcoreConfigTest(APIView):
+    authentication_classes = []
+    def get(self, request):
+        try:
+            data = request.GET.dict()
+            if 'server_host' not in data and 'mount_point' not in data:
+                return other_response(message='没有传入指定测试参数', code=400, result={})
+
+            if not os.path.exists("/tmp/vmcore-nfs"):
+                cmd = '/bin/mkdir -p /tmp/vmcore-nfs'
+                ret = os.system(cmd)
+                if ret != 0:
+                    return other_response(message='无法创建nfs文件夹', code=400, result={})
+
+            cmd = '/bin/mount -t nfs %s:%s /tmp/vmcore-nfs' % (data['server_host'],data['mount_point'])
+            ret = os.system(cmd)
+            if ret != 0:
+                return other_response(message='无法连接', code=400, result={})
+
+            cmd = '/bin/umount /tmp/vmcore-nfs'
+            ret = os.system(cmd)
+            if ret != 0:
+                return other_response(message='无法umount nfs', code=400, result={})
+            return success(result={})
         except Exception as e:
             logger.error(e)
             return other_response(message=str(e), code=400)

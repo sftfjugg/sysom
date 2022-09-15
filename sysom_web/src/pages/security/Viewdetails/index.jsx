@@ -10,18 +10,24 @@ function index(props) {
   const [home, sethome] = useState("");
   const [reason, setreason] = useState("");
   const [Svisible, setSvisible] = useState(false);
+  const [result, setResult] = useState(false);
   useEffect(async () => {
     const msg = await viewApi(
       props.match.params.id,
       props.match.params.homename
     );
-    sethome(msg.data.hostname);
-    if (msg.data.status == "fail") {
-      setSvisible(false);
-      setreason(msg.data.details);
-    } else {
-      setSvisible(true);
+
+    if (msg) {
+      sethome(msg.data.hostname);
+      setResult(true)
+      if (msg.data.status == "fail") {
+        setSvisible(false);
+        setreason(msg.data.details);
+      } else {
+        setSvisible(true);
+      }
     }
+
   }, []);
   const fn = () => {
     props.history.push("/security/historical");
@@ -33,9 +39,11 @@ function index(props) {
           <h3> <span>
             <FormattedMessage id="pages.hostTable.hostname" defaultMessage="Hostname" />
           </span> {home} </h3>
-          {Svisible ?
-            <p className="card_succ"><FormattedMessage id="pages.security.Historical.fix_success" defaultMessage="CVE repair is successful" />.</p>
-            : <p className="card_err"><FormattedMessage id="pages.security.Historical.fix_fail" defaultMessage="CVE repair failed, the cause of failure is" />{reason}</p>}
+          {result ?
+            (Svisible ?
+              <p className="card_succ"><FormattedMessage id="pages.security.Historical.fix_success" defaultMessage="CVE repair is successful" />.</p>
+              : <p className="card_err"><FormattedMessage id="pages.security.Historical.fix_fail" defaultMessage="CVE repair failed, the cause of failure is" />{reason}</p>)
+            : <p></p>}
         </ProCard>
         <Row></Row>
         <Row>

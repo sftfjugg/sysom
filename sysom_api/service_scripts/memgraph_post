@@ -4,34 +4,72 @@ import sys
 import json
 import random
 
+
 def memgraph_result(raw):
-    """
-    fd = open("./test.json",'r')
+    '''
+    fd = open("./test.json", 'r')
     raw = fd.read().strip()
     fd.close()
-    """
+    '''
     outdata = {}
     if raw.find("memGraph") == -1:
-        outdata = {"status":"fail"}
+        outdata = {"status": "fail"}
         print(outdata)
         return
     rawdata = json.loads(raw)
-    outdata["event"] = rawdata["event"]
 
     memgraph = {}
     memgraph["used"] = rawdata["memGraph"]["used"]
     memgraph["free"] = rawdata["memGraph"]["free"]
     memgraph["available"] = rawdata["memGraph"]["available"]
-    memgraph["cache"] = (rawdata["memGraph"]["user"]["cache"] + rawdata["memGraph"]["user"]["shmem"])
-    outdata["memgraph"] = memgraph
-   
-    outdata["kernel"] = rawdata["memGraph"]["kernel"]
-    outdata["memleak"] = rawdata["memleak"]
-    outdata["user"] = rawdata["memGraph"]["user"]
-    outdata["taskMemTop"] = rawdata["memTop"]
-    outdata["filecacheTop"] = rawdata["filecacheTop"]
-    outdata = json.dumps(outdata, indent=4)
-    print(outdata)
+    memgraph["cache"] = (rawdata["memGraph"]["user"]
+                         ["cache"] + rawdata["memGraph"]["user"]["shmem"])
+
+    newmemgraph = {}
+    newmemgraph["dataMemEvent"] = {"data": {}}
+    newmemgraph["dataMemEvent"]["data"] = [
+        {"key": "内存利用率", "value": round(rawdata["event"]["util"], 2)},
+        {"key": "内存泄漏检查",
+            "value":  "正常" if rawdata["event"]["leak"] else "危险"},
+        {"key": "Memcg泄漏检查",
+            "value": "正常" if rawdata["event"]["memcg"] else "危险"},
+        {"key": "内存碎片化评估",
+            "value": "正常" if rawdata["event"]["memfrag"] else "危险"}
+    ]
+
+    newmemgraph["dataMemOverView"] = {"data": {}}
+    newmemgraph["dataMemOverView"]["data"] = [
+        {"key": i[0], "value": i[1]} for i in memgraph.items()]
+
+    newmemgraph["dataKerMem"] = {"data": {}}
+    newmemgraph["dataKerMem"]["data"] = [
+        {"key": i[0], "value": i[1]} for i in rawdata["memGraph"]["kernel"].items()]
+
+    newmemgraph["dataUserMem"] = {"data": {}}
+    newmemgraph["dataUserMem"]["data"] = [
+        {"key": i[0], "value": i[1]} for i in rawdata["memGraph"]["user"].items()]
+
+    newmemgraph["dataCacheList"] = {"data": {}}
+    newmemgraph["dataCacheList"]["data"] = [
+        {"key": index, "文件名": item["file"], "cached": item["cached"], "进程": ','.join(
+            item["task"])}
+        for index, item in enumerate(rawdata["filecacheTop"])]
+
+    newmemgraph["dataProcMemList"] = {"data": {}}
+    newmemgraph["dataProcMemList"]["data"] = [
+        {"key": index, "进程名": item["comm"], "总内存": item["total_mem"],
+            "RssAnon": item["RssAnon"], "RssFile": item["RssFile"]}
+        for index, item in enumerate(rawdata["memTop"])]
+
+    print(json.dumps(newmemgraph, ensure_ascii=False))
+
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
 
 if __name__ == "__main__":
-    memgraph_result(sys.argv[1])
+    res, _ = extract_params()
+    memgraph_result(res)

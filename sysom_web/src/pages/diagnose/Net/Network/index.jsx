@@ -21,27 +21,20 @@ const NetList = () => {
     refNetListTable.current.reload();
   }
 
-
-  /*
   const onListClick = async (record) => {
-    const msg = await request('/api/metric/');
-    const metric = msg.data.seq.reduce((metric, item) => { 
+    const msg = await getTask(record.task_id);
+    console.log(msg)
+    msg.metric = msg.result.seq.reduce((metric, item) => {
       metric.push({
-          x:item.meta.seq,
-          y:item.delays.filter((item) => item.delay === "total")[0].ts
-      }); return metric}, [])
-    setData({rawData:msg, metric:metric});
-  }
-
-  */
-
-  const onListClick = async (record) => {
-    const msg = await getTask(record.id);
+        x: String(item.meta.seq),
+        delay: item.delays.filter((item) => item.delay === "total")[0].ts
+      }); return metric
+    }, [])
     setData(msg);
   }
 
   const onError = async (record) => {
-    const msg = await getTask(record.id);
+    const msg = await getTask(record.task_id);
     Modal.error({
       title: '诊断失败',
       content: (

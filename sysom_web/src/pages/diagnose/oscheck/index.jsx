@@ -5,7 +5,7 @@ import ProCard from '@ant-design/pro-card';
 import OSCheckTaskForm from './osCheckTaskForm';
 import OSCheckTaskResult from './osCheckResult'
 import OSCheckList from './osCheckList';
-import { _getTask } from '../service'
+import { getTask } from '../service'
 
 const { Divider } = ProCard;
 
@@ -19,7 +19,7 @@ const NetList = () => {
   }
 
   const onError = async (record) => {
-    const msg = await _getTask(record.id);
+    const msg = await getTask(record.task_id);
     Modal.error({
       title: '诊断失败',
       content: (
@@ -51,7 +51,7 @@ const NetList = () => {
       CRASH: "宕机"
     }
 
-    const msg = await _getTask(record.id);
+    const msg = await getTask(record.task_id);
 
     const statusLevelList = ["none", "info", "warning", "error", "critical", "fatal"]
     const statusLevelMap = { none: 0, info: 1, warning: 2, error: 3, critical: 4, fatal: 5 }

@@ -284,9 +284,32 @@ async function getSimilarCrash(req, res, u) {
   return res.json(result);
 }
 
+async function postConfigTask(req, res, u) {
+  let realUrl = u;
+
+  if (
+    !realUrl ||
+    Object.prototype.toString.call(realUrl) !== "[object String]"
+  ) {
+    realUrl = req.url;
+  }
+
+  const dataSource = {
+      "status": "success",
+      "data": []
+  };
+
+  const result = {
+    data: dataSource,
+    success: true,
+  };
+  return res.json(result);
+}
+
 export default {
   "GET /api/vmcore": getVmcore,
   "GET /api/issue": getSolution,
   "POST /api/issue": postSolution,
   "POST /api/vmcore": getSimilarCrash,
+  "POST /api/config": postConfigTask,
 };

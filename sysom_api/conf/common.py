@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'apps.task',
     'apps.vmcore',
     'apps.alarm',
-    'consumer',
+    'apps.channel',
 
     'rest_framework',
     'corsheaders',
@@ -49,6 +49,31 @@ DATABASES = {
         'PASSWORD': 'sysom_admin',
         'HOST': '127.0.0.1',
         'PORT': '3306',
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION":'redis://127.0.0.1:6379/0',
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "encoding": 'utf-8',
+                "max_connections": 50
+            }
+        }
+    },
+    "noticelcon": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": 'redis://127.0.0.1:6379/1',
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "encoding": 'utf-8',
+                "max_connections": 50
+            }
+        }
     }
 }
 
@@ -95,7 +120,7 @@ REST_FRAMEWORK = {
         'lib.renderers.SysomJsonRender',
     ),
     'DEFAULT_PAGINATION_CLASS': 'lib.paginations.Pagination',
-    'UNICODE_JSON': False,
+    'UNICODE_JSON': True,
     'EXCEPTION_HANDLER': 'lib.exception.exception_handler'
 }
 
@@ -113,10 +138,38 @@ SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
 
 SERVER_IP = get_ip_address()
 
+IS_MICRO_SERVICES = False # 是否微服务
+
+# sysom node resource download dir
+WEB_DIR = os.path.join(BASE_DIR.parent, 'sysom_web')
+DOWNLOAD_DIR = os.path.join(WEB_DIR, 'download')
+
+# sysom service
+SYSOM_SERVICE = 'http://127.0.0.1:7001'
+TASK_SERVICE = 'http://127.0.0.1:7002'
+CHANNEL_SERVICE = 'http://127.0.0.1:7003'
+
+# key path
+KEY_PATH=os.path.join(BASE_DIR, 'conf', 'ssh-key')
+
+##################################################################
+# Cec settings
+##################################################################
+SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000"
+SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
+
+# API
+TASK_API = f'{TASK_SERVICE}/api/v1/tasks/'
+HOST_LIST_API = f'{SYSOM_SERVICE}/api/v1/host/'
+CHANNEL_VALIDATE_API = f'{CHANNEL_SERVICE}/api/v1/channel/validate/'
+CHANNEL_COMMAND_API = f'{CHANNEL_SERVICE}/api/v1/channel/'
+CHANNEL_RESULT_API = f'{CHANNEL_SERVICE}/api/v1/channel/exec_result/'
+
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')
 if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
     os.makedirs(os.path.join(BASE_DIR, 'logs'))
+
 
 # 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日志:
 # 格式:[日期][模块.函数名称():行号] [级别] 信息
@@ -188,4 +241,3 @@ LOGGING = {
         },
     }
 }
-

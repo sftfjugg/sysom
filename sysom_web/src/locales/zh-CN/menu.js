@@ -2,6 +2,7 @@ export default {
   'menu.welcome': '首页',
   'menu.host': '主机管理',
   'menu.host.list': '主机列表',
+  'menu.host.cluster': '集群列表',
   'menu.host.terminal': '主机终端',
   'menu.monitor': '监控中心',
   'menu.monitor.': '监控中心',
@@ -11,6 +12,7 @@ export default {
   'menu.vmcore.list': '宕机列表',
   'menu.vmcore.search': '宕机查询',
   'menu.vmcore.match': '宕机匹配',
+  'menu.vmcore.config': '宕机配置',
   'menu.newpage': '新叶',
   'menu.newpage.newPage': '新子叶',
   'menu.more-blocks': '更多区块',
@@ -75,6 +77,7 @@ export default {
   'menu.vmcore.analyse': '在线分析',
   'menu.journal': '日志中心',
   'menu.journal.audit': '审计日志',
+  'menu.journal.alarm': '告警日志',
   'menu.journal.task': '任务日志',
   'menu.security': '安全中心',
   'menu.security.list': '漏洞中心'

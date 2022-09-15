@@ -181,7 +181,7 @@ class VulSummaryView(APIView):
 
         try:
             latest_scan_time = localtime(
-                VulJobModel.objects.filter(job_name="update_sa").order_by(
+                VulJobModel.objects.filter(job_name="update_vul").order_by(
                     '-job_start_time').first().job_start_time).strftime(
                 '%Y-%m-%d %Z %H:%M:%S')
         except Exception:
@@ -210,7 +210,7 @@ class VulSummaryView(APIView):
 
     def get_vul_info(self, queryset):
         cve_count = len(set([cve[0] for cve in queryset.values_list("cve_id")]))
-        high_cve_count = len(set([cve[0] for cve in queryset.filter(score__gt=7.0).values_list("cve_id")]))
+        high_cve_count = len(set([cve[0] for cve in queryset.filter(vul_level='high').values_list("cve_id")]))
         affect_host = []
         for cve in queryset:
             affect_host.extend(list(cve.host.all()))
@@ -282,7 +282,7 @@ class UpdateSaView(APIView):
         检测最近更新时间，如果小于时间间隔，则直接返回成功
         """
         try:
-            last_update_sa_time = VulJobModel.objects.filter(job_name="update_sa").order_by(
+            last_update_sa_time = VulJobModel.objects.filter(job_name="update_vul").order_by(
                 '-job_start_time').first().job_end_time
             if last_update_sa_time is None:
                 return success(message="forbidden",
@@ -294,9 +294,11 @@ class UpdateSaView(APIView):
                 return success(message="forbidden",
                                result="The data has been updated recently,no need to update it again")
             else:
+                upvul()
                 upsa()
                 return success(result="Update security advisory data")
         except AttributeError:
+            upvul()
             upsa()
             return success(result="Update security advisory data")
 
@@ -332,15 +334,39 @@ class VulAddrViewSet(viewsets.ModelViewSet):
         super().update(request, *args, **kwargs)
         return success(result={}, message="修改成功")
 
-    @action(detail=True, methods=['get'])
+    def destroy(self, request, *args, **kwargs):
+        super().destroy(request, *args, **kwargs)
+        return success(result={}, message="删除成功")
+
+    @action(detail=False, methods=['post'])
     def test_connect(self, request, *args, **kwargs):
-        vul = self.get_object()
-        url, method, headers, params, payload, auth = vul.get_req_arg()
+        body = request.data
+        url, method, headers, params, payload, auth = self.get_req_arg(body)
         req = requests.Request(method, url, headers=headers, data=payload, params=params, auth=auth)
         prepped = req.prepare()
         data = {"request": self.get_req_struct(prepped),
                 "status": self.get_resp_result(prepped)}
         return success(result=data, message="")
+
+    @staticmethod
+    def get_req_arg(body):
+        headers = body.get("headers", {})
+        if "User-Agent" not in headers:
+            headers[
+                "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
+
+        if body.get("authorization_type").lower() == "basic" and body.get("authorization_body"):
+            authorization_body = body.get("authorization_body")
+            auth = (authorization_body["username"], authorization_body["password"])
+        else:
+            auth = ()
+
+        for i in VulAddrModel.REQUEST_METHOD_CHOICES:
+            if i[0] == body.get("method"):
+                method = i[1]
+                break
+
+        return body.get("url"), method, headers, body.get("params"), body.get("body"), auth
 
     @staticmethod
     def get_req_struct(req):
@@ -361,7 +387,7 @@ class VulAddrViewSet(viewsets.ModelViewSet):
                 msg = f"Status Code: {resp_status} OK"
             else:
                 msg = f"Status Code: {resp_status} ERROR"
+            return msg
         except Exception as e:
             msg = f"Status Code: ERROR({e})"
-        finally:
             return msg

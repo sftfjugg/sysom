@@ -7,7 +7,7 @@ import CPUTaskForm from './CPUTaskForm';
 import CPUTaskList from './CPUTaskList';
 import CPUPieChart from './CPUPieChart';
 import CPUEvent from './CPUEvent';
-import { _getTask } from '../../service'
+import { getTask } from '../../service'
 
 const { Divider } = ProCard;
 
@@ -35,7 +35,7 @@ export default (props) => {
   }
 
   const onError = async (record) => {
-    const msg = await _getTask(record.id);
+    const msg = await getTask(record.task_id);
     Modal.error({
       title: '诊断失败',
       content: (
@@ -47,20 +47,14 @@ export default (props) => {
   }
 
   const onListClick = async (record) => {
-    const msg = await _getTask(record.id);
+    const msg = await getTask(record.task_id);
     setCPUTaskResult(msg);
   }
 
-  /*
-               <iframe
-                frameBorder="0"
-                style={{ width: "1200px", height: "422px" }}
-                src={`/api/v1/tasks/${CPUTaskResult.id}/svg/`}
-                onLoad={e => setTimeout(() => {
-                  const obj = ReactDOM.findDOMNode(this);
-                  obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
-                }, 50)}
-              />*/
+  let svgUrl = ""
+  if (!!CPUTaskResult && CPUTaskResult.task_id) {
+    svgUrl = `/api/v1/tasks/${CPUTaskResult.task_id}/svg/`
+  }
 
   return (
     <PageContainer>
@@ -78,7 +72,7 @@ export default (props) => {
             <Divider />
             <ProCard title="调度火焰图" layout="center">
             <div style={{textAlign:'center', width:'100%'}}>
-              <SmartIFrame src={`/api/v1/tasks/${CPUTaskResult.id}/svg/`} />
+              <SmartIFrame src={svgUrl} />
               </div>
             </ProCard>
           </>

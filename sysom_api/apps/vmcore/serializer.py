@@ -63,4 +63,9 @@ class AddIssueSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.VmcoreConfig
+        fields = "__all__"
+
 

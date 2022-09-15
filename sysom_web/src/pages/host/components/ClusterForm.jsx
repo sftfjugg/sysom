@@ -1,5 +1,5 @@
 import { Button, message } from "antd";
-import { ModalForm, ProFormText } from "@ant-design/pro-form";
+import { ModalForm, ProFormText, ProFormTextArea } from "@ant-design/pro-form";
 import { FormattedMessage } from 'umi';
 import { PlusOutlined } from "@ant-design/icons";
 import { addCluster } from "../service";
@@ -19,7 +19,14 @@ const handleAddCluster = async (fields) => {
   }
 };
 
-const Cluster = () => {
+/**
+ * 新建集群表单组件
+ * @param {*} props
+ *            props.onAddClusterSuccess => 当新建集群成功时会调用该回调
+ * @returns 
+ */
+const Cluster = (props) => {
+
   return (
     <ModalForm
       title="新建集群"
@@ -36,7 +43,13 @@ const Cluster = () => {
         },
       }}
       onFinish={async (values) => {
-        await handleAddCluster(values);
+        let success = await handleAddCluster(values);
+        if (success) {
+          // add cluster success
+          props.onAddClusterSuccess();
+        } else {
+          // add cluster failed
+        }
         return true;
       }}
     >
@@ -57,6 +70,8 @@ const Cluster = () => {
           },
         ]}
       />
+      <ProFormTextArea label="备注信息" width="md" name="cluster_description" />
+
     </ModalForm>
   );
 };

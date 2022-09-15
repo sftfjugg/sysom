@@ -1,0 +1,94 @@
+{
+    "servicename": "memgraph",
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP， 我们将在会这台机器内部发起SysAK诊断"
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "memEvent",
+            "type": "stat",
+            "title": "事件总览",
+            "datasource": "dataMemEvent",
+            "fieldConfig": {
+                "mappings": [
+                    {
+                        "type": "value", 
+                        "options": {
+                            "正常": {
+                                "color": "green",
+                                "index": 0
+                            },
+                            "危险": {
+                                "color": "red",
+                                "index": 1
+                            }
+                        }
+                    }
+                ],
+                "thresholds": {
+                    "mode": "absolute", 
+                    "steps": [
+                        {
+                            "color": "red",
+                            "value": 5
+                        },
+                        {
+                            "color": "green",
+                            "value": 0
+                        }
+                    ]
+                },
+                "unit": "%"
+            }
+        },
+        {
+            "key": "pieRow",
+            "type": "row",
+            "title": "测试行",
+            "datasource": "",
+            "children": [
+                {
+                    "key": "memOverView",
+                    "type": "piechart",
+                    "title": "内存总览",
+                    "datasource": "dataMemOverView"
+                },
+                {
+                    "key": "kerMem",
+                    "type": "piechart",
+                    "title": "内核内存",
+                    "datasource": "dataKerMem"
+                },
+                {
+                    "key": "userMem",
+                    "type": "piechart",
+                    "title": "用户态内存",
+                    "datasource": "dataUserMem"
+                }
+            ]
+        },
+        {
+            "key": "procMemList",
+            "type": "table",
+            "title": "进程内存排序",
+            "datasource": "dataProcMemList"
+        },
+        {
+            "key": "cacheList",
+            "type": "table",
+            "title": "Cache排序",
+            "datasource": "dataCacheList",
+            "fieldConfig": {
+                "unit": "KB"
+            }
+        }
+    ]
+
+}

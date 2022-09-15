@@ -14,7 +14,7 @@ class SSH:
             username='root',
             pkey=None,
             password=None,
-            connect_timeout=10
+            connect_timeout=3
     ):
         self.client = None
         self.arguments = {

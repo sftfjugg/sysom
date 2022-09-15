@@ -6,16 +6,16 @@ import sys
 ###############################################################################
 ##  如前端入参是这个：
 ##  {
-##    "实例IP":"192.168.1.101",
-##    "时间阈值":"1",
-##    "诊断时长":"10"
-##    "目标磁盘":"vda"
+##    "instance":"192.168.1.101",
+##    "thresh":"1",
+##    "diag_time":"10"
+##    "disk":"vda"
 ##  }
 ##  解析参数方法：
 ##  sysak iosdiag latency -t 1 -T 10 vda
-##  -t 1 时间阈值，表示要捕获IO耗时超过1ms的IO
-##  -T 10 诊断时长，表示诊断10秒后自动退出
-##  vda 目标磁盘，可以不填，不填默认会捕获系统所有磁盘的IO
+##  -t 1 thresh，表示要捕获IO耗时超过1ms的IO
+##  -T 10 diag_time，表示诊断10秒后自动退出
+##  vda disk，可以不填，不填默认会捕获系统所有磁盘的IO
 ##                如填写有效盘符则只捕获指定磁盘IO
 ##                如填写一个无效盘符，也会捕获系统所有磁盘的IO
 ##
@@ -31,14 +31,14 @@ result = {}
 result['commands'] = []
 
 cmd0 = {}
-cmd0['instance'] = args["实例IP"]
-cmd0_arg_t = args.get("时间阈值","5000")
+cmd0['instance'] = args["instance"]
+cmd0_arg_t = args.get("thresh","5000")
 if int(cmd0_arg_t) < 0:
 	cmd0_arg_t = 0
-cmd0_arg_T = args.get("诊断时长","10")
+cmd0_arg_T = args.get("diag_time","10")
 if int(cmd0_arg_T) <= 0:
 	cmd0_arg_T = 10
-cmd0_arg_device = args.get("目标磁盘","")
+cmd0_arg_device = args.get("disk","")
 dump_log_cmd = "cat /var/log/sysak/iosdiag/latency/result.log.stat 2>/dev/null;\
     echo \"\";cat /var/log/sysak/iosdiag/latency/result.log.seq 2>/dev/null;"
 iosdiag_cmd = "sysak iosdiag latency -t "+str(cmd0_arg_t)+" -T "+str(cmd0_arg_T)+" "+cmd0_arg_device+" > /dev/null 2>&1"
