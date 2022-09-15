@@ -126,4 +126,5 @@ class NoticelconConsumer(JsonWebsocketConsumer):
     
     def loop_message(self):
         for message in self.consumer:
-            self.send_json(message.value)
+            if message.value.get('sub', '') == self._user.username:
+                self.send_json(message.value)
