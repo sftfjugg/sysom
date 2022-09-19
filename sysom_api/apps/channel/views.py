@@ -1,7 +1,6 @@
 import logging
 import re
 import os
-from importlib import import_module
 from django.conf import settings
 from django.db import connection
 from rest_framework.viewsets import GenericViewSet
@@ -9,6 +8,7 @@ from .models import ExecuteResult
 from lib.response import other_response
 from .channels.ssh import SSH
 from lib.exception import APIException
+from lib.utils import import_string
 
 
 logger = logging.getLogger(__name__)
@@ -28,10 +28,10 @@ class ChannelAPIView(GenericViewSet):
     def valid_channel(self, request):
         data = getattr(request, 'data')
         channel_type = data.pop('channel', 'ssh')
-        package = import_module(f'apps.channel.channels.{channel_type}')
+        package = import_string(f'apps.channel.channels.{channel_type}')
         try:
             package.Channel(**data)
-            return import_module(f'apps.channel.channels.{channel_type}')
+            return import_string(f'apps.channel.channels.{channel_type}')
         except Exception as e:
             logger.error(e)
 
@@ -42,7 +42,7 @@ class ChannelAPIView(GenericViewSet):
 
         for i, pkg in enumerate(packages):
             try:
-                package = import_module(f'apps.channel.channels.{pkg}')
+                package = import_string(f'apps.channel.channels.{pkg}')
                 package.Channel(**request.data)
                 channel_type = pkg
                 break
@@ -51,7 +51,7 @@ class ChannelAPIView(GenericViewSet):
                 if i+1 == len(packages):
                     raise APIException(message='No channels available!')
                 continue
-        return import_module(f'apps.channel.channels.{channel_type}')
+        return import_string(f'apps.channel.channels.{channel_type}')
 
     def channel_post(self, request, *args, **kwargs):
         channel_type = request.data.get('channel', 'ssh')
