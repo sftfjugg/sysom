@@ -8,7 +8,7 @@
     "dashboard": {
         "menu.diagnose.memory.memgraph": "内存大盘",
         "menu.diagnose.memory.filecache": "Cache分析",
-        "menu.diagnose.cpu.schedmoni": "调度抖动诊断",
-        "menu.diagnose.memory.oomcheck": "OOM诊断"
+        "menu.diagnose.memory.oomcheck": "OOM诊断",
+        "menu.diagnose.cpu.schedmoni": "调度抖动诊断"
     }
 }
