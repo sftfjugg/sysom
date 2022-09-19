@@ -1,0 +1,53 @@
+{
+    "servicename": "oomcheck",
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP， 我们将在会这台机器内部发起SysAK诊断"
+        },
+        {
+            "type": "text",
+            "name": "time",
+            "initialValue": "",
+            "label": "诊断时间",
+            "tooltips": "请输入需要诊断OOM的时间点，默认为最近一次"
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "oomAnalysis",
+            "type": "stat",
+            "title": "OOM原因分析",
+            "datasource": "oomAnalysis"
+        },
+        {
+            "key": "oomEvent",
+            "type": "stat",
+            "title": "OOM诊断总览",
+            "datasource": "oomResult"
+        },
+        {
+            "key": "oomDetail",
+            "type": "table",
+            "title": "OOM诊断详情",
+            "datasource": "oomDetail",
+            "fieldConfig": {
+                "unit": "KB"
+            }
+        },
+        {
+            "key": "oomTask",
+            "type": "table",
+            "title": "OOM进程使用情况",
+            "datasource": "oomTask",
+            "fieldConfig": {
+                "unit": "KB"
+            }
+        }
+    ]
+
+}

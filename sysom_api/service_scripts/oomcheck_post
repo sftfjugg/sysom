@@ -1,0 +1,132 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+
+def analyze_root(oomres):
+    root = oomres['root']
+    reason = "其他原因"
+    if root == "limit":
+        reason = "内存不足"
+    elif root == "plimit":
+        reason = "父cgroup内存不足"
+    elif root == "memleak":
+        if 'leaktype' not in oomres:
+            oomres['leaktype'] = ''
+        if 'leakusage' not in oomres:
+            oomres['leakusage'] = '0'
+        reason = "主机内存限制，并且怀疑有%s内存泄漏，已使用内存%sKB" % (oomres['leaktype'], oomres['leakusage'])
+    elif root == "fork":
+        if 'fork_max_cnt' not in oomres:
+            oomres['fork_max_cnt'] = 0
+        if 'fork_max_task' not in oomres:
+            oomres['fork_max_task'] = ''
+        if 'fork_max_usage' not in oomres:
+            oomres['fork_max_usage'] = 0
+        reason = "由于%s个优先级较高的%s进程导致OOM,已使用%sKB" % (oomres['fork_max_cnt'],oomres['fork_max_task'], oomres['fork_max_usage'])
+    elif root == "cpuset":
+        reason = "主机内存限制，主机存在多个内存节点，可能存在cpuset设置不合理的情况"
+    elif root == "frag":
+        if 'order' not in oomres:
+            oomres['order'] = '0-3低'
+        reason = "主机可能存在内存碎片，%s阶内存缺少导致触发OOM" % oomres['order']
+    elif root == "policy":
+        reason = "主机内存限制，主机存在多个内存节点，可能存在mempolicy设置不合理的情况"
+    elif root == "shmem":
+        if 'shmem' not in oomres:
+            oomres['shmem'] = '0'
+        reason = "共享内存导致OOM，已使用%sKB" % oomres['shmem']
+    return reason
+
+def advise_root(root):
+    advice = ""
+    if root == "limit" or root == "plimit":
+        advice = "调整业务使用内存"
+    elif root == "memleak":
+        advice = "可使用SysAK memleak工具深度排查"
+    elif root == "fork":
+        advice = "考虑业务内存使用状况和业务OOM优先级oom_score_adj设置"
+    elif root == "cpuset":
+        advice = "合理配置cpuset，考虑充分利用多个内存节点"
+    elif root == "frag":
+        advice = "评估系统内存碎片化程度"
+    elif root == "policy":
+        advice = "合理配置mempolicy，考虑充分利用多个内存节点"
+    elif root == "shmem":
+        advice = "考虑业务是否使用过多共享内存"
+    return advice
+
+def oomcheck_result(raw):
+    raw = raw.strip()
+    result = {}
+    result = {"oomResult":{"data":[{"key":"OOM进程", "value":"无"},
+        {"key":"OOM次数", "value":"无"},{"key":"OOM类型", "value":"无"},
+        ]},"oomAnalysis":{"data":[
+        {"key":"OOM详细原因", "value":"无"},{"key":"OOM诊断建议", "value":"无"}
+            ]},"oomDetail":{"data":[
+                {"key":0, "主机free内存":"-","主机low内存水线":"-", "主机使用总RSS":"-"}]},"oomTask":{"data":[{"key":0, "进程名":"-", "使用的内存":"-"}]}}
+    if len(raw) == 0:
+        print(json.dumps(result))
+        return
+    rawdata = json.loads(raw)
+    exp_time = ""
+    res = {}
+    for time in rawdata:
+        exp_time = time
+        res = rawdata[time]
+    if len(res) == 0 or res['type'] == 'unknow':
+        print(json.dumps(result))
+        return
+    if res['type'] == 'host':
+        result['oomResult']['data'][0]["value"] = "%s(%s)" % (res['task'], res['pid'])
+        result['oomResult']['data'][1]["value"] = res['total_oom']
+        result['oomResult']['data'][2]["value"] = "主机OOM"
+        result['oomAnalysis']['data'][0]["value"] = analyze_root(res)
+        result['oomAnalysis']['data'][1]["value"] = advise_root(res['root'])
+
+        result['oomDetail']['data'] = [{"key":0, "主机free内存":res['host_free']
+            ,"主机low内存水线":res['host_low'], "主机使用总RSS":res['total_rss']}]
+
+        if len(res['rss_list_desc']) > 0:
+            result['oomTask']['data'] = []
+        cnt = 0
+        for task_info in res['rss_list_desc']:
+            result['oomTask']['data'].append({"key":cnt, "进程名":task_info['task'], "使用的内存":task_info['rss']})
+            cnt += 1
+    elif res['type'] == 'cgroup':
+        result['oomResult']['data'][0]["value"] = "%s(%s)" % (res['task'], res['pid'])
+        result['oomResult']['data'][1]["value"] = res['total_oom']
+        result['oomResult']['data'][2]["value"] = "Cgroup OOM"
+        result['oomAnalysis']['data'][0]["value"] = analyze_root(res)
+        result['oomAnalysis']['data'][1]["value"] = advise_root(res['root'])
+
+        result['oomDetail']['data'] = []
+        result['oomDetail']['data'].append({"key":0})
+        result['oomDetail']['data'][0]["Cgroup名"]=res['cg_name']
+        if res['containerID'] != 'unknow':
+            result['oomDetail']['data'][0]["ContainerID"]=res['containerID']
+        if res['podName'] != 'unknow':
+            result['oomDetail']['data'][0]["Pod"]=res['podName']
+        result['oomDetail']['data'][0]["Cgroup可使用内存"]=res['cg_limit']
+        result['oomDetail']['data'][0]["Cgroup已使用内存"]=res['cg_usage']
+
+        if len(res['rss_list_desc']) > 0:
+            result['oomTask']['data'] = []
+        cnt = 0
+        for task_info in res['rss_list_desc']:
+            result['oomTask']['data'].append({"key":cnt, "进程名":task_info['task'], "使用的内存":task_info['rss']})
+            cnt += 1
+
+
+    print(json.dumps(result))
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+    res, _ = extract_params()
+    oomcheck_result(res)
