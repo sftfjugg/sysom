@@ -9,6 +9,7 @@
 import uuid as UUID
 import json
 import logging
+from importlib import import_module
 from datetime import datetime, date as datetime_date
 from decimal import Decimal
 
@@ -131,6 +132,28 @@ def generate_private_key(hostname, port, username, password=None, pkey=None):
         return False, "认证失败，请检查用户名密码或IP地址是否正确"
     except Exception as e:
         return False, e
+
+
+def import_string(dotted_path: str):
+    """
+    优化import_module
+    Args:
+        dotted_path 动态导包路径
+    Return Package 
+    """
+    try:
+        module_path, class_name = dotted_path.rsplit('.', 1)
+    except ValueError as err:
+        raise ImportError("%s doesn't look like a module path" % dotted_path) from err
+
+    module = import_module(module_path)
+
+    try:
+        return getattr(module, class_name)
+    except AttributeError as err:
+        raise ImportError('Module "%s" does not define a "%s" attribute/class' % (
+            module_path, class_name)
+                          ) from err
 
 
 class HTTP:
