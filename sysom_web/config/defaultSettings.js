@@ -7,5 +7,7 @@ const Settings = {
     fixSiderbar: true,
     title: '系统运维平台',
     logo: null,
+    footerLink: {
+    }
 };
 export default Settings;
