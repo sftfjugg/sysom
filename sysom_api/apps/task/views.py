@@ -153,6 +153,7 @@ def script_task(data):
                                     status="Fail")
             return other_response(message="not find commands, Please check the script return", code=400,
                                   success=False)
+        [script.update(data) for script in resp_scripts]
         ssh_job(
             resp_scripts,
             task_id,
