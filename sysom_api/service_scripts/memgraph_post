@@ -19,11 +19,9 @@ def memgraph_result(raw):
     rawdata = json.loads(raw)
 
     memgraph = {}
-    memgraph["used"] = rawdata["memGraph"]["used"]
+    memgraph["app"] = rawdata["memGraph"]["userUsed"]
     memgraph["free"] = rawdata["memGraph"]["free"]
-    memgraph["available"] = rawdata["memGraph"]["available"]
-    memgraph["cache"] = (rawdata["memGraph"]["user"]
-                         ["cache"] + rawdata["memGraph"]["user"]["shmem"])
+    memgraph["kernel"] = rawdata["memGraph"]["kernelUsed"]
 
     newmemgraph = {}
     newmemgraph["dataMemEvent"] = {"data": {}}
