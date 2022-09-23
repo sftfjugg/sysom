@@ -145,11 +145,11 @@ def import_string(dotted_path: str):
         module_path, class_name = dotted_path.rsplit('.', 1)
     except ValueError as err:
         raise ImportError("%s doesn't look like a module path" % dotted_path) from err
-
-    module = import_module(module_path)
+    module = import_module(dotted_path)
 
     try:
-        return getattr(module, class_name)
+        getattr(module, 'Channel')
+        return module
     except AttributeError as err:
         raise ImportError('Module "%s" does not define a "%s" attribute/class' % (
             module_path, class_name)
