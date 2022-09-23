@@ -285,13 +285,16 @@ class RedisConsumer(Consumer, ClientBase):
     @logger.catch(reraise=True)
     def __getitem__(self, item):
         msg = None
-        if not self._message_cache_queue.empty():
-            msg = self._message_cache_queue.get()
-        else:
-            for new_msg in self.consume():
-                self._message_cache_queue.put(new_msg)
+        try:
             if not self._message_cache_queue.empty():
                 msg = self._message_cache_queue.get()
+            else:
+                for new_msg in self.consume():
+                    self._message_cache_queue.put(new_msg)
+                if not self._message_cache_queue.empty():
+                    msg = self._message_cache_queue.get()
+        except Exception as e:
+            raise StopIteration()
         return msg
 
     @logger.catch(reraise=True)
@@ -338,6 +341,8 @@ class RedisConsumer(Consumer, ClientBase):
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to disconnect from '{self._current_url}'.")
         self._redis_client.quit()
+        self._redis_client.connection_pool.disconnect()
+        self._redis_client.close()
         self._redis_client = None
         LoggerHelper.get_lazy_logger().success(
             f"{self} disconnect from '{self._current_url}' successfully.")

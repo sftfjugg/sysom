@@ -113,6 +113,7 @@ class NoticelconConsumer(JsonWebsocketConsumer):
         super().__init__(*args, **kwargs)
         self._user = None
         self.consumer = None
+        self._loop_message_thread: Thread = None
 
     def connect(self):
         self._user = self.scope['user']
@@ -120,7 +121,8 @@ class NoticelconConsumer(JsonWebsocketConsumer):
             self.accept()
             self.consumer = dispatch_consumer(settings.SYSOM_CEC_URL, settings.SYSOM_CEC_ALARM_TOPIC,
                                               consumer_id=Consumer.generate_consumer_id(), start_from_now=True)
-            Thread(target=self.loop_message).start()
+            self._loop_message_thread = Thread(target=self.loop_message)
+            self._loop_message_thread.start()
         else:
             self.close()
     
@@ -128,3 +130,12 @@ class NoticelconConsumer(JsonWebsocketConsumer):
         for message in self.consumer:
             if message.value.get('sub', '') == self._user.username:
                 self.send_json(message.value)
+
+    def disconnect(self, code):
+        """
+        Websocket 断开连接时，断开与事件中心的连接，并释放线程资源
+        """
+        self.consumer.disconnect()
+        if self._loop_message_thread is not None and self._loop_message_thread.isAlive():
+            self._loop_message_thread.join()
+        return super().disconnect(code)
