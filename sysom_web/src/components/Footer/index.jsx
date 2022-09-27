@@ -14,6 +14,7 @@ const Footer = () => {
   if (!!Settings.footerLink?.title && !!Settings.footerLink?.link) {
     links = [{
       ...Settings.footerLink,
+      href: Settings.footerLink.link,
       key: Settings.footerLink.title
     }]
   }
