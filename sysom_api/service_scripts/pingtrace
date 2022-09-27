@@ -41,7 +41,11 @@ cmd0['cmd'] = "sysak pingtrace -s -t "+str(cmd0_arg)+" > /dev/null 2>&1 &"
 
 cmd1 = {}
 cmd1['instance'] = args["origin_instance"]
-cmd1_arg_c = args["target_instance"]
+if args.get("target_ip"):
+    cmd1_arg_c = args.get("target_ip")
+else:
+    cmd1_arg_c = args["target_instance"]
+
 cmd1_arg_t = str(cmd0_arg - 4)
 cmd1_arg_i = str(int(args["time_gap"]) * 1000)
 cmd1_arg_C = str(args["pkg_num"])
