@@ -1,12 +1,9 @@
 import logging
 from rest_framework import serializers
-from rest_framework_jwt.settings import api_settings
 
 from . import models
 
 logger = logging.getLogger(__name__)
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 
 class PanicListSerializer(serializers.ModelSerializer):

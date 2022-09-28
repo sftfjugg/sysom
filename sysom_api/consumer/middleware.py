@@ -1,11 +1,8 @@
 import logging
 from channels.db import database_sync_to_async
-from rest_framework_jwt.settings import api_settings
 
 
 logger = logging.getLogger(__name__)
-jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
-jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER
 
 
 @database_sync_to_async

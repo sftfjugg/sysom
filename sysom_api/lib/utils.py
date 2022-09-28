@@ -6,14 +6,20 @@
 @Author  : DM
 @Software: PyCharm
 """
+import time
 import uuid as UUID
 import json
 import logging
+import jwt
+import requests
+
 from importlib import import_module
 from datetime import datetime, date as datetime_date
 from decimal import Decimal
 
-import requests
+from jwt import PyJWKClient
+from django.conf import settings
+from rest_framework.exceptions import AuthenticationFailed
 from apscheduler.schedulers.background import BackgroundScheduler
 from paramiko import BadAuthenticationType, AuthenticationException
 from lib.ssh import SSH
@@ -28,8 +34,6 @@ job_defaults = {
 }
 scheduler = BackgroundScheduler(job_defaults=job_defaults)
 scheduler.start()
-
-
 
 
 CHAR_SET = ("a", "b", "c", "d", "e", "f",
@@ -187,3 +191,48 @@ class HTTP:
                 result = '请求超时, 重试三次'
 
         return status, result
+
+
+class JWT:
+    @staticmethod
+    def buc_decode(token: str):
+        r, s = None, False
+        jwks_client = PyJWKClient(settings.BUC_VERIFIED_TOKEN_URL)
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        try:
+            r, s = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["RS256"],
+                audience="sysom",
+                options={"verify_exp": False},
+            ), True
+        except jwt.exceptions.ExpiredSignatureError as e:
+            r = f'令牌失效: {e}'
+        except jwt.exceptions.DecodeError as e:
+            r = f'Token 校验失败: {e}'
+        return r, s
+
+    @staticmethod
+    def sysom_decode(token):
+        r, s = None, False
+        try:
+            r, s = jwt.decode(token, key=settings.SECRET_KEY, algorithms='HS256'), True
+        except jwt.exceptions.ExpiredSignatureError as e:
+            r = f'令牌失效: {e}'
+        except jwt.exceptions.DecodeError as e:
+            r = f'Token 校验失败: {e}'
+        return r, s 
+
+    @staticmethod
+    def _encode(payload: dict, exp: int=60 * 5):
+        """
+        生成JWT Token
+        :args 
+            payload 载体
+            exp 过期时间 (单位秒) 默认时间5分钟
+        """
+        payload['exp'] = time.time() + exp
+        # 默认不可逆加密算法为HS256
+        return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+
