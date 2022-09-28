@@ -26,13 +26,13 @@ def memgraph_result(raw):
     newmemgraph = {}
     newmemgraph["dataMemEvent"] = {"data": {}}
     newmemgraph["dataMemEvent"]["data"] = [
-        {"key": "内存利用率", "value": round(rawdata["event"]["util"], 2)},
-        {"key": "内存泄漏检查",
-            "value":  "正常" if rawdata["event"]["leak"] else "危险"},
-        {"key": "Memcg泄漏检查",
-            "value": "正常" if rawdata["event"]["memcg"] else "危险"},
-        {"key": "内存碎片化评估",
-            "value": "正常" if rawdata["event"]["memfrag"] else "危险"}
+        {"key": "Util", "value": round(rawdata["event"]["util"], 2)},
+        {"key": "MemLeak",
+            "value":  "OK" if rawdata["event"]["leak"] else "NG"},
+        {"key": "MemcgLeak",
+            "value": "OK" if rawdata["event"]["memcg"] else "NG"},
+        {"key": "MemFrag",
+            "value": "OK" if rawdata["event"]["memfrag"] else "NG"}
     ]
 
     newmemgraph["dataMemOverView"] = {"data": {}}
@@ -49,13 +49,13 @@ def memgraph_result(raw):
 
     newmemgraph["dataCacheList"] = {"data": {}}
     newmemgraph["dataCacheList"]["data"] = [
-        {"key": index, "文件名": item["file"], "cached": item["cached"], "进程": ','.join(
+        {"key": index, "Name": item["file"], "cached": item["cached"], "Task": ','.join(
             item["task"])}
         for index, item in enumerate(rawdata["filecacheTop"])]
 
     newmemgraph["dataProcMemList"] = {"data": {}}
     newmemgraph["dataProcMemList"]["data"] = [
-        {"key": index, "进程名": item["comm"], "总内存": item["total_mem"],
+        {"key": index, "task": item["comm"], "MemTotal": item["total_mem"],
             "RssAnon": item["RssAnon"], "RssFile": item["RssFile"]}
         for index, item in enumerate(rawdata["memTop"])]
 
