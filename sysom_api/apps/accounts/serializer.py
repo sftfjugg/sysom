@@ -1,13 +1,10 @@
 import logging
 from rest_framework import serializers
-from rest_framework_jwt.settings import api_settings
 
 from . import models
+from lib.utils import JWT
 
 logger = logging.getLogger(__name__)
-jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
 
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
@@ -97,8 +94,7 @@ class UserAuthSerializer(serializers.ModelSerializer):
 
     def create_token(self):
         user = models.User.objects.get(username=self.data.get('username'))
-        payload = jwt_payload_handler(user)
-        token = jwt_encode_handler(payload)
+        token = JWT._encode({'id': user.id, 'username': user.username}, exp=60 * 60 * 24 * 2)
         return user, token
 
 

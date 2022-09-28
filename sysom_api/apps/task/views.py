@@ -108,7 +108,7 @@ def script_task(data):
         if IS_MICRO_SERVICES:
             data.pop('user')
             user = params.pop('user')
-            user_id = user['user_id']
+            user_id = user['id']
         else:
             from apps.accounts.models import User
             user = User.objects.filter(username=username).first()
