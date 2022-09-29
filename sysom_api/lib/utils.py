@@ -195,25 +195,6 @@ class HTTP:
 
 class JWT:
     @staticmethod
-    def buc_decode(token: str):
-        r, s = None, False
-        jwks_client = PyJWKClient(settings.BUC_VERIFIED_TOKEN_URL)
-        signing_key = jwks_client.get_signing_key_from_jwt(token)
-        try:
-            r, s = jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=["RS256"],
-                audience="sysom",
-                options={"verify_exp": False},
-            ), True
-        except jwt.exceptions.ExpiredSignatureError as e:
-            r = f'令牌失效: {e}'
-        except jwt.exceptions.DecodeError as e:
-            r = f'Token 校验失败: {e}'
-        return r, s
-
-    @staticmethod
     def sysom_decode(token):
         r, s = None, False
         try:
