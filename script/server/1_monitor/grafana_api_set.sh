@@ -9,10 +9,11 @@ SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep "'USER'" | awk -F"'" '{print $4}'`
 SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep PASSWORD | awk -F"'" '{print $4}'`
 ##modify grafana.ini
 sed -i 's/;type\ =\ sqlite3/type\ =\ mysql/g' $GRAFANA_CONFIG
-sed -i "/;user = root/{n;n;s/;password =/password = $SYSOM_DATABASE_PASSWORD/g}" $GRAFANA_CONFIG
+####If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
+sed -i "/;user = root/{n;n;s/;password =/password = \"\"\"$SYSOM_DATABASE_PASSWORD\"\"\"/g}" $GRAFANA_CONFIG
 sed -i 's/;name = grafana/name = grafana/g' $GRAFANA_CONFIG
 sed -i "s/;user = root/user = $SYSOM_DATABASE_USER/g" $GRAFANA_CONFIG
-sed -i "s/127.0.0.1:3306/$SYSOM_DATABASE_HOST:$SYSOM_DATABASE_PORT/g" $GRAFANA_CONFIG
+sed -i "s/;host = 127.0.0.1:3306/host = $SYSOM_DATABASE_HOST:$SYSOM_DATABASE_PORT/g" $GRAFANA_CONFIG
 systemctl restart grafana-server
 
 ##login grafana, and get cookie
