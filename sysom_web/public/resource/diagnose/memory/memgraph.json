@@ -14,18 +14,18 @@
         {
             "key": "memEvent",
             "type": "stat",
-            "title": "事件总览",
+            "title": "MemEvent",
             "datasource": "dataMemEvent",
             "fieldConfig": {
                 "mappings": [
                     {
                         "type": "value", 
                         "options": {
-                            "正常": {
+                            "OK": {
                                 "color": "green",
                                 "index": 0
                             },
-                            "危险": {
+                            "NG": {
                                 "color": "red",
                                 "index": 1
                             }
@@ -57,19 +57,19 @@
                 {
                     "key": "memOverView",
                     "type": "piechart",
-                    "title": "内存总览",
+                    "title": "MemOverView",
                     "datasource": "dataMemOverView"
                 },
                 {
                     "key": "kerMem",
                     "type": "piechart",
-                    "title": "内核内存",
+                    "title": "KernelMem",
                     "datasource": "dataKerMem"
                 },
                 {
                     "key": "userMem",
                     "type": "piechart",
-                    "title": "用户态内存",
+                    "title": "UserMem",
                     "datasource": "dataUserMem"
                 }
             ]
@@ -77,13 +77,13 @@
         {
             "key": "procMemList",
             "type": "table",
-            "title": "进程内存排序",
+            "title": "TaskTop",
             "datasource": "dataProcMemList"
         },
         {
             "key": "cacheList",
             "type": "table",
-            "title": "Cache排序",
+            "title": "CacheTop",
             "datasource": "dataCacheList",
             "fieldConfig": {
                 "unit": "KB"
