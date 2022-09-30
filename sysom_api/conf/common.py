@@ -171,6 +171,11 @@ if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
     os.makedirs(os.path.join(BASE_DIR, 'logs'))
 
 
+# JWT Token Decode DIR
+JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
+if not os.path.exists(JWT_TOKEN_DECODE_DIR):
+    os.makedirs(JWT_TOKEN_DECODE_DIR)
+
 # 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日志:
 # 格式:[日期][模块.函数名称():行号] [级别] 信息
 STANDARD_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
