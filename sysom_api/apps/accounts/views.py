@@ -46,6 +46,11 @@ class UserModelViewSet(
         else:
             return [permission() for permission in self.permission_classes]
 
+    def get_user_info(self, request):
+        """获取用户信息"""
+        serializer = self.get_serializer(request.user)
+        return success(result=serializer.data)
+
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         return success(result=response.data, message="创建成功")
