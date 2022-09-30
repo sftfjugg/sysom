@@ -195,17 +195,6 @@ class HTTP:
 
 class JWT:
     @staticmethod
-    def sysom_decode(token):
-        r, s = None, False
-        try:
-            r, s = jwt.decode(token, key=settings.SECRET_KEY, algorithms='HS256'), True
-        except jwt.exceptions.ExpiredSignatureError as e:
-            r = f'令牌失效: {e}'
-        except jwt.exceptions.DecodeError as e:
-            r = f'Token 校验失败: {e}'
-        return r, s 
-
-    @staticmethod
     def _encode(payload: dict, exp: int=60 * 5):
         """
         生成JWT Token
@@ -216,4 +205,3 @@ class JWT:
         payload['exp'] = time.time() + exp
         # 默认不可逆加密算法为HS256
         return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-
