@@ -17,7 +17,6 @@ from importlib import import_module
 from datetime import datetime, date as datetime_date
 from decimal import Decimal
 
-from jwt import PyJWKClient
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 from apscheduler.schedulers.background import BackgroundScheduler
