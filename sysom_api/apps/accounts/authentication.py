@@ -46,9 +46,9 @@ class Authentication(BaseAuthentication):
             module = import_module(string)
             try:
                 m = getattr(module, 'JWTTokenDecode')
-            except:
-                pass
-            jwt_decode_classes.append(m())
+                jwt_decode_classes.append(m())
+            except Exception as exc:
+                logger.error(exc)
         
         return jwt_decode_classes
 
