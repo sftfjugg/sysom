@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*- #
 """
-Time                2022/7/27 15:55
+Time                2022/7/25 12:34
 Author:             mingfeng (SunnyQjm)
 Email               mfeng@linux.alibaba.com
 File                meta.py
 Description:
+
+This file define some meta info objects which used to manage CEC
 """
+from typing import List
 
 
 class TopicMeta:
-    """Common topic meta info definition
+    """Common Topic meta info definition
 
-    通用 Topic 元数据信息定义
+    This class define the Topic's meta info.
 
     Args:
-        topic_name(str): 主题名字
+        topic_name(str): Topic name
 
     Attributes:
-        topic_name(str): 主题名字
+        topic_name(str): Topic name
     """
 
     def __init__(self, topic_name: str = ""):
@@ -27,12 +30,10 @@ class TopicMeta:
         self.error = None
 
     def __repr__(self):
-        if self.error is not None:
-            return f"TopicMeta({self.topic_name}, {len(self.partitions)} " \
-                   f"partitions, {self.error})"
-        else:
-            return f"TopicMeta({self.topic_name}, {len(self.partitions)} " \
-                   f"partitions)"
+        return f"TopicMeta(" \
+               f"{self.topic_name}, {len(self.partitions)} partitions" \
+               f"{f', {self.error}' if self.error is not None else ''}" \
+               f")"
 
     def __str__(self):
         return self.topic_name
@@ -41,10 +42,13 @@ class TopicMeta:
 class PartitionMeta:
     """Common Partition meta info definition
 
-    通用 Partition 元数据定义
+    This class define the Partition's meta info.
 
     Args:
+        partition_id(int): Partition ID
 
+    Attributes:
+        partition_id(int): Partition ID
     """
 
     def __init__(self, partition_id: int = -1):
@@ -52,10 +56,10 @@ class PartitionMeta:
         self.error = None
 
     def __repr__(self):
-        if self.error is not None:
-            return f"PartitionMeta({self.partition_id}, {self.error})"
-        else:
-            return f"PartitionMeta({self.partition_id})"
+        return f"PartitionMeta(" \
+               f"{self.partition_id}" \
+               f"{f', {self.error}' if self.error is not None else ''}" \
+               f")"
 
     def __str__(self):
         return f"{self.partition_id}"
@@ -64,22 +68,25 @@ class PartitionMeta:
 class ConsumerGroupMeta:
     """Common Consumer Group meta info definition
 
-    通用 ConsumerGroup 元数据定义
+    This class define the ConsumerGroup's meta info.
 
+    Args:
+        group_id(str): Group ID
+
+    Attributes:
+        group_id(str): Group ID
     """
 
     def __init__(self, group_id: str = ""):
         self.group_id = group_id
-        self.members: [ConsumerGroupMemberMeta] = []
+        self.members: List[ConsumerGroupMemberMeta] = []
         self.error = None
 
     def __repr__(self):
-        if self.error is not None:
-            return f"ConsumerGroupMeta({self.group_id}, {len(self.members)} " \
-                   f"members, {self.error})"
-        else:
-            return f"ConsumerGroupMeta({self.group_id}, {len(self.members)} " \
-                   f"members)"
+        return f"ConsumerGroupMeta(" \
+               f"{self.group_id}, {len(self.members)} members" \
+               f"{f', {self.error}' if self.error is not None else ''}" \
+               f")"
 
     def __str__(self):
         return self.group_id
@@ -88,8 +95,13 @@ class ConsumerGroupMeta:
 class ConsumerGroupMemberMeta:
     """Common Consumer Group Member meta info definition
 
-    通用 ConsumerGroupMember 元数据定义
+    This class define the ConsumerGroupMember's meta info
 
+    Args:
+        client_id(str): Client ID
+
+    Attributes:
+        client_id(str): Client ID
     """
 
     def __init__(self, client_id: str = ""):
@@ -97,7 +109,10 @@ class ConsumerGroupMemberMeta:
         self.error = None
 
     def __repr__(self):
-        if self.error is not None:
-            return f"ConsumerGroupMemberMeta({self.client_id}, {self.error})"
-        else:
-            return f"ConsumerGroupMemberMeta({self.client_id})"
+        return f"ConsumerGroupMemberMeta(" \
+               f"{self.client_id}" \
+               f"{f', {self.error}' if self.error is not None else ''}" \
+               f")"
+
+    def __str__(self):
+        return self.client_id

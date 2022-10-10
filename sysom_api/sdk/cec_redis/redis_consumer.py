@@ -1,95 +1,119 @@
 # -*- coding: utf-8 -*- #
 """
-Time                2022/7/26 16:45
+Time                2022/8/15 16:45
 Author:             mingfeng (SunnyQjm)
 Email               mfeng@linux.alibaba.com
 File                redis_consumer.py
 Description:
 """
 import json
+from queue import Queue
+from typing import List, Optional
 
+import redis.exceptions
+from redis import Redis
+from loguru import logger
 from ..cec_base.consumer import Consumer, ConsumeMode
 from ..cec_base.event import Event
 from ..cec_base.url import CecUrl
 from ..cec_base.log import LoggerHelper
-from redis import Redis
 from .utils import do_connect_by_cec_url
 from .redis_admin import RedisAdmin
-from loguru import logger
-from queue import Queue
 from .consume_status_storage import ConsumeStatusStorage
 from .common import StaticConst, ClientBase
+from .admin_static import static_create_consumer_group, \
+    get_topic_consumer_group_meta_info_key
 
 
 class RedisConsumer(Consumer, ClientBase):
     """A redis-based execution module implement of Consumer
 
-    一个基于 Redis 实现的执行模块中的 Consumer 实现
+    Consumer implementation in an execution module based on the Redis.
 
     """
 
-    def __init__(self, url: CecUrl, topic_name: str, consumer_id: str = "",
-                 group_id: str = "", start_from_now: bool = True,
-                 default_batch_consume_limit: int = 10):
-        Consumer.__init__(self, topic_name, consumer_id, group_id,
-                          start_from_now, default_batch_consume_limit)
+    # pylint: disable=too-many-instance-attributes
+    # Eight is reasonable in this case.
+    def __init__(self, url: CecUrl, **kwargs):
+        Consumer.__init__(self, **kwargs)
         ClientBase.__init__(self, url)
 
-        # 特化参数1：pending_expire_time => pending 消息超时时间
-        #   - 在pending列表中超过指定时间的消息，当前消费者会尝试将其获取下来消费
-        self.pending_expire_time = self.get_special_param(
+        # Specialized parameter 1: cec_auto_transfer_interval
+        # - This parameter specifies whether enable pending list transfer
+        #   mechanisms, if enabled, the consumer will try to transfer long
+        #   unacknowledged messages from the same group's pending list to
+        #   itself for processing at each consumption.
+        self._enable_pending_list_transfer = self.get_special_param(
+            StaticConst.REDIS_SPECIAL_PARM_CEC_ENABLE_PENDING_LIST_TRANSFER
+        )
+        # Specialized parameter 2: pending_expire_time
+        # - messages in the pending list that are older than the specified
+        #   time, the current consumer will try to fetch them down for
+        #   consumption
+        self._pending_expire_time = self.get_special_param(
             StaticConst.REDIS_SPECIAL_PARM_CEC_PENDING_EXPIRE_TIME
         )
 
         self._current_url = ""
-        self._redis_client: Redis = None
+        self._redis_client: Optional[Redis] = None
         self.connect_by_cec_url(url)
-        self._last_event_id: str = None  # 最近一次消费的ID
-        self._message_cache_queue = Queue()  # 消息缓存队列
+        self._last_event_id: Optional[str] = None  # Last consume ID
+        self._event_cache_queue = Queue()  # Event cache queue
         self.consume_status_storage = None
         self.inner_topic_name = StaticConst.get_inner_topic_name(
-            topic_name)
+            self.topic_name)
 
-        # 如果是组消费模式，检查消费组是否存在
+        # If it is group consumption mode, check if the consumer group exists
         if self.consume_mode == ConsumeMode.CONSUME_GROUP:
-            # 尝试创建消费组，如果已经存在就忽略，如果不存在则创建
-            RedisAdmin.static_create_consumer_group(self._redis_client,
-                                                    group_id,
-                                                    True)
+            # Try to create a consumer group, ignore if it already exists,
+            # create if it doesn't
+            static_create_consumer_group(self._redis_client,
+                                         self.group_id,
+                                         ignore_exception=True)
             self.consume_status_storage = ConsumeStatusStorage(
                 self._redis_client,
-                topic_name,
-                group_id
+                self.topic_name,
+                self.group_id
             )
 
-        # 通过本字段标识是否是需要拉取 pending 列表中的消息
+        # Identifies by this field whether it is a message that needs to be
+        # pulled from the pending list
         self._is_need_fetch_pending_message = True
 
     @logger.catch(reraise=True)
     def consume(self, timeout: int = -1, auto_ack: bool = False,
-                batch_consume_limit: int = 0) -> [Event]:
-        """Consume some event from cec
+                batch_consume_limit: int = 0, **kwargs) -> List[Event]:
+        """Consuming events from the Event Center
 
-        从事件中心尝试消费一组事件
+        Start to consume the event from event center according to the
+        corresponding ConsumeMode
 
         Args:
-            timeout(int): 超时等待时间（单位：ms），<=0 表示阻塞等待
-            auto_ack(bool): 是否开启自动确认（组消费模式有效）
+            timeout(int): Blocking wait time
+                          (Negative numbers represent infinite blocking wait)
+            auto_ack(bool): Whether to enable automatic confirmation
+                            (valid for group consumption mode)
 
-                1. 一旦开启自动确认，每成功读取到一个事件消息就会自动确认；
-                2. 调用者一定要保证消息接收后正常处理，因为一旦某个消息被确认，消息中心不保证下次
-                   仍然可以获取到该消息，如果客户端在处理消息的过程中奔溃，则该消息或许无法恢复；
-                3. 所以最保险的做法是，auto_ack = False 不开启自动确认，在事件被正确处理完
-                   后显示调用 Consumer.ack() 方法确认消息被成功处理;
-                4. 如果有一些使用组消费业务，可以承担事件丢失无法恢（只会在客户端程序奔溃没有正确
-                   处理的情况下才会发生）的风险，则可以开启 auto_ack 选项。
+                1. Once automatic acknowledgement is turned on, every event
+                   successfully read will be automatically acknowledged;
+                2. Caller must ensure that the event is processed properly
+                   after it is received, because once a event is acknowledged,
+                   the event center does not guarantee that the event will
+                   still be available next time, and if the client runs down
+                   while processing the message, the message may not be
+                   recoverable;
+                3. So it is safest to leave auto_ack = False and explicitly
+                   call the Consumer.ack() method to acknowledge the event
+                   after it has been processed correctly;
 
-            batch_consume_limit(int): 批量消费限制
+            batch_consume_limit(int): Batch consume limit
 
-                1. 该参数指定了调用 consume 方法，最多一次拉取的事件的数量；
-                2. 如果该值 <= 0 则将采用 self.default_batch_consume_limit 中指定的缺省
-                   值；
-                3. 如果该值 > 0 则将覆盖 self.default_batch_consume_limit，以本值为准。
+                1. This parameter specifies the number of events to be pulled
+                   at most once by calling the consume method;
+                2. If the value <= 0 then the default value specified in
+                   self.default_batch_consume_limit will be used；
+                3. If this value > 0 then it will override
+                   self.default_batch_consume_limit, use current passed value.
 
         Returns:
             [Message]: The Event list
@@ -102,51 +126,56 @@ class RedisConsumer(Consumer, ClientBase):
             ... , start_from_now=False)
             >>> consumer.consume(200, auto_ack=False, batch_consume_limit=20)
         """
-        if timeout <= 0:
-            timeout = 0
-        batch_consume_limit = self.default_batch_consume_limit if \
-            batch_consume_limit <= 0 else batch_consume_limit
 
-        LoggerHelper.get_lazy_logger().debug(
-            f"{self} try to consume one message from "
-            f"{self.topic_name} in {self.consume_mode}.")
+        def pending_list_transfer():
+            """Do pending list transfer
 
-        if self.consume_mode == ConsumeMode.CONSUME_GROUP:
-            message_ret = [[[], [], []]]
-            if self._last_event_id is None:
-                # 确保消费组存在
-                RedisAdmin.add_group_to_stream(
-                    self._redis_client, self.topic_name, self.group_id)
+            Check if there are any messages in the pending list of the same
+            group that have not been acknowledged for a long time, and if so,
+            try to transfer them to the current consumer for processing
 
-            # 首先处理 pending list transfer
-            # 1. 尝试从消费组整体的 pending list 中过滤出长时间未 ACK 的事件，即在
-            #    pending list 中停留时间超过 'pending_expire_time' 的事件；
-            # 2. 并将超期的事件 transfer 到当前消费者进行处理
+            Returns:
+
+            """
+            _message_ret = [[[], [], []]]
+            # First process pending list transfers
+            # 1. Try to filter out events that have not been acked for a long
+            #    time from the pending list of the consumer group as a whole,
+            #    i.e. events that have been in the pending list for longer
+            #    than 'pending_expire_time';
+            # 2. Then transfer the overdue events to the current consumer for
+            #    processing.
             if self.is_gte_6_2(self._redis_client):
-                # Redis 版本大于等于 6.2 支持使用 xautoclaim 来合并 xpending + xclaim 操
-                # 作，因此直接使用 xautoclaim 即可
-                # 尝试从消费组全局的 pending list transfer 超期的消息到当前消费者
-                message_ret = [
+                # Redis versions greater than or equal to 6.2 support the use
+                # of 'xautoclaim' to merge 'xpending + xclaim' operations, so
+                # it is straightforward to use 'xautoclaim' to attempt to
+                # transfer overdue messages from the global pending list of the
+                # consumer group to the current consumer
+                _message_ret = [
                     self._redis_client.xautoclaim(
                         self.inner_topic_name, self.group_id,
                         self.consumer_id,
-                        min_idle_time=self.pending_expire_time,
+                        min_idle_time=self._pending_expire_time,
                         count=batch_consume_limit
                     )
                 ]
             else:
-                # 如果Redis版本小于 6.2，则不支持 xautoclaim，需要使用 xpending + xclaim
-                # 尝试从消费组全局的 pending list transfer 超期的消息到当前消费者
+                # If Redis version is less than 6.2, 'xautoclaim' is not
+                # supported, so you need to use 'xpending + xclaim ' to try to
+                # transfer the overdue message from the pending list of the
+                # consumer group global to the current consumer
+                max_range = '+' if self._last_event_id is None else \
+                    self._last_event_id
                 pending_list = self._redis_client.xpending_range(
                     self.inner_topic_name, self.group_id,
                     min='-',
-                    max='+' if self._last_event_id is None else self._last_event_id,
+                    max=max_range,
                     count=batch_consume_limit,
                 )
                 if len(pending_list) > 0:
                     pending_list = list(filter(
                         lambda item: item.get('time_since_delivered',
-                                              0) > self.pending_expire_time,
+                                              0) > self._pending_expire_time,
                         pending_list
                     ))
                     pending_ids = list(map(
@@ -154,61 +183,96 @@ class RedisConsumer(Consumer, ClientBase):
                         pending_list
                     ))
                     if len(pending_ids) > 0:
-                        message_ret = [[[], self._redis_client.xclaim(
+                        _message_ret = [[[], self._redis_client.xclaim(
                             self.inner_topic_name, self.group_id,
-                            self.consumer_id, self.pending_expire_time,
+                            self.consumer_id, self._pending_expire_time,
                             pending_ids
                         )]]
+            return _message_ret
 
-            if len(message_ret[0][1]) <= 0:
-                # 判断是否需要从 pending list 拉取消息
-                # 1. 实例创建后，第一次消费会尝试获取 pending 列表的消息，即当前消费者（由
-                #    consumer_id 区分不同的消费者，使用相同的 consumer_id 创建的RedisConsumer
-                #    实例表征的是相同的消费者）从事件中心拉取了，但是没确认的消息列表；
-                # 2. 考虑到没确认的消息列表可能较多，一次拉取不完，所以如果成功从 pending
-                #    list 拉到消息则 _is_need_fetch_pending_message 保持不变，下次仍然尝
-                #    试从 pending list 继续拉取消息；
-                # 3. 如果从 pending list 没有拉取到消息，则将 _is_need_fetch_pending_message
-                #    设置为 False，本 RedisConsumer 之后将不会尝试从 pending list 拉取消息
+        def group_consume():
+            """Group consumption mode"""
+            _message_ret = [[[], [], []]]
+            if self._last_event_id is None:
+                # Ensuring the presence of consumption groups
+                RedisAdmin.add_group_to_stream(
+                    self._redis_client, self.topic_name, self.group_id)
+
+            if self._enable_pending_list_transfer:
+                _message_ret = pending_list_transfer()
+
+            if len(_message_ret[0][1]) <= 0:
+                # Determine whether the message needs to be pulled from the
+                # pending list
+                # 1. After the instance is created, the first consumption will
+                #    try to get the message of the pending list, that is, the
+                #    current consumer (consumer_id distinguishes different
+                #    consumers, and the RedisConsumer instance created with the
+                #    same consumer_id represents The same consumer) pulled the
+                #    message list from the event center, but the unconfirmed
+                #    message list;
+                # 2. Considering that there may be more unconfirmed message
+                #    lists, you can't pull it all at once, so if you
+                #    successfully pull from the pending list to the message,
+                #    '_is_need_fetch_pending_message' will remain unchanged,
+                #    and try to get from pending list next time.
+                # 3. If the message is not pulled from the pending list, set
+                #    '_is_need_fetch_pending_message' to False, and this
+                #    RedisConsumer will not attempt from pending List pull
+                #    message
                 if self._is_need_fetch_pending_message:
-                    message_ret = self._redis_client.xreadgroup(
+                    _message_ret = self._redis_client.xreadgroup(
                         self.group_id, self.consumer_id, {
                             self.inner_topic_name: '0-0'
                         }, count=batch_consume_limit, block=timeout,
                         noack=auto_ack
                     )
-                    if len(message_ret[0][1]) == 0:
+                    if len(_message_ret[0][1]) == 0:
                         self._is_need_fetch_pending_message = False
-                        message_ret = self._redis_client.xreadgroup(
+                        _message_ret = self._redis_client.xreadgroup(
                             self.group_id, self.consumer_id, {
                                 self.inner_topic_name: '>'
                             }, count=batch_consume_limit, block=timeout,
                             noack=auto_ack
                         )
                 else:
-                    # 组消费模式单独处理
-                    message_ret = self._redis_client.xreadgroup(
+                    _message_ret = self._redis_client.xreadgroup(
                         self.group_id, self.consumer_id, {
                             self.inner_topic_name: '>'
                         }, count=batch_consume_limit, block=timeout,
                         noack=auto_ack
                     )
 
-            # 更新状态，执行必要的清除任务
+            # Update status and perform necessary clearance tasks
             self.consume_status_storage.update()
-        else:
-            # 下面处理扇形广播消费
+            return _message_ret
+
+        def broadcast_consume():
+            """Broad consumption mode"""
             if self._last_event_id is None:
-                # 表示自从这个 Consumer 被实例化后第一次调用消费方法，做一些初始化操作
-                message_ret = self._redis_client.xread({
-                    self.inner_topic_name: '$' if self.consume_mode ==
-                                                  ConsumeMode.CONSUME_FROM_NOW else '0-0'
+                # Indicates the first call to the consumer method since the
+                # Consumer was instantiated, doing some initialization
+                return self._redis_client.xread({
+                    self.inner_topic_name: '$'
+                    if self.consume_mode ==
+                       ConsumeMode.CONSUME_FROM_NOW else '0-0'
                 }, count=batch_consume_limit, block=timeout)
-            else:
-                # 按序依次取出消息
-                message_ret = self._redis_client.xread({
-                    self.inner_topic_name: self._last_event_id
-                }, count=batch_consume_limit, block=timeout)
+            # Take out the messages in sequential order
+            return self._redis_client.xread({
+                self.inner_topic_name: self._last_event_id
+            }, count=batch_consume_limit, block=timeout)
+
+        timeout = 0 if timeout <= 0 else timeout
+        batch_consume_limit = self.default_batch_consume_limit if \
+            batch_consume_limit <= 0 else batch_consume_limit
+
+        LoggerHelper.get_lazy_logger().debug(
+            f"{self} try to consume one message from "
+            f"{self.topic_name} in {self.consume_mode}.")
+        if self.consume_mode == ConsumeMode.CONSUME_GROUP:
+            message_ret = group_consume()
+        else:
+            message_ret = broadcast_consume()
         if len(message_ret) < 1 or len(message_ret[0]) < 2 or len(
                 message_ret[0][1]) < 1:
             LoggerHelper.get_lazy_logger().warning(
@@ -220,12 +284,14 @@ class RedisConsumer(Consumer, ClientBase):
         for message_tuple in message_ret[0][1]:
             self._last_event_id = message_tuple[0]
 
-            # 过滤掉不是通过 cec 接口投递的事件
+            # Filter out events that are not cast through the cec interface
             if StaticConst.REDIS_CEC_EVENT_VALUE_KEY not in message_tuple[1]:
                 continue
 
-            message_content = json.loads(
-                message_tuple[1][StaticConst.REDIS_CEC_EVENT_VALUE_KEY])
+            message_content = message_tuple[1][
+                StaticConst.REDIS_CEC_EVENT_VALUE_KEY]
+            if self.auto_convert_to_dict:
+                message_content = json.loads(message_content)
             msg = Event(message_content, message_tuple[0])
             messages.append(msg)
             LoggerHelper.get_lazy_logger().debug(
@@ -234,15 +300,19 @@ class RedisConsumer(Consumer, ClientBase):
         return messages
 
     @logger.catch(reraise=True)
-    def ack(self, event: Event) -> int:
+    def ack(self, event: Event, **kwargs) -> int:
         """Confirm that the specified event has been successfully consumed
 
-        事件确认，在接收到事件并成功处理后调用本方法确认
+        Acknowledgement of the specified event
+        1. The event should normally be acknowledged after it has been taken
+           out and successfully processed.
 
         Args:
-            event(Event): 要确认的事件
-                1. 必须是通过 Consumer 消费获得的 Event 实例；
-                2. 自行构造的 Event 传递进去不保证结果符合预期
+            event(Event): Events to be confirmed
+                1. Must be an instance of the Event obtained through Consumer
+                   interface;
+                2. Passing in a self-constructed Event does not guarantee that
+                   the result will be as expected.
 
         Returns:
             int: 1 if successfully, 0 otherwise
@@ -260,23 +330,23 @@ class RedisConsumer(Consumer, ClientBase):
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to ack => {event.event_id}"
         )
-        # 使用流水线来加速
-        # 1. 记录当前主题-消费组最新确认的ID
-        pl = self._redis_client.pipeline()
-        key = RedisAdmin.get_topic_consumer_group_meta_info_key(
+        # Use pipeline to speed up
+        # 1. Record the latest acked ID of the current topic-consumer group
+        pipeline = self._redis_client.pipeline()
+        key = get_topic_consumer_group_meta_info_key(
             self.topic_name,
             self.group_id,
             StaticConst.TOPIC_CONSUMER_GROUP_META_KEY_LAST_ACK_ID)
-        pl.set(
+        pipeline.set(
             key,
             event.event_id
         )
-        # 2. 对事件进行确认
-        pl.xack(self.inner_topic_name, self.group_id, event.event_id)
+        # 2. Acknowledgement of the event
+        pipeline.xack(self.inner_topic_name, self.group_id, event.event_id)
 
-        # 3. 记录确认的ID
-        self.consume_status_storage.do_after_ack_by_pl(pl, event)
-        rets = pl.execute()
+        # 3. Record acked ID
+        self.consume_status_storage.do_after_ack_by_pl(pipeline, event)
+        rets = pipeline.execute()
         LoggerHelper.get_lazy_logger().info(
             f"{self} ack '{event.event_id}' successfully"
         )
@@ -286,22 +356,25 @@ class RedisConsumer(Consumer, ClientBase):
     def __getitem__(self, item):
         msg = None
         try:
-            if not self._message_cache_queue.empty():
-                msg = self._message_cache_queue.get()
+            if not self._event_cache_queue.empty():
+                msg = self._event_cache_queue.get()
             else:
                 for new_msg in self.consume():
-                    self._message_cache_queue.put(new_msg)
-                if not self._message_cache_queue.empty():
-                    msg = self._message_cache_queue.get()
-        except Exception as e:
-            raise StopIteration()
+                    self._event_cache_queue.put(new_msg)
+                if not self._event_cache_queue.empty():
+                    msg = self._event_cache_queue.get()
+        except redis.exceptions.ConnectionError:
+            pass
+        finally:
+            if msg is None:
+                raise StopIteration()
         return msg
 
     @logger.catch(reraise=True)
     def connect_by_cec_url(self, url: CecUrl):
         """Connect to redis server by CecUrl
 
-        通过 CecUrl 连接到 Redis 服务器
+        Connecting to the Redis server via CecUrl
 
         Args:
           url(str): CecUrl
@@ -309,7 +382,7 @@ class RedisConsumer(Consumer, ClientBase):
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to connect to '{url}'.")
         self._redis_client = do_connect_by_cec_url(url)
-        self._current_url = url.__str__()
+        self._current_url = str(url)
         LoggerHelper.get_lazy_logger().success(
             f"{self} connect to '{url}' successfully.")
         return self
@@ -318,7 +391,8 @@ class RedisConsumer(Consumer, ClientBase):
     def connect(self, url: str):
         """Connect to redis server by url
 
-        连接到远端的消息中间件 => 对应到本模块就是连接到 Redis 服务器
+        Connecting to the remote message queue => Corresponding to this module
+        is connecting to the Redis server.
 
         Args:
           url(str): CecUrl
@@ -334,15 +408,14 @@ class RedisConsumer(Consumer, ClientBase):
     def disconnect(self):
         """Disconnect from redis server
 
-        断开连接 => 对应到本模块就是断开 Redis 服务器连接
+        Disconnect from remote server => Corresponds to this module as
+        disconnecting the Redis server.
         """
         if self._redis_client is None:
             return
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to disconnect from '{self._current_url}'.")
-        self._redis_client.quit()
         self._redis_client.connection_pool.disconnect()
-        self._redis_client.close()
         self._redis_client = None
         LoggerHelper.get_lazy_logger().success(
             f"{self} disconnect from '{self._current_url}' successfully.")

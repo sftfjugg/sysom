@@ -1,95 +1,136 @@
 # -*- coding: utf-8 -*- #
 """
+Time                2022/7/26 14:32
 Author:             mingfeng (SunnyQjm)
-Created:            2022/07/24
+Email               mfeng@linux.alibaba.com
+File                admin.py
 Description:
 """
 import importlib
 import json
+from typing import List
 from abc import ABCMeta, abstractmethod
-from .base import Connectable, Disconnectable
-from .base import Registrable, ProtoAlreadyExistsException
-from .base import ProtoNotExistsException, CecException
+from .base import Connectable
+from .exceptions import CecProtoAlreadyExistsException, \
+    CecProtoNotExistsException
 from .event import Event
 from .meta import TopicMeta, \
     ConsumerGroupMemberMeta
 from .url import CecUrl
-from loguru import logger
+from .log import LoggerHelper
 
 
-class ConsumeStatusItem(object):
+class ConsumeStatusItem:
+    """Consume status
+
+    Consume status => which indicate consume status of a particular topic
+    by a particular consumer group.
+
+    Args:
+        topic(str): Topic name
+        consumer_group_id(str): Consumer group ID
+        partition(int): Topic partition ID
+
+    Keyword Args
+        min_id(str): Minimum ID/offset
+        max_id(str): Maximum ID/offset
+        total_event_count(int): Total number of events stored in the partition
+                           (both consumed and unconsumed)
+        last_ack_id(str): ID of the last acknowledged event of the current
+                          consumer group in the partition.
+                          (ID of the last consumer-acknowledged event)
+        lag(int): Number of messages stacked in the partition LAG
+                  (number of events that have been submitted to the partition,
+                  but not consumed or acknowledged by a consumer in the current
+                  consumer group)
+
     """
-    消费状态 => 表征了单个消费者组对特定主题的消费情况
 
-    1. 最小ID（最小 offset）
-    2. 最大ID（最大 offset）
-    3. 分区中存储的事件总数（包括已消费的和未消费的）
-    4. 最后一个当前消费组在该分区已确认的事件ID（最后一次消费者确认的事件的ID）
-    5. 分区的消息堆积数量 LAG（已经提交到该分区，但是没有被当前消费者消费或确认的事件数量）
-    """
-
+    # pylint: disable=too-many-instance-attributes
+    # Eight is reasonable in this case.
     def __init__(self, topic: str, consumer_group_id: str, partition: int,
-                 min_id: str = "", max_id: str = "",
-                 total_event_count: int = 0, last_ack_id: str = "",
-                 lag: int = 0):
+                 **kwargs):
         self.topic = topic
         self.consumer_group_id = consumer_group_id
         self.partition = partition
-        self.min_id = min_id
-        self.max_id = max_id
-        self.total_event_count = total_event_count
-        self.last_ack_id = last_ack_id
-        self.lag = lag
-
-    def tojson(self):
-        return json.dumps(self.__dict__)
+        self.min_id = kwargs.get("min_id", "")
+        self.max_id = kwargs.get("max_id", "")
+        self.total_event_count = kwargs.get("total_event_count", 0)
+        self.last_ack_id = kwargs.get("last_ack_id", "")
+        self.lag = kwargs.get("lag", 0)
 
     def __repr__(self):
-        return self.tojson()
+        return json.dumps(self.__dict__)
+
+    def __str__(self):
+        return json.dumps(self.__dict__)
 
 
-class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
+class Admin(Connectable, metaclass=ABCMeta):
     """Common Event Center Management interface definition
 
-    通用事件中心管理接口定义
+    This interface defines the generic behavior of the CEC Admin.
+
     """
-    protoDict = {
+
+    proto_dict = {
 
     }
 
     @abstractmethod
     def create_topic(self, topic_name: str = "", num_partitions: int = 1,
-                     replication_factor: int = 1,
-                     ignore_exception: bool = False,
-                     expire_time: int = 24 * 60 * 60 * 1000) -> bool:
+                     replication_factor: int = 1, **kwargs) -> bool:
         """Create one topic
 
-        创建主题
+        Create a topic in the Event Center.
 
         Args:
-            topic_name: 主题名字（主题的唯一标识）
-            num_partitions: 该主题的分区数
+            topic_name(str): Topic name (unique identification of the topic)
+            num_partitions(int): Number of partitions of the topic
+                1. This parameter specifies that in a distributed cluster
+                   deployment scenario, data on the same topic should be
+                   partitioned into several partitions, stored on separate
+                   cluster nodes.
+                2. If the underlying message queue supports partition
+                   (e.g., Kafka), then partition can be performed based
+                   on this param.
+                3. If the underlying messaging queue does not support partition
+                   (e.g. Redis), this parameter is ignored (it is assumed that
+                   there is only one partition).
+                   The Admin.is_support_partitions() method can be used to
+                   determine whether the underlying message queue currently
+                   in use supports this feature.
 
-                1. 该参数指定了在分布式集群部署的场景下，同一个主题的数据应该被划分为几个分区，分别存储在不同的集群节点上；
-                2. 如果底层的消息中间件支持分区（比如：Kafka），则可以依据该配置进行分区；
-                3. 如果底层的消息中间件不支持分区（比如：Redis），则忽略该参数即可（认定为只有一个分区即可），可以通过
-                   Admin.is_support_partitions() 方法判定当前使用的消息中间件实现是否支持该特性；
+            replication_factor(int): Redundancy factor (specifies how many
+                                     copies of the data for the subject should
+                                     be kept in the event center)
 
-            replication_factor: 冗余因子（指定该主题的数据又几个副本）
+                1. This parameter specifies the number of copies of partitions
+                   of the same topic that exist in a distributed cluster
+                   deployment scenario; if replication_factor == 1, it
+                   indicates that all partitions under the topic have only one
+                   copy and are not reversible in case of loss.
+                2. If the underlying message queue supports data replication,
+                   the corresponding settings can be made based on this param.
+                3. If the underlying message queue does not support data
+                   replication, this parameter is ignored (i.e. it is assumed
+                   that only one replica is available).
+                   The Admin.is_support_replication() method can be used to
+                   determine whether the underlying message queue currently
+                   in use supports this feature.
 
-                1. 该参数制定了在分布式集群部署的场景下，同一个主题的分区存在副本的数量，如果 replication_factor == 1
-                   则表示主题下的所有分区都只有一个副本，一旦丢失不可回复；
-                2. 如果底层的消息中间件支持数据副本，则可以依据该配置进行对应的设置；
-                3. 如果底层的消息中间件不支持数据副本，则忽略该参数即可（即认定只有一个副本即可），可以通过
-                   Admin.is_support_replication() 方法判定当前使用的小心中间件实现是否支持该特性；
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
+            expire_time: Event timeout time (in ms, default: 1day)
 
-            ignore_exception: 是否忽略可能会抛出的异常
-            expire_time: 事件超时时间（单位：ms，默认：1day）
-
-                1. 该参数指定了目标 Topic 中每个事件的有效期；
-                2. 一旦一个事件的加入到 Topic 的时间超过了 expire_time，则cec不保证该事件
-                   的持久性，cec应当在合适的时候删除超时的事件；
-                3. 不强制要求超时的事件被立即删除，可以对超时的事件进行周期性的清理。
+                1. This parameter specifies the validity of each event in the
+                   target Topic.
+                2. Once an event has been added to Topic for longer than the
+                   expire_time, CEC does not guarantee persistence of the
+                   event and CEC shall remove the timed out event when
+                   appropriate.
+                3. Instead of forcing time-out events to be deleted immediately
+                   , time-out events can be cleaned up periodically.
         Returns:
             bool: True if successful, False otherwise.
 
@@ -101,18 +142,18 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.create_topic("test_topic")
             True
         """
-        pass
 
     @abstractmethod
-    def del_topic(self, topic_name: str,
-                  ignore_exception: bool = False) -> bool:
+    def del_topic(self, topic_name: str, **kwargs) -> bool:
         """Delete one topic
 
-        删除主题
+        Delete a topic in the Event Center.
 
         Args:
-          topic_name: 主题名字（主题的唯一标识）
-          ignore_exception: 是否忽略可能会抛出的异常
+            topic_name(str): Topic name (unique identification of the topic)
+
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if successful, False otherwise.
@@ -125,15 +166,16 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.del_topic("test_topic")
             True
         """
-        pass
 
     @abstractmethod
-    def is_topic_exist(self, topic_name: str) -> bool:
-        """Judge whether one specific topic is exists
-        判断某个主题是否存在
+    def is_topic_exist(self, topic_name: str, **kwargs) -> bool:
+        """Determine whther one specific topic exists
+
+        Determines whether the target topic exists in the currently used event
+        center.
 
         Args:
-            topic_name: 主题名字（主题的唯一标识）
+            topic_name(str): Topic name (unique identification of the topic)
 
         Returns:
             bool: True if topic exists, False otherwise.
@@ -143,36 +185,35 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.is_topic_exist("test_topic")
             True
         """
-        pass
 
     @abstractmethod
-    def get_topic_list(self) -> [TopicMeta]:
+    def get_topic_list(self, **kwargs) -> List[TopicMeta]:
         """Get topic list
 
-        获取主题列表
+        Get a list of topics contained in the event center currently in use.
 
         Args:
 
         Returns:
-            [str]: The topic name list
+            [str]: The topic meta info list
 
         Examples:
             >>> admin = dispatch_admin("redis://localhost:6379")
             >>> admin.get_topic_list()
             [TopicMeta(faeec676-60db-4418-a775-c5f1121d5331, 1)]
         """
-        pass
 
     @abstractmethod
-    def create_consumer_group(self, consumer_group_id: str,
-                              ignore_exception: bool = False) -> bool:
+    def create_consumer_group(self, consumer_group_id: str, **kwargs) -> bool:
         """Create one consumer group
 
-        创建一个消费组
+        Create a consumer group in the Event Center
 
         Args:
-            consumer_group_id: 消费组ID，应当具有唯一性
-            ignore_exception: 是否忽略可能会抛出的异常
+            consumer_group_id: Consumer group ID, which should be unique
+
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if successful, False otherwise.
@@ -186,18 +227,18 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.create_consumer_group("test_group")
             True
         """
-        pass
 
     @abstractmethod
-    def del_consumer_group(self, consumer_group_id: str,
-                           ignore_exception: bool = False) -> bool:
+    def del_consumer_group(self, consumer_group_id: str, **kwargs) -> bool:
         """Delete one consumer group
 
-        删除一个消费组
+        Delete a consumer group in the Event Center
 
         Args:
-            consumer_group_id: 消费组ID
-            ignore_exception: 是否忽略可能会抛出的异常
+            consumer_group_id: Consumer group ID, which should be unique
+
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if successful, False otherwise.
@@ -210,16 +251,19 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.del_consumer_group("test_group")
             True
         """
-        pass
 
     @abstractmethod
-    def is_consumer_group_exist(self, consumer_group_id: str) -> bool:
-        """Judge whether one specific consumer group exists
+    def is_consumer_group_exist(self, consumer_group_id: str,
+                                **kwargs) -> bool:
+        """Determine whther one specific consumer group exists
 
-        判断某个消费组是否存在
+        Determines whether the target consumer group exists in the currently
+        used event center.
 
         Args:
-            consumer_group_id: 消费组ID
+            consumer_group_id: Consumer group ID, which should be unique
+
+        Keyword Args:
 
         Returns:
             bool: True if consumer group exists, False otherwise.
@@ -229,13 +273,14 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.is_consumer_group_exist("test_group")
             True
         """
-        pass
 
     @abstractmethod
-    def get_consumer_group_list(self) -> [ConsumerGroupMemberMeta]:
+    def get_consumer_group_list(self, **kwargs) -> List[
+        ConsumerGroupMemberMeta]:
         """Get consumer group list
 
-        获取消费组列表
+        Get a list of consumer groups contained in the event center currently
+        in use.
 
         Returns:
             [str]: The consumer group list
@@ -244,31 +289,35 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin = dispatch_admin("redis://localhost:6379")
             >>> admin.get_consumer_group_list()
         """
-        pass
 
     @abstractmethod
-    def get_consume_status(self, topic: str, consumer_group_id: str = "",
-                           partition: int = 0) -> [ConsumeStatusItem]:
+    def get_consume_status(
+            self, topic: str, consumer_group_id: str = "",
+            partition: int = 0, **kwargs
+    ) -> List[ConsumeStatusItem]:
         """Get consumption info for specific <topic, consumer_group, partition>
 
-        获取特定消费者组对某个主题下的特定分区的消费情况，应包含以下数据
-        1. 最小ID（最小 offset）
-        2. 最大ID（最大 offset）
-        3. 分区中存储的事件总数（包括已消费的和未消费的）
-        4. 最后一个当前消费组在该分区已确认的事件ID（最后一次消费者确认的事件的ID）
-        5. 分区的消息堆积数量 LAG（已经提交到该分区，但是没有被当前消费者消费或确认的事件数量）
+        Get the consumption info of a particular topic by a particular consumer
+        group.
 
         Args:
-            topic: 主题名字
-            consumer_group_id: 消费组ID
-                1. 如果 consumer_group_id 为空字符串或者None，则返回订阅了该主题的所有
-                   消费组的消费情况；=> 此时 partition 参数无效（将获取所有分区的消费数据）
-                2. 如果 consumer_group_id 为无效的组ID，则抛出异常；
-                3. 如果 consumer_group_id 为有效的组ID，则只获取该消费组的消费情况。
-            partition: 分区ID
-                1. 如果 partition 指定有效非负整数 => 返回指定分区的消费情况
-                2. 如果 partition 指定无效非负整数 => 抛出异常
-                3. 如果 partition 指定负数 => 返回当前主题下所有分区的消费情况
+            topic(str): Topic name
+            consumer_group_id(str): Consumer group ID
+                1. If consumer_group_id == '' or None, returns the consumption
+                   info of all consumer groups subscribed to the topic;
+                   => In this case the partition parameter is invalid
+                   (will get consumption info for all partitions)
+                2. Throws an exception if consumer_group_id is an invalid group
+                   ID;
+                3. If consumer_group_id is a valid group ID, then only get
+                   consumption info of the specified consumption group.
+            partition: Partition ID
+                1. If partition specifies a valid non-negative integer
+                   => returns the consumption info of the specified partition;
+                2. Throws an exception if partition specifies an invalid
+                   non-negative integer;
+                3. If partition specifies a negative number => returns the
+                   consumption info of all partitions under the current topic.
 
         Raises:
             CecException
@@ -300,32 +349,30 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
         Returns:
 
         """
-        pass
 
     @abstractmethod
     def get_event_list(self, topic: str, partition: int, offset: str,
-                       count: int) -> [Event]:
+                       count: int, **kwargs) -> List[Event]:
         """ Get event list for specific <topic, partition>
 
-        获取特定主题在指定分区下的消息列表
-        1. offset 和 count 用于分页
+        Get a list of messages for a specific topic under a specified partition
+        1. offset and count for paging
 
         Args:
-            topic: 主题名字
-            partition: 分区ID
-            offset: 偏移（希望读取在该 ID 之后的消息）
-            count: 最大读取数量
+            topic(str): Topic name
+            partition: Partition ID
+            offset: Offset (want to read messages after this ID)
+            count: Maximum number of reads
 
         Returns:
 
         """
-        pass
 
     @abstractmethod
-    def is_support_partitions(self) -> bool:
+    def is_support_partitions(self, **kwargs) -> bool:
         """Is current execution module support partitions
 
-        返回当前执行模块是否支持分区
+        Returns whether the current execution module supports partitioning
 
         Returns:
             bool: True if current execution module support partitions, False
@@ -336,13 +383,12 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.is_support_partitions()
             False
         """
-        pass
 
     @abstractmethod
-    def is_support_replication(self) -> bool:
+    def is_support_replication(self, **kwargs) -> bool:
         """Is current execution module support replication
 
-        返回当前的执行模块是否支持数据副本
+        Returns whether the current execution module supports data replication
 
         Returns:
             bool: True if current execution module support replication, False
@@ -353,18 +399,21 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> admin.is_support_replication()
             False
         """
-        pass
 
     @staticmethod
     def register(proto, sub_class):
         """Register one new protocol => indicate one execution module
 
-        注册一个新的协议 => 一个新的执行模块的 Admin 实现要生效，需要调用本方法注册（通常执行
-        模块按规范编写的话，是不需要开发者手动调用本方法的，抽象层会动态导入）
+        Register a new protocol => This function is called by the executing
+        module to register its own implementation of Admin for the executing
+        module to take effect.
+        (Usually when the execution module is implemented according to the
+        specification, there is no need for the developer to call this method
+        manually, the abstraction layer will dynamically import)
 
         Args:
-            proto: 协议标识
-            sub_class: 子类
+            proto(str): Protocol identification
+            sub_class: Implementation class of Admin
 
         Returns:
 
@@ -372,23 +421,26 @@ class Admin(Connectable, Disconnectable, Registrable, metaclass=ABCMeta):
             >>> Admin.register('redis', RedisAdmin)
 
         """
-        if proto in Admin.protoDict:
-            err = ProtoAlreadyExistsException(
+        if proto in Admin.proto_dict:
+            err = CecProtoAlreadyExistsException(
                 f"Proto '{proto}' already exists in Cec-base-Admin."
             )
-            logger.error(err)
+            LoggerHelper.get_lazy_logger().error(err)
             raise err
-        Admin.protoDict[proto] = sub_class
-        logger.success(f"Cec-base-Admin register proto '{proto}' success")
+        Admin.proto_dict[proto] = sub_class
+        LoggerHelper.get_lazy_logger().success(
+            f"Cec-base-Admin register proto '{proto}' success"
+        )
 
 
 def dispatch_admin(url: str, **kwargs) -> Admin:
     """Construct one Admin instance according the url
 
-    根据传入的 URL，构造对应类型的 Admin 实例
+    Construct an Admin instance of the corresponding type based on the URL
+    passed in.
 
     Args:
-      url: CecUrl
+      url(str): CecUrl
 
     Returns:
         Admin: One Admin instance
@@ -397,42 +449,25 @@ def dispatch_admin(url: str, **kwargs) -> Admin:
         >>> admin = dispatch_admin("redis://localhost:6379")
     """
     cec_url = CecUrl.parse(url)
-    if cec_url.proto not in Admin.protoDict:
-        # 检查是否可以动态导入
+    if cec_url.proto not in Admin.proto_dict:
+        # Check if dynamic import is possible
         target_module = f"sdk.cec_{cec_url.proto}.{cec_url.proto}_admin"
         try:
             module = importlib.import_module(target_module)
-            Admin.protoDict[cec_url.proto] = \
+            Admin.register(
+                cec_url.proto,
                 getattr(module, f'{cec_url.proto.capitalize()}Admin')
-        except ModuleNotFoundError:
-            logger.error(
-                f"Try to auto import module {target_module} failed.")
-            err = ProtoNotExistsException(
-                f"Proto '{cec_url.proto}' not exists in Cec-base-Admin."
             )
-            raise err
-    admin_instance = Admin.protoDict[cec_url.proto](cec_url, **kwargs)
-    logger.success(
+        except ModuleNotFoundError as exc:
+            LoggerHelper.get_lazy_logger().error(
+                f"Try to auto import module {target_module} failed."
+            )
+            raise CecProtoNotExistsException(
+                f"Proto '{cec_url.proto}' not exists in Cec-base-Admin."
+            ) from exc
+    admin_instance = Admin.proto_dict[cec_url.proto](cec_url, **kwargs)
+    LoggerHelper.get_lazy_logger().success(
         f"Cec-base-Admin dispatch one admin instance success. "
-        f"proto={cec_url.proto}, url={url}")
+        f"proto={cec_url.proto}, url={url}"
+    )
     return admin_instance
-
-
-class TopicAlreadyExistsException(CecException):
-    """在创建 Topic 的过程中，如果当前 Topic 已经存在，则应当抛出本异常"""
-    pass
-
-
-class TopicNotExistsException(CecException):
-    """在删除 Topic 的过程中，如果不存在目标 Topic，则应当抛出本异常"""
-    pass
-
-
-class ConsumerGroupAlreadyExistsException(CecException):
-    """在创建消费组的过程中，如果当前消费组已经存在，则应当抛出本异常"""
-    pass
-
-
-class ConsumerGroupNotExistsException(CecException):
-    """在删除消费组的过程中，如果不存在目标消费组，则应当抛出本异常"""
-    pass

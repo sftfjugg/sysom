@@ -1,144 +1,82 @@
 # -*- coding: utf-8 -*- #
 """
-Time                2022/7/25 14:48
+Time                2022/7/29 11:25
 Author:             mingfeng (SunnyQjm)
 Email               mfeng@linux.alibaba.com
 File                redis_admin.py
 Description:
 """
-import json
-import sys
-from typing import Optional
 
+import json
+from typing import Optional, List
+
+import redis.exceptions
 from ..cec_base.admin import Admin, ConsumeStatusItem
-from ..cec_base.admin import TopicNotExistsException, TopicAlreadyExistsException
-from ..cec_base.admin import ConsumerGroupNotExistsException
-from ..cec_base.admin import ConsumerGroupAlreadyExistsException
-from ..cec_base.base import raise_if_not_ignore, CecException
+from ..cec_base.exceptions import CecException
 from ..cec_base.event import Event
-from ..cec_base.meta import TopicMeta, PartitionMeta, ConsumerGroupMeta, \
-    ConsumerGroupMemberMeta
+from ..cec_base.meta import ConsumerGroupMeta
 from ..cec_base.log import LoggerHelper
 from ..cec_base.url import CecUrl
 from redis import Redis
 from redis.exceptions import ResponseError
-
-from .utils import do_connect_by_cec_url
 from loguru import logger
-from itertools import chain
+from .utils import raise_if_not_ignore, do_connect_by_cec_url
 from .consume_status_storage import ConsumeStatusStorage
 from .common import StaticConst, ClientBase
+from .admin_static import static_create_topic, static_del_topic, \
+    static_is_topic_exist, static_get_topic_list, \
+    static_create_consumer_group, static_del_consumer_group, \
+    static_is_consumer_group_exist, static_get_consumer_group_list, \
+    get_topic_consumer_group_meta, get_sub_list_key
 
 
 class RedisAdmin(Admin, ClientBase):
     """A redis-based execution module implement of Admin
 
-    一个基于 Redis 实现的执行模块中的 Admin 实现
+    Admin implementation in an execution module based on the Redis.
 
     """
 
     def __init__(self, url: CecUrl):
         Admin.__init__(self)
         ClientBase.__init__(self, url)
-        self._redis_client: Redis = None
+        self._redis_client: Optional[Redis] = None
         self._current_url: str = ""
         self.connect_by_cec_url(url)
 
     ####################################################################
-    # 事件中心接口实现
+    # Event Center Admin Interface Implementation
     ####################################################################
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_create_topic(redis_client: Redis, topic_name: str = "",
-                            num_partitions: int = 1,
-                            replication_factor: int = 1,
-                            ignore_exception: bool = False,
-                            expire_time: int = 24 * 60 * 60 * 1000) -> bool:
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} try to create_topic <topic_name="
-            f"{topic_name}, num_partitions={num_partitions}"
-            f", replication_factor={replication_factor},"
-            f" expire_time={expire_time}>.")
-        # 内部表征 Topic 的 Stream 的 Key，拼接了特殊的前缀作为命名空间
-        inner_topic_name = StaticConst.get_inner_topic_name(
-            topic_name)
-        result = True
-        try:
-            # 加锁
-            if not RedisAdmin._lock_topic(redis_client, topic_name,
-                                          ignore_exception):
-                return False
-            # 1. 判断 Topic 是否存在
-            if RedisAdmin.static_is_topic_exist(redis_client,
-                                                topic_name):
-                raise TopicAlreadyExistsException(
-                    f"Topic {topic_name} already "
-                    f"exists."
-                )
-            else:
-                # 2. 使用 xadd 触发 stream 创建
-                event_id = redis_client.xadd(inner_topic_name, {
-                    "test": 1
-                })
-
-                pl = redis_client.pipeline()
-                # 3. 删除刚才添加的测试事件，清空 stream
-                pl.xdel(inner_topic_name, event_id)
-
-                # 4. 将新建的 Topic 加入到 Topic 集合当中（便于获取所有 Topic 列表）
-                pl.sadd(StaticConst.REDIS_ADMIN_TOPIC_LIST_SET,
-                        inner_topic_name)
-                pl.execute()
-        except Exception as e:
-            raise_if_not_ignore(ignore_exception, e)
-        finally:
-            # 解锁
-            RedisAdmin._unlock_topic(redis_client, topic_name)
-
-        LoggerHelper.get_lazy_logger().success(
-            f"{redis_client} create_topic '{topic_name}' successfully.")
-        return result
 
     @logger.catch(reraise=True)
     def create_topic(self, topic_name: str = "", num_partitions: int = 1,
-                     replication_factor: int = 1,
-                     ignore_exception: bool = False,
-                     expire_time: int = 24 * 60 * 60 * 1000) -> bool:
+                     replication_factor: int = 1, **kwargs) -> bool:
         """Create one topic
 
-        创建一个 Topic => 对应到 Redis 应该是创建一个 Stream：
-            1. 首先判断 Topic 是否已经存在，如果已经存在，则抛出异常；
-            2. 接着使用 xadd 命令触发 stream 的创建过程；
-            3. 最后将刚才插入的测试数据删掉，清空 stream
-            4. 将 topic_name 加入到特定的 set 集合当中
-              （该集合包含了所有通过 CEC 创建的 Topic 名称列表）
+        Creating a Topic => Corresponding to Redis should be creating a Stream:
+            1. First determine whether Topic already exists and, if so, throw
+               an exception;
+            2. Then use the xadd command to trigger the stream creation
+               process;
+            3. Thirdly, delete the test data you just inserted and clear
+               the stream;
+            4. Finally, add the topic_name to a specific set
+               (This collection contains a list of all the Topic names created
+               through the CEC)
 
-        TODO: 此处需要进一步考虑是否使用事务，防止中间某一步执行出错，状态不一致
+        TODO: This is where further consideration needs to be given to the use
+              of transactions to prevent errors in execution at an intermediate
+              step and inconsistent state
 
         Args:
-            topic_name: 主题名字（主题的唯一标识）
-            num_partitions: 该主题的分区数
-
-                1. 该参数指定了在分布式集群部署的场景下，同一个主题的数据应该被划分为几个分区，分别存储在不同的集群节点上；
-                2. 如果底层的消息中间件支持分区（比如：Kafka），则可以依据该配置进行分区；
-                3. 如果底层的消息中间件不支持分区（比如：Redis），则忽略该参数即可（认定为只有一个分区即可），可以通过
-                   Admin.is_support_partitions() 方法判定当前使用的消息中间件实现是否支持该特性；
-
-            replication_factor: 冗余因子（指定该主题的数据又几个副本）
-
-                1. 该参数制定了在分布式集群部署的场景下，同一个主题的分区存在副本的数量，如果 replication_factor == 1
-                   则表示主题下的所有分区都只有一个副本，一旦丢失不可回复；
-                2. 如果底层的消息中间件支持数据副本，则可以依据该配置进行对应的设置；
-                3. 如果底层的消息中间件不支持数据副本，则忽略该参数即可（即认定只有一个副本即可），可以通过
-                   Admin.is_support_replication() 方法判定当前使用的小心中间件实现是否支持该特性；
-
-            ignore_exception: 是否忽略可能会抛出的异常
-            expire_time: 事件超时时间（单位：ms，默认：1day）
-
-                1. 该参数指定了目标 Topic 中每个事件的有效期；
-                2. 一旦一个事件的加入到 Topic 的时间超过了 expire_time，则cec不保证该事件
-                   的持久性，cec应当在合适的时候删除超时的事件；
-                3. 不强制要求超时的事件被立即删除，可以对超时的事件进行周期性的清理。
+            topic_name(str): Topic name (unique identification of the topic)
+            num_partitions(int): Number of partitions of the topic
+            replication_factor(int): Redundancy factor (specifies how many
+                                     copies of the data for the subject should
+                                     be kept in the event center)
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
+            expire_time: Event timeout time (in ms, default: 1day)
 
         Returns:
             bool: True if successful, False otherwise.
@@ -152,73 +90,27 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.create_topic("test_topic")
             True
         """
-        return RedisAdmin.static_create_topic(self._redis_client,
-                                              topic_name,
-                                              num_partitions,
-                                              replication_factor,
-                                              ignore_exception,
-                                              expire_time)
-
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_del_topic(redis_client: Redis, topic_name: str,
-                         ignore_exception: bool = False) -> bool:
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} try to del_topic <topic_name={topic_name}>.")
-
-        inner_topic_name = StaticConst.get_inner_topic_name(
-            topic_name)
-
-        try:
-            # 加锁
-            if not RedisAdmin._lock_topic(redis_client, topic_name,
-                                          ignore_exception):
-                return False
-            # 1. 判断是否存在
-            if not RedisAdmin.static_is_topic_exist(redis_client,
-                                                    topic_name):
-                raise_if_not_ignore(ignore_exception,
-                                    TopicNotExistsException(
-                                        f"Topic {topic_name} not exists."
-                                    ))
-            pl = redis_client.pipeline()
-
-            # 2. 删除对应的 stream（topic）
-            pl.delete(inner_topic_name)
-
-            # 3. 将当前 topic 从 topic 列表中移除
-            pl.srem(StaticConst.REDIS_ADMIN_TOPIC_LIST_SET,
-                    inner_topic_name)
-
-            pl.execute()
-
-            # 4. 清除 TOPIC 相关的元数据信息
-            RedisAdmin.del_topic_meta(redis_client, topic_name)
-
-            # 5. 删除 TOPIC 关联的用于存储消费状态的结构
-            ConsumeStatusStorage.destroy_by_stream(redis_client, topic_name)
-        except Exception as e:
-            raise_if_not_ignore(ignore_exception, e)
-        finally:
-            # 解锁
-            RedisAdmin._unlock_topic(redis_client, topic_name)
-
-        LoggerHelper.get_lazy_logger().success(
-            f"{redis_client} del_topic '{topic_name}' successfully.")
-        return True
+        return static_create_topic(
+            self._redis_client,
+            topic_name,
+            num_partitions,
+            replication_factor,
+            **kwargs
+        )
 
     @logger.catch(reraise=True)
-    def del_topic(self, topic_name: str,
-                  ignore_exception: bool = False) -> bool:
+    def del_topic(self, topic_name: str, **kwargs) -> bool:
         """Delete one topic
 
-        删除一个 Topic => 对应到 Redis 应该是删除一个 Stream
-            1. 直接删除 Stream 对应的key即可
-            2. 清楚一些相关的元数据信息
+        Deleting a Topic => Corresponding to redis should be deleting a stream
+            1. Just delete the key corresponding to the stream
+            2. Clear some relevant metadata information
 
         Args:
-          topic_name: 主题名字（主题的唯一标识）
-          ignore_exception: 是否忽略可能会抛出的异常
+            topic_name(str): Topic name
+
+        Keyword Args
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if successful, False otherwise.
@@ -231,28 +123,21 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.del_topic("test_topic")
             True
         """
-        return RedisAdmin.static_del_topic(self._redis_client, topic_name,
-                                           ignore_exception)
-
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_is_topic_exist(redis_client: Redis,
-                              topic_name: str) -> bool:
-        res = redis_client.type(
-            StaticConst.get_inner_topic_name(topic_name)) == 'stream'
-        LoggerHelper.get_lazy_logger().debug(
-            f"Is topic {topic_name} exists? => {res}.")
-        return res
+        return static_del_topic(self._redis_client, topic_name, **kwargs)
 
     @logger.catch(reraise=True)
-    def is_topic_exist(self, topic_name: str) -> bool:
+    def is_topic_exist(self, topic_name: str, **kwargs) -> bool:
         """Judge whether one specific topic is exists
 
-        判断 Topic 是否存在 => 对应到 Redis 应该是判断是否存最对应stream
-            1. 使用 type 命令判断key对应的类型是否是 stream
+        Determine if Topic exists => Corresponds to Redis should be to
+        determine if the most corresponding stream exists
+            1. Use the type command to determine whether the type of the key
+               is 'stream'
 
         Args:
-            topic_name: 主题名字（主题的唯一标识）
+            topic_name(str): Topic name
+
+        Keyword Args:
 
         Returns:
             bool: True if topic exists, False otherwise.
@@ -262,36 +147,21 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.is_topic_exist("test_topic")
             True
         """
-        return RedisAdmin.static_is_topic_exist(self._redis_client,
-                                                topic_name)
-
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_get_topic_list(redis_client: Redis) -> [str]:
-        res = redis_client.smembers(StaticConst.REDIS_ADMIN_TOPIC_LIST_SET)
-        topics = []
-        for inner_topic_name in res:
-            topic_meta = TopicMeta(
-                StaticConst.get_topic_name_by_inner_topic_name(
-                    inner_topic_name))
-            topic_meta.partitions = {
-                0: PartitionMeta(0)
-            }
-            topics.append(topic_meta)
-
-        LoggerHelper.get_lazy_logger().debug(
-            f"get_topic_list => {res}.")
-        return topics
+        return static_is_topic_exist(self._redis_client, topic_name, **kwargs)
 
     @logger.catch(reraise=True)
-    def get_topic_list(self) -> [str]:
+    def get_topic_list(self, **kwargs) -> [str]:
         """Get topic list
 
-        获取 Topic 列表 => 对应到 Redis 应该是获取所有 Stream 的列表
-            1. 本实现创建了一个特殊的 Set，保存了由本套接口创建的所有 Stream 的key；
-            2. 所以只需要查询该 Set，获取到所有的key即可
+        Getting the Topic list => corresponding to Redis should be a list of
+        all Streams.
+            1. This implementation creates a special Set that holds the keys
+               of all Streams created by this set of interfaces;
+            2. So just query the Set and get all the keys.
 
         Args:
+
+        Keyword Args:
 
         Returns:
             [str]: The topic name list
@@ -301,14 +171,14 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.get_topic_list()
             ['test_topic']
         """
-        return RedisAdmin.static_get_topic_list(self._redis_client)
+        return static_get_topic_list(self._redis_client, **kwargs)
 
     @staticmethod
     @logger.catch(reraise=True)
     def get_meta_info(client: Redis, topic_name: str) -> Optional[dict]:
         """Get topic's meta info
 
-        获取特定 Topic 的元数据信息
+        Get metadata information for a specific topic
 
         Args:
           client(Redis): Redis client
@@ -329,60 +199,27 @@ class RedisAdmin(Admin, ClientBase):
             **res
         }
 
-    @staticmethod
     @logger.catch(reraise=True)
-    def static_create_consumer_group(redis_client: Redis,
-                                     consumer_group_id: str,
-                                     ignore_exception: bool = False) -> bool:
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} try to create_consumer_group "
-            f"<consumer_group_id={consumer_group_id}>.")
-
-        # 使用set给create/del操作加锁（防止并发场景下重复创建删除问题）
-        try:
-            # 加锁
-            if not RedisAdmin._lock_consumer_group(redis_client,
-                                                   consumer_group_id,
-                                                   ignore_exception):
-                return False
-            if RedisAdmin.static_is_consumer_group_exist(redis_client,
-                                                         consumer_group_id):
-                if ignore_exception:
-                    return False
-                else:
-                    raise ConsumerGroupAlreadyExistsException(
-                        f"Consumer group {consumer_group_id} already exists.")
-            # 添加到消费组key集合当中
-            redis_client.sadd(
-                StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LIST_SET,
-                consumer_group_id)
-        except Exception as e:
-            raise_if_not_ignore(ignore_exception, e)
-        finally:
-            # 解锁
-            RedisAdmin._unlock_consumer_group(redis_client,
-                                              consumer_group_id)
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} create_consumer_group "
-            f"'{consumer_group_id}' successfully.")
-        return True
-
-    @logger.catch(reraise=True)
-    def create_consumer_group(self, consumer_group_id: str,
-                              ignore_exception: bool = False) -> bool:
+    def create_consumer_group(self, consumer_group_id: str, **kwargs) -> bool:
         """Create one consumer group
 
-        创建一个消费组
-            1. Redis 中消费组的概念是对每个 Stream 来讲的，同一个消费组不能消费多个
-               Stream；
-            2. 本实现创建了一个特殊的 Set，保存了由本套接口创建的所有消费组，在对某个
-               Stream 进行组消费时，如果组不存在则创建。
-            3. 再以 ConsumerId 为 key，创建一个 List，保存和该消费者相关的所有的
-               Stream，用于保障删除一个消费组时，可以删除所有 Stream 中的同名消费组
+        Create a consumer group
+            1. The concept of a consumption group in Redis is for each Stream,
+               the same consumer group cannot consume multiple Streams;
+            2. This implementation creates a special Set that holds all
+               consumer groups created by this set of interfaces, and creates
+               them if the group does not exist when group consumption is
+               performed on a Stream;
+            3. Then create a list with ConsumerId as the key to store all the
+               Streams related to that consumer, to ensure that when a consumer
+               group is deleted, this consumer group should be removed from all
+               subscribed streams
 
         Args:
-            consumer_group_id: 消费组ID，应当具有唯一性
-            ignore_exception: 是否忽略可能会抛出的异常
+            consumer_group_id(str): Consumer group ID
+
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if successful, False otherwise.
@@ -396,87 +233,26 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.create_consumer_group("test_group")
             True
         """
-        return RedisAdmin.static_create_consumer_group(self._redis_client,
-                                                       consumer_group_id,
-                                                       ignore_exception)
-
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_del_consumer_group(redis_client: Redis,
-                                  consumer_group_id: str,
-                                  ignore_exception: bool = False) -> bool:
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} try to del_consumer_group "
-            f"<consumer_group_id={consumer_group_id}>.")
-
-        try:
-            # 加锁
-            if not RedisAdmin._lock_consumer_group(
-                    redis_client, consumer_group_id, ignore_exception
-            ):
-                return False
-
-            # 1. 首先判断消费组是否存在，不存在则根据情况抛出异常
-            if not RedisAdmin.static_is_consumer_group_exist(redis_client,
-                                                             consumer_group_id):
-                raise_if_not_ignore(ignore_exception,
-                                    ConsumerGroupNotExistsException(
-                                        f"Consumer group {consumer_group_id} "
-                                        f"not exists."
-                                    ))
-
-            # 2. 从消费组集合中移除
-            redis_client.srem(
-                StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LIST_SET,
-                consumer_group_id)
-
-            # 3. 销毁当前消费组关联的所有stream中的同名消费组结构
-            streams = redis_client.lpop(
-                RedisAdmin.get_sub_list_key(consumer_group_id),
-                sys.maxsize
-            )
-            pl = redis_client.pipeline()
-            for stream in streams:
-                # 取消订阅主题
-                pl.xgroup_destroy(stream, consumer_group_id)
-
-                # 删除对应的 zset
-                ConsumeStatusStorage.destroy_by_stream_group(pl, stream,
-                                                             consumer_group_id)
-            pl.execute()
-            for stream in streams:
-                # 清除主题-消费组相关的元数据信息
-                RedisAdmin.del_topic_consumer_group_meta(redis_client, stream,
-                                                         consumer_group_id)
-        except ConsumerGroupNotExistsException as e:
-            raise_if_not_ignore(ignore_exception, e)
-        except Exception as e:
-            print(e)
-            # 此处忽略 Pipeline 执行清理操作可能产生的错误
-            pass
-        finally:
-            # 解锁
-            RedisAdmin._unlock_consumer_group(redis_client,
-                                              consumer_group_id)
-
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} del_consumer_group "
-            f"'{consumer_group_id}' successfully.")
-        return True
+        return static_create_consumer_group(self._redis_client,
+                                            consumer_group_id,
+                                            **kwargs)
 
     @logger.catch(reraise=True)
-    def del_consumer_group(self, consumer_group_id: str,
-                           ignore_exception: bool = False) -> bool:
+    def del_consumer_group(self, consumer_group_id: str, **kwargs) -> bool:
         """Delete one consumer group
 
-        删除消费组
-            1. 首先判断消费组是否存在，不存在则根据情况抛出异常
-            2. 首先在消费组 key 集合中移除当前消费组；
-            3. 然后找到消费组关联的所有的stream，执行destroy操作
+        Delete consumer group
+            1. First determine if the consumer group exists, and if not,
+               throw an exception as appropriate;
+            2. Removal from the set of consumer groups;
+            3. Destroy all consumer group structures of the same name in all
+               streams associated with the current consumption group.
 
         Args:
-            consumer_group_id: 消费组ID
-            ignore_exception: 是否忽略可能会抛出的异常
+            consumer_group_id(str): Consumer group ID
+
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if successful, False otherwise.
@@ -489,34 +265,25 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.del_consumer_group("test_group")
             True
         """
-        return RedisAdmin.static_del_consumer_group(self._redis_client,
-                                                    consumer_group_id,
-                                                    ignore_exception)
-
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_is_consumer_group_exist(redis_client: Redis,
-                                       consumer_group_id: str) -> bool:
-        res = redis_client.sismember(
-            StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LIST_SET,
-            consumer_group_id)
-
-        LoggerHelper.get_lazy_logger().debug(
-            f"{redis_client} Is consumer group '{consumer_group_id}' exists => {res}")
-        return res
+        return static_del_consumer_group(self._redis_client, consumer_group_id,
+                                         **kwargs)
 
     @logger.catch(reraise=True)
-    def is_consumer_group_exist(self, consumer_group_id: str) -> bool:
+    def is_consumer_group_exist(self, consumer_group_id: str,
+                                **kwargs) -> bool:
         """Judge whether one specific consumer group exists
 
-        判断指定的消费组是否存在
-            1. 判断存储所有消费组 key 的 Set 中是否包含指定的消费者id；
-            2. 同时判断 consumer_group_id 是否是一个key，如果被占用，也报已存在，不允许
-               创建
-        TODO: 此处要考虑是否需要并发安全
+        Determines whether the specific consumer group exists
+            1. Determine whether the set storing all consumer group keys
+               contains the specified consumer id;
+            2. Also determine if consumer_group_id is a key, and if it is
+               occupied, also report it as existing and not allowed to create.
 
         Args:
-            consumer_group_id: 消费组ID
+            consumer_group_id(str): Consumer group ID
+
+        Keyword Args:
+            ignore_exception: Whether to ignore exceptions that may be thrown
 
         Returns:
             bool: True if consumer group exists, False otherwise.
@@ -526,204 +293,214 @@ class RedisAdmin(Admin, ClientBase):
             >>> admin.is_consumer_group_exist("test_group")
             True
         """
-        return RedisAdmin.static_is_consumer_group_exist(
-            self._redis_client,
-            consumer_group_id)
-
-    @staticmethod
-    @logger.catch(reraise=True)
-    def static_get_consumer_group_list(redis_client: Redis) \
-            -> [ConsumerGroupMeta]:
-
-        res = redis_client.smembers(
-            StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LIST_SET)
-        group_metas = []
-        for group_id in res:
-            group_meta = ConsumerGroupMeta(group_id)
-            try:
-                # 得到改消费组所有订阅的主题信息
-                sub_topics = redis_client.lrange(
-                    RedisAdmin.get_sub_list_key(group_id), 0, -1
-                )
-
-                # 遍历所有的主题，得到所有的成员
-                pl = redis_client.pipeline(transaction=True)
-                for topic in sub_topics:
-                    pl.xinfo_consumers(topic, group_id)
-
-                # {"name":"Alice","pending":1,"idle":9104628}
-                for consumer in chain.from_iterable(pl.execute()):
-                    group_meta.members.append(
-                        ConsumerGroupMemberMeta(consumer['name']))
-            except Exception as e:
-                group_meta.error = e
-            else:
-                group_metas.append(group_meta)
-
-        LoggerHelper.get_lazy_logger().debug(
-            f"get_consumer_group_list => {res}.")
-        return group_metas
+        return static_is_consumer_group_exist(self._redis_client,
+                                              consumer_group_id)
 
     @logger.catch(reraise=True)
-    def get_consumer_group_list(self) -> [ConsumerGroupMeta]:
+    def get_consumer_group_list(self, **kwargs) -> [ConsumerGroupMeta]:
         """Get consumer group list
 
-        获取消费组列表
-            1. 由于在 Redis 中，消费组是属于 Stream 的，不同 Stream 的消费组是独立的，
-               为了实现出同一个消费组可以消费不同 Topic 的目的，使用一个特殊的 set
-               _REDIS_ADMIN_CONSUMER_GROUP_LIST_SET => 存储了所有的消费组的名字
-            2. 当某个消费组试图消费一个 Stream 时，cec-redis 会自动判断 Stream 中是否
-               包含该消费组，如果不包含则自动创建；
-            3. 因此可以直接通过 _REDIS_ADMIN_CONSUMER_GROUP_LIST_SET 获取消费组列表
+        Get consumer group list
+            1. Since in Redis, consumer groups belong to Streams, and consumer
+               groups of different Streams are independent, a special set
+               _REDIS_ADMIN_CONSUMER_GROUP_LIST_SET stores the names of all
+               consumer groups in order to achieve the purpose that the same
+               consumer group can consume different Topics;
+            2. When a consumer group tries to consume a Stream, cec-redis
+               automatically determines if the Stream contains the consumer
+               group and automatically creates it if it does not;
+            3. So you can get the list of consumer groups directly from
+               _REDIS_ADMIN_CONSUMER_GROUP_LIST_SET.
 
         Returns:
-            [str]: The consumer group list
+            [ConsumerGroupMeta]: The consumer group list
 
         Examples:
             >>> admin = dispatch_admin("redis://localhost:6379")
             >>> admin.get_consumer_group_list()
             ['test_group']
         """
-        return RedisAdmin.static_get_consumer_group_list(
-            self._redis_client)
+        return static_get_consumer_group_list(self._redis_client, **kwargs)
 
     @logger.catch(reraise=True)
-    def get_consume_status(self, topic: str, consumer_group_id: str = "",
-                           partition: int = 0) -> [ConsumeStatusItem]:
+    def get_consume_status(
+            self, topic: str, consumer_group_id: str = "", partition: int = 0,
+            **kwargs) -> [ConsumeStatusItem]:
         """Get consumption info for specific <topic, consumer_group, partition>
 
-        获取特定消费者组对某个主题下的特定分区的消费情况，应包含以下数据
-        1. 最小ID（最小 offset）=> xinfo stream (first-entry)
-        2. 最大ID（最大 offset）=> xinfo stream (last-entry)
-        3. 分区中存储的事件总数（包括已消费的和未消费的）=> xlen / xinfo stream (length)
-        4. 最后一个当前消费组在该分区已确认的事件ID（最后一次消费者确认的事件的ID）
-           => 使用 Redis 的一个主题相关的 key 存储了最后一次ack的ID，从中提取即可
-        5. 分区的消息堆积数量 LAG（已经提交到该分区，但是没有被当前消费者消费或确认的事件数量）
-           => xinfo stream (entries-added) 可以得到历史加入到主题的事件数量
-           => xinfo group (entries-read) 可以得到当前消费组已经读取的事件数量
-           => 两者相减能得到消息堆积数量
+        Get the consumption info of a particular topic by a particular consumer
+        group.
 
         Args:
-            topic: 主题名字
-            consumer_group_id: 消费组ID
-                1. 如果 consumer_group_id 为空字符串或者None，则返回订阅了该主题的所有
-                   消费组的消费情况；=> 此时 partition 参数无效（将获取所有分区的消费数据）
-                2. 如果 consumer_group_id 为无效的组ID，则抛出异常；
-                3. 如果 consumer_group_id 为有效的组ID，则只获取该消费组的消费情况。
-            partition: 分区ID（Redis不支持分区，因此此参数在 cec-redis 的实现里面只有一个合法值0）
-                1. 如果 partition 指定有效非负整数 => 返回指定分区的消费情况
-                2. 如果 partition 指定无效非负整数 => 抛出异常
-                3. 如果 partition 指定负数 => 返回当前主题下所有分区的消费情况
+            topic(str): Topic name
+            consumer_group_id(str): Consumer group ID
+                1. If consumer_group_id == '' or None, returns the consumption
+                   info of all consumer groups subscribed to the topic;
+                   => In this case the partition parameter is invalid
+                   (will get consumption info for all partitions)
+                2. Throws an exception if consumer_group_id is an invalid group
+                   ID;
+                3. If consumer_group_id is a valid group ID, then only get
+                   consumption info of the specified consumption group.
+            partition: Partition ID
+                1. If partition specifies a valid non-negative integer
+                   => returns the consumption info of the specified partition;
+                2. Throws an exception if partition specifies an invalid
+                   non-negative integer;
+                3. If partition specifies a negative number => returns the
+                   consumption info of all partitions under the current topic.
 
         Raises:
             CecException
 
+        Examples:
+            >>> admin = dispatch_admin("redis://localhost:6379")
+            >>> admin.get_consume_status("topic1")
+            [
+                {
+                    "topic":"topic1",
+                    "consumer_group_id":"c78e8b71-45b9-4e11-8f8e-05a98b534cc0",
+                    "min_id":"1661516434003-0",
+                    "max_id":"1661516434004-4",
+                    "total_event_count":10,
+                    "last_ack_id":"1661516434003-4",
+                    "lag":5
+                },
+                {
+                    "topic":"topic1",
+                    "consumer_group_id":"d1b39ec3-6ae9-42a6-83b5-257d875788e6",
+                    "min_id":"1661516434003-0",
+                    "max_id":"1661516434004-4",
+                    "total_event_count":10,
+                    "last_ack_id":"1661516434003-1",
+                    "lag":8
+                }
+            ]
+
         Returns:
 
         """
-        inner_topic_name = StaticConst.get_inner_topic_name(topic)
 
-        # 使用 xinfo stream 获取主题信息
-        try:
-            stream_info = self._redis_client.xinfo_stream(inner_topic_name)
-            min_id, max_id, length, entries_added = None, None, 0, 0
-            if 'first-entry' in stream_info:
-                min_id = stream_info['first-entry'][0]
-            if 'last-entry' in stream_info:
-                max_id = stream_info['last-entry'][0]
-            if 'length' in stream_info:
-                length = stream_info['length']
-            groups = self._redis_client.xinfo_groups(inner_topic_name)
-            if consumer_group_id != '' and consumer_group_id is not None:
-                select_group = None
-                # 尝试获取指定消费组的消费信息
-                for group in groups:
-                    if group.get('name') == consumer_group_id:
-                        select_group = group
-                        break
-                if select_group is None:
-                    # 消费组不存在
-                    raise CecException(
-                        f"Consumer group {consumer_group_id} not exists or did "
-                        f"not subscribe topic {topic}")
+        def _get_one_group_consume_status(_groups: [dict]) \
+                -> List[ConsumeStatusItem]:
+            """Get the consumption of the specified consumer group"""
+            select_group = None
+            # Attempt to obtain consumption information for the specified
+            # consumer group
+            for _group in _groups:
+                if _group.get('name') == consumer_group_id:
+                    select_group = _group
+                    break
+            if select_group is None:
+                # Consumer group not exists
+                raise CecException(
+                    f"Consumer group {consumer_group_id} not exists or did "
+                    f"not subscribe topic {topic}")
 
-                # 由于目前 cec-redis 的实现不支持分区，因此每个主题有且只有一个分区号
-                # 并且分区号为0，如果在指定了消费组的情况下，传入的分区号 <= 0视为有效；
-                # 传入的分区号 > 0 视为无效
-                if partition > 0:
-                    raise CecException(
-                        f"Topic {topic} did not contains partition {partition}"
+            # Since the current implementation of cec-redis does not support
+            # partitioning, each topic has one and only one partition number
+            # and the partition number is 0. If a consumption group is
+            # specified, the partition number passed in <= 0 is considered
+            # valid; the partition number passed in > 0 is considered invalid.
+            if partition > 0:
+                raise CecException(
+                    f"Topic {topic} did not contains partition {partition}"
+                )
+
+            # Here it is sufficient to return the consumption of the
+            # specified consumer group
+            last_ack_id = get_topic_consumer_group_meta(
+                self._redis_client, topic, select_group.get('name'),
+                StaticConst.TOPIC_CONSUMER_GROUP_META_KEY_LAST_ACK_ID
+            )
+
+            # Get LAG
+            if self.is_gte_7(self._redis_client):
+                lag = select_group['lag'] + select_group['pending']
+            else:
+                lag = ConsumeStatusStorage.get_already_ack_count(
+                    self._redis_client, topic, consumer_group_id
+                )
+
+            return [
+                ConsumeStatusItem(
+                    topic, consumer_group_id, 0,
+                    min_id=min_id,
+                    max_id=max_id,
+                    total_event_count=length,
+                    last_ack_id=last_ack_id,
+                    lag=lag
+                )
+            ]
+
+        def _get_all_group_consume_status(_groups: [dict]) \
+                -> List[ConsumeStatusItem]:
+            """Get the consumption of the all consumer group"""
+            # 获取所有消费组的消费情况（此时 partition 参数无效）
+            res, counts_map = [], {}
+            if not self.is_gte_7(self._redis_client):
+                # 如果 Redis 版本小于7，将使用 ConsumeStatusStorage 获取 lag
+                pipeline = self._redis_client.pipeline()
+                for _group in _groups:
+                    ConsumeStatusStorage.get_already_ack_count(
+                        pipeline, topic, _group.get('name')
                     )
+                counts = pipeline.execute()
+                for i, _group in enumerate(_groups):
+                    counts_map[_group.get('name')] = counts[i]
 
-                # 此处只需将指定消费组的消费情况返回即可
-                last_ack_id = self.get_topic_consumer_group_meta(
-                    self._redis_client, topic, select_group.get('name'),
+            for _group in _groups:
+                last_ack_id = get_topic_consumer_group_meta(
+                    self._redis_client, topic, _group.get('name'),
                     StaticConst.TOPIC_CONSUMER_GROUP_META_KEY_LAST_ACK_ID
                 )
 
                 # 获取 LAG
-                if self.is_gte_7(self._redis_client):
-                    lag = select_group['lag'] + select_group['pending']
+                if 'lag' in _group and 'pending' in _group:
+                    lag = _group['lag'] + _group['pending']
                 else:
-                    lag = ConsumeStatusStorage.get_already_ack_count(
-                        self._redis_client, topic, consumer_group_id
-                    )
+                    lag = length - counts_map[_group.get('name')]
 
-                # 返回指定消费组的消费情况
-                return [
-                    ConsumeStatusItem(
-                        topic, consumer_group_id, 0,
-                        min_id, max_id, length,
-                        last_ack_id, lag
-                    )
-                ]
-            else:
-                # 获取所有消费组的消费情况（此时 partition 参数无效）
-                res, counts_map = [], {}
-                if not self.is_gte_7(self._redis_client):
-                    # 如果 Redis 版本小于7，将使用 ConsumeStatusStorage 获取 lag
-                    pl = self._redis_client.pipeline()
-                    for group in groups:
-                        ConsumeStatusStorage.get_already_ack_count(
-                            pl, topic, group.get('name')
-                        )
-                    counts = pl.execute()
-                    for i in range(len(groups)):
-                        counts_map[groups[i].get('name')] = counts[i]
+                res.append(ConsumeStatusItem(
+                    topic, consumer_group_id, 0,
+                    min_id=min_id,
+                    max_id=max_id,
+                    length=length,
+                    last_ack_id=last_ack_id,
+                    lag=lag
+                ))
+            return res
 
-                for group in groups:
-                    last_ack_id = self.get_topic_consumer_group_meta(
-                        self._redis_client, topic, group.get('name'),
-                        StaticConst.TOPIC_CONSUMER_GROUP_META_KEY_LAST_ACK_ID
-                    )
+        inner_topic_name = StaticConst.get_inner_topic_name(topic)
 
-                    # 获取 LAG
-                    if 'lag' in group and 'pending' in group:
-                        lag = group['lag'] + group['pending']
-                    else:
-                        lag = length - counts_map[group.get('name')]
-
-                    res.append(ConsumeStatusItem(
-                        topic, group['name'], 0,
-                        min_id, max_id, length,
-                        last_ack_id, lag
-                    ))
-                return res
-        except Exception as e:
-            raise CecException(e)
+        # Use 'xinfo stream' to get topic information
+        try:
+            stream_info = self._redis_client.xinfo_stream(inner_topic_name)
+            min_id = stream_info.get("first-entry", [None])[0]
+            max_id = stream_info.get("last-entry", [None])[0]
+            length = stream_info.get("length", 0)
+            groups = self._redis_client.xinfo_groups(inner_topic_name)
+            if consumer_group_id != '' and consumer_group_id is not None:
+                return _get_one_group_consume_status(groups)
+            return _get_all_group_consume_status(groups)
+        except redis.exceptions.RedisError as exc:
+            raise CecException(exc) from exc
 
     @logger.catch(reraise=True)
     def get_event_list(self, topic: str, partition: int, offset: str,
-                       count: int) -> [Event]:
+                       count: int, **kwargs) -> [Event]:
         """ Get event list for specific <topic, partition>
 
-        获取特定主题在指定分区下的消息列表 => Redis 中使用 xrange 命令获取 stream 中的消息
-        1. offset 和 count 用于分页
+        Get a list of messages for a specific topic under a specified partition
+        => Use the xrange command in Redis to get the messages in a stream
+        1. offset and count for paging
+
         Args:
-            topic: 主题名字
-            partition: 分区ID => Redis 中无分区，因此次参数无效
-            offset: 偏移（希望读取在该 ID 之后的消息）
-            count: 最大读取数量
+            topic(str): Topic name
+            partition(int): Partition ID => There is no partition in Redis, so
+                            this parameter is invalid
+            offset(int): Offset (want to read messages after this ID)
+            count(int): Maximum number of reads
 
         References:
             https://redis.io/commands/xrange/
@@ -731,18 +508,22 @@ class RedisAdmin(Admin, ClientBase):
         Returns:
 
         """
+        ignore_exception = kwargs.get("ignore_exception", False)
         inner_topic_name = StaticConst.get_inner_topic_name(topic)
-        messages = self._redis_client.xrange(
-            inner_topic_name,
-            min=f"({offset}",
-            max='+',
-            count=count
-        )
         res = []
-        for message in messages:
-            message_content = json.loads(
-                message[1][StaticConst.REDIS_CEC_EVENT_VALUE_KEY])
-            res.append(Event(message_content, message[0]))
+        try:
+            messages = self._redis_client.xrange(
+                inner_topic_name,
+                min=f"({offset}",
+                max='+',
+                count=count
+            )
+            for message in messages:
+                message_content = json.loads(
+                    message[1][StaticConst.REDIS_CEC_EVENT_VALUE_KEY])
+                res.append(Event(message_content, message[0]))
+        except redis.exceptions.RedisError as exc:
+            raise_if_not_ignore(ignore_exception, exc)
         return res
 
     @staticmethod
@@ -751,7 +532,7 @@ class RedisAdmin(Admin, ClientBase):
                             consumer_group_id: str) -> bool:
         """Add one consumer group to stream
 
-        将消费组添加到对应的stream中
+        Add the consumer group to the corresponding stream
 
         Args:
           redis_client(Redis): Redis client
@@ -770,17 +551,13 @@ class RedisAdmin(Admin, ClientBase):
                 inner_topic_name,
                 consumer_group_id, id="0-0")
         except ResponseError:
-            # 消费组已存在
             LoggerHelper.get_lazy_logger().debug(
                 f"Consumer group '{consumer_group_id}"
                 f"' already exists.")
             return False
-        except Exception as e:
-            raise e
         else:
-            # 消费组创建成功，进行关联
             redis_client.lpush(
-                RedisAdmin.get_sub_list_key(consumer_group_id),
+                get_sub_list_key(consumer_group_id),
                 inner_topic_name
             )
         LoggerHelper.get_lazy_logger().debug(
@@ -789,18 +566,18 @@ class RedisAdmin(Admin, ClientBase):
         return True
 
     @logger.catch(reraise=True)
-    def is_support_partitions(self) -> bool:
+    def is_support_partitions(self, **kwargs) -> bool:
         return False
 
     @logger.catch(reraise=True)
-    def is_support_replication(self) -> bool:
+    def is_support_replication(self, **kwargs) -> bool:
         return False
 
     @logger.catch(reraise=True)
     def connect_by_cec_url(self, url: CecUrl):
         """Connect to redis server by CecUrl
 
-        通过 CecUrl 连接到 Redis 服务器
+        Connecting to the Redis server via CecUrl
 
         Args:
           url(str): CecUrl
@@ -808,7 +585,7 @@ class RedisAdmin(Admin, ClientBase):
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to connect to '{url}'.")
         self._redis_client = do_connect_by_cec_url(url)
-        self._current_url = url.__str__()
+        self._current_url = str(url)
         LoggerHelper.get_lazy_logger().success(
             f"{self} connect to '{url}' successfully.")
 
@@ -816,7 +593,8 @@ class RedisAdmin(Admin, ClientBase):
     def connect(self, url: str):
         """Connect to redis server by url
 
-        连接到远端的消息中间件 => 对应到本模块就是连接到 Redis 服务器
+        Connecting to the remote message queue => Corresponding to this module
+        is connecting to the Redis server.
 
         Args:
           url(str): CecUrl
@@ -828,7 +606,9 @@ class RedisAdmin(Admin, ClientBase):
     def disconnect(self):
         """Disconnect from redis server
 
-        断开连接 => 对应到本模块就是断开 Redis 服务器连接
+        Disconnect from remote server => Corresponds to this module as
+        disconnecting the Redis server.
+
         """
         if self._redis_client is None:
             return
@@ -839,251 +619,15 @@ class RedisAdmin(Admin, ClientBase):
         LoggerHelper.get_lazy_logger().success(
             f"{self} disconnect from '{self._current_url}' successfully.")
 
-    ####################################################################
-    # 一些辅助函数
-    ####################################################################
-
-    @staticmethod
-    def get_topic_consumer_group_meta_info_key(topic: str, group_id: str,
-                                               key: str):
-        return f"{StaticConst.REDIS_ADMIN_TOPIC_CONSUMER_GROUP_META_PREFIX}" \
-               f"{topic + ':' if topic is not None else ''}" \
-               f"{group_id + ':' if group_id is not None else ''}" \
-               f"{key + ':' if key is not None else ''}"
-
-    @staticmethod
-    def get_topic_meta_info_key(topic: str, key: str):
-        return f"{StaticConst.REDIS_ADMIN_TOPIC_META_PREFIX}" \
-               f"{topic + ':' if topic is not None else ''}" \
-               f"{key + ':' if key is not None else ''}"
-
-    @staticmethod
-    def get_sub_list_key(group_id: str) -> str:
-        return f"{StaticConst.REDIS_ADMIN_CONSUMER_GROUP_SUB_LIST_PREFIX}" \
-               f"{group_id}"
-
-    @staticmethod
-    def store_meta(redis_client: Redis, key: str, value: str):
-        return redis_client.set(key, value)
-
-    @staticmethod
-    def get_meta(redis_client: Redis, key: str):
-        return redis_client.get(key)
-
-    @staticmethod
-    def del_meta(redis_client: Redis, prefix: str):
-        next_cursor = 0
-        while True:
-            next_cursor, key_list = redis_client.scan(
-                next_cursor,
-                match=f"{prefix}*",
-                count=100
-            )
-            if len(key_list) > 0:
-                redis_client.delete(*key_list)
-            if next_cursor == 0:
-                break
-        return True
-
-    @staticmethod
-    def store_topic_consumer_group_meta(redis_client: Redis, topic: str,
-                                        key: str, group_id: str, value):
-        return RedisAdmin.store_meta(
-            redis_client,
-            RedisAdmin.get_topic_consumer_group_meta_info_key(
-                topic, group_id, key
-            ),
-            value
-        )
-
-    @staticmethod
-    def store_topic_meta(redis_client: Redis, topic: str, key: str, value):
-        """Store topic meta info
-
-        存储主题相关的元数据信息
-
-        Args:
-            redis_client:
-            topic:
-            key:
-            value:
-
-        Returns:
-
-        """
-        return RedisAdmin.store_meta(
-            redis_client,
-            RedisAdmin.get_topic_meta_info_key(topic, key),
-            value
-        )
-
-    @staticmethod
-    def get_topic_consumer_group_meta(redis_client: Redis, topic: str,
-                                      group_id: str, key: str):
-        return RedisAdmin.get_meta(
-            redis_client,
-            RedisAdmin.get_topic_consumer_group_meta_info_key(
-                topic, group_id, key
-            )
-        )
-
-    @staticmethod
-    def get_topic_meta(redis_client: Redis, topic: str, key: str):
-        """Get topic meta info
-
-        获取主题相关的元数据信息
-
-        Args:
-            redis_client:
-            topic:
-            key:
-
-        Returns:
-
-        """
-        return RedisAdmin.get_meta(
-            redis_client,
-            RedisAdmin.get_topic_meta_info_key(topic, key)
-        )
-
-    @staticmethod
-    def del_topic_consumer_group_meta(redis_client: Redis,
-                                      topic: str, group_id: str):
-        return RedisAdmin.del_meta(
-            redis_client,
-            RedisAdmin.get_topic_consumer_group_meta_info_key(
-                topic, group_id, None
-            )
-        )
-
-    @staticmethod
-    def del_topic_meta(redis_client: Redis, topic: str):
-        """Delete all meta info for specific topic
-
-        删除特定主题的所有元数据信息
-
-        Args:
-            redis_client:
-            topic:
-
-        Returns:
-
-        """
-        res1 = RedisAdmin.del_meta(
-            redis_client,
-            RedisAdmin.get_topic_consumer_group_meta_info_key(topic, None,
-                                                              None)
-        )
-        res2 = RedisAdmin.del_meta(
-            redis_client,
-            RedisAdmin.get_topic_meta_info_key(topic, None)
-        )
-        return res1 and res2
-
-    @staticmethod
-    def _lock_topic(redis_client: Redis, topic: str,
-                    ignore_exception: bool = False) -> bool:
-        """
-
-        给某个主题加锁，防止并发场景下重复操作问题
-
-        Args:
-            redis_client:
-            topic:
-            ignore_exception:
-
-        Returns:
-
-        """
-        # 使用set给create/del操作加锁（防止并发场景下重复创建删除问题）
-        if redis_client.set(
-                f"{StaticConst.REDIS_ADMIN_TOPIC_LOCKER_PREFIX}{topic}",
-                topic, nx=True, ex=10) == 0:
-            return raise_if_not_ignore(ignore_exception,
-                                       CecException(
-                                           f"Someone else is creating or"
-                                           f" deleting this topic."
-                                       ))
-        return True
-
-    @staticmethod
-    def _unlock_topic(redis_client: Redis, topic: str) -> bool:
-        """
-
-        释放给某个主题加的锁，应当和 lock_topic 配套使用
-
-        Args:
-            redis_client:
-            topic:
-
-        Returns:
-
-        """
-        # 释放锁
-        if redis_client.get(
-                f"{StaticConst.REDIS_ADMIN_TOPIC_LOCKER_PREFIX}{topic}"
-        ) == topic:
-            return redis_client.delete(
-                f"{StaticConst.REDIS_ADMIN_TOPIC_LOCKER_PREFIX}{topic}") == 1
-        else:
-            return False
-
-    @staticmethod
-    def _lock_consumer_group(redis_client: Redis, consumer_group_id: str,
-                             ignore_exception: bool = False) -> bool:
-        """
-
-        给某个消费组加锁，防止并发场景下重复操作问题
-
-        Args:
-            redis_client:
-            consumer_group_id:
-            ignore_exception:
-
-        Returns:
-
-        """
-        # 使用set给create/del操作加锁（防止并发场景下重复创建删除问题）
-        if redis_client.set(
-                f"{StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LOCKER_PREFIX}"
-                f"{consumer_group_id}",
-                consumer_group_id, nx=True, ex=10) == 0:
-            return raise_if_not_ignore(ignore_exception,
-                                       CecException(
-                                           f"Someone else is creating or"
-                                           f" deleting this consumer group."
-                                       ))
-        return True
-
-    @staticmethod
-    def _unlock_consumer_group(redis_client: Redis,
-                               consumer_group_id: str) -> bool:
-        """
-
-        释放给某个消费组加的锁，应当和 lock_consumer_group 配套使用
-
-        Args:
-            redis_client:
-            consumer_group_id:
-
-        Returns:
-
-        """
-        # 释放锁
-        if redis_client.get(
-                f"{StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LOCKER_PREFIX}"
-                f"{consumer_group_id}"
-        ) == consumer_group_id:
-            return redis_client.delete(
-                f"{StaticConst.REDIS_ADMIN_CONSUMER_GROUP_LOCKER_PREFIX}"
-                f"{consumer_group_id}") == 1
-        else:
-            return False
-
     @logger.catch()
     def __del__(self):
         self.disconnect()
 
     @logger.catch(reraise=True)
     def client(self):
+        """Get inner redis client
+
+        Returns:
+
+        """
         return self._redis_client
