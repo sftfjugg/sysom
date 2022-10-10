@@ -82,3 +82,5 @@ loguru==0.6.0
 prompt_toolkit==3.0.30
 rich==12.5.1
 APScheduler==3.9.1
+schedule==1.1.0
+atomic==0.7.3
