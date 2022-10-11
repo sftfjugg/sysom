@@ -1,64 +1,71 @@
 # -*- coding: utf-8 -*- #
 """
+Time                2022/7/27 9:21
 Author:             mingfeng (SunnyQjm)
-Created:            2022/07/25
+Email               mfeng@linux.alibaba.com
+File                producer.py
 Description:
 """
 import importlib
 from abc import ABCMeta, abstractmethod
-from typing import Callable
-from .base import Connectable, Disconnectable
-from .base import Registrable
-from .base import ProtoAlreadyExistsException, ProtoNotExistsException
+from typing import Callable, Union
+from .base import Connectable
+from .exceptions import CecProtoAlreadyExistsException
+from .exceptions import CecProtoNotExistsException
+from .log import LoggerHelper
 from .url import CecUrl
 from .event import Event
-from loguru import logger
 
 
-class Producer(Connectable, Disconnectable, Registrable,
-               metaclass=ABCMeta):
+class Producer(Connectable, metaclass=ABCMeta):
     """Common Event Center Producer interface definition
 
-    通用事件中心，生产者接口定义
+    This interface defines the generic behavior of the CEC Producer.
 
     """
-    protoDict = {}
+    proto_dict = {}
 
     @abstractmethod
-    def produce(self, topic_name: str, message_value: dict,
-                callback: Callable[[Exception, Event], None] = None,
-                partition: int = -1,
-                **kwargs):
-        """Generate one new event, then put it to event center
+    def produce(self, topic_name: str, message_value: Union[bytes, dict],
+                callback: Callable[[Exception, Event], None] = None, **kwargs):
+        """Generate a new event, then put it to event center
 
-        生成一个新的事件，并将其注入到事件中心当中（本操作默认是异步的，如果想实现同步，
-        请搭配 flush 方法使用）
+        Generate a new event and inject it into the event center (this
+        operation is asynchronous by default, if you want to be synchronous,
+        use it with the flush method)
 
         Args:
-            topic_name: 主题名称
-            message_value: 事件内容
-            callback(Callable[[Exception, Event], None]): 事件成功投递到事件中心回调
-            partition(int): 分区号
-                1. 如果指定了有效分区号，消息投递给指定的分区（不建议）；
-                2. 传递了一个正数分区号，但是无此分区，将抛出异常；
-                3. 传递了一个负数分区号（比如-1），则消息将使用内建的策略均衡的投
-                   递给所有的分区（建议）。
+            topic_name(str): Topic name
+            message_value(bytes | dict): Event value
+            callback(Callable[[Exception, Event], None]): Event delivery
+                                                          results callback
+
+        Keyword Args:
+            partition(int): Partition ID
+                1. If a valid partition number is specified, the event is
+                   deliverd to the specified partition (not recommended);
+                2. A positive partition ID is passed, but no such partition is
+                   available, an exception will be thrown.
+                3. A negative partition number is passed (e.g. -1), then the
+                   event will be cast to all partitions in a balanced manner
+                   using the built-in policy (recommended).
 
         Examples:
             >>> producer = dispatch_producer(
             ..."redis://localhost:6379?password=123456")
             >>> producer.produce("test_topic", {"value": "hhh"})
         """
-        pass
 
     @abstractmethod
-    def flush(self, timeout: int = -1):
+    def flush(self, timeout: int = -1, **kwargs):
         """Flush all cached event to event center
 
-        将在缓存中还未提交的所有事件都注入到事件中心当中（这是一个阻塞调用）
+        Deliver all events in the cache that have not yet been committed into
+        the event center (this is a blocking call)
 
         Args:
-            timeout: 超时等待时间（单位：ms），<= 表示阻塞等待
+            timeout(int): Blocking wait time
+                          (Negative numbers represent infinite blocking wait)
 
         Examples:
             >>> producer = dispatch_producer(
@@ -66,18 +73,21 @@ class Producer(Connectable, Disconnectable, Registrable,
             >>> producer.produce("test_topic", {"value": "hhh"})
             >>> producer.flush()
         """
-        pass
 
     @staticmethod
     def register(proto, sub_class):
         """Register one new protocol => indicate one execution module
 
-        注册一个新的协议 => 一个新的执行模块的 Producer 实现要生效，需要调用本方法注册（通常执行
-        模块按规范编写的话，是不需要开发者手动调用本方法的，抽象层会动态导入）
+        Register a new protocol => This function is called by the executing
+        module to register its own implementation of Producer for the executing
+        module to take effect.
+        (Usually when the execution module is implemented according to the
+        specification, there is no need for the developer to call this method
+        manually, the abstraction layer will dynamically import)
 
         Args:
-            proto: 协议标识
-            sub_class: 子类
+            proto(str): Protocol identification
+            sub_class: Implementation class of Producer
 
         Returns:
 
@@ -85,20 +95,23 @@ class Producer(Connectable, Disconnectable, Registrable,
             >>> Producer.register('redis', RedisProducer)
 
         """
-        if proto in Producer.protoDict:
-            err = ProtoAlreadyExistsException(
+        if proto in Producer.proto_dict:
+            err = CecProtoAlreadyExistsException(
                 f"Proto '{proto}' already exists in Cec-base-Producer."
             )
-            logger.error(err)
+            LoggerHelper.get_lazy_logger().error(err)
             raise err
-        Producer.protoDict[proto] = sub_class
-        logger.success(f"Cec-base-Producer register proto '{proto}' success")
+        Producer.proto_dict[proto] = sub_class
+        LoggerHelper.get_lazy_logger().success(
+            f"Cec-base-Producer register proto '{proto}' success"
+        )
 
 
 def dispatch_producer(url: str, **kwargs) -> Producer:
     """Construct one Producer instance according the url
 
-    根据传入的 URL，构造对应的 Producer 实例
+    Construct a Producer instance of the corresponding type based on the URL
+    passed in.
 
     Args:
         url(str): CecUrl
@@ -111,22 +124,25 @@ def dispatch_producer(url: str, **kwargs) -> Producer:
             ..."redis://localhost:6379?password=123456")
     """
     cec_url = CecUrl.parse(url)
-    if cec_url.proto not in Producer.protoDict:
-        # 检查是否可以动态导入包
+    if cec_url.proto not in Producer.proto_dict:
+        # Check if dynamic import is possible
         target_module = f"sdk.cec_{cec_url.proto}.{cec_url.proto}_producer"
         try:
             module = importlib.import_module(target_module)
-            Producer.protoDict[cec_url.proto] = \
+            Producer.register(
+                cec_url.proto,
                 getattr(module, f'{cec_url.proto.capitalize()}Producer')
-        except ModuleNotFoundError:
-            logger.error(
-                f"Try to auto import module {target_module} failed.")
-            err = ProtoNotExistsException(
-                f"Proto '{cec_url.proto}' not exists in Cec-base-Producer."
             )
-            raise err
-    producer_instance = Producer.protoDict[cec_url.proto](cec_url, **kwargs)
-    logger.success(
+        except ModuleNotFoundError as exc:
+            LoggerHelper.get_lazy_logger().error(
+                f"Try to auto import module {target_module} failed."
+            )
+            raise CecProtoNotExistsException(
+                f"Proto '{cec_url.proto}' not exists in Cec-base-Producer."
+            ) from exc
+    producer_instance = Producer.proto_dict[cec_url.proto](cec_url, **kwargs)
+    LoggerHelper.get_lazy_logger().success(
         f"Cec-base-Producer dispatch one producer instance success. "
-        f"proto={cec_url.proto}, url={url}")
+        f"proto={cec_url.proto}, url={url}"
+    )
     return producer_instance
