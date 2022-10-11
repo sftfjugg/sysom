@@ -61,3 +61,96 @@ def raise_if_not_ignore(is_ignore_exception: bool, exception: Exception):
         LoggerHelper.get_lazy_logger().exception(exception)
         return False
     raise exception
+
+
+class RedisLocker:
+    """
+    This is a simple redis lock implement
+
+    Args:
+        redis_client(Redis): Redis client
+        key(str): Locker key
+        ex(int): Expire time, seconds
+    """
+
+    def __init__(self, redis_client: Redis, key: str, ex: int = 10):
+        self._redis_client = redis_client
+        self._key = key
+        self._ex = ex
+        self._get_locker = False
+
+    def __enter__(self):
+        return self.lock()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self.unlock()
+
+    def unlock(self):
+        """Unlock
+
+        Returns:
+
+        """
+        if self._get_locker and self._redis_client.get(self._key) == self._key:
+            return self._redis_client.delete(self._key) == 1
+        return False
+
+    def lock(self) -> bool:
+        """Lock
+
+        Returns:
+
+        """
+        self._get_locker = self._redis_client.set(
+            self._key, self._key, nx=True, ex=self._ex
+        ) == 1
+        return self._get_locker
+
+
+def transfer_pending_list(redis_client: Redis, topic: str, group: str,
+                          count: int, target_consumer: str, **kwargs):
+    """
+
+    Args:
+        redis_client(Redis): Redis client
+        topic(str): Topic
+        group(str): Consumer group
+        count(str): max count
+        target_consumer(str):
+
+    Keyword Args:
+        min_id(str): Min ID
+        max_id(str): Max ID
+        min_idle_time(int): filter messages that were idle less than this
+                            amount of milliseconds.
+        filter_consumer(str): name of a consumer to filter by (optional).
+
+    Returns:
+
+    """
+    min_id = kwargs.get("min_id", "-")
+    max_id = kwargs.get("max_id", "+")
+    min_idle_time = kwargs.get("min_idle_time", 0)
+    filter_consumer = kwargs.get("filter_consumer", None)
+
+    _message_ret = [[[], [], []]]
+    pending_list = redis_client.xpending_range(
+        topic, group, count=count, min=min_id, max=max_id,
+        consumername=filter_consumer
+    )
+    if len(pending_list) > 0:
+        pending_list = list(filter(
+            lambda item: item.get('time_since_delivered',
+                                  0) > min_idle_time,
+            pending_list
+        ))
+        pending_ids = list(map(
+            lambda item: item.get('message_id', '0-0'),
+            pending_list
+        ))
+        if len(pending_ids) > 0:
+            _message_ret = [[[], redis_client.xclaim(
+                topic, group, target_consumer, min_idle_time,
+                pending_ids
+            )]]
+    return _message_ret

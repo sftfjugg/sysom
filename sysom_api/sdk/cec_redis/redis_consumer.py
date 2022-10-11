@@ -23,6 +23,7 @@ from .consume_status_storage import ConsumeStatusStorage
 from .common import StaticConst, ClientBase
 from .admin_static import static_create_consumer_group, \
     get_topic_consumer_group_meta_info_key
+from .utils import RedisLocker, transfer_pending_list
 
 
 class RedisConsumer(Consumer, ClientBase):
@@ -39,46 +40,73 @@ class RedisConsumer(Consumer, ClientBase):
         ClientBase.__init__(self, url)
 
         # Specialized parameter 1: cec_auto_transfer_interval
-        # - This parameter specifies whether enable pending list transfer
-        #   mechanisms, if enabled, the consumer will try to transfer long
-        #   unacknowledged messages from the same group's pending list to
-        #   itself for processing at each consumption.
         self._enable_pending_list_transfer = self.get_special_param(
             StaticConst.REDIS_SPECIAL_PARM_CEC_ENABLE_PENDING_LIST_TRANSFER
         )
-        # Specialized parameter 2: pending_expire_time
-        # - messages in the pending list that are older than the specified
-        #   time, the current consumer will try to fetch them down for
-        #   consumption
+        # Specialized parameter 2: cec_pending_expire_time
         self._pending_expire_time = self.get_special_param(
             StaticConst.REDIS_SPECIAL_PARM_CEC_PENDING_EXPIRE_TIME
         )
 
         self._current_url = ""
         self._redis_client: Optional[Redis] = None
-        self.connect_by_cec_url(url)
         self._last_event_id: Optional[str] = None  # Last consume ID
         self._event_cache_queue = Queue()  # Event cache queue
         self.consume_status_storage = None
         self.inner_topic_name = StaticConst.get_inner_topic_name(
             self.topic_name)
 
-        # If it is group consumption mode, check if the consumer group exists
-        if self.consume_mode == ConsumeMode.CONSUME_GROUP:
-            # Try to create a consumer group, ignore if it already exists,
-            # create if it doesn't
-            static_create_consumer_group(self._redis_client,
-                                         self.group_id,
-                                         ignore_exception=True)
-            self.consume_status_storage = ConsumeStatusStorage(
-                self._redis_client,
-                self.topic_name,
-                self.group_id
-            )
-
         # Identifies by this field whether it is a message that needs to be
         # pulled from the pending list
         self._is_need_fetch_pending_message = True
+        self.connect_by_cec_url(url)
+
+    def _pending_list_transfer(self, batch_consume_limit: int):
+        """Do pending list transfer
+
+        Check if there are any messages in the pending list of the same
+        group that have not been acknowledged for a long time, and if so,
+        try to transfer them to the current consumer for processing
+
+        Returns:
+
+        """
+        _message_ret = [[[], [], []]]
+        # First process pending list transfers
+        # 1. Try to filter out events that have not been acked for a long
+        #    time from the pending list of the consumer group as a whole,
+        #    i.e. events that have been in the pending list for longer
+        #    than 'pending_expire_time';
+        # 2. Then transfer the overdue events to the current consumer for
+        #    processing.
+        if self.is_gte_6_2(self._redis_client):
+            # Redis versions greater than or equal to 6.2 support the use
+            # of 'xautoclaim' to merge 'xpending + xclaim' operations, so
+            # it is straightforward to use 'xautoclaim' to attempt to
+            # transfer overdue messages from the global pending list of the
+            # consumer group to the current consumer
+            _message_ret = [
+                self._redis_client.xautoclaim(
+                    self.inner_topic_name, self.group_id,
+                    self.consumer_id,
+                    min_idle_time=self._pending_expire_time,
+                    count=batch_consume_limit,
+                )
+            ]
+        else:
+            # If Redis version is less than 6.2, 'xautoclaim' is not
+            # supported, so you need to use 'xpending + xclaim ' to try to
+            # transfer the overdue message from the pending list of the
+            # consumer group global to the current consumer
+            max_range = '+' if self._last_event_id is None else \
+                self._last_event_id
+            _message_ret = transfer_pending_list(
+                self._redis_client, self.inner_topic_name, self.group_id,
+                batch_consume_limit, self.consumer_id,
+                min_id="-", max_id=max_range,
+                min_idle_time=self._pending_expire_time
+            )
+        return _message_ret
 
     @logger.catch(reraise=True)
     def consume(self, timeout: int = -1, auto_ack: bool = False,
@@ -127,69 +155,6 @@ class RedisConsumer(Consumer, ClientBase):
             >>> consumer.consume(200, auto_ack=False, batch_consume_limit=20)
         """
 
-        def pending_list_transfer():
-            """Do pending list transfer
-
-            Check if there are any messages in the pending list of the same
-            group that have not been acknowledged for a long time, and if so,
-            try to transfer them to the current consumer for processing
-
-            Returns:
-
-            """
-            _message_ret = [[[], [], []]]
-            # First process pending list transfers
-            # 1. Try to filter out events that have not been acked for a long
-            #    time from the pending list of the consumer group as a whole,
-            #    i.e. events that have been in the pending list for longer
-            #    than 'pending_expire_time';
-            # 2. Then transfer the overdue events to the current consumer for
-            #    processing.
-            if self.is_gte_6_2(self._redis_client):
-                # Redis versions greater than or equal to 6.2 support the use
-                # of 'xautoclaim' to merge 'xpending + xclaim' operations, so
-                # it is straightforward to use 'xautoclaim' to attempt to
-                # transfer overdue messages from the global pending list of the
-                # consumer group to the current consumer
-                _message_ret = [
-                    self._redis_client.xautoclaim(
-                        self.inner_topic_name, self.group_id,
-                        self.consumer_id,
-                        min_idle_time=self._pending_expire_time,
-                        count=batch_consume_limit
-                    )
-                ]
-            else:
-                # If Redis version is less than 6.2, 'xautoclaim' is not
-                # supported, so you need to use 'xpending + xclaim ' to try to
-                # transfer the overdue message from the pending list of the
-                # consumer group global to the current consumer
-                max_range = '+' if self._last_event_id is None else \
-                    self._last_event_id
-                pending_list = self._redis_client.xpending_range(
-                    self.inner_topic_name, self.group_id,
-                    min='-',
-                    max=max_range,
-                    count=batch_consume_limit,
-                )
-                if len(pending_list) > 0:
-                    pending_list = list(filter(
-                        lambda item: item.get('time_since_delivered',
-                                              0) > self._pending_expire_time,
-                        pending_list
-                    ))
-                    pending_ids = list(map(
-                        lambda item: item.get('message_id', '0-0'),
-                        pending_list
-                    ))
-                    if len(pending_ids) > 0:
-                        _message_ret = [[[], self._redis_client.xclaim(
-                            self.inner_topic_name, self.group_id,
-                            self.consumer_id, self._pending_expire_time,
-                            pending_ids
-                        )]]
-            return _message_ret
-
         def group_consume():
             """Group consumption mode"""
             _message_ret = [[[], [], []]]
@@ -199,7 +164,7 @@ class RedisConsumer(Consumer, ClientBase):
                     self._redis_client, self.topic_name, self.group_id)
 
             if self._enable_pending_list_transfer:
-                _message_ret = pending_list_transfer()
+                _message_ret = self._pending_list_transfer(batch_consume_limit)
 
             if len(_message_ret[0][1]) <= 0:
                 # Determine whether the message needs to be pulled from the
@@ -280,7 +245,7 @@ class RedisConsumer(Consumer, ClientBase):
                 f"{self.topic_name}, but its invalid. => "
                 f"{message_ret}")
             return []
-        messages: [Event] = []
+        messages: List[Event] = []
         for message_tuple in message_ret[0][1]:
             self._last_event_id = message_tuple[0]
 
@@ -383,6 +348,21 @@ class RedisConsumer(Consumer, ClientBase):
             f"{self} try to connect to '{url}'.")
         self._redis_client = do_connect_by_cec_url(url)
         self._current_url = str(url)
+
+        # If it is group consumption mode, check if the consumer group exists
+        if self.consume_mode == ConsumeMode.CONSUME_GROUP:
+            # Try to create a consumer group, ignore if it already exists,
+            # create if it doesn't
+            static_create_consumer_group(self._redis_client,
+                                         self.group_id,
+                                         ignore_exception=True)
+            RedisAdmin.add_group_to_stream(
+                self._redis_client, self.topic_name, self.group_id)
+            self.consume_status_storage = ConsumeStatusStorage(
+                self._redis_client,
+                self.topic_name,
+                self.group_id
+            )
         LoggerHelper.get_lazy_logger().success(
             f"{self} connect to '{url}' successfully.")
         return self
@@ -415,6 +395,7 @@ class RedisConsumer(Consumer, ClientBase):
             return
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to disconnect from '{self._current_url}'.")
+        self._redis_client.close()
         self._redis_client.connection_pool.disconnect()
         self._redis_client = None
         LoggerHelper.get_lazy_logger().success(
