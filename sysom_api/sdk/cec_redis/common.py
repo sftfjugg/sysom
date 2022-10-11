@@ -66,14 +66,20 @@ class StaticConst:
     # Heartbeat monitoring related configurations
     REDIS_HEARTBEAT_CHANNEL_PREFIX = f"{CEC_REDIS_PREFIX}HEARTBEAT:"
 
+    # Heartbeat locker prefix
+    REDIS_HEARTBEAT_LOCKER_PREFIX \
+        = f"{CEC_REDIS_PREFIX}HEARTBEAT-LOCKER:"
+
     # List of specialization parameters
     REDIS_SPECIAL_PARM_CEC_DEFAULT_MAX_LEN = 'cec_default_max_len'
     REDIS_SPECIAL_PARM_CEC_AUTO_MK_TOPIC = 'cec_auto_mk_topic'
     REDIS_SPECIAL_PARM_CEC_ENABLE_PENDING_LIST_TRANSFER = \
         "cec_enable_pending_list_transfer"
     REDIS_SPECIAL_PARM_CEC_PENDING_EXPIRE_TIME = 'cec_pending_expire_time'
-    REDIS_SPECIAL_PARM_CEC_AUTO_TRANSFER_INTERVAL = \
-        'cec_auto_transfer_interval'
+    REDIS_SPECIAL_PARM_CEC_ENABLE_HEART_BEAT = 'cec_enable_heartbeat'
+    REDIS_SPECIAL_PARM_CEC_HEARTBEAT_INTERVAL = 'cec_heartbeat_interval'
+    REDIS_SPECIAL_PARM_CEC_HEARTBEAT_CHECK_INTERVAL = \
+        'cec_heartbeat_check_interval'
 
     _redis_special_parameter_list = [
         # cec_default_max_len => Default maximum queue length limit
@@ -85,20 +91,19 @@ class StaticConst:
         # cec_auto_mk_topic => Automatic topic creation
         #   1. Effective range：[Consumer]
         #   2. Meaning: This parameter specifies whether the Producer needs to
-        #               create a Topic automatically if it does not exist when
-        #               it delivers a message to a Topic.
+        #      create a Topic automatically if it does not exist when it
+        #      delivers a message to a Topic.
         REDIS_SPECIAL_PARM_CEC_AUTO_MK_TOPIC,
         # cec_enable_pending_list_transfer => Whether enable pending list
         # transfer
         #   1. Effective range: [Consumer]
         #   2. Meaning: This parameter specifies whether enable pending list
-        #               transfer mechanisms, if enabled, the consumer will try
-        #               to transfer long unacknowledged messages from the same
-        #               group's pending list to itself for processing at each
-        #               consumption.
+        #      transfer mechanisms, if enabled, the consumer will try to
+        #      transfer long unacknowledged messages from the same group's
+        #      pending list to itself for processing at each consumption.
         REDIS_SPECIAL_PARM_CEC_ENABLE_PENDING_LIST_TRANSFER,
         # cec_pending_expire_time => expire conversion interval
-        #   1. Require enable 'cec_enable_pending_list_transfer'
+        #   0. Require enable 'cec_enable_pending_list_transfer'
         #   1. Effective range：[Consumer(broadcast mode)]
         #   2. Meaning: This parameter specifies the time interval after which
         #      an event in the pending list that has been unacknowledged for a
@@ -106,22 +111,37 @@ class StaticConst:
         #      the group, and each consumer will try to stream the overdue
         #      events in the pending list to itself at each batch.
         REDIS_SPECIAL_PARM_CEC_PENDING_EXPIRE_TIME,
-        # cec_auto_transfer_interval => Automatic switching of inspection
+        # cec_enable_heartbeat => Enable heartbeat mechanisms
+        #   1. Effective range: [Consumer(group consume mode)]
+        #   2. Meaning: This parameter specifies whether enable heartbeat
+        #      mechanisms, if enabled, the current consumer periodically sends
+        #      heartbeat data to the channel shared by the consumer group,
+        #      subscribes to and monitors the health of other consumers in the
+        #      group, and tries to transfer its unacknowledged messages to
+        #      itself for processing when it detects an offline consumer.
+        REDIS_SPECIAL_PARM_CEC_ENABLE_HEART_BEAT,
+        # cec_heartbeat_interval => Automatic switching of inspection
         #                               intervals
-        #   1. Effective range：[Consumer(broadcast mode)]
-        #   2. Meaning: This parameter specifies an event interval to
-        #      automatically check for event transfer.
-        #       - When an event remains unacknowledged in the pending list
-        #         (pending list) for a long time, exceeding a threshold, and
-        #         needs to be flowed to other consumers for processing.
-        REDIS_SPECIAL_PARM_CEC_AUTO_TRANSFER_INTERVAL,
+        #   0. Require enable 'cec_enable_heartbeat'
+        #   1. Effective range：[Consumer(group consume mode)]
+        #   2. Meaning: This parameter specifies the heartbeat interval.
+        REDIS_SPECIAL_PARM_CEC_HEARTBEAT_INTERVAL,
+        # cec_heartbeat_check_interval => Heartbeat check interval
+        #   0. Require enable 'cec_enable_heartbeat'
+        #   1. Effective range：[Consumer(group consume mode)]
+        #   2. Meaning: This parameter specifies the heartbeat checkout
+        #      interval.
+        REDIS_SPECIAL_PARM_CEC_HEARTBEAT_CHECK_INTERVAL,
     ]
+
     _redis_special_parameters_default_value = {
         REDIS_SPECIAL_PARM_CEC_DEFAULT_MAX_LEN: (int, 1000),
         REDIS_SPECIAL_PARM_CEC_AUTO_MK_TOPIC: (bool, False),
         REDIS_SPECIAL_PARM_CEC_ENABLE_PENDING_LIST_TRANSFER: (bool, False),
         REDIS_SPECIAL_PARM_CEC_PENDING_EXPIRE_TIME: (int, 5 * 60 * 1000),
-        REDIS_SPECIAL_PARM_CEC_AUTO_TRANSFER_INTERVAL: (int, 5 * 60 * 1000),
+        REDIS_SPECIAL_PARM_CEC_ENABLE_HEART_BEAT: (bool, True),
+        REDIS_SPECIAL_PARM_CEC_HEARTBEAT_INTERVAL: (int, 5),
+        REDIS_SPECIAL_PARM_CEC_HEARTBEAT_CHECK_INTERVAL: (int, 3)
     }
 
     @staticmethod

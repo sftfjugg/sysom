@@ -23,6 +23,7 @@ from .consume_status_storage import ConsumeStatusStorage
 from .common import StaticConst, ClientBase
 from .admin_static import static_create_consumer_group, \
     get_topic_consumer_group_meta_info_key
+from .heartbeat import Heartbeat
 from .utils import RedisLocker, transfer_pending_list
 
 
@@ -48,8 +49,19 @@ class RedisConsumer(Consumer, ClientBase):
             StaticConst.REDIS_SPECIAL_PARM_CEC_PENDING_EXPIRE_TIME
         )
 
+        # Specialized parameter 3: cec_enable_heartbeat
+        self._enable_heartbeat = self.get_special_param(
+            StaticConst.REDIS_SPECIAL_PARM_CEC_ENABLE_HEART_BEAT
+        )
+
+        # Specialized parameter 4: cec_heartbeat_interval
+        self._heartbeat_interval = self.get_special_param(
+            StaticConst.REDIS_SPECIAL_PARM_CEC_HEARTBEAT_INTERVAL
+        )
+
         self._current_url = ""
         self._redis_client: Optional[Redis] = None
+        self._heartbeat: Optional[Heartbeat] = None
         self._last_event_id: Optional[str] = None  # Last consume ID
         self._event_cache_queue = Queue()  # Event cache queue
         self.consume_status_storage = None
@@ -108,6 +120,39 @@ class RedisConsumer(Consumer, ClientBase):
             )
         return _message_ret
 
+    def _heartbeat_checkout(self, batch_consume_limit: int):
+        """Offline consumer detect
+
+        Check if there is an offline consumer in the group and if so try to
+        transfer its unprocessed events to the current consumer
+        """
+        _message_ret, transfer_count = [[[], [], []]], 0
+        if not self._enable_heartbeat or self._heartbeat is None:
+            return _message_ret
+        next_consumer = self._heartbeat.get_next_offline_consumer()
+        while next_consumer is not None:
+            with RedisLocker(
+                    self._redis_client,
+                    f"{StaticConst.REDIS_HEARTBEAT_LOCKER_PREFIX}"
+                    f"{self.group_id}",
+            ) as result:
+                if not result:
+                    continue
+                _message_ret = transfer_pending_list(
+                    self._redis_client, self.inner_topic_name,
+                    self.group_id,
+                    batch_consume_limit, self.consumer_id,
+                    min_id="-", max_id="+",
+                    min_idle_time=0, filter_consumer=next_consumer
+                )
+                transfer_count = len(_message_ret[0][1])
+                if transfer_count < batch_consume_limit:
+                    self._heartbeat.remove_consumer(next_consumer)
+                if transfer_count > 0:
+                    break
+            next_consumer = self._heartbeat.get_next_offline_consumer()
+        return _message_ret
+
     @logger.catch(reraise=True)
     def consume(self, timeout: int = -1, auto_ack: bool = False,
                 batch_consume_limit: int = 0, **kwargs) -> List[Event]:
@@ -162,6 +207,9 @@ class RedisConsumer(Consumer, ClientBase):
                 # Ensuring the presence of consumption groups
                 RedisAdmin.add_group_to_stream(
                     self._redis_client, self.topic_name, self.group_id)
+
+            if self._enable_heartbeat:
+                _message_ret = self._heartbeat_checkout(batch_consume_limit)
 
             if self._enable_pending_list_transfer:
                 _message_ret = self._pending_list_transfer(batch_consume_limit)
@@ -363,6 +411,21 @@ class RedisConsumer(Consumer, ClientBase):
                 self.topic_name,
                 self.group_id
             )
+        else:
+            self._enable_heartbeat = False
+
+        if self._enable_heartbeat:
+            self._heartbeat = Heartbeat(
+                self._redis_client, self.inner_topic_name, self.group_id,
+                self.consumer_id,
+                heartbeat_interval=self.get_special_param(
+                    StaticConst.REDIS_SPECIAL_PARM_CEC_HEARTBEAT_INTERVAL
+                ),
+                heartbeat_check_interval=self.get_special_param(
+                    StaticConst.REDIS_SPECIAL_PARM_CEC_HEARTBEAT_CHECK_INTERVAL
+                ),
+            )
+            self._heartbeat.start()
         LoggerHelper.get_lazy_logger().success(
             f"{self} connect to '{url}' successfully.")
         return self
@@ -395,6 +458,9 @@ class RedisConsumer(Consumer, ClientBase):
             return
         LoggerHelper.get_lazy_logger().debug(
             f"{self} try to disconnect from '{self._current_url}'.")
+        if self._heartbeat is not None:
+            self._heartbeat.stop()
+            self._heartbeat = None
         self._redis_client.close()
         self._redis_client.connection_pool.disconnect()
         self._redis_client = None
