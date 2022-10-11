@@ -28,11 +28,11 @@ def memgraph_result(raw):
     newmemgraph["dataMemEvent"]["data"] = [
         {"key": "Util", "value": round(rawdata["event"]["util"], 2)},
         {"key": "MemLeak",
-            "value":  "OK" if rawdata["event"]["leak"] else "NG"},
+            "value":  "NG" if rawdata["event"]["leak"] else "OK"},
         {"key": "MemcgLeak",
-            "value": "OK" if rawdata["event"]["memcg"] else "NG"},
+            "value": "NG" if rawdata["event"]["memcg"] else "OK"},
         {"key": "MemFrag",
-            "value": "OK" if rawdata["event"]["memfrag"] else "NG"}
+            "value": "NG" if rawdata["event"]["memfrag"] else "OK"}
     ]
 
     newmemgraph["dataMemOverView"] = {"data": {}}
