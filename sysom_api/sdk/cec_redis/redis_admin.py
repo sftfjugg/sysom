@@ -14,7 +14,7 @@ import redis.exceptions
 from ..cec_base.admin import Admin, ConsumeStatusItem
 from ..cec_base.exceptions import CecException
 from ..cec_base.event import Event
-from ..cec_base.meta import ConsumerGroupMeta
+from ..cec_base.meta import ConsumerGroupMeta, TopicMeta
 from ..cec_base.log import LoggerHelper
 from ..cec_base.url import CecUrl
 from redis import Redis
@@ -150,7 +150,7 @@ class RedisAdmin(Admin, ClientBase):
         return static_is_topic_exist(self._redis_client, topic_name, **kwargs)
 
     @logger.catch(reraise=True)
-    def get_topic_list(self, **kwargs) -> [str]:
+    def get_topic_list(self, **kwargs) -> List[TopicMeta]:
         """Get topic list
 
         Getting the Topic list => corresponding to Redis should be a list of
@@ -297,7 +297,7 @@ class RedisAdmin(Admin, ClientBase):
                                               consumer_group_id)
 
     @logger.catch(reraise=True)
-    def get_consumer_group_list(self, **kwargs) -> [ConsumerGroupMeta]:
+    def get_consumer_group_list(self, **kwargs) -> List[ConsumerGroupMeta]:
         """Get consumer group list
 
         Get consumer group list
@@ -325,7 +325,7 @@ class RedisAdmin(Admin, ClientBase):
     @logger.catch(reraise=True)
     def get_consume_status(
             self, topic: str, consumer_group_id: str = "", partition: int = 0,
-            **kwargs) -> [ConsumeStatusItem]:
+            **kwargs) -> List[ConsumeStatusItem]:
         """Get consumption info for specific <topic, consumer_group, partition>
 
         Get the consumption info of a particular topic by a particular consumer
@@ -381,7 +381,7 @@ class RedisAdmin(Admin, ClientBase):
 
         """
 
-        def _get_one_group_consume_status(_groups: [dict]) \
+        def _get_one_group_consume_status(_groups: List[dict]) \
                 -> List[ConsumeStatusItem]:
             """Get the consumption of the specified consumer group"""
             select_group = None
@@ -433,7 +433,7 @@ class RedisAdmin(Admin, ClientBase):
                 )
             ]
 
-        def _get_all_group_consume_status(_groups: [dict]) \
+        def _get_all_group_consume_status(_groups: List[dict]) \
                 -> List[ConsumeStatusItem]:
             """Get the consumption of the all consumer group"""
             # 获取所有消费组的消费情况（此时 partition 参数无效）
@@ -488,7 +488,7 @@ class RedisAdmin(Admin, ClientBase):
 
     @logger.catch(reraise=True)
     def get_event_list(self, topic: str, partition: int, offset: str,
-                       count: int, **kwargs) -> [Event]:
+                       count: int, **kwargs) -> List[Event]:
         """ Get event list for specific <topic, partition>
 
         Get a list of messages for a specific topic under a specified partition

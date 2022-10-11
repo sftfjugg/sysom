@@ -7,7 +7,7 @@ File                admin_static.py
 Description:
 """
 import sys
-from typing import Optional
+from typing import Optional, List
 from itertools import chain
 from redis import Redis
 from loguru import logger
@@ -183,7 +183,7 @@ def static_is_topic_exist(redis_client: Redis, topic_name: str,
 
 
 @logger.catch(reraise=True)
-def static_get_topic_list(redis_client: Redis, **kwargs) -> [str]:
+def static_get_topic_list(redis_client: Redis, **kwargs) -> List[TopicMeta]:
     """A static method to get topic list
 
     Args:
@@ -310,6 +310,8 @@ def static_del_consumer_group(redis_client: Redis,
             get_sub_list_key(consumer_group_id),
             sys.maxsize
         )
+        if streams is None:
+            streams = []
         pipeline = redis_client.pipeline()
         for stream in streams:
             # Unsubscribe from topics
@@ -371,7 +373,7 @@ def static_is_consumer_group_exist(redis_client: Redis,
 
 @logger.catch(reraise=True)
 def static_get_consumer_group_list(redis_client: Redis, **kwargs) \
-        -> [ConsumerGroupMeta]:
+        -> List[ConsumerGroupMeta]:
     """A static method to get consumer group list
 
     Args:
@@ -417,6 +419,22 @@ def static_get_consumer_group_list(redis_client: Redis, **kwargs) \
     LoggerHelper.get_lazy_logger().debug(
         f"get_consumer_group_list => {res}.")
     return group_metas
+
+
+def static_del_consumer(redis_client: Redis, topic: str, group: str,
+                        consumer: str):
+    """A static method to remove consumer from consumer group
+
+    Args:
+        redis_client(Redis):
+        topic(str):
+        group(str):
+        consumer(str):
+
+    Returns:
+
+    """
+    return redis_client.xgroup_delconsumer(topic, group, consumer) == 1
 
 
 def _lock_consumer_group(redis_client: Redis, consumer_group_id: str,
