@@ -1,6 +1,6 @@
 from django.db import models
 
-from lib import BaseModel
+from lib.base_model import BaseModel
 
 
 class JobModel(BaseModel):

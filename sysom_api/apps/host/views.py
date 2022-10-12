@@ -1,4 +1,3 @@
-import imp
 import re
 import logging
 import os
@@ -17,12 +16,11 @@ from apps.host import serializer
 from apps.common.common_model_viewset import CommonModelViewSet
 from apps.host.models import HostModel, Cluster
 from apps.accounts.authentication import Authentication
-from apps.task.views import script_task
-from lib import *
+from lib.response import *
+from lib.utils import human_datetime, datetime
 from lib.exception import APIException
 from lib.excel import Excel
 from lib.utils import HTTP
-from lib.validates import validate_ssh
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
 from apps.channel.channels.ssh import SSH

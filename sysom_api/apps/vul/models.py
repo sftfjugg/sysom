@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from lib import BaseModel, human_datetime
+from lib.base_model import BaseModel, human_datetime
 from apps.host.models import HostModel
 from apps.accounts.models import User
 

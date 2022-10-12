@@ -13,7 +13,7 @@ from apps.accounts.authentication import Authentication
 
 from . import models
 from . import serializer
-from lib import success, other_response
+from lib.response import success, other_response
 
 logger = logging.getLogger(__name__)
 

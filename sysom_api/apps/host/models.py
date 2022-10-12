@@ -1,5 +1,5 @@
 from django.db import models
-from lib import BaseModel
+from lib.base_model import BaseModel
 from apps.accounts.models import User
 
 from lib.ssh import SSH
