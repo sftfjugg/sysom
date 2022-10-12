@@ -37,9 +37,9 @@ def initialization_settings(sender, **kwargs):
 def init_model():
     try:
         from .models import SettingsModel
-        from lib.ssh import SSH
+        from lib.utils import generate_key
 
-        k, v = SSH.generate_key()
+        k, v = generate_key()
         ssh_key = json.dumps({"private_key": k, "public_key": v})
         SettingsModel.objects.create(key='ssh_key', value=ssh_key, description='系统自动生成公私匙')
     except Exception as e:
