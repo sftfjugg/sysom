@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework.views import APIView
 from apps.accounts.authentication import Authentication
-from lib import *
+from lib.response import success
 from lib.exception import FileNotFoundException
 
 logger = logging.getLogger(__name__)

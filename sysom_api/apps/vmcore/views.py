@@ -1,19 +1,15 @@
 import logging
 from typing import Dict
-from django.shortcuts import render
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.accounts.permissions import IsAdminPermission, IsOperationPermission
-from apps.accounts.serializer import UserAuthSerializer
+from apps.accounts.permissions import IsAdminPermission
 from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
-from lib import success, other_response
+from lib.response import success, other_response
 from sysom import settings
 import datetime
 import re

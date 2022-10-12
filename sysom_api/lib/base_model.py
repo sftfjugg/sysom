@@ -8,7 +8,7 @@
 """
 
 from django.db import models
-from lib import human_datetime
+from lib.utils import human_datetime
 
 
 class BaseModel(models.Model):

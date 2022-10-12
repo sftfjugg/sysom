@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
-from lib import BaseModel
+from lib.base_model import BaseModel
 
 
 class User(BaseModel):

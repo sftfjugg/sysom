@@ -18,7 +18,6 @@ from datetime import datetime, date as datetime_date
 from decimal import Decimal
 
 from django.conf import settings
-from rest_framework.exceptions import AuthenticationFailed
 from apscheduler.schedulers.background import BackgroundScheduler
 from paramiko import BadAuthenticationType, AuthenticationException
 from lib.ssh import SSH
