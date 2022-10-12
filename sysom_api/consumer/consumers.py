@@ -55,7 +55,6 @@ class SshConsumer(WebsocketConsumer):
         self.send(bytes_data=b'\r\n')
         self.send(bytes_data=b'Connecting ...\r\n')
         try:
-            # self.ssh = self.host.get_host_client().get_client()
             self.ssh = SSH(
                 hostname=instance.ip, username=instance.username, port=instance.port)._client
         except Exception as e:

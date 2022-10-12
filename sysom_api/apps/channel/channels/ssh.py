@@ -30,16 +30,6 @@ DEFAULT_CONNENT_TIMEOUT = 5    # 默认ssh链接超时时间 5s
 DEFAULT_NODE_USER = 'root'     # 默认节点用户名 root
 
 
-class ChannelError(paramiko.AuthenticationException):
-    def __init__(self, code=400, message='后端异常', args=('后端异常',)) -> None:
-        self.code = code
-        self.message = message
-        self.args = args
-
-    def __str__(self):
-        return self.message
-
-
 class SSH:
     """
     args: 
