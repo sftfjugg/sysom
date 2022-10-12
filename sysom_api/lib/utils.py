@@ -19,6 +19,8 @@ from decimal import Decimal
 
 from django.conf import settings
 from apscheduler.schedulers.background import BackgroundScheduler
+from paramiko.rsakey import RSAKey
+from io import StringIO
 
 
 logger = logging.getLogger(__name__)
@@ -133,6 +135,12 @@ def import_string(dotted_path: str):
         raise ImportError('Module "%s" does not define a "%s" attribute/class' % (
             module_path, class_name)
                           ) from err
+
+def generate_key():
+    key_obj = StringIO()
+    key = RSAKey.generate(2048)
+    key.write_private_key(key_obj)
+    return key_obj.getvalue(), 'ssh-rsa ' + key.get_base64()
 
 
 class HTTP:
