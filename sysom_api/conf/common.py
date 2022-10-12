@@ -52,31 +52,6 @@ DATABASES = {
     }
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION":'redis://127.0.0.1:6379/0',
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {
-                "encoding": 'utf-8',
-                "max_connections": 50
-            }
-        }
-    },
-    "noticelcon": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": 'redis://127.0.0.1:6379/1',
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {
-                "encoding": 'utf-8',
-                "max_connections": 50
-            }
-        }
-    }
-}
-
 ROOT_URLCONF = 'sysom.urls'
 
 AUTH_USER_MODEL = 'accounts.User'

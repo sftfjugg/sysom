@@ -4,7 +4,6 @@ from django.db.models import Q
 
 from apps.alarm import serializer
 from django_filters.rest_framework import DjangoFilterBackend
-from django_redis import get_redis_connection
 from rest_framework.filters import SearchFilter, OrderingFilter
 from apps.alarm.models import AlarmModel, SubscribeModel
 from lib import *
