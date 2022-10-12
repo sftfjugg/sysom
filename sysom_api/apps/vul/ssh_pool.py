@@ -12,6 +12,7 @@ import multiprocessing
 import time
 
 from lib.ssh import SSH
+from apps.channel.channels.ssh import SSH
 
 
 class SshProcessQueueManager:
@@ -26,15 +27,15 @@ class SshProcessQueueManager:
         self.forks = min(len(self.hosts), max(self.DEFAULT_FORKS, cpu_count))
 
     def ssh_command(self, que, host, cmd):
-        ssh_cli = SSH(host.ip, host.port, host.username, host.private_key)
+        ssh_cli = SSH(hostname=host.ip, port=host.port, username=host.username)
+        # ssh_cli = SSH(host.ip, host.port, host.username, host.private_key)
         try:
-            with ssh_cli as ssh:
-                status, result = ssh.exec_command(cmd)
-                que.put({'host': host.hostname,
-                         'ret': {
-                             "status": status,
-                             "result": result
-                         }})
+            status, result = ssh_cli.run_command(cmd)
+            que.put({'host': host.hostname,
+                        'ret': {
+                            "status": status,
+                            "result": result
+                        }})
         except Exception as e:
             logging.error(e)
             que.put({'host': host.hostname,
