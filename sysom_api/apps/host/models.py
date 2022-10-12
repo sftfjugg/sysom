@@ -2,8 +2,6 @@ from django.db import models
 from lib.base_model import BaseModel
 from apps.accounts.models import User
 
-from lib.ssh import SSH
-
 
 class HostModel(BaseModel):
     HOST_STATUS_CHOICES = (
@@ -29,11 +27,6 @@ class HostModel(BaseModel):
 
     def __str__(self):
         return f'主机：{self.hostname}'
-
-    def get_host_client(self, pkey=None):
-        pkey = pkey or self.private_key
-        return SSH(hostname=self.ip, port=self.port, username=self.username, pkey=pkey)
-
 
 class Cluster(BaseModel):
     cluster_name = models.CharField(max_length=128, unique=True)

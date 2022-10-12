@@ -19,8 +19,6 @@ from decimal import Decimal
 
 from django.conf import settings
 from apscheduler.schedulers.background import BackgroundScheduler
-from paramiko import BadAuthenticationType, AuthenticationException
-from lib.ssh import SSH
 
 
 logger = logging.getLogger(__name__)
@@ -113,27 +111,6 @@ def url_format_dict(url_params: str):
     except Exception as e:
         logger.error(str(e))
     return result
-
-
-def generate_private_key(hostname, port, username, password=None, pkey=None):
-    try:
-        if password:
-            private_key, public_key = SSH.generate_key()
-            with SSH(hostname, port, username, password=password) as ssh:
-                ssh.add_public_key(public_key)
-
-            with SSH(hostname, port, username, private_key) as ssh:
-                ssh.ping()
-            return True, private_key
-        if pkey:
-            SSH(hostname, port, username, pkey)
-            return True, pkey
-    except BadAuthenticationType:
-        return False, "认证类型暂不支持"
-    except AuthenticationException:
-        return False, "认证失败，请检查用户名密码或IP地址是否正确"
-    except Exception as e:
-        return False, e
 
 
 def import_string(dotted_path: str):
