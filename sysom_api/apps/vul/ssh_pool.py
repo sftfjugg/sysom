@@ -11,8 +11,7 @@ import logging
 import multiprocessing
 import time
 
-from lib.ssh import SSH
-from apps.channel.channels.ssh import SSH
+from lib.channels.ssh import SSH
 
 
 class SshProcessQueueManager:

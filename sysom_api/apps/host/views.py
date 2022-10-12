@@ -23,7 +23,7 @@ from lib.excel import Excel
 from lib.utils import HTTP
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
-from apps.channel.channels.ssh import SSH
+from lib.channels.ssh import SSH
 
 
 logger = logging.getLogger(__name__)

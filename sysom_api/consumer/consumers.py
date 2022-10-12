@@ -43,7 +43,7 @@ class SshConsumer(WebsocketConsumer):
     def _connect_host_init(self):
         """初始化host连接"""
         from apps.host.models import HostModel
-        from apps.channel.channels.ssh import SSH
+        from lib.channels.ssh import SSH
         instance = get_host_instance(
             model=HostModel, ip=self.host_ip, created_by=self.user.id)
         if not instance:

@@ -18,7 +18,7 @@ import paramiko
 from io import StringIO
 from paramiko.client import SSHClient, AutoAddPolicy
 from paramiko.rsakey import RSAKey
-from django.conf import settings
+from sysom.settings import *
 
 from .base import BaseChannel
 from lib.utils import uuid_8, HTTP
@@ -68,7 +68,7 @@ class SSH:
     @classmethod
     def get_ssh_key(cls) -> dict:
         try:
-            with open(settings.KEY_PATH, 'r') as f:
+            with open(KEY_PATH, 'r') as f:
                 return json.loads(f.read())
         except Exception as e:
             logger.error(e)
@@ -118,7 +118,7 @@ class Channel(BaseChannel):
         self.validate_kwargs()
 
     def check_host_is_exist(self, instance: str) -> bool:
-        status, _ = HTTP.request('get', f'{settings.HOST_LIST_API}ip/{instance}/', '', {})
+        status, _ = HTTP.request('get', f'{HOST_LIST_API}ip/{instance}/', '', {})
         return True if status == 200 else False
 
     def validate_kwargs(self):
