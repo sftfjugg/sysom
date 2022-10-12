@@ -6,7 +6,7 @@ from django.db import connection
 from rest_framework.viewsets import GenericViewSet
 from .models import ExecuteResult
 from lib.response import other_response
-from .channels.ssh import SSH
+from lib.channels.ssh import SSH
 from lib.exception import APIException
 from lib.utils import import_string
 
@@ -28,21 +28,21 @@ class ChannelAPIView(GenericViewSet):
     def valid_channel(self, request):
         data = getattr(request, 'data')
         channel_type = data.pop('channel', 'ssh')
-        package = import_string(f'apps.channel.channels.{channel_type}')
+        package = import_string(f'lib.channels.{channel_type}')
         try:
             package.Channel(**data)
-            return import_string(f'apps.channel.channels.{channel_type}')
+            return import_string(f'lib.channels.{channel_type}')
         except Exception as e:
             logger.error(e)
 
-        channels_path = os.path.join(settings.BASE_DIR, 'apps', 'channel', 'channels')
+        channels_path = os.path.join(settings.BASE_DIR, 'lib', 'channel', 'channels')
         packages = [dir.replace('.py', '') for dir in os.listdir(channels_path) if not dir.startswith('__')]
         packages.remove('base')
         packages.remove('ssh')
 
         for i, pkg in enumerate(packages):
             try:
-                package = import_string(f'apps.channel.channels.{pkg}')
+                package = import_string(f'lib.channels.{pkg}')
                 package.Channel(**request.data)
                 channel_type = pkg
                 break
@@ -51,7 +51,7 @@ class ChannelAPIView(GenericViewSet):
                 if i+1 == len(packages):
                     raise APIException(message='No channels available!')
                 continue
-        return import_string(f'apps.channel.channels.{channel_type}')
+        return import_string(f'lib.channels.{channel_type}')
 
     def channel_post(self, request, *args, **kwargs):
         channel_type = request.data.get('channel', 'ssh')

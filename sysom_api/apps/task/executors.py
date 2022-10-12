@@ -125,7 +125,7 @@ class SshJob:
         
     def _import_service(self):
         from apps.host.models import HostModel
-        from apps.channel.channels.ssh import SSH
+        from lib.channels.ssh import SSH
 
         try:
             self.update_job(status="Running")
