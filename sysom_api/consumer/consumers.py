@@ -5,7 +5,6 @@ from urllib import parse
 from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
 from channels.exceptions import StopConsumer
 from django.conf import settings
-from django_redis import get_redis_connection
 import os
 from django.conf import settings
 from sdk.cec_base.consumer import Consumer, dispatch_consumer
