@@ -5,6 +5,7 @@ systemctl start nfs && systemctl enable nfs
 
 VMCORE_HOME=${NODE_HOME}/vmcore
 VMCORE_NFS_HOME=${SERVER_HOME}/vmcore/vmcore-nfs
+NODE_CONF=${APP_HOME}/conf
 mkdir -p ${VMCORE_HOME}
 
 service="
@@ -15,7 +16,7 @@ DefaultDependencies=no
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/python3 ${VMCORE_HOME}/vmcore_collect.py ${SERVER_LOCAL_IP} ${VMCORE_NFS_HOME}
+ExecStart=/usr/bin/python3 ${VMCORE_HOME}/vmcore_collect.py ${SERVER_LOCAL_IP} ${VMCORE_NFS_HOME} ${NODE_CONF}
 StartLimitInterval=0
 StandardOutput=syslog
 StandardError=inherit
