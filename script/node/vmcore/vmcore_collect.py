@@ -8,9 +8,12 @@ import socket
 
 nfs_ip = '127.0.0.1'
 nfs_dir = '/usr/vmcore-nfs'
-if len(sys.argv) == 3 :
+node_conf = '/usr/local/sysom/conf'
+if len(sys.argv) >= 3 :
     nfs_ip = sys.argv[1]
     nfs_dir = sys.argv[2]
+    if len(sys.argv) == 4 and sys.argv[3] != "":
+        node_conf = sys.argv[3]
 
 def get_crash_path():
     try:
@@ -102,27 +105,32 @@ def upload_nfs(vmcore_dir):
         pass
 
 def nfs_config():
-    global nfs_ip, nfs_dir
+    global nfs_ip, nfs_dir,node_conf
     server_local_ip = ""
-    with open("/usr/local/sysom/sysom_node_init/conf",'r') as fin:
-        line = fin.readline()
-        while len(line):
-            if line.startswith("SERVER_LOCAL_IP"):
-                server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
-            line = fin.readline()
-    if server_local_ip != "":
-        cmd = f'wget -T 3 -t 1 http://{server_local_ip}/download/vmcore_nfs_config -O vmcore_nfs_config'
-        ret = os.system(cmd)
-        if ret:
-            return False
-        with open("vmcore_nfs_config",'r') as fin:
+    try:
+        with open(node_conf,'r') as fin:
             line = fin.readline()
             while len(line):
-                if line.startswith("server_host"):
-                    nfs_ip = line.split("server_host=")[1].strip()
-                if line.startswith("mount_point"):
-                    nfs_dir = line.split("mount_point=")[1].strip()
+                if line.startswith("SERVER_LOCAL_IP"):
+                    server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
                 line = fin.readline()
+        if server_local_ip != "":
+            cmd = f'wget -T 3 -t 1 http://{server_local_ip}/download/vmcore_nfs_config -O vmcore_nfs_config'
+            ret = os.system(cmd)
+            if ret:
+                return False
+            with open("vmcore_nfs_config",'r') as fin:
+                line = fin.readline()
+                while len(line):
+                    if line.startswith("server_host"):
+                        nfs_ip = line.split("server_host=")[1].strip()
+                    if line.startswith("mount_point"):
+                        nfs_dir = line.split("mount_point=")[1].strip()
+                    line = fin.readline()
+    except:
+        import traceback
+        traceback.print_exc()
+        return False
     return True
 
 def main():
