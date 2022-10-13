@@ -13,6 +13,7 @@ from sdk.cec_base.consumer import Consumer
 from sdk.cec_base.cec_client import CecClient
 from sdk.cec_base.log import LoggerHelper
 
+
 class TaskExecutor(CecClient):
     """ A cec-based task executor
 
@@ -32,10 +33,10 @@ class TaskExecutor(CecClient):
                  task_process_thread_num: int = 5) -> None:
         CecClient.__init__(self, url)
         self.append_group_consume_task(
-            task_delivery_topic, group_id, consumer_id, ensure_topic_exist = True
+            task_delivery_topic, group_id, consumer_id, ensure_topic_exist=True
         )
         self._target_topic = task_result_topic
-        
+
         # 执行任务的线程池数量
         self._task_process_thread_poll = ThreadPoolExecutor(
             max_workers=task_process_thread_num)
@@ -82,10 +83,10 @@ class TaskExecutor(CecClient):
                 channel_result = channel.run_command()
                 status = channel_result.get("state", 1)
                 res = channel_result.get("result", {}).get("result")
-                if not res:
-                    res = f"Sysak doesn't return any error msg, state = {status}"
                 # 如果本轮的命令执行出错，则直接停止执行任务，返回错误信息
                 if status != 0:
+                    if not res:
+                        res = f"Sysak doesn't return any error msg, state = {status}"
                     result["status"] = 1
                     result["errMsg"] = res
                     break
@@ -102,4 +103,5 @@ class TaskExecutor(CecClient):
         self.delivery(self._target_topic, result)
 
     def on_receive_event(self, consumer: Consumer, event: Event, task: dict):
-        self._task_process_thread_poll.submit(self._process_each_task, consumer, event)
+        self._task_process_thread_poll.submit(
+            self._process_each_task, consumer, event)
