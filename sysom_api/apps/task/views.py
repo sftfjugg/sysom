@@ -108,7 +108,7 @@ class TaskAPIView(CommonModelViewSet,
         try:
             # 检查参数是否缺失
             res = self.require_param_validate(
-                request, ['instance', 'service_name'])
+                request, ['service_name'])
             if not res['success']:
                 return other_response(message=res.get('message', 'Missing parameters'), code=400)
             data = request.data
