@@ -3,6 +3,7 @@ import socket
 import datetime
 from pathlib import Path
 
+
 def get_ip_address():
     """ip address"""
     hostname = socket.gethostname()
@@ -26,7 +27,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
-    'drf_yasg', # 在线API文档
+    'drf_yasg',  # 在线API文档
     'channels',
     'django_filters',
     'django_apscheduler',
@@ -113,7 +114,7 @@ SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
 
 SERVER_IP = get_ip_address()
 
-IS_MICRO_SERVICES = False # 是否微服务
+IS_MICRO_SERVICES = False  # 是否微服务
 
 # sysom node resource download dir
 WEB_DIR = os.path.join(BASE_DIR.parent, 'sysom_web')
@@ -125,13 +126,19 @@ TASK_SERVICE = 'http://127.0.0.1:7002'
 CHANNEL_SERVICE = 'http://127.0.0.1:7003'
 
 # key path
-KEY_PATH=os.path.join(BASE_DIR, 'conf', 'ssh-key')
+KEY_PATH = os.path.join(BASE_DIR, 'conf', 'ssh-key')
 
 ##################################################################
 # Cec settings
 ##################################################################
-SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000"
+SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000&cec_auto_mk_topic=true"
 SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
+# 任务模块用于下发任务的主题
+SYSOM_CEC_TASK_DELIVERY_TOPIC = "CEC-SYSOM-TASK-DELIVERY"
+SYSOM_CEC_TASK_DELIVERY_GROUP = "CEC-SYSOM-TASK-DELIVERY-GROUP"         # 读取任务的消费组
+# 任务模块用于下发任务处理结果的主题
+SYSOM_CEC_TASK_RESULT_PROCESS_TOPIC = "CEC-SYSOM-TASK-RESULT-PROCESS"
+SYSOM_CEC_TASK_RESULT_PROCESS_GROUP = "CEC-SYSOM-TASK-RESULT-PROCESS-GROUP"
 
 # API
 TASK_API = f'{TASK_SERVICE}/api/v1/tasks/'
@@ -154,9 +161,9 @@ if not os.path.exists(JWT_TOKEN_DECODE_DIR):
 # 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日志:
 # 格式:[日期][模块.函数名称():行号] [级别] 信息
 STANDARD_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
-                        '- <%(module)s:%(lineno)d>: %(message)s'
+    '- <%(module)s:%(lineno)d>: %(message)s'
 CONSOLE_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
-                        '- <%(module)s:%(lineno)d>: %(message)s'
+    '- <%(module)s:%(lineno)d>: %(message)s'
 
 LOGGING = {
     'version': 1,
