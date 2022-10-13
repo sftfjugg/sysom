@@ -126,10 +126,10 @@ class Channel(BaseChannel):
             lambda x: not x[1], [(field, self.kwargs.get(field, None))
                                  for field in self.FIELDS]
         ):
-            raise Exception(message=f'parameter: {item[0]} not found!')
+            raise Exception(f'parameter: {item[0]} not found!')
         
         if not self.check_host_is_exist(self.kwargs['instance']):
-            raise Exception(message=f'IP: {self.kwargs["instance"]} not exist')
+            raise Exception(f'IP: {self.kwargs["instance"]} not exist')
 
         if not self.ssh:
             self.ssh = SSH(hostname=self.kwargs['instance'])

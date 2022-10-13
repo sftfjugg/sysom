@@ -297,7 +297,7 @@ class TaskDispatcher(CecClient):
             try:
                 JobModel.objects.create(**task)
             except:
-                raise Exception(message='任务创建失败!')
+                raise Exception('任务创建失败!')
             # 将任务下发到事件中心，异步执行
             self.delivery(settings.SYSOM_CEC_TASK_DELIVERY_TOPIC, {
                 **task,
