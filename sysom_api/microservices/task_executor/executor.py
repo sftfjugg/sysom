@@ -50,7 +50,7 @@ class TaskExecutor(CecClient):
             package = import_module(f'lib.channels.{channel_type}')
             return package.Channel(**data, channel_name=channel_type)
         except Exception as e:
-            raise Exception(message='No channels available!')
+            raise Exception(f'No channels available => {str(e)}')
 
     def _process_each_task(self, consumer: Consumer, event: Event):
         """
@@ -94,8 +94,9 @@ class TaskExecutor(CecClient):
                 # 如果命令执行成功，则将执行的结果保存
                 result["results"].append(res)
         except Exception as e:
+            LoggerHelper.get_lazy_logger().error(e)
             LoggerHelper.get_lazy_logger().exception(e)
-            result["state"] = 1
+            result["status"] = 1
             result["errMsg"] = str(e)
         # 执行消息确认
         res = consumer.ack(event)
