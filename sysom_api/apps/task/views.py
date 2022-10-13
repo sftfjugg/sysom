@@ -15,16 +15,18 @@ from django.conf import settings
 from apps.task import seriaizer
 from apps.task.models import JobModel
 from apps.task.filter import TaskFilter
+from apps.common.common_model_viewset import CommonModelViewSet
 from lib.response import success, other_response, not_found
 from lib.utils import uuid_8, scheduler
 from lib.exception import APIException
 from lib.authentications import TaskAuthentication
+from .executors import TaskDispatcher
 
 logger = logging.getLogger(__name__)
 IS_MICRO_SERVICES = settings.IS_MICRO_SERVICES
 
 
-class TaskAPIView(GenericViewSet,
+class TaskAPIView(CommonModelViewSet,
                   mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.DestroyModelMixin,
@@ -38,6 +40,12 @@ class TaskAPIView(GenericViewSet,
     filterset_class = TaskFilter  # 精确查询
     authentication_classes = [TaskAuthentication]
     create_requird_fields = ['service_name']
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        # 构造任务执行器，并使用它来进行任务下发和结果处理（结果处理在 apps.py）
+        # 【v2 基于事件中心接口相关功能】
+        self._task_executor: TaskDispatcher = TaskDispatcher(settings.SYSOM_CEC_URL)
 
     def get_authenticators(self):
         if self.request.path.endswith("svg/"):
@@ -95,6 +103,29 @@ class TaskAPIView(GenericViewSet,
             return FileResponse(svg_context)
         else:
             return success(result={}, message=f"任务：{instance.status}", success=False)
+
+    def create_task_v2(self, request, *args, **kwargs):
+        try:
+            # 检查参数是否缺失
+            res = self.require_param_validate(
+                request, ['instance', 'service_name'])
+            if not res['success']:
+                return other_response(message=res.get('message', 'Missing parameters'), code=400)
+            data = request.data
+            data['user'] = getattr(request, 'user')
+            return self._delivery_task(data)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return other_response(message=str(e), code=400, success=False)
+
+    def _delivery_task(self, data: dict):
+        """
+        将任务发布到事件中心
+        【v2 基于事件中心接口相关功能】
+        """
+        res = self._task_executor.delivery_task(data)
+        if res['success']:
+            return success(result=res["result"])
 
 
 def script_task(data):
