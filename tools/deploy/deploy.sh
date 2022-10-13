@@ -84,11 +84,13 @@ init_conf() {
     cp tools/deploy/sysom.ini /etc/supervisord.d/
     cp tools/deploy/task-service.ini /etc/supervisord.d/
     cp tools/deploy/channel-service.ini /etc/supervisord.d/
+    cp tools/deploy/task-executor-service.ini /etc/supervisord.d/
     ###change the install dir base on param $1###
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/sysom.ini
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/task-service.ini
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/channel-service.ini
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/task-executor-service.ini
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
     cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
     sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${API_DIR}/conf/task_gunicorn.py
