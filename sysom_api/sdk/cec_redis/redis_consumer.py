@@ -268,7 +268,7 @@ class RedisConsumer(Consumer, ClientBase):
                 return self._redis_client.xread({
                     self.inner_topic_name: '$'
                     if self.consume_mode ==
-                       ConsumeMode.CONSUME_FROM_NOW else '0-0'
+                    ConsumeMode.CONSUME_FROM_NOW else '0-0'
                 }, count=batch_consume_limit, block=timeout)
             # Take out the messages in sequential order
             return self._redis_client.xread({
@@ -366,7 +366,7 @@ class RedisConsumer(Consumer, ClientBase):
         return rets[1]
 
     @logger.catch(reraise=True)
-    def __getitem__(self, item):
+    def __next__(self):
         msg = None
         try:
             if not self._event_cache_queue.empty():

@@ -130,6 +130,7 @@ class Consumer(Connectable, metaclass=ABCMeta):
             ... , start_from_now=False)
             >>> consumer.consume(200, auto_ack=False, batch_consume_limit=20)
         """
+        raise NotImplemented
 
     @abstractmethod
     def ack(self, event: Event, **kwargs) -> int:
@@ -159,10 +160,14 @@ class Consumer(Connectable, metaclass=ABCMeta):
             >>> msg = msgs[0]
             >>> consumer.ack(msg)
         """
+        raise NotImplemented
+
+    def __iter__(self):
+        return self
 
     @abstractmethod
-    def __getitem__(self, item):
-        """Require subclass to implement __getitem__ to support for-each
+    def __next__(self):
+        """Require subclass to implement __next__ to support for-each
 
         Args:
             item:
@@ -170,6 +175,7 @@ class Consumer(Connectable, metaclass=ABCMeta):
         Returns:
 
         """
+        raise NotImplemented
 
     @staticmethod
     def generate_consumer_id() -> str:

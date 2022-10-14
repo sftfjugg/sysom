@@ -6,7 +6,7 @@ Email               mfeng@linux.alibaba.com
 File                apps.py
 Description:
 """
-
+import signal
 from sdk.cec_base.consumer import Consumer
 from sdk.cec_base.log import LoggerHelper, LoggerLevel
 from .executor import TaskExecutor
@@ -21,5 +21,7 @@ if __name__ == '__main__':
         SYSOM_CEC_TASK_DELIVERY_GROUP,
         SYSOM_CEC_TASK_RESULT_PROCESS_TOPIC
     )
+    signal.signal(signal.SIGINT, task_executor.stop)
+    signal.signal(signal.SIGTERM, task_executor.stop)
     task_executor.start()
     task_executor.join()
