@@ -16,7 +16,7 @@ from sdk.cec_base.producer import Producer, dispatch_producer
 
 class CecClient:
     """ A client implementation for communicating with the CEC
-    
+
     Args:
         url(str): CEC url
     """
@@ -31,9 +31,9 @@ class CecClient:
 
     def _ensure_topic_exists(self, topic: str):
         """A func used to ensure a specific topic exist
-        
+
         Determine whether the topic exists and create it if it does not
-        
+
         Args:
             topic(str): Topic Name
         """
@@ -42,13 +42,13 @@ class CecClient:
 
     def _do_group_consume_task(self, consumer: Consumer, task: dict):
         """A runable func to do group consume task
-        
+
         Args:
             consumer(Consumer): CEC Consumer instance
             topic(str): Topic name
             group_id(str): Group ID
             consumer_id(str): Consumer ID
-            
+
         """
         for event in consumer:
             self.on_receive_event(consumer, event, task)
@@ -111,10 +111,11 @@ class CecClient:
             # Perform consume tasks inside a separate thread
             task_thread = Thread(target=self._do_group_consume_task, args=(
                 consumer, task))
+            task_thread.setDaemon(True)
             task_thread.start()
             self._inner_threads.append(task_thread)
 
-    def stop(self):
+    def stop(self, *args, **kwargs):
         for consumer in self._consumers:
             consumer.disconnect()
         self.join()

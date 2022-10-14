@@ -241,6 +241,7 @@ class Heartbeat:
             target=self.run,
             name=f"CEC-{self._consumer_group}:{self._consumer_id}-HEARTBEAT"
         )
+        self._heartbeat_listen_thread.setDaemon(True)
         self._heartbeat_listen_thread.start()
         return True
 
