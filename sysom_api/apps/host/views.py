@@ -138,12 +138,12 @@ class HostModelViewSet(CommonModelViewSet,
         return ser
 
     def _destroy_host_tasks(self, instance):
+        ser = serializer.HostSerializer(instance=instance)
+        self.perform_destroy(instance)
         status, content = self.client_deploy_cmd_delete(instance)
         if status != 200:
             raise APIException(
-                message=f'删除失败，清除脚本执行失败，错误如下：{content["message"]}')
-        self.perform_destroy(instance)
-        ser = serializer.HostSerializer(instance=instance)
+                message=f'主机已删除，清除脚本执行失败，错误如下：{content["message"]}')
         return ser
 
     def check_instance_exist(self, request, *args, **kwargs):

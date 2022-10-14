@@ -78,9 +78,9 @@ class SshJob:
                 patch_host_url = f'{settings.HOST_LIST_API}update/{ip}/'
                 HTTP.request('patch', url=patch_host_url, data={'status': resp_status}, token=self.user['token'])
                 
-            if self.kwargs.get('service_name', None) == "node_delete":
-                del_host_url = f'{settings.HOST_LIST_API}del/{ip}/'
-                HTTP.request('delete', url=del_host_url, token=self.user['token'], data={})
+            # if self.kwargs.get('service_name', None) == "node_delete":
+            #     del_host_url = f'{settings.HOST_LIST_API}del/{ip}/'
+            #     HTTP.request('delete', url=del_host_url, token=self.user['token'], data={})
 
             if resp_status != 0:
                 self.update_job(status="Fail", result=execute_result, host_by=host_ips)
