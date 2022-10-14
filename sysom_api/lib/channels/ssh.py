@@ -117,9 +117,9 @@ class Channel(BaseChannel):
 
         self.validate_kwargs()
 
-    def check_host_is_exist(self, instance: str) -> bool:
-        status, _ = HTTP.request('get', f'{HOST_LIST_API}ip/{instance}/', '', {})
-        return True if status == 200 else False
+    # def check_host_is_exist(self, instance: str) -> bool:
+    #     status, _ = HTTP.request('get', f'{HOST_LIST_API}ip/{instance}/', '', {})
+    #     return True if status == 200 else False
 
     def validate_kwargs(self):
         for item in filter(
@@ -128,8 +128,8 @@ class Channel(BaseChannel):
         ):
             raise Exception(f'parameter: {item[0]} not found!')
         
-        if not self.check_host_is_exist(self.kwargs['instance']):
-            raise Exception(f'IP: {self.kwargs["instance"]} not exist')
+        # if not self.check_host_is_exist(self.kwargs['instance']):
+        #     raise Exception(f'IP: {self.kwargs["instance"]} not exist')
 
         if not self.ssh:
             self.ssh = SSH(hostname=self.kwargs['instance'])
