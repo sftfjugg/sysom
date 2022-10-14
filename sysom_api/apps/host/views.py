@@ -107,11 +107,6 @@ class HostModelViewSet(CommonModelViewSet,
         else:
             return ErrorResponse(msg=res["message"])
 
-    def perform_destroy(self, instance: HostModel):
-        instance.deleted_at = human_datetime()
-        instance.deleted_by = self.request.user
-        instance.save()
-
     def _validate_and_initialize_host(self, context):
         s, e = SSH.validate_ssh_host(
             ip=context['ip'],
