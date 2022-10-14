@@ -32,7 +32,7 @@ const PacketLoss = (props) => {
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="回包数量" value={props.data.result.stat.packet_num.[1].num} suffix="个" valueStyle={{ color: "red" }} />
+          <Statistic title="回包数量" value={props.data.result.stat.packet_num[1].num} suffix="个" valueStyle={{ color: "red" }} />
         </ProCard>
       </ProCard.Group>
     </RcResizeObserver>
