@@ -133,19 +133,19 @@ KEY_PATH = os.path.join(BASE_DIR, 'conf', 'ssh-key')
 ##################################################################
 SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000&cec_auto_mk_topic=true"
 SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
-# 任务模块用于下发任务的主题
+# 任务模块用于生成诊断任务的主题（可以通过将诊断参数发送到这个主题来触发诊断任务的执行）
+SYSOM_CEC_TASK_GENERATE_TOPIC = "CEC-SYSOM-TASK-GENERATE-TOPCI"
+SYSOM_CEC_TASK_GENERATE_TASK_LISTENER = "CEC-SYSOM-TASK-GENERATE-TASK-LISTENER"
+# 任务模块用于下发任务的主题 => 执行完预处理脚本，待下发到node执行
 SYSOM_CEC_TASK_DELIVERY_TOPIC = "CEC-SYSOM-TASK-DELIVERY"
 SYSOM_CEC_TASK_DELIVERY_GROUP = "CEC-SYSOM-TASK-DELIVERY-GROUP"         # 读取任务的消费组
-# 任务模块用于下发任务处理结果的主题
+# 任务模块用于下发任务处理结果的主题 => node执行结束，待后处理脚本执行
 SYSOM_CEC_TASK_RESULT_PROCESS_TOPIC = "CEC-SYSOM-TASK-RESULT-PROCESS"
 SYSOM_CEC_TASK_RESULT_PROCESS_GROUP = "CEC-SYSOM-TASK-RESULT-PROCESS-GROUP"
-
-# API
-TASK_API = f'{TASK_SERVICE}/api/v1/tasks/'
-HOST_LIST_API = f'{SYSOM_SERVICE}/api/v1/host/'
-CHANNEL_VALIDATE_API = f'{CHANNEL_SERVICE}/api/v1/channel/validate/'
-CHANNEL_COMMAND_API = f'{CHANNEL_SERVICE}/api/v1/channel/'
-CHANNEL_RESULT_API = f'{CHANNEL_SERVICE}/api/v1/channel/exec_result/'
+# 诊断任务最终执行结果报告 => 后处理脚本执行结束，报告最终任务的执行结果
+SYSOM_CEC_TASK_EXECUTE_RESULT_TOPIC = "CEC-SYSOM-TASK-EXECUTE-RESULT"
+# 主机模块监听诊断任务执行结果消费组
+SYSOM_CEC_TASK_RESULT_LISTENER_HOST_GROUP = "CEC-SYSOM-TASK-RESULT-LISTENER-HOST-GROUP"
 
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')

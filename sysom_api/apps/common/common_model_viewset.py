@@ -1,12 +1,24 @@
 from typing import Any
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.exceptions import ValidationError
+from sdk.cec_base.cec_client import CecClient
+from django.conf import settings
 
 
 class CommonModelViewSet(GenericViewSet):
     """
     通用 ModelViewSet 实现，提供一些通用工具方法
     """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._inner_cec_client: CecClient = None
+
+    def produce_event_to_cec(self, topic: str, value: dict):
+        """Produce one event to specific topic"""
+        if self._inner_cec_client is None:
+            self._inner_cec_client = CecClient(settings.SYSOM_CEC_URL)
+        self._inner_cec_client.delivery(topic, value)
 
     def require_param_validate(self, request, require_params):
         """
@@ -49,7 +61,7 @@ class CommonModelViewSet(GenericViewSet):
                     not_allow_params.append(key)
             for param_name in not_allow_params:
                 context.pop(param_name)
-                
+
         return {
             "success": True,
             "message": "",
