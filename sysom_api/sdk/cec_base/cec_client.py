@@ -7,7 +7,8 @@ File                cec_client.py
 Description:
 """
 from threading import Thread
-from typing import List
+from typing import Any, List
+from queue import Queue
 from sdk.cec_base.consumer import Consumer, dispatch_consumer
 from sdk.cec_base.admin import Admin, dispatch_admin
 from sdk.cec_base.event import Event
@@ -19,13 +20,27 @@ class CecClient:
 
     Args:
         url(str): CEC url
+        sync_mode(bool): This parameter specifies whether CecClient uses
+                         synchronous mode
+            1. sync mode: In synchronous mode, all received events will
+               be placed inside a FIFO queue, which is fetched via the
+               get_next_event interface;
+            2. callback mode: In callback mode, CecClient will call the
+               on_receive_event callback every time it receives an event.
+
     """
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, sync_mode: bool = False,
+                 custom_callback: Any = None) -> None:
         self._url = url
         self._tasks: List[dict] = []
         self._consumers: List[Consumer] = []
         self._inner_threads: List[Thread]
+        self._sync_mode = sync_mode
+        self._inner_queue = None
+        self._custom_callback = custom_callback
+        if self._sync_mode:
+            self._inner_queue = Queue(maxsize=10)
         self.admin: Admin = dispatch_admin(url)
         self.producer: Producer = dispatch_producer(url)
 
@@ -45,18 +60,31 @@ class CecClient:
 
         Args:
             consumer(Consumer): CEC Consumer instance
-            topic(str): Topic name
-            group_id(str): Group ID
-            consumer_id(str): Consumer ID
-
+            task: Consume task
         """
         for event in consumer:
-            self.on_receive_event(consumer, event, task)
+            if self._sync_mode:
+                self._inner_queue.put({
+                    "event": event,
+                    "task": task,
+                    "consumer": consumer
+                })
+            elif self._custom_callback is not None:
+                self._custom_callback(consumer, event, task)
+            else:
+                self.on_receive_event(consumer, event, task)
+
+    def get_next_event(self) -> dict:
+        """Get next event"""
+        if not self._sync_mode:
+            raise Exception("Not in sync mode")
+        return self._inner_queue.get()
 
     def on_receive_event(self, consumer: Consumer, event: Event, task: dict):
         """Invoke while receive event from CEC
 
         Args:
+            consumer(Consumer): Cec Consumer instance
             event(Event): CEC Event
             task: Consume task
             {
