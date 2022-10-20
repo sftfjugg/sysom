@@ -2,6 +2,7 @@ import re
 import logging
 import os
 import threading
+from typing import Any
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
@@ -42,6 +43,9 @@ class HostModelViewSet(CommonModelViewSet,
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['ip', 'hostname', 'cluster', 'status']
     http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
 
     def get_authenticators(self):
         if self.request.method == "GET":
@@ -135,10 +139,7 @@ class HostModelViewSet(CommonModelViewSet,
     def _destroy_host_tasks(self, instance):
         ser = serializer.HostSerializer(instance=instance)
         self.perform_destroy(instance)
-        status, content = self.client_deploy_cmd_delete(instance)
-        if status != 200:
-            raise APIException(
-                message=f'主机已删除，清除脚本执行失败，错误如下：{content["message"]}')
+        self.client_deploy_cmd_delete(instance)
         return ser
 
     def check_instance_exist(self, request, *args, **kwargs):
@@ -154,28 +155,23 @@ class HostModelViewSet(CommonModelViewSet,
 
         kwargs = {}
         kwargs['data'] = data
-        kwargs['url'] = settings.TASK_API
         kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
-        status, res = HTTP.request('post', **kwargs)
-        logger.info(f'node init task create success, res {res}')
+        self.produce_event_to_cec(
+            settings.SYSOM_CEC_TASK_GENERATE_TOPIC, kwargs)
+        logger.info(f'node init task create success')
 
     def client_deploy_cmd_delete(self, instance):
         request: Request = getattr(self, 'request')
-        try:
-            data = {}
-            data['service_name'] = "node_delete"
-            data['instance'] = instance.ip
+        data = {}
+        data['service_name'] = "node_delete"
+        data['instance'] = instance.ip
 
-            kwargs = {}
-            kwargs['data'] = data
-            kwargs['url'] = settings.TASK_API
-            kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
-
-            status, res = HTTP.request('post', **kwargs)
-            logger.info(f'node delete task create success, res {res}')
-            return status, res
-        except Exception as e:
-            return False, str(e)
+        kwargs = {}
+        kwargs['data'] = data
+        kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
+        self.produce_event_to_cec(
+            settings.SYSOM_CEC_TASK_GENERATE_TOPIC, kwargs)
+        logger.info(f'node delete task create success')
 
     def _get_cluster_instance(self, cluster_name):
         try:
@@ -324,7 +320,7 @@ class HostModelViewSet(CommonModelViewSet,
             HostModel.objects.get(ip=host_ip)
             return success(result={})
         except HostModel.DoesNotExist:
-            raise APIException(message=f'Error: ip {host_ip} not exist!') 
+            raise APIException(message=f'Error: ip {host_ip} not exist!')
 
     def _validate_ip_format(self, ip) -> bool:
         p = '((\d{1,2})|([01]\d{2})|(2[0-4]\d)|(25[0-5]))'
@@ -447,7 +443,7 @@ class ClusterViewSet(CommonModelViewSet,
             else:
                 # 包含主机不允许删除
                 kwargs.update(
-                {'message': f"Cluster（{instance.cluster_name}） contains hosts, delete failed!"})
+                    {'message': f"Cluster（{instance.cluster_name}） contains hosts, delete failed!"})
                 kwargs.update({'collected_time': human_datetime()})
                 _create_alarm_message(kwargs)
                 fail_list.append(instance.cluster_name)
