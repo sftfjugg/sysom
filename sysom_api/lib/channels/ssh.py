@@ -117,10 +117,6 @@ class Channel(BaseChannel):
 
         self.validate_kwargs()
 
-    # def check_host_is_exist(self, instance: str) -> bool:
-    #     status, _ = HTTP.request('get', f'{HOST_LIST_API}ip/{instance}/', '', {})
-    #     return True if status == 200 else False
-
     def validate_kwargs(self):
         for item in filter(
             lambda x: not x[1], [(field, self.kwargs.get(field, None))
