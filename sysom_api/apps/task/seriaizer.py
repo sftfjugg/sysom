@@ -10,15 +10,18 @@ from apps.task.models import JobModel
 
 
 class JobListSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = JobModel
         exclude = ('deleted_at', 'host_by', 'command', 'result')
 
 
-
 class JobRetrieveSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = JobModel
         exclude = ('deleted_at', 'host_by', 'command')
+
+
+class JobDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobModel
+        exclude = ['deleted_at']

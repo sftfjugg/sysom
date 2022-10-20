@@ -11,18 +11,17 @@ class JobConfig(AppConfig):
     name = 'apps.task'
 
     def ready(self):
-        if 'runserver' in sys.argv or 'manage.py' not in sys.argv:
-            from django.conf import settings
-            from sdk.cec_base.consumer import Consumer
+        from django.conf import settings
+        if ('runserver' in sys.argv or 'manage.py' not in sys.argv) and settings.IS_MICRO_SERVICES:
+            from sdk.cec_base.log import LoggerHelper, LoggerLevel
             from apps.task.executors import TaskDispatcher
+            LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
             # 这边微服务正式启动的时候执行一些处理代码
             # 启动任务结果处理线程
             try:
                 TaskDispatcher(
                     settings.SYSOM_CEC_URL,
-                ).start_dispatcher(settings.SYSOM_CEC_TASK_RESULT_PROCESS_TOPIC,
-                                   Consumer.generate_consumer_id(),
-                                   settings.SYSOM_CEC_TASK_RESULT_PROCESS_GROUP)
+                ).start_dispatcher()
             except Exception as e:
                 logger.exception(e)
         else:
