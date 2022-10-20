@@ -6,12 +6,17 @@ Email               mfeng@linux.alibaba.com
 File                executor.py
 Description:
 """
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from importlib import import_module
+import os
 from sdk.cec_base.event import Event
 from sdk.cec_base.consumer import Consumer
 from sdk.cec_base.cec_client import CecClient
 from sdk.cec_base.log import LoggerHelper
+from .conf import *
+
+logger = logging.getLogger(__name__)
 
 
 class TaskExecutor(CecClient):
@@ -52,6 +57,34 @@ class TaskExecutor(CecClient):
         except Exception as e:
             raise Exception(f'No channels available => {str(e)}')
 
+    def _do_run_command(self, data: dict):
+        # 1. 首先在指定的channel尝试执行
+        result, err = {}, None
+        try:
+            result = self._get_channel(data).run_command()
+        except Exception as exc:
+            logger.error(exc)
+            err = exc
+            # 2. 默认通道执行失败，在此处遍历尝试其它可能可用的channel
+            channels_path = os.path.join(BASE_DIR, 'lib', 'channels')
+            packages = [dir.replace('.py', '') for dir in os.listdir(
+                channels_path) if not dir.startswith('__')]
+            packages.remove('base')
+            packages.remove('ssh')
+
+            for _, pkg in enumerate(packages):
+                try:
+                    result = self._get_channel(
+                        {**data, "channel": pkg}).run_command()
+                    err = None
+                    break
+                except Exception as exc:
+                    logger.error(exc)
+                    err = exc
+        if err is not None:
+            raise err
+        return result
+
     def _process_each_task(self, consumer: Consumer, event: Event):
         """
         处理每个单独的任务
@@ -75,12 +108,12 @@ class TaskExecutor(CecClient):
                     result["errMsg"] = "script result find not instance or cmd"
                     break
 
-                # 根据参数动态引入 Channel 包，构造一个 Channel 实例用于执行命令
-                channel = self._get_channel(script)
+                # # 根据参数动态引入 Channel 包，构造一个 Channel 实例用于执行命令
+                # channel = self._get_channel(script)
 
                 # 使用对应的 Channel 执行命令，并得到结果
                 # 取出任务执行的结果：{'state': 0, 'result': 'xxxxxxxx'} 0为执行成功, 1位=为执行失败
-                channel_result = channel.run_command()
+                channel_result = self._do_run_command(script)
                 status = channel_result.get("state", 1)
                 res = channel_result.get("result", {}).get("result")
                 # 如果本轮的命令执行出错，则直接停止执行任务，返回错误信息
