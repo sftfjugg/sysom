@@ -23,11 +23,8 @@ const TablePannel = (props) => {
     }
   }
 
-  let empty = false;
   let columns = [];
-  if (!data || data.length <= 0) {
-    empty = true;
-  } else {
+  if (!!data && data.length > 0) {
     columns = data && Object.keys(data[0]).map((key) => ({
       title: key,
       dataIndex: key,
@@ -40,33 +37,30 @@ const TablePannel = (props) => {
   columns = columns?.filter((col) => !keyword.includes(col.title))
 
   return (
-    empty ?
-      <></>
-      :
-      <ProCard
-        title={configs.title}
-        style={{ marginTop: 16, }} bordered collapsible
-        bodyStyle={{ padding: 0 }}
-      >
-        {
-          data ?
-            <ProTable
-              options={false}
-              dataSource={data}
-              columns={columns}
-              search={false}
-              style={{ marginTop: 16 }}
-              bordered
-              col
-              clapsible
-            />
-            : <Empty style={{ marginBottom: 20 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={
-                <div>Datasource  <Text type="danger"> {configs?.datasource} </Text> no data</div>
-              } />
+    <ProCard
+      title={configs.title}
+      style={{ marginTop: 16, }} bordered collapsible
+      bodyStyle={{ padding: 0 }}
+    >
+      {
+        data ?
+          <ProTable
+            options={false}
+            dataSource={data}
+            columns={columns}
+            search={false}
+            style={{ marginTop: 16 }}
+            bordered
+            col
+            clapsible
+          />
+          : <Empty style={{ marginBottom: 20 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <div>Datasource  <Text type="danger"> {configs?.datasource} </Text> no data</div>
+            } />
 
-        }
-      </ProCard>
+      }
+    </ProCard>
   )
 }
 
