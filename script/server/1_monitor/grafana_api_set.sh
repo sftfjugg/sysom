@@ -1,6 +1,6 @@
 #!/bin/bash -x
 GRAFANA_CONFIG=/etc/grafana/grafana.ini
-SYSOM_CONF=${SERVER_HOME}/target/sysom_api/conf/common.py
+SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
 
 ###grafana configure mysql###
 SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
