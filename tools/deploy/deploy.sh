@@ -9,7 +9,11 @@
 
 ALIYUN_MIRROR="https://mirrors.aliyun.com/pypi/simple/"
 APP_NAME="sysom"
-API_DIR="sysom_api"
+SERVER_DIR="sysom_server"
+API_DIR=$SERVER_DIR/sysom_api
+DIAGNOSIS_DIR=$SERVER_DIR/sysom_diagnosis
+CHANNEL_DIR=$SERVER_DIR/sysom_channel
+SDK_DIR=$SERVER_DIR/sdk
 WEB_DIR="sysom_web"
 SCRIPT_DIR="script"
 APP_HOME=/usr/local/sysom
@@ -72,7 +76,7 @@ update_target() {
     fi
     mkdir -p ${TARGET_PATH}
     echo "INFO: copy project file..."
-    cp -r ${API_DIR} ${WEB_DIR} ${TARGET_PATH}
+    cp -r ${SERVER_DIR} ${WEB_DIR} ${TARGET_PATH}
     cp -r ${SCRIPT_DIR} ${APP_HOME}/init_scripts
 }
 
@@ -82,19 +86,17 @@ init_conf() {
     cp tools/deploy/nginx.conf /etc/nginx/
     cp tools/deploy/sysom.conf /etc/nginx/conf.d/
     cp tools/deploy/sysom.ini /etc/supervisord.d/
-    cp tools/deploy/task-service.ini /etc/supervisord.d/
+    cp tools/deploy/diagnosis-service.ini /etc/supervisord.d/
     cp tools/deploy/channel-service.ini /etc/supervisord.d/
-    cp tools/deploy/task-executor-service.ini /etc/supervisord.d/
     ###change the install dir base on param $1###
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/sysom.ini
-    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/task-service.ini
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/diagnosis-service.ini
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/channel-service.ini
-    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/task-executor-service.ini
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
     cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
-    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${API_DIR}/conf/task_gunicorn.py
-    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${API_DIR}/conf/channel_gunicorn.py
+    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${DIAGNOSIS_DIR}/conf/diagnosis_gunicorn.py
+    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${CHANNEL_DIR}/conf/channel_gunicorn.py
 }
 
 start_script_server() {
