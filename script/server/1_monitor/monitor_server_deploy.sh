@@ -52,15 +52,15 @@ install_grafana()
 {
     echo "install grafana......"
 
-    pushd $RESOURCE_DIR
-    ls | grep $GRAFANA_PKG 1>/dev/null 2>/dev/null
+    pushd ${RESOURCE_DIR}
+    ls | grep ${GRAFANA_PKG} 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
-        wget $OSS_URL/$GRAFANA_PKG || wget $GRAFANA_DL_URL/$GRAFANA_PKG
+        wget ${OSS_URL}/${GRAFANA_PKG} || wget ${GRAFANA_DL_URL}/${GRAFANA_PKG}
         ls
     fi
 
-    yum install -y $GRAFANA_PKG
+    yum install -y ./${GRAFANA_PKG}
     popd
 }
 
@@ -111,20 +111,20 @@ EOF
 install_prometheus()
 {
     echo "install prometheus......"
-    pushd $RESOURCE_DIR
+    pushd ${RESOURCE_DIR}
 
     rm -rf prometheus
 
-    ls | grep $PROMETHEUS_TAR 1>/dev/null 2>/dev/null
+    ls | grep ${PROMETHEUS_TAR} 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
-        wget $OSS_URL/$PROMETHEUS_TAR || wget $PROMETHEUS_DL_URL/$PROMETHEUS_TAR
+        wget ${OSS_URL}/${PROMETHEUS_TAR} || wget ${PROMETHEUS_DL_URL}/${PROMETHEUS_TAR}
         ls
     fi
-    tar -zxvf $PROMETHEUS_TAR
+    tar -zxvf ${PROMETHEUS_TAR}
 
     ##rename the prometheus directory
-    mv $PROMETHEUS_PKG prometheus
+    mv ${PROMETHEUS_PKG} prometheus
     popd
 }
 
@@ -132,14 +132,14 @@ install_prometheus()
 download_node_exporter()
 {
     echo "install node_exporter......"
-    pushd $RESOURCE_DIR
+    pushd ${RESOURCE_DIR}
     rm -rf node_exporter
 
-    ls | grep $NODE_EXPORTER_TAR 1>/dev/null 2>/dev/null
+    ls | grep ${NODE_EXPORTER_TAR} 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
         echo "wget node_exporter"
-        wget $OSS_URL/$NODE_EXPORTER_TAR || wget $NODE_DL_URL/$NODE_EXPORTER_TAR
+        wget ${$OSS_URL}/${NODE_EXPORTER_TAR} || wget ${NODE_DL_URL}/${NODE_EXPORTER_TAR}
     fi
     popd
 
@@ -172,14 +172,14 @@ configure_grafana()
 
 configure_cron()
 {
-    echo "* * * * * python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 30;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
+    echo "* * * * * python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
+    echo "* * * * * sleep 30;python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
 }
 
 main()
 {
     echo "perpare download resource packages: grafana, prometheus, node_exporter"
-    mkdir -p $RESOURCE_DIR
+    mkdir -p ${RESOURCE_DIR}
     install_grafana
     install_prometheus
     download_node_exporter
