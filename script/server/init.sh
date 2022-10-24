@@ -19,6 +19,11 @@ then
 	export SERVER_PUBLIC_IP=$SERVER_LOCAL_IP
 fi
 
+if [ "$SERVER_PORT" == "" ]
+then
+       export SERVER_PORT=80
+fi
+
 basedir=`dirname $0`
 
 cd $basedir
