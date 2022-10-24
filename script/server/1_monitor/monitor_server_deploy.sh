@@ -139,7 +139,7 @@ download_node_exporter()
     if [ $? -ne 0 ]
     then
         echo "wget node_exporter"
-        wget ${$OSS_URL}/${NODE_EXPORTER_TAR} || wget ${NODE_DL_URL}/${NODE_EXPORTER_TAR}
+        wget ${OSS_URL}/${NODE_EXPORTER_TAR} || wget ${NODE_DL_URL}/${NODE_EXPORTER_TAR}
     fi
     popd
 
