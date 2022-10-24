@@ -20,16 +20,21 @@ APP_HOME=/usr/local/sysom
 SERVER_LOCAL_IP=""
 SERVER_PUBLIC_IP=""
 SERVER_PORT=""
+SERVER_PORT=80
 
-if [ $# != 4 ] ; then
+if [ $# -lt 3 ] ; then
     echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP WEB_PORT"
     echo "Or we use default install dir: /usr/local/sysom/"
+    echo "If WEB_PORT not set, use port 80 default"
     echo "E.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx 80"
     exit 1
 else
     APP_HOME=$1
     SERVER_LOCAL_IP=$2
     SERVER_PUBLIC_IP=$3
+fi
+
+if [ $# -eq 4 ] ; then
     SERVER_PORT=$4
 fi
 
