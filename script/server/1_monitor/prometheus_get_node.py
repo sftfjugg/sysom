@@ -10,7 +10,8 @@ tfile=os.path.dirname(os.path.realpath(__file__))+"/node/node.json"
 #print(tfile)
 
 ofile="/tmp/sysom_node.json"
-host_api="http://localhost/api/v1/host"
+port = sys.argv[1]
+host_api="http://localhost" + ":" + port + "/api/v1/host"
 
 hostlist = requests.get(host_api)
 res = hostlist.content

@@ -19,15 +19,18 @@ SCRIPT_DIR="script"
 APP_HOME=/usr/local/sysom
 SERVER_LOCAL_IP=""
 SERVER_PUBLIC_IP=""
+SERVER_PORT=""
 
-if [ $# != 3 ] ; then
-    echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP"
+if [ $# != 4 ] ; then
+    echo "USAGE: $0 INSTALL_DIR Internal_IP EXTERNAL_IP WEB_PORT"
     echo "Or we use default install dir: /usr/local/sysom/"
-    echo "E.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx"
+    echo "E.g.: $0 /usr/local/sysom 192.168.0.100 120.26.xx.xx 80"
+    exit 1
 else
     APP_HOME=$1
     SERVER_LOCAL_IP=$2
     SERVER_PUBLIC_IP=$3
+    SERVER_PORT=$4
 fi
 
 SERVER_HOME=${APP_HOME}/server
@@ -37,6 +40,7 @@ export SERVER_HOME=${APP_HOME}/server
 export NODE_HOME=${APP_HOME}/node
 export SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
 export SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
+export SERVER_PORT=${SERVER_PORT}
 
 VIRTUALENV_HOME="${SERVER_HOME}/virtualenv"
 TARGET_PATH="${SERVER_HOME}/target"
@@ -89,6 +93,7 @@ init_conf() {
     cp tools/deploy/diagnosis-service.ini /etc/supervisord.d/
     cp tools/deploy/channel-service.ini /etc/supervisord.d/
     ###change the install dir base on param $1###
+    sed -i "s;SERVER_PORT;${SERVER_PORT};g" /etc/nginx/conf.d/sysom.conf
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/sysom.ini
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/diagnosis-service.ini
@@ -104,10 +109,23 @@ start_script_server() {
    systemctl start sysom-server.service
 }
 
+generate_service_env() {
+    rm -f /usr/local/sysom/env
+    cat << EOF > /usr/local/sysom/env
+APP_HOME=${APP_HOME}
+SERVER_HOME=${APP_HOME}/server
+NODE_HOME=${APP_HOME}/node
+SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
+SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
+SERVER_PORT=${SERVER_PORT}
+EOF
+}
+
 deploy() {
     touch_env_rpms
     update_target
     init_conf
+    generate_service_env
     start_script_server
 }
 

@@ -107,15 +107,18 @@ def upload_nfs(vmcore_dir):
 def nfs_config():
     global nfs_ip, nfs_dir,node_conf
     server_local_ip = ""
+    server_port = "80"
     try:
         with open(node_conf,'r') as fin:
             line = fin.readline()
             while len(line):
                 if line.startswith("SERVER_LOCAL_IP"):
                     server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
+                if line.startswith("SERVER_PORT"):
+                    server_port = line.split("SERVER_PORT=")[1].strip()
                 line = fin.readline()
         if server_local_ip != "":
-            cmd = f'wget -T 3 -t 1 http://{server_local_ip}/download/vmcore_nfs_config -O vmcore_nfs_config'
+            cmd = f'wget -T 3 -t 1 http://{server_local_ip}:{server_port}/download/vmcore_nfs_config -O vmcore_nfs_config'
             ret = os.system(cmd)
             if ret:
                 return False

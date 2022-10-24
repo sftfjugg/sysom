@@ -160,6 +160,7 @@ set_node_init_cmd()
 {
     sed "s#server_local_ip='xxx'#server_local_ip=\"${SERVER_LOCAL_IP}\"#g" -i ${NODE_INIT_SCRIPT}
     sed "s#server_public_ip='xxx'#server_public_ip=\"${SERVER_PUBLIC_IP}\"#g" -i  ${NODE_INIT_SCRIPT}
+    sed "s#server_port='xxx'#server_port=\"${SERVER_PORT}\"#g" -i  ${NODE_INIT_SCRIPT}
     sed "s#app_home='xxx'#app_home=\"${APP_HOME}\"#g" -i ${NODE_INIT_SCRIPT}
     sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#g" -i ${NODE_DELETE_SCRIPT}
 }
@@ -172,8 +173,8 @@ configure_grafana()
 
 configure_cron()
 {
-    echo "* * * * * python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 30;python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
+    echo "* * * * * python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
+    echo "* * * * * sleep 30;python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
 }
 
 main()
