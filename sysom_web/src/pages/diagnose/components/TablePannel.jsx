@@ -23,11 +23,14 @@ const TablePannel = (props) => {
     }
   }
 
-  let columns = data && Object.keys(data[0]).map((key) => ({
-    title: key,
-    dataIndex: key,
-    render: bgColorRender
-  }))
+  let columns = [];
+  if (!!data && data.length > 0) {
+    columns = data && Object.keys(data[0]).map((key) => ({
+      title: key,
+      dataIndex: key,
+      render: bgColorRender
+    }));
+  }
 
   //filter reserve keyword
   const keyword = ["key", "children"]
