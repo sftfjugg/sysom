@@ -16,8 +16,8 @@ PROMETHEUS_DL_URL=https://github.com/prometheus/prometheus/releases/download/v${
 NODE_DL_URL=https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VER}
 NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
-NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_api/service_scripts/node_init
-NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_api/service_scripts/node_delete
+NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_init
+NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_delete
 
 BASE_DIR=`dirname $0`
 
