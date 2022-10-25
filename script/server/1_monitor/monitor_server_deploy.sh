@@ -85,11 +85,10 @@ EOF
 start_prometheus_service()
 {
     ##create prometheus service
-    prometheus_exec=${RESOURCE_DIR}/prometheus/prometheus
-    prometheus_config="--config.file=\"${RESOURCE_DIR}/prometheus/prometheus.yml\""
-    prometheus_data="--storage.tsdb.path=\"${RESOURCE_DIR}/prometheus/data/\""
+    prometheus_dir=${RESOURCE_DIR}/prometheus/
+    prometheus_exec="bash -c \"cd $prometheus_dir && ./prometheus\""
     
-    prometheus_service_task="$service_task$prometheus_exec $prometheus_config $prometheus_data"
+    prometheus_service_task="$service_task$prometheus_exec"
 
     cat << EOF > prometheus.service
 $service_head
