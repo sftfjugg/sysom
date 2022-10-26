@@ -1,4 +1,5 @@
 {
+    "version":1.0,
     "folder": {
         "menu.diagnose.memory": "内存诊断中心",
         "menu.diagnose.storage": "存储诊断中心",

@@ -163,7 +163,7 @@ export function render(oldRender) {
     })
 
   //Add diagnose dashboard dynamically
-  requestURL('/resource/diagnose/locales.json').then((res) => {
+  requestURL('/resource/diagnose/v1/locales.json').then((res) => {
     addLocale('zh-CN', res.folder)
     addLocale('zh-CN', res.dashboard)
     Object.entries(res.dashboard).map(item => {

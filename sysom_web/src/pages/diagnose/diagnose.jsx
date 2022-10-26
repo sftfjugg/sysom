@@ -18,7 +18,9 @@ const Diagnose = (props) => {
     const [data, setData] = useState();
 
     useEffect(() => {
-        request(`/resource${props.match.url}.json`).then((res) => {
+        let urlslice = props.match.url.split("/")
+        urlslice.splice(2,0, "v1")
+        request(`/resource${urlslice.join("/")}.json`).then((res) => {
             setPannelConfig(res)
         })
     }, [])
