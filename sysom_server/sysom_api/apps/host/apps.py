@@ -92,7 +92,8 @@ class HostConfig(AppConfig):
                 cec_client = CecClient(settings.SYSOM_CEC_URL, custom_callback=_on_receive_task_result)
                 cec_client.append_group_consume_task(
                     settings.SYSOM_CEC_CHANNEL_RESULT_TOPIC,
-                    settings.SYSOM_CEC_API_HOST_CONSUMER_GROUP
+                    settings.SYSOM_CEC_API_HOST_CONSUMER_GROUP,
+                    ensure_topic_exist=True
                 )
                 cec_client.start()
             except Exception as e:
