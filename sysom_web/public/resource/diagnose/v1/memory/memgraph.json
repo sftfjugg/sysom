@@ -1,5 +1,6 @@
 {
     "servicename": "memgraph",
+    "version":1.0,
     "taskform": [
         {
             "type": "text",
