@@ -14,6 +14,7 @@ main()
     configure_cron
     systemctl start grafana-server
     systemctl start prometheus
+    systemctl start influxdb
 }
 
 main

@@ -14,6 +14,7 @@ sed -i "/;user = root/{n;n;s/;password =/password = \"\"\"$SYSOM_DATABASE_PASSWO
 sed -i 's/;name = grafana/name = grafana/g' $GRAFANA_CONFIG
 sed -i "s/;user = root/user = $SYSOM_DATABASE_USER/g" $GRAFANA_CONFIG
 sed -i "s/;host = 127.0.0.1:3306/host = $SYSOM_DATABASE_HOST:$SYSOM_DATABASE_PORT/g" $GRAFANA_CONFIG
+sed 's/disable_login_form = true/;disable_login_form = false/g' -i $GRAFANA_CONFIG
 systemctl restart grafana-server
 
 ##login grafana, and get cookie
@@ -36,9 +37,19 @@ curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/da
 --data '{"name": "sysom-prometheus", "type": "prometheus", "url": "http://127.0.0.1:9090","access": "proxy", "isDefault": true}'
 if [ $? -ne 0 ]
 then
-    echo "grafana configure datasource error"
+    echo "grafana configure prometheus datasource error"
     exit 1
 fi
+
+curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
+--header 'Content-Type: application/json' \
+--data '{"name":"sysom-influxdb","type":"influxdb","access":"proxy","url":"http://localhost:8086","user":"admin","database":"sysom_monitor","secureJsonData":{"password":"sysom_admin"}}'
+if [ $? -ne 0 ]
+then
+    echo "grafana configure influxdb datasource error"
+    exit 1
+fi
+
 
 ##initial sysom-dashborad
 curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
@@ -49,6 +60,16 @@ then
     echo "grafana configure dashboard error"
     exit 1
 fi
+
+curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
+--header 'Content-Type: application/json' \
+-d @"sysom-netinfo-dashboard.json"
+if [ $? -ne 0 ]
+then
+    echo "grafana configure dashboard error"
+    exit 1
+fi
+
 
 rm -f cookie
 
