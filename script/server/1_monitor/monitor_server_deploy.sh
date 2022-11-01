@@ -2,7 +2,7 @@
 
 UPLOAD_DIR=${SERVER_HOME}/target/sysom_web/download/
 RESOURCE_DIR=${SERVER_HOME}/monitor
-GRAFANA_PKG=grafana-8.2.5-1.x86_64.rpm
+GRAFANA_PKG=grafana-9.2.2-1.x86_64.rpm
 PROMETHEUS_VER=2.29.1
 PROMETHEUS_ARCH=linux-amd64
 PROMETHEUS_PKG=prometheus-${PROMETHEUS_VER}.${PROMETHEUS_ARCH}
@@ -16,8 +16,8 @@ PROMETHEUS_DL_URL=https://github.com/prometheus/prometheus/releases/download/v${
 NODE_DL_URL=https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VER}
 NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
-NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_api/service_scripts/node_init
-NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_api/service_scripts/node_delete
+NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_init
+NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_delete
 
 BASE_DIR=`dirname $0`
 
@@ -62,6 +62,18 @@ install_grafana()
 
     yum install -y $GRAFANA_PKG
     popd
+}
+
+install_and_config_influxdb()
+{
+    # install influxdb
+    rpm -q --quiet influxdb || yum install -y influxdb
+    systemctl enable influxdb.service
+    systemctl start influxdb.service
+
+    # config influxdb
+    influx -execute "create user \"admin\" with password 'sysom_admin'"
+    influx -execute "create database sysom_monitor"
 }
 
 ##configure prometheus.yml to auto discovery new nodes
@@ -192,6 +204,8 @@ main()
 
     configure_grafana
     configure_cron
+
+    install_and_config_influxdb
 }
 
 main
