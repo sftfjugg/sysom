@@ -67,6 +67,14 @@ install_grafana()
 install_and_config_influxdb()
 {
     # install influxdb
+    cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
+[influxdb]
+name = InfluxDB Repository - RHEL \$releasever
+baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdb.key
+EOF
     rpm -q --quiet influxdb || yum install -y influxdb
     systemctl enable influxdb.service
     systemctl start influxdb.service
