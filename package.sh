@@ -31,6 +31,7 @@ cp -r ${SERVERDIR}/ ${TOOLSDIR}/ "${RELEASE}"/
 cp -r ${WEBDIR}/dist/ "${RELEASE}"/${WEBDIR}/
 mkdir -p "${RELEASE}"/${WEBDIR}/download/
 cp ${TOOLSDIR}/deploy/deploy.sh "${RELEASE}"/
+cp ${TOOLSDIR}/deploy/clear.sh "${RELEASE}"/
 cp -r ${SCRIPTDIR} "${RELEASE}"/
 tar czf "${RELEASE}".tar.gz "${RELEASE}"/
 rm -rf "${RELEASE}"
