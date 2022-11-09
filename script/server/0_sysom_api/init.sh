@@ -128,8 +128,9 @@ init_conf() {
 
 install_sdk() {
     pushd ${TARGET_PATH}/${SDK_DIR}
-    python setup_cec_base.py install
-    python setup_cec_redis.py install
+    python setup_cec_base.py develop
+    python setup_cec_redis.py develop
+    python setup_channel_job.py develoop
     sudo rm -r *.egg-info build dist
     popd
 }

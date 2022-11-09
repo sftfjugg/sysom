@@ -14,7 +14,13 @@ class TaskConfig(AppConfig):
         if ('runserver' in sys.argv or 'manage.py' not in sys.argv):
             from cec_base.log import LoggerHelper, LoggerLevel
             from apps.task.executors import TaskDispatcher
+            from channel_job.job import default_channel_job_executor
             LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
+
+            # 初始化 channel_job sdk
+            default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
+            default_channel_job_executor.start()
+
             # 这边微服务正式启动的时候执行一些处理代码
             # 启动任务结果处理线程
             try:

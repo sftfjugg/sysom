@@ -19,13 +19,13 @@ class BaseChannel(metaclass=ABCMeta):
 
     @abstractmethod
     def client(self, **kwargs):
-        raise NotImplemented
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
     def initial(**kwargs):
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def run_command(self, **kwargs):
-        raise NotImplemented
+        raise NotImplementedError

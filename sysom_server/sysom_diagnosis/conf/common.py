@@ -19,10 +19,9 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
+    'django.contrib.staticfiles',
     'drf_yasg',  # 在线API文档
-    'channels',
     'django_filters',
-    'django_apscheduler',
 ]
 
 MIDDLEWARE = [
@@ -93,12 +92,20 @@ SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
 SYSOM_CEC_CHANNEL_TOPIC = "SYSOM_CEC_CHANNEL_TOPIC"
 # 通道模块用于投递执行结果的主题
 SYSOM_CEC_CHANNEL_RESULT_TOPIC = "SYSOM_CEC_CHANNEL_RESULT_TOPIC"
+# 诊断模块用于接收通道执行结果的主题
+SYSOM_CEC_CHANNEL_DIAGNOSIS_TOPIC = "SYSOM_CEC_CHANNEL_DIAGNOSIS_TOPIC"
 # 诊断模块消费组
 SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP = "SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP"
 # 诊断模块用于汇报最终诊断执行结果的主题
 SYSOM_CEC_DIAGNOSIS_RESULT_TOPIC = "SYSOM_CEC_DIAGNOSIS_RESULT_TOPIC"
 # 用于分发插件系统相关事件的主题
 SYSOM_CEC_PLUGIN_TOPIC = "SYSOM_CEC_PLUGIN_TOPIC"
+
+# channl_job SDK 需要的url
+CHANNEL_JOB_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}" \
+                  f"&channel_job_listen_topic={SYSOM_CEC_CHANNEL_DIAGNOSIS_TOPIC}" \
+                  f"&channel_job_consumer_group={SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP}"
+
 
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')

@@ -110,8 +110,9 @@ class ChannelListener(CecClient):
             "code": 0,
             "err_msg": "",
             "echo": task.get("echo", {}),
-            "result": {}
+            "result": ""
         }
+        bind_result_topic = task.get("bind_result_topic", None)
         try:
             opt_type = task.get("type", "cmd")
             channel_type = task.get("channel", "ssh")
@@ -141,6 +142,9 @@ class ChannelListener(CecClient):
             res = consumer.ack(event)
             # 将任务执行的结果写入到事件中心，供 Task 模块获取
             self.delivery(self._target_topic, result)
+            # 如果显示指定了反馈topic，则往该topic也发送一份
+            if (bind_result_topic):
+                self.delivery(bind_result_topic, result)
 
     def on_receive_event(self, consumer: Consumer, producer: Producer, event: Event, task: dict):
         self._task_process_thread_poll.submit(

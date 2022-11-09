@@ -1,8 +1,6 @@
 import json
 import logging
-from multiprocessing.connection import wait
 import sys
-from unicodedata import name
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 
@@ -15,15 +13,21 @@ class ChannelConfig(AppConfig):
     name = 'apps.channel'
 
     def ready(self):
-        # 1. Perform the necessary initialization operations when the
-        #    database is changed
-        post_migrate.connect(on_post_migrate, sender=self)
+        from django.conf import settings
+        if ('runserver' in sys.argv or 'manage.py' not in sys.argv):
+            # 这边微服务正式启动的时候执行一些处理代码
+            # 启动任务结果处理线程
 
-        # 2. Read key pair from database then save as file
-        export_key_pair()
+            # 2. Read key pair from database then save as file
+            export_key_pair()
 
-        # 3. Start channel listener
-        start_channel_listener()
+            # 3. Start channel listener
+            start_channel_listener()
+        else:
+            # 这边执行数据库迁移等操作的时候执行一些处理代码
+            # 1. Perform the necessary initialization operations when the
+            #    database is changed
+            post_migrate.connect(on_post_migrate, sender=self)
 
         logger.info(">>> Channel module loading success")
 
@@ -41,6 +45,7 @@ def on_post_migrate(sender, **kwargs):
         ChannelSettingModel.objects.create(
             name="ssh_key", value=ssh_key, description="SysOM Channel auto generated key")
     except Exception as exc:
+        # logger.exception(exc)
         pass
 
 
