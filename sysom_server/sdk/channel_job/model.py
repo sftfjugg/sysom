@@ -7,6 +7,7 @@ File                entry.py
 Description:
 """
 from typing import Optional
+import json
 import uuid
 
 
@@ -39,7 +40,7 @@ class JobEntry:
 
 
 class JobResult:
-    def __init__(self, code: int, err_msg: str = "", result: dict = "",
+    def __init__(self, code: int, err_msg: str = "", result: str = "",
                  echo: dict = {}) -> None:
         self.code = code
         self.err_msg = err_msg
@@ -50,10 +51,13 @@ class JobResult:
 
     @staticmethod
     def parse_by_cec_event_value(value: dict):
+        result = value.get("result", "")
+        if isinstance(result, dict):
+            result = json.dumps(result)
         return JobResult(
             code=value.get("code", 1),
             err_msg=value.get("err_msg", ""),
-            result=value.get("result", ""),
+            result=result,
             echo=value.get("echo", {})
         )
 

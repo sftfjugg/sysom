@@ -12,11 +12,11 @@ from cec_base.cec_client import CecClient
 from cec_base.event import Event
 from cec_base.consumer import Consumer
 from cec_base.producer import Producer
+from channel_job.job import default_channel_job_executor, JobResult
 from .seriaizer import JobDetailSerializer
 
 
 logger = logging.getLogger(__name__)
-
 
 class TaskDispatcher(CecClient):
     """A asynchronous task dispatcher implement
@@ -31,12 +31,13 @@ class TaskDispatcher(CecClient):
         CecClient.__init__(self, url)
 
     def start_dispatcher(self):
-        self.append_group_consume_task(
-            settings.SYSOM_CEC_CHANNEL_RESULT_TOPIC,
-            settings.SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP,
-            Consumer.generate_consumer_id(),
-            ensure_topic_exist=True
-        )
+
+        # self.append_group_consume_task(
+        #     settings.SYSOM_CEC_CHANNEL_RESULT_TOPIC,
+        #     settings.SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP,
+        #     Consumer.generate_consumer_id(),
+        #     ensure_topic_exist=True
+        # )
         self.append_group_consume_task(
             settings.SYSOM_CEC_PLUGIN_TOPIC,
             settings.SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP,
@@ -198,18 +199,30 @@ class TaskDispatcher(CecClient):
             except:
                 raise Exception('任务创建失败!')
 
-            # 将任务下发到事件中心，异步执行
-            self.delivery(settings.SYSOM_CEC_CHANNEL_TOPIC, {
-                "channel": data.pop("channel", "ssh"),
-                "type": "cmd",
-                "params": {
-                    **data,
-                    "command": resp_scripts[0].get("cmd", "Unknown")
-                },
-                "echo": {
-                    "task_id": task_id
+            for idx, script in enumerate(resp_scripts):
+                job_params = {
+                    "channel_type": data.pop("channel", "ssh"),
+                    "channel_opt": "cmd",
+                    "params": {
+                        **data,
+                        "instance": script.get("instance", "Unknown"),
+                        "command": script.get("cmd", "Unknown")
+                    },
+                    "echo": {
+                        "task_id": task_id
+                    }
                 }
-            })
+                # 前 n - 1 个命令同步执行
+                if idx < len(resp_scripts) - 1:
+                    job_result = default_channel_job_executor.dispatch_job(**job_params) \
+                        .execute(timeout=5000)
+                    if job_result.code != 0:
+                        raise Exception(
+                            f"Task execute failed: {job_result.err_msg}")
+                else:
+                    # 最后一个命令异步执行
+                    default_channel_job_executor.dispatch_job(**job_params) \
+                        .execute_async(self._process_task_result)
             # 任务创建成功，返回任务ID
             return {
                 "success": True,
@@ -226,7 +239,7 @@ class TaskDispatcher(CecClient):
     # 诊断结果处理
     ################################################################################################
 
-    def _process_task_result(self, event: Event):
+    def _process_task_result(self, job_result: JobResult):
         """
         处理任务执行结果回调
         {
@@ -246,18 +259,13 @@ class TaskDispatcher(CecClient):
                 raise e
             finally:
                 connection.close()
-        task_result = event.value
-        code = task_result.get("code", 1)
-        err_msg = task_result.get("err_msg", "")
-        result = task_result.get("result", "")
-        echo = task_result.get("echo", {})
-        if "task_id" not in echo or not echo.get("task_id"):
-            return
-
+        code = job_result.code
+        result = ""
+        err_msg = job_result.err_msg
+        task_id = job_result.echo.get("task_id", "")
         task = {}
         instance = None
         try:
-            task_id = echo.get("task_id")
             # 获取到 Task 实例
             instance = JobModel.objects.get(task_id=task_id)
             # 如果任务执行失败，更新状态
@@ -280,7 +288,7 @@ class TaskDispatcher(CecClient):
                 try:
                     # 将要传递的中间结果写入到临时文件当中
                     with os.fdopen(fd, 'w') as tmp:
-                        tmp.write(result)
+                        tmp.write(job_result.result)
                     resp = subprocess.run(command_list, stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
                     if resp.returncode != 0:
