@@ -1,0 +1,49 @@
+{
+    "servicename": "schedmoni",
+    "version":1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP， 我们将在会这台机器内部发起SysAK诊断"
+        },
+        {
+            "type": "text",
+            "name": "diag_time",
+            "initialValue": "20",
+            "label": "诊断时间",
+            "tooltips": "本次的期望的诊断时间，默认20秒"
+	},
+        {
+            "type": "text",
+            "name": "thresh",
+            "initialValue": "20",
+            "label": "诊断阈值",
+            "tooltips": "延迟的阈值，超过这个阈值就记录，默认20ms"
+	}
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "jitterEvent",
+            "type": "stat",
+            "title": "事件总览",
+            "datasource": "jitterEventSummary"
+        },
+        {
+            "key": "timeseriesTable",
+            "type": "timeseries",
+            "title": "抖动时间线图",
+            "datasource": "jitterTimeSeries"
+        },
+        {
+            "key": "jitterTable",
+            "type": "table",
+            "title": "调度抖动详情",
+            "datasource": "jitterTable"
+        }
+    ]
+
+}

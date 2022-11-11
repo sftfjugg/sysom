@@ -1,0 +1,58 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  如前端入参是这个：
+##  {
+##    "origin_instance":"192.168.1.101",
+##    "target_instance":"192.168.1.102",
+##    "pkg_num":"100",
+##    "time_gap":"10",
+##    "protocol":"ICMP"
+##  }
+##  解析参数方法：
+##  sysak pingtrace -s -t 6
+##  -t 6 来自 “pkg_num” * "time_gap” / 1000 + 5
+##  本命令运行在“target_instance”
+##  
+##  sysak pingtrace -c 192.168.1.102 -t 2 -i 10000 -C 100 -o log
+##  -c 192.168.1.102 来自 “target_instance”
+##  -t 2 来自 “pkg_num” * "time_gap” / 1000 + 1 
+##  -i 10000 来自 “time_gap”* 1000
+##  -C 100 来自 “pkg_num”
+##  本命令运行在“origin_instance”
+###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+
+result = {}
+result['commands'] = []
+
+cmd0_arg = int(int(args["pkg_num"]) * int(args["time_gap"]) / 1000) + 5
+cmd0 = {}
+cmd0['instance'] = args["target_instance"]
+cmd0['cmd'] = "sysak pingtrace -s -t "+str(cmd0_arg)+" > /dev/null 2>&1 &"
+
+cmd1 = {}
+cmd1['instance'] = args["origin_instance"]
+if args.get("target_ip"):
+    cmd1_arg_c = args.get("target_ip")
+else:
+    cmd1_arg_c = args["target_instance"]
+
+cmd1_arg_t = str(cmd0_arg - 4)
+cmd1_arg_i = str(int(args["time_gap"]) * 1000)
+cmd1_arg_C = str(args["pkg_num"])
+cmd1['cmd'] = "sysak pingtrace -c "+cmd1_arg_c+" -t "+cmd1_arg_t+" -i "+cmd1_arg_i+" -C "+cmd1_arg_C+" > /tmp/pingtrace.log && cat /tmp/pingtrace.log"
+
+result['commands'].append(cmd0)
+result['commands'].append(cmd1)
+
+data = json.dumps(result)
+print(data)

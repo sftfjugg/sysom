@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  {
+##    "service_name":"oomcheck",
+##    "instance":"192.168.1.101"
+##    "time":""
+##  }
+##  解析参数方法：
+##  sysak oomcheck -j /var/log/sysak/memgraph.json -g -l -f -k -c 3 &&  cat /var/log/sysak/memgraph.json
+##  cat /var/log/sysak/oomcheck.json 是memgraph诊断结果
+##
+###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["instance"]
+if args['time'] != "":
+    cmd0['cmd'] = "sysak oomcheck -j -t %s 2>/dev/null > /tmp/oomcheck.log && cat /tmp/oomcheck.log" % args['time']
+else:
+    cmd0['cmd'] = "sysak oomcheck -j 2>/dev/null > /tmp/oomcheck.log && cat /tmp/oomcheck.log" 
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)

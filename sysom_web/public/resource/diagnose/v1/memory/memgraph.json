@@ -1,0 +1,95 @@
+{
+    "servicename": "memgraph",
+    "version":1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP， 我们将在会这台机器内部发起SysAK诊断"
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "memEvent",
+            "type": "stat",
+            "title": "MemEvent",
+            "datasource": "dataMemEvent",
+            "fieldConfig": {
+                "mappings": [
+                    {
+                        "type": "value", 
+                        "options": {
+                            "OK": {
+                                "color": "green",
+                                "index": 0
+                            },
+                            "NG": {
+                                "color": "red",
+                                "index": 1
+                            }
+                        }
+                    }
+                ],
+                "thresholds": {
+                    "mode": "absolute", 
+                    "steps": [
+                        {
+                            "color": "red",
+                            "value": 5
+                        },
+                        {
+                            "color": "green",
+                            "value": 0
+                        }
+                    ]
+                },
+                "unit": "%"
+            }
+        },
+        {
+            "key": "pieRow",
+            "type": "row",
+            "title": "测试行",
+            "datasource": "",
+            "children": [
+                {
+                    "key": "memOverView",
+                    "type": "piechart",
+                    "title": "MemOverView",
+                    "datasource": "dataMemOverView"
+                },
+                {
+                    "key": "kerMem",
+                    "type": "piechart",
+                    "title": "KernelMem",
+                    "datasource": "dataKerMem"
+                },
+                {
+                    "key": "userMem",
+                    "type": "piechart",
+                    "title": "UserMem",
+                    "datasource": "dataUserMem"
+                }
+            ]
+        },
+        {
+            "key": "procMemList",
+            "type": "table",
+            "title": "TaskTop",
+            "datasource": "dataProcMemList"
+        },
+        {
+            "key": "cacheList",
+            "type": "table",
+            "title": "CacheTop",
+            "datasource": "dataCacheList",
+            "fieldConfig": {
+                "unit": "KB"
+            }
+        }
+    ]
+
+}

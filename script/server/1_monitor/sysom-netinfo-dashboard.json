@@ -1,0 +1,5376 @@
+{
+    "dashboard": {
+        "annotations": {
+          "list": [
+            {
+              "builtIn": 1,
+              "datasource": "-- Grafana --",
+              "enable": true,
+              "hide": true,
+              "iconColor": "rgba(0, 211, 255, 1)",
+              "name": "Annotations & Alerts",
+              "target": {
+                "limit": 100,
+                "matchAny": false,
+                "tags": [],
+                "type": "dashboard"
+              },
+              "type": "dashboard"
+            }
+          ]
+        },
+        "editable": true,
+        "fiscalYearStartMonth": 0,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "id": null,
+        "iteration": 1666937736191,
+        "links": [],
+        "liveNow": false,
+        "panels": [
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 0
+            },
+            "id": 7,
+            "panels": [],
+            "title": "Summay",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 4,
+              "x": 0,
+              "y": 1
+            },
+            "id": 2,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "SELECT last(\"name\") FROM \"os_host_release\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Operating System",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 4,
+              "x": 4,
+              "y": 1
+            },
+            "id": 3,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "SELECT last(\"os_kernel\") FROM \"os_host_release\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Operating System Version",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 2,
+              "x": 8,
+              "y": 1
+            },
+            "id": 4,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "SELECT last(\"cpus\") FROM \"lscpu\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "CPUs",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "CPU health，should not lower than 60%",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 2,
+              "x": 10,
+              "y": 1
+            },
+            "id": 5,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "select floor(mean(idle)) from cpu_total where  (\"host\" =~ /^$LINUXHOST$/) and time > now() - 10m",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "CPU health",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "disk busy rate. the lower the better",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 3,
+              "x": 12,
+              "y": 1
+            },
+            "id": 13,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "select max(busy) from disks where (\"host\" =~ /^$LINUXHOST$/) and time > now() - 10m",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "disk busy rate(%)",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 3,
+              "x": 15,
+              "y": 1
+            },
+            "id": 14,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "select sum(total) as retrans from net_retrans where (\"host\" =~ /^$LINUXHOST$/) and time > now() - 1h",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "net retrans",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "description": "",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "#ffffff",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 2,
+              "w": 3,
+              "x": 18,
+              "y": 1
+            },
+            "id": 15,
+            "options": {
+              "colorMode": "value",
+              "graphMode": "area",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "/^last$/",
+                "values": false
+              },
+              "text": {},
+              "textMode": "auto"
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "alias": "last",
+                "query": "SELECT last(\"model\") FROM \"identity\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Model",
+            "type": "stat"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "percentage",
+                  "steps": [
+                    {
+                      "color": "super-light-red",
+                      "value": null
+                    },
+                    {
+                      "color": "light-blue",
+                      "value": 10
+                    },
+                    {
+                      "color": "semi-dark-green",
+                      "value": 90
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 4,
+              "w": 4,
+              "x": 0,
+              "y": 3
+            },
+            "id": 17,
+            "options": {
+              "displayMode": "gradient",
+              "orientation": "horizontal",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "showUnfilled": true,
+              "text": {}
+            },
+            "pluginVersion": "8.2.5",
+            "targets": [
+              {
+                "query": "select last(\"MemTotal\")/1024/1024 as \"total\", last(\"Active\")/1024/1024 as \"active\", last(\"MemFree\")/1024/1024 as \"free\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "table"
+              }
+            ],
+            "title": "mem summary",
+            "type": "bargauge"
+          },
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 7
+            },
+            "id": 9,
+            "panels": [],
+            "title": "Netinfo",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 8
+            },
+            "id": 11,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "$tag_status",
+                "query": "SELECT \"count\" FROM \"pkt_staus\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"status\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "pktMon",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 8
+            },
+            "id": 12,
+            "options": {
+              "dedupStrategy": "none",
+              "enableLogDetails": true,
+              "prettifyLogMessage": false,
+              "showCommonLabels": false,
+              "showLabels": false,
+              "showTime": false,
+              "sortOrder": "Descending",
+              "wrapLogMessage": false
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"logs\" FROM \"pkt_log\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "pktMon logs",
+            "type": "logs"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 9,
+              "x": 0,
+              "y": 16
+            },
+            "id": 19,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "l_rx_kern",
+                "query": "SELECT \"l_rx_kern\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "l_rx_merged_kern",
+                "hide": false,
+                "query": "SELECT \"l_rx_merged_kern\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "l_rx_task_waking",
+                "hide": false,
+                "query": "SELECT \"l_rx_task_waking\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "l_tx_kern",
+                "hide": false,
+                "query": "SELECT \"l_tx_kern\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "l_tx_merged_kern",
+                "hide": false,
+                "query": "SELECT \"l_tx_merged_kern\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "l_tx_qdisc",
+                "hide": false,
+                "query": "SELECT \"l_tx_qdisc\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "F",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "l_rx_task_queue",
+                "hide": false,
+                "query": "SELECT \"l_rx_task_queue\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "G",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "total",
+                "hide": false,
+                "query": "SELECT \"total\" FROM \"pingtrace\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "H",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "pingtrace",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "gridPos": {
+              "h": 8,
+              "w": 15,
+              "x": 9,
+              "y": 16
+            },
+            "id": 20,
+            "options": {
+              "dedupStrategy": "none",
+              "enableLogDetails": true,
+              "prettifyLogMessage": false,
+              "showCommonLabels": false,
+              "showLabels": false,
+              "showTime": true,
+              "sortOrder": "Descending",
+              "wrapLogMessage": true
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"log\" FROM \"syn_retrans\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "table"
+              }
+            ],
+            "title": "tcp connect retrans",
+            "type": "logs"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 24
+            },
+            "id": 21,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "FRAG",
+                "query": "SELECT \"FRAG\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "INET",
+                "hide": false,
+                "query": "SELECT \"INET\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "RAW",
+                "hide": false,
+                "query": "SELECT \"RAW\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "UDP",
+                "hide": false,
+                "query": "SELECT \"UDP\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "TCP",
+                "hide": false,
+                "query": "SELECT \"tcp\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "socket count",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 24
+            },
+            "id": 22,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "closed",
+                "query": "SELECT \"tcp_closed\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "estab",
+                "hide": false,
+                "query": "SELECT \"tcp_estab\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "orphaned",
+                "hide": false,
+                "query": "SELECT \"tcp_orphaned\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "synrecv",
+                "hide": false,
+                "query": "SELECT \"tcp_synrecv\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "timewait",
+                "hide": false,
+                "query": "SELECT \"tcp_timewait\" FROM \"socket\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "tcp status",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": false,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "short"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 9,
+              "x": 0,
+              "y": 32
+            },
+            "id": 24,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "log_counts",
+                "query": "SELECT \"count\" FROM \"net_log_c\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "tcp_reset",
+                "hide": false,
+                "query": "SELECT \"count\" FROM \"net_reset_c\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "tcp_retrans",
+                "hide": false,
+                "query": "SELECT \"count\" FROM \"net_retrans_c\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "runlatency log nums",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "gridPos": {
+              "h": 8,
+              "w": 15,
+              "x": 9,
+              "y": 32
+            },
+            "id": 25,
+            "options": {
+              "dedupStrategy": "none",
+              "enableLogDetails": true,
+              "prettifyLogMessage": false,
+              "showCommonLabels": false,
+              "showLabels": false,
+              "showTime": true,
+              "sortOrder": "Descending",
+              "wrapLogMessage": true
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"log\" FROM \"net_log\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "table"
+              }
+            ],
+            "title": "runlatency logs",
+            "type": "logs"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 40
+            },
+            "id": 26,
+            "options": {
+              "dedupStrategy": "none",
+              "enableLogDetails": true,
+              "prettifyLogMessage": false,
+              "showCommonLabels": false,
+              "showLabels": false,
+              "showTime": true,
+              "sortOrder": "Descending",
+              "wrapLogMessage": true
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"log\" FROM \"net_reset\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "table"
+              }
+            ],
+            "title": "tcp_reset logs",
+            "type": "logs"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 40
+            },
+            "id": 27,
+            "options": {
+              "dedupStrategy": "none",
+              "enableLogDetails": true,
+              "prettifyLogMessage": false,
+              "showCommonLabels": false,
+              "showLabels": false,
+              "showTime": true,
+              "sortOrder": "Descending",
+              "wrapLogMessage": true
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"log\" FROM \"net_retrans\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "table"
+              }
+            ],
+            "title": "net_retrans logs",
+            "type": "logs"
+          },
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 48
+            },
+            "id": 29,
+            "panels": [],
+            "title": "Sched",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 49
+            },
+            "id": 31,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "User",
+                "query": "SELECT mean(\"user\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "System",
+                "hide": false,
+                "query": "SELECT mean(\"sys\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Steal",
+                "hide": false,
+                "query": "SELECT mean(\"steal\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "SoftIRQ",
+                "hide": false,
+                "query": "SELECT mean(\"softirq\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "HardIRQ",
+                "hide": false,
+                "query": "SELECT mean(\"hardirq\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Nice",
+                "hide": false,
+                "query": "SELECT mean(\"nice\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "F",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "IOwait",
+                "hide": false,
+                "query": "SELECT mean(\"iowait\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "G",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Guest",
+                "hide": false,
+                "query": "SELECT mean(\"guest\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "H",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "GuestNice",
+                "hide": false,
+                "query": "SELECT mean(\"guestnice\") FROM \"cpu_total\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "I",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "CPU - Utilisation for Total System",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 49
+            },
+            "id": 32,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Running",
+                "query": "SELECT mean(\"procs_running\") FROM \"stat_counters\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Blocked",
+                "hide": false,
+                "query": "SELECT mean(\"procs_blocked\") FROM \"stat_counters\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Run Queue & Blocked",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 57
+            },
+            "id": 33,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"user\" FROM \"cpus\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"cpu_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "per cpu user",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 57
+            },
+            "id": 34,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"sys\" FROM \"cpus\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"cpu_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "per cpu sys",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 65
+            },
+            "id": 35,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"softirq\" FROM \"cpus\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"cpu_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "per cpu softirq",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 65
+            },
+            "id": 36,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "",
+                "query": "SELECT \"iowait\" FROM \"cpus\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"cpu_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "per cpu iowait",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 73
+            },
+            "id": 37,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "fork",
+                "query": "SELECT mean(\"processes_forks\") FROM \"stat_counters\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Process fork()",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 73
+            },
+            "id": 38,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "ctxt",
+                "query": "SELECT mean(\"ctxt\") FROM \"stat_counters\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Process Context Switches",
+            "type": "timeseries"
+          },
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 81
+            },
+            "id": 41,
+            "panels": [],
+            "title": "Memory",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "mappings": [],
+                "unit": "deckbytes"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 6,
+              "x": 0,
+              "y": 82
+            },
+            "id": 43,
+            "options": {
+              "legend": {
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Available",
+                "query": "SELECT last(\"MemAvailable\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Free",
+                "hide": false,
+                "query": "SELECT last(\"MemFree\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Memory Available/Free",
+            "type": "piechart"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "mappings": [],
+                "unit": "deckbytes"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 6,
+              "x": 6,
+              "y": 82
+            },
+            "id": 44,
+            "options": {
+              "legend": {
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Active",
+                "query": "SELECT last(\"Active\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Inactive",
+                "hide": false,
+                "query": "SELECT last(\"Inactive\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Memory Active/InActive",
+            "type": "piechart"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "deckbytes"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 82
+            },
+            "id": 39,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Active",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Active\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "InActive",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Inactive\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "InActive_anon",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Inactive_anon\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Active_anon",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Active_anon\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Active_file",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Active_file\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "InActive_file",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Inactive_file\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "F",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Buffers",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Buffers\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "G",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Cached",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Cached\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "H",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "CommitLimit",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"CommitLimit\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "I",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Dirty",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Dirty\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "J",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "KernelStack",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"KernelStack\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "K",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Mapped",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"Mapped\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "L",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "MemAvailable",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"MemAvailable\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "M",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "MemFree",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"MemFree\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "N",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "MemTotal",
+                "hide": false,
+                "query": "SELECT \"MemTotal\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "O",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "PageTables",
+                "hide": false,
+                "query": "SELECT \"PageTables\" FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "P",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Memory stats",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "deckbytes"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 90
+            },
+            "id": 45,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "MemTotal",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT mean(\"MemTotal\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "MemFree",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT mean(\"MemFree\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "MemAvailable",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "hide": false,
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT mean(\"MemAvailable\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              }
+            ],
+            "title": "Memory Total & Free",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "deckbytes"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 90
+            },
+            "id": 46,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Active",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT mean(\"Active\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "InActive",
+                "hide": false,
+                "query": "SELECT mean(\"Inactive\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Memory Active & Inactive",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 98
+            },
+            "id": 47,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Total",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT mean(\"SwapTotal\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Free",
+                "hide": false,
+                "query": "SELECT mean(\"SwapFree\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Cached",
+                "hide": false,
+                "query": "SELECT mean(\"SwapCached\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Paging Space",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "KBs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 98
+            },
+            "id": 48,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "Paging_page_in",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT mean(\"pgpgin\") FROM \"proc_vmstat\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "Paging_page_out",
+                "hide": false,
+                "query": "SELECT mean(\"pgpgout\") FROM \"proc_vmstat\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Paging_swap_in",
+                "hide": false,
+                "query": "SELECT mean(\"pswpin\") FROM \"proc_vmstat\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Paging_swap_out",
+                "hide": false,
+                "query": "SELECT mean(\"pswpout\") FROM \"proc_vmstat\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Paging Rates",
+            "type": "timeseries"
+          },
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 106
+            },
+            "id": 50,
+            "panels": [],
+            "title": "Disk",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "KBs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 107
+            },
+            "id": 51,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_disk_name]].Read",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"rkb\" FROM \"disks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_disk_name]].Write",
+                "hide": false,
+                "query": "SELECT \"wkb\" *  -1 FROM \"disks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "Cached",
+                "hide": false,
+                "query": "SELECT mean(\"SwapCached\") FROM \"proc_meminfo\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Disks KB/sec",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 107
+            },
+            "id": 52,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_disk_name]].Read",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"reads\" FROM \"disks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_disk_name]].Write",
+                "hide": false,
+                "query": "SELECT \"writes\" *  -1 FROM \"disks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Disks Blocks",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "percent"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 115
+            },
+            "id": 53,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_disk_name]].Busy",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"busy\" FROM \"disks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              }
+            ],
+            "title": "Disks Busy Percent",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 115
+            },
+            "id": 54,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_disk_name]]_r",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"rwait\" FROM \"disk_wait\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_disk_name]]_w",
+                "hide": false,
+                "query": "SELECT \"wwait\"  *-1 FROM \"disk_wait\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"disk_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "disk wait",
+            "type": "timeseries"
+          },
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 123
+            },
+            "id": 57,
+            "panels": [],
+            "title": "Network",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "bytes"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 124
+            },
+            "id": 55,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_network_name]].ibytes",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"ibytes\" FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_network_name]].obytes",
+                "hide": false,
+                "query": "SELECT \"obytes\" *  -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Network Bytes",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "pps"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 124
+            },
+            "id": 58,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_network_name]].ipackets",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"ipackets\" FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_network_name]].opackets",
+                "hide": false,
+                "query": "SELECT \"opackets\" *  -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Network Packets",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "pps"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 132
+            },
+            "id": 59,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_network_name]].idropped",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"idrop\" FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_network_name]].odropped",
+                "hide": false,
+                "query": "SELECT \"odrop\" *  -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "[[tag_network_name]].ierrs",
+                "hide": false,
+                "query": "SELECT \"ierrs\" FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "[[tag_network_name]].oerrs",
+                "hide": false,
+                "query": "SELECT \"oerrs\" *  -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "[[tag_network_name]].ioverruns",
+                "hide": false,
+                "query": "SELECT \"ififo\" FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "[[tag_network_name]].ooverruns",
+                "hide": false,
+                "query": "SELECT \"ofifo\" *  -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "F",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Network Drops",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "pps"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 132
+            },
+            "id": 60,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "[[tag_network_name]].iframe",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"iframe\" FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "[[tag_network_name]].ocarrier",
+                "hide": false,
+                "query": "SELECT \"ocarrier\"  * -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "[[tag_network_name]].ocolls",
+                "hide": false,
+                "query": "SELECT \"ocolls\"  * -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "[[tag_network_name]].ocolls",
+                "hide": false,
+                "query": "SELECT \"ocolls\"  * -1 FROM \"networks\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter GROUP BY \"network_name\"",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "Network Drops",
+            "type": "timeseries"
+          },
+          {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+              "h": 1,
+              "w": 24,
+              "x": 0,
+              "y": 140
+            },
+            "id": 62,
+            "panels": [],
+            "title": "Dist",
+            "type": "row"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 141
+            },
+            "id": 63,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "us1",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"us1\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "us10",
+                "hide": false,
+                "query": "SELECT \"us10\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "us100",
+                "hide": false,
+                "query": "SELECT \"us100\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "ms1",
+                "hide": false,
+                "query": "SELECT \"ms1\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "ms10",
+                "hide": false,
+                "query": "SELECT \"ms10\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "ms100",
+                "hide": false,
+                "query": "SELECT \"ms100\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "F",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "s1",
+                "hide": false,
+                "query": "SELECT \"s1\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "G",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "so",
+                "hide": false,
+                "query": "SELECT \"so\" FROM \"cpudist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "H",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "cpudist",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 141
+            },
+            "id": 64,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "hung",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"hung\" FROM \"loghealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "io",
+                "hide": false,
+                "query": "SELECT \"io\" FROM \"loghealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "mem",
+                "hide": false,
+                "query": "SELECT \"mem\" FROM \"loghealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "net",
+                "hide": false,
+                "query": "SELECT \"net\" FROM \"loghealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "wait",
+                "hide": false,
+                "query": "SELECT \"wait\" FROM \"loghealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "loghealth",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 149
+            },
+            "id": 65,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "hungs",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"hungs\" FROM \"health\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "ios",
+                "hide": false,
+                "query": "SELECT \"ios\" FROM \"health\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "mems",
+                "hide": false,
+                "query": "SELECT \"mems\" FROM \"health\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "waits",
+                "hide": false,
+                "query": "SELECT \"waits\" FROM \"health\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "nets",
+                "hide": false,
+                "query": "SELECT \"nets\" FROM \"health\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "count",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 149
+            },
+            "id": 66,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "hung",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"hung\" FROM \"perhealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "io",
+                "hide": false,
+                "query": "SELECT \"io\" FROM \"perhealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "net",
+                "hide": false,
+                "query": "SELECT \"net\" FROM \"perhealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "mem",
+                "hide": false,
+                "query": "SELECT \"mem\" FROM \"perhealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "wait",
+                "hide": false,
+                "query": "SELECT \"wait\" FROM \"perhealth\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "E",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "perhealth",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 157
+            },
+            "id": 67,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "ms100",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"ms100\" FROM \"virthist\" WHERE $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "so",
+                "hide": false,
+                "query": "SELECT \"so\" FROM \"virthist\" WHERE $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "s1",
+                "hide": false,
+                "query": "SELECT \"s1\" FROM \"virthist\" WHERE $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "virtout",
+            "type": "timeseries"
+          },
+          {
+            "datasource": "sysom-influxdb",
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "axisLabel": "",
+                  "axisPlacement": "auto",
+                  "barAlignment": 0,
+                  "drawStyle": "line",
+                  "fillOpacity": 10,
+                  "gradientMode": "none",
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  },
+                  "lineInterpolation": "linear",
+                  "lineStyle": {
+                    "fill": "solid"
+                  },
+                  "lineWidth": 1,
+                  "pointSize": 5,
+                  "scaleDistribution": {
+                    "type": "linear"
+                  },
+                  "showPoints": "auto",
+                  "spanNulls": true,
+                  "stacking": {
+                    "group": "A",
+                    "mode": "none"
+                  },
+                  "thresholdsStyle": {
+                    "mode": "off"
+                  }
+                },
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                },
+                "unit": "none"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 157
+            },
+            "id": 68,
+            "options": {
+              "legend": {
+                "calcs": [],
+                "displayMode": "list",
+                "placement": "bottom"
+              },
+              "tooltip": {
+                "mode": "single"
+              }
+            },
+            "targets": [
+              {
+                "alias": "ms10",
+                "groupBy": [
+                  {
+                    "params": [
+                      "$__interval"
+                    ],
+                    "type": "time"
+                  },
+                  {
+                    "params": [
+                      "null"
+                    ],
+                    "type": "fill"
+                  }
+                ],
+                "orderByTime": "ASC",
+                "policy": "default",
+                "query": "SELECT \"ms10\" FROM \"net_hist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "A",
+                "resultFormat": "time_series",
+                "select": [
+                  [
+                    {
+                      "params": [
+                        "value"
+                      ],
+                      "type": "field"
+                    },
+                    {
+                      "params": [],
+                      "type": "mean"
+                    }
+                  ]
+                ],
+                "tags": []
+              },
+              {
+                "alias": "ms100",
+                "hide": false,
+                "query": "SELECT \"ms100\" FROM \"net_hist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "B",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "s1",
+                "hide": false,
+                "query": "SELECT \"s1\" FROM \"net_hist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "C",
+                "resultFormat": "time_series"
+              },
+              {
+                "alias": "so",
+                "hide": false,
+                "query": "SELECT \"so\" FROM \"net_hist\" WHERE (\"host\" =~ /^$LINUXHOST$/) AND $timeFilter",
+                "rawQuery": true,
+                "refId": "D",
+                "resultFormat": "time_series"
+              }
+            ],
+            "title": "nethist",
+            "type": "timeseries"
+          }
+        ],
+        "refresh": "5s",
+        "schemaVersion": 32,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+          "list": [
+            {
+              "allValue": null,
+              "current": {
+                "selected": true,
+                "text": "None",
+                "value": "None"
+              },
+              "datasource": "sysom-influxdb",
+              "definition": "SHOW TAG VALUES WITH KEY = \"host\"",
+              "description": null,
+              "error": null,
+              "hide": 0,
+              "includeAll": false,
+              "label": null,
+              "multi": false,
+              "name": "LINUXHOST",
+              "options": [],
+              "query": "SHOW TAG VALUES WITH KEY = \"host\"",
+              "refresh": 1,
+              "regex": "",
+              "skipUrlSync": false,
+              "sort": 1,
+              "type": "query"
+            }
+          ]
+        },
+        "time": {
+          "from": "now-3h",
+          "to": "now"
+        },
+        "timepicker": {},
+        "timezone": "",
+        "title": "sysom-netinfo",
+        "uid": "sysom-netinfo",
+        "version": 4
+      }
+}

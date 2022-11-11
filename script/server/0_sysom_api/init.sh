@@ -9,7 +9,11 @@
 
 ALIYUN_MIRROR="https://mirrors.aliyun.com/pypi/simple/"
 APP_NAME="sysom"
-API_DIR="sysom_api"
+SERVER_DIR="sysom_server"
+API_DIR=$SERVER_DIR/sysom_api
+DIAGNOSIS_DIR=$SERVER_DIR/sysom_diagnosis
+CHANNEL_DIR=$SERVER_DIR/sysom_channel
+SDK_DIR=$SERVER_DIR/sdk
 WEB_DIR="sysom_web"
 
 VIRTUALENV_HOME="${SERVER_HOME}/virtualenv"
@@ -87,7 +91,9 @@ setup_database() {
     mysql -uroot -e "grant usage on *.* to 'sysom'@'localhost' identified by 'sysom_admin'"
     mysql -uroot -e "drop database if exists sysom;"
     mysql -uroot -e "create database sysom character set utf8;"
+    mysql -uroot -e "create database grafana character set utf8;"
     mysql -uroot -e "grant all privileges on sysom.* to 'sysom'@'%';"
+    mysql -uroot -e "grant all privileges on grafana.* to 'sysom'@'%';"
     mysql -uroot -e "flush privileges;"
 }
 
@@ -105,6 +111,28 @@ init_conf() {
     python manage.py makemigrations channel
     python manage.py migrate
     popd
+
+    pushd ${TARGET_PATH}/${DIAGNOSIS_DIR}
+    rm -f apps/*/migrations/00*.py
+    python manage.py makemigrations task
+    python manage.py migrate
+    popd
+
+
+    pushd ${TARGET_PATH}/${CHANNEL_DIR}
+    rm -f apps/*/migrations/00*.py
+    python manage.py makemigrations channel
+    python manage.py migrate
+    popd
+}
+
+install_sdk() {
+    pushd ${TARGET_PATH}/${SDK_DIR}
+    python setup_cec_base.py develop
+    python setup_cec_redis.py develop
+    python setup_channel_job.py develop
+    sudo rm -r *.egg-info build dist
+    popd
 }
 
 start_app() {
@@ -120,6 +148,7 @@ deploy() {
     check_selinux_status
     touch_virtualenv
     check_requirements
+    install_sdk
     setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
     init_conf
     start_app

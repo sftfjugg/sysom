@@ -2,7 +2,7 @@
 
 UPLOAD_DIR=${SERVER_HOME}/target/sysom_web/download/
 RESOURCE_DIR=${SERVER_HOME}/monitor
-GRAFANA_PKG=grafana-8.2.5-1.x86_64.rpm
+GRAFANA_PKG=grafana-9.2.2-1.x86_64.rpm
 PROMETHEUS_VER=2.29.1
 PROMETHEUS_ARCH=linux-amd64
 PROMETHEUS_PKG=prometheus-${PROMETHEUS_VER}.${PROMETHEUS_ARCH}
@@ -16,8 +16,8 @@ PROMETHEUS_DL_URL=https://github.com/prometheus/prometheus/releases/download/v${
 NODE_DL_URL=https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VER}
 NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
-NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_api/service_scripts/node_init
-NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_api/service_scripts/node_delete
+NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_init
+NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_delete
 
 BASE_DIR=`dirname $0`
 
@@ -52,16 +52,36 @@ install_grafana()
 {
     echo "install grafana......"
 
-    pushd $RESOURCE_DIR
-    ls | grep $GRAFANA_PKG 1>/dev/null 2>/dev/null
+    pushd ${RESOURCE_DIR}
+    ls | grep ${GRAFANA_PKG} 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
-        wget $OSS_URL/$GRAFANA_PKG || wget $GRAFANA_DL_URL/$GRAFANA_PKG
+        wget ${OSS_URL}/${GRAFANA_PKG} || wget ${GRAFANA_DL_URL}/${GRAFANA_PKG}
         ls
     fi
 
-    yum install -y $GRAFANA_PKG
+    yum install -y ./${GRAFANA_PKG}
     popd
+}
+
+install_and_config_influxdb()
+{
+    # install influxdb
+    cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
+[influxdb]
+name = InfluxDB Repository - RHEL \$releasever
+baseurl = https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+enabled = 1
+gpgcheck = 1
+gpgkey = https://repos.influxdata.com/influxdb.key
+EOF
+    rpm -q --quiet influxdb || yum install -y influxdb
+    systemctl enable influxdb.service
+    systemctl start influxdb.service
+
+    # config influxdb
+    influx -execute "create user \"admin\" with password 'sysom_admin'"
+    influx -execute "create database sysom_monitor"
 }
 
 ##configure prometheus.yml to auto discovery new nodes
@@ -85,11 +105,10 @@ EOF
 start_prometheus_service()
 {
     ##create prometheus service
-    prometheus_exec=${RESOURCE_DIR}/prometheus/prometheus
-    prometheus_config="--config.file=\"${RESOURCE_DIR}/prometheus/prometheus.yml\""
-    prometheus_data="--storage.tsdb.path=\"${RESOURCE_DIR}/prometheus/data/\""
+    prometheus_dir=${RESOURCE_DIR}/prometheus/
+    prometheus_exec="bash -c \"cd $prometheus_dir && ./prometheus\""
     
-    prometheus_service_task="$service_task$prometheus_exec $prometheus_config $prometheus_data"
+    prometheus_service_task="$service_task$prometheus_exec"
 
     cat << EOF > prometheus.service
 $service_head
@@ -111,20 +130,20 @@ EOF
 install_prometheus()
 {
     echo "install prometheus......"
-    pushd $RESOURCE_DIR
+    pushd ${RESOURCE_DIR}
 
     rm -rf prometheus
 
-    ls | grep $PROMETHEUS_TAR 1>/dev/null 2>/dev/null
+    ls | grep ${PROMETHEUS_TAR} 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
-        wget $OSS_URL/$PROMETHEUS_TAR || wget $PROMETHEUS_DL_URL/$PROMETHEUS_TAR
+        wget ${OSS_URL}/${PROMETHEUS_TAR} || wget ${PROMETHEUS_DL_URL}/${PROMETHEUS_TAR}
         ls
     fi
-    tar -zxvf $PROMETHEUS_TAR
+    tar -zxvf ${PROMETHEUS_TAR}
 
     ##rename the prometheus directory
-    mv $PROMETHEUS_PKG prometheus
+    mv ${PROMETHEUS_PKG} prometheus
     popd
 }
 
@@ -132,14 +151,14 @@ install_prometheus()
 download_node_exporter()
 {
     echo "install node_exporter......"
-    pushd $RESOURCE_DIR
+    pushd ${RESOURCE_DIR}
     rm -rf node_exporter
 
-    ls | grep $NODE_EXPORTER_TAR 1>/dev/null 2>/dev/null
+    ls | grep ${NODE_EXPORTER_TAR} 1>/dev/null 2>/dev/null
     if [ $? -ne 0 ]
     then
         echo "wget node_exporter"
-        wget $OSS_URL/$NODE_EXPORTER_TAR || wget $NODE_DL_URL/$NODE_EXPORTER_TAR
+        wget ${OSS_URL}/${NODE_EXPORTER_TAR} || wget ${NODE_DL_URL}/${NODE_EXPORTER_TAR}
     fi
     popd
 
@@ -158,11 +177,11 @@ prepare_node_init_tar()
 
 set_node_init_cmd()
 {
-    sed "s#server_local_ip='xxx'#server_local_ip=\"${SERVER_LOCAL_IP}\"#" -i ${NODE_INIT_SCRIPT}
-    sed "s#server_public_ip='xxx'#server_public_ip=\"${SERVER_PUBLIC_IP}\"#" -i  ${NODE_INIT_SCRIPT}
-    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#" -i ${NODE_INIT_SCRIPT}
-    sed "s#server_home='xxx'#server_home=\"${SERVER_HOME}\"#" -i ${NODE_INIT_SCRIPT}
-    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#" -i ${NODE_DELETE_SCRIPT}
+    sed "s#server_local_ip='xxx'#server_local_ip=\"${SERVER_LOCAL_IP}\"#g" -i ${NODE_INIT_SCRIPT}
+    sed "s#server_public_ip='xxx'#server_public_ip=\"${SERVER_PUBLIC_IP}\"#g" -i  ${NODE_INIT_SCRIPT}
+    sed "s#server_port='xxx'#server_port=\"${SERVER_PORT}\"#g" -i  ${NODE_INIT_SCRIPT}
+    sed "s#app_home='xxx'#app_home=\"${APP_HOME}\"#g" -i ${NODE_INIT_SCRIPT}
+    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#g" -i ${NODE_DELETE_SCRIPT}
 }
 
 
@@ -173,14 +192,14 @@ configure_grafana()
 
 configure_cron()
 {
-    echo "* * * * * python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
-    echo "* * * * * sleep 30;python3 $RESOURCE_DIR/prometheus/prometheus_get_node.py" >> /var/spool/cron/root
+    echo "* * * * * python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
+    echo "* * * * * sleep 30;python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
 }
 
 main()
 {
     echo "perpare download resource packages: grafana, prometheus, node_exporter"
-    mkdir -p $RESOURCE_DIR
+    mkdir -p ${RESOURCE_DIR}
     install_grafana
     install_prometheus
     download_node_exporter
@@ -193,6 +212,8 @@ main()
 
     configure_grafana
     configure_cron
+
+    install_and_config_influxdb
 }
 
 main

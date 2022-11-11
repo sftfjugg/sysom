@@ -17,7 +17,7 @@ disable_grafana()
 uninstall_pkg()
 {
     rm -f /usr/lib/systemd/system/prometheus.service
-    rm -rf $RESOURCE_DIR/prometheus
+    rm -rf ${RESOURCE_DIR}/prometheus
     yum erase -y grafana.x86_64
     rm -rf /usr/share/grafana
     rm -rf /var/lib/grafana

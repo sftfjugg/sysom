@@ -2,6 +2,7 @@ import { Layout, Carousel, Menu } from 'antd';
 import { useIntl } from 'umi';
 import AvatarDrop from './../components/RightContent'
 import styles from './Welcome.less';
+import Footer from '@/components/Footer';
 
 const { SubMenu } = Menu;
 const { Header, Content } = Layout;
@@ -80,6 +81,11 @@ const Welcome = () => {
           }
         </Carousel>
       </Content>
+      <div style={{
+        width: "100%",
+        height: '12px'
+      }}/>
+      <Footer/>
     </Layout>
   );
 };
