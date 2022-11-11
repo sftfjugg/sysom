@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+from typing import Union
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins, status
@@ -223,21 +224,42 @@ class PermissionViewSet(GenericViewSet,
 
 class ChangePasswordViewSet(APIView):
     """Change User Password"""
-    required_fields = ['row_password', 'new_password', 'new_password_again']
+    authentication_classes = []
+    required_fields = ['username', 'row_password', 'new_password', 'new_password_again']
+
+    @classmethod
+    def _verfiy_user(cls, username: str, password: str) -> Union[None, models.User]:
+        """
+        验证用户
+        @args username<str>: 用户名称
+        @args password<str>: 用户登录的明文密码
+        """
+        try:
+            user: models.User = models.User.objects.get(username=username)
+        except models.User.DoesNotExist:
+            return None
+        else:
+            return user if user.verify_password(plain_password=password) else None
 
     def post(self, request: Request):
-        user = request.user
+        """
+        用户修改密码
+        """
         data = request.data
         for f in filter(lambda x: not x[1], [(field, data.get(field, None)) for field in self.required_fields]):
             return other_response(message=f'{f[0]} 不能为空', code=400, result={})
-        if data.get('new_password') != data.get('new_password_again'):
-            return other_response(message="两次密码不一致", code=400, result={})
-        if not user.verify_password(data.get('row_password')):
-            return other_response(message="原始密码错误", code=400, result={})
+
+        if data['new_password'] != data['new_password_again']:
+            return other_response(message="两次密码不一致", code=400, result={}, success=False)
+
+        user = self._verfiy_user(data['username'], data['row_password'])
+        if user is None:
+            return other_response(message='请检查原账号信息', code=400, result={}, success=False)
+
         try:
             user.password = user.make_password(data.get('new_password'))
             user.save()
         except Exception as e:
             logger.error(e)
-            return other_response(message=f"数据库错误！{e}", code=400)
+            return other_response(message=f"数据库错误！{e}", code=400, success=False)
         return success(result={}, message="密码修成成功")
