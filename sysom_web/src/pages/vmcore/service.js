@@ -98,3 +98,11 @@ export async function postConfig(params, options) {
     ...(options || {}),
   });
 }
+// /api/v1/vmcore/
+export async function postSource(params, options) {
+  return request('/api/v1/vmcore/', {
+    method: 'POST',
+    data: params,
+    ...(options || {}),
+  });
+}

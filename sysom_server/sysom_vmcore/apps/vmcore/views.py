@@ -5,12 +5,12 @@ from rest_framework import mixins
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 
-from apps.accounts.permissions import IsAdminPermission
-from apps.accounts.authentication import Authentication
+# from apps.accounts.permissions import IsAdminPermission
+# from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
 from lib.response import success, other_response
-from sysom import settings
+from django.conf import settings
 import datetime
 import re
 
@@ -28,9 +28,9 @@ class VmcoreViewSet(GenericViewSet,
                        mixins.CreateModelMixin,
                        mixins.DestroyModelMixin
                        ):
-    queryset = models.Panic.objects.filter(deleted_at=None)
+    queryset = models.Panic.objects.all()
     serializer_class = serializer.PanicListSerializer
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['hostname', 'calltrace', 'id', 'name', 'ver']
     
@@ -297,10 +297,10 @@ class IssueModelViewSet(GenericViewSet,
                        mixins.ListModelMixin,
                        mixins.UpdateModelMixin,
                        mixins.RetrieveModelMixin):
-    queryset = models.Issue.objects.filter(deleted_at=None)
+    queryset = models.Issue.objects.all()
     serializer_class = serializer.IssueSerializer
-    authentication_classes = [Authentication]
-    permission_classes = [IsAdminPermission]
+    # authentication_classes = [Authentication]
+    # permission_classes = [IsAdminPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['id']
 
@@ -311,11 +311,11 @@ class IssueModelViewSet(GenericViewSet,
         elif 'vmcore_id' in data:
             vmcore = models.Panic.objects.filter(id=data['vmcore_id'])
             if len(vmcore) == 0:
-                return models.Issue.objects.filter(deleted_at=None)
+                return models.Issue.objects.all()
             issue_id = vmcore[0].issue_id
             return models.Issue.objects.filter(id=issue_id)
         else:
-            return models.Issue.objects.filter(deleted_at=None)
+            return models.Issue.objects.all()
 
     def get_serializer_class(self):
         if self.request.method == "GET":
