@@ -37,7 +37,7 @@ if arg_time:
 arg_thresh = args["thresh"]
 
 dump_log_cmd = "cat /var/log/sysak/schedmoni/schedmoni.json;"
-schedmoni_cmd = "sysak schedmoni -j "+str(arg_time)+" "+str(arg_thresh)+" > /dev/null"
+schedmoni_cmd = "sysak -g schedmoni -j "+str(arg_time)+" "+str(arg_thresh)+" > /dev/null"
 cmd0['cmd'] = schedmoni_cmd+" && "+dump_log_cmd
 
 result['commands'].append(cmd0)
