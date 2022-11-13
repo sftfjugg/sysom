@@ -23,6 +23,7 @@ from lib.exception import APIException
 from lib.excel import Excel
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
+from channel_job import default_channel_job_executor
 
 
 logger = logging.getLogger(__name__)
@@ -139,22 +140,38 @@ class HostModelViewSet(CommonModelViewSet,
         return instance if instance else None
 
     def client_deploy_cmd_init(self, instance, params: dict):
+        job_result = default_channel_job_executor.dispatch_job(
+            channel_type="ssh", channel_opt="init",
+            params={
+                "instance": instance.ip,
+                "username": instance.username,
+                "port": instance.port,
+                **params
+            },
+            timeout=1000,
+            auto_retry=True
+        ).execute()
+        if job_result.code != 0:
+            instance.status = 1
+            instance.description = job_result.err_msg
+            instance.save()
+            raise APIException(message=job_result.err_msg)
+
+        instance.status = 0
+        instance.save()
+
+        # Init success, notify all plugin to initial
         request: Request = getattr(self, 'request')
         self.produce_event_to_cec(
-            settings.SYSOM_CEC_CHANNEL_TOPIC,
+            settings.SYSOM_CEC_PLUGIN_TOPIC,
             {
-                "channel": "ssh",
                 "type": "init",
                 "params": {
+                    "channel": "ssh",
                     "instance": instance.ip,
                     "username": instance.username,
                     "port": instance.port,
-                    **params
-                },
-                "echo": {
-                    "instance": instance.ip,
-                    "token": request.META.get('HTTP_AUTHORIZATION'),
-                    "label": "host_init"
+                    "token": request.META.get('HTTP_AUTHORIZATION')
                 }
             }
         )
@@ -162,7 +179,6 @@ class HostModelViewSet(CommonModelViewSet,
 
     def client_deploy_cmd_delete(self, instance: HostModel):
         request: Request = getattr(self, 'request')
-        print("begin client_deploy_cmd_delete")
         # 通知所有插件执行清理操作
         self.produce_event_to_cec(
             settings.SYSOM_CEC_PLUGIN_TOPIC,
@@ -181,18 +197,6 @@ class HostModelViewSet(CommonModelViewSet,
                 }
             }
         )
-        print("end client_deploy_cmd_delete")
-        # request: Request = getattr(self, 'request')
-        # data = {}
-        # data['service_name'] = "node_delete"
-        # data['instance'] = instance.ip
-
-        # kwargs = {}
-        # kwargs['data'] = data
-        # kwargs['token'] = request.META.get('HTTP_AUTHORIZATION')
-        # self.produce_event_to_cec(
-        #     settings.SYSOM_CEC_TASK_GENERATE_TOPIC, kwargs)
-        # logger.info(f'node delete task create success')
 
     def _get_cluster_instance(self, cluster_name):
         try:
