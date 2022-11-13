@@ -13,7 +13,10 @@ setuptools.setup(
     author_email="mfeng@linux.alibaba.com",
     description="A common event center interface definition package",
     url="",
-    packages=setuptools.find_packages(),
+    packages=["cec_base"],
+    install_requires=[
+        "loguru>=0.6.0"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GPL License",
