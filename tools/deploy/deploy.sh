@@ -94,15 +94,11 @@ init_conf() {
     mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
     cp tools/deploy/nginx.conf /etc/nginx/
     cp tools/deploy/sysom.conf /etc/nginx/conf.d/
-    cp tools/deploy/sysom.ini /etc/supervisord.d/
-    cp tools/deploy/diagnosis-service.ini /etc/supervisord.d/
-    cp tools/deploy/channel-service.ini /etc/supervisord.d/
+    cp tools/deploy/sysom*ini /etc/supervisord.d/
     ###change the install dir base on param $1###
     sed -i "s;SERVER_PORT;${SERVER_PORT};g" /etc/nginx/conf.d/sysom.conf
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
-    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/sysom.ini
-    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/diagnosis-service.ini
-    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/channel-service.ini
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/sysom*ini
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
     cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
     sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${DIAGNOSIS_DIR}/conf/diagnosis_gunicorn.py
