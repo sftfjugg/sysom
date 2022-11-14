@@ -19,7 +19,6 @@ INSTALLED_APPS = [
     'apps.vul',
     'apps.accounts',
     'apps.host',
-    'apps.monitor',
     'apps.alarm',
 
     'rest_framework',
