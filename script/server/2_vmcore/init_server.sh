@@ -14,4 +14,4 @@ chmod -R 777 ${file_path}
 
 cp parse_panic.py ${SERVER_HOME}/vmcore
 cp vmcore_const.py ${SERVER_HOME}/vmcore
-echo "* * * * * pushd ${SERVER_HOME}/vmcore;python3 parse_panic.py ${file_path};popd" >> /var/spool/cron/root
+echo "* * * * * pushd ${SERVER_HOME}/vmcore;python3 parse_panic.py ${file_path} ${SERVER_PORT};popd" >> /var/spool/cron/root
