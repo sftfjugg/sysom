@@ -14,17 +14,24 @@ import uuid
 class JobEntry:
     def __init__(self, channel_type: str = "ssh", channel_opt: str = "cmd",
                  params: dict = {}, echo: dict = {},
-                 listen_topic: str = "", job_id: Optional[str] = None) -> None:
+                 listen_topic: str = "", job_id: Optional[str] = None,
+                 **kwargs) -> None:
         self.channel_type = channel_type
         self.channel_opt = channel_opt
         self.params = params
         self.job_id = job_id
         self.echo = echo
         self.listen_topic = listen_topic
+        self.timeout = kwargs.get("timeout", 1000)
+        self.auto_retry = kwargs.get("auto_retry", False)
         if self.job_id is None:
             self.job_id = str(uuid.uuid4())
 
     def to_channel_vlaue(self) -> dict:
+        if "timeout" not in self.params:
+            self.params["timeout"] = self.timeout
+        if "auto_retry" not in self.params:
+            self.params["auto_retry"] = self.auto_retry
         result = {
             "channel": self.channel_type,
             "type": self.channel_opt,
