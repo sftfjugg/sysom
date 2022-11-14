@@ -6,4 +6,6 @@ Email               mfeng@linux.alibaba.com
 File                __init__.py.py
 Description:
 """
+from .job import *
+
 name = "channel_job"
