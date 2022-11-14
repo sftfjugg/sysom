@@ -145,22 +145,14 @@ class ChannelJob:
                 self._chunk_callback(result)
 
         if result.is_finished:
-            # Job is finished and no exception has been thrown, collect all result
-            final_result: JobResult = JobResult.parse_by_other_job_result(
-                result)
-            final_result.result = ""
-            final_result.err_msg = ""
             if len(self._results) <= 0:
                 self._results.append(result)
                 invoke_chunk_callback(result)
-            for chunk in self._results:
-                final_result.result += chunk.result
-                final_result.err_msg += chunk.err_msg
-            self._final_result = final_result
+            self._final_result = result
             with self._finish_conn:
                 self._finish_conn.notify()
             if self._finish_callback is not None:
-                self._finish_callback(final_result)
+                self._finish_callback(result)
         else:
             invoke_chunk_callback(result)
             self._results.append(result)
