@@ -92,22 +92,24 @@ const Login = () => {
           });
           message.success(defaultLoginSuccessMessage);
 
-          if (!history) return;
-          const { query } = history.location;
-          const { redirect } = query;
-          history.push(redirect || '/');
+          // if (!history) return;
+          // const { query } = history.location;
+          // const { redirect } = query;
+          // history.push(redirect || '/');
+          history.push('/');
           return;
         }
 
-        console.log(msg); // 如果失败去设置用户错误信息
+        // console.log(msg); // 如果失败去设置用户错误信息
 
         setUserPasswordState(msg);
       } catch (error) {
-        const defaultLoginFailureMessage = intl.formatMessage({
-          id: 'pages.password.failure',
-          defaultMessage: '密码修改失败，请重试！',
-        });
-        message.error(defaultLoginFailureMessage);
+        // message.error("111");
+        // const defaultLoginFailureMessage = intl.formatMessage({
+        //   id: 'pages.password.failure',
+        //   defaultMessage: '密码修改失败，请重试！',
+        // });
+        // message.error(defaultLoginFailureMessage);
       }
     }
     
