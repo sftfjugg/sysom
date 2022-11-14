@@ -207,11 +207,11 @@ class TaskDispatcher(CecClient):
                         **data,
                         "instance": script.get("instance", "Unknown"),
                         "command": script.get("cmd", "Unknown"),
-                        "timeout": 1000 * 60 * 10,  # 10 minutes
                     },
                     "echo": {
                         "task_id": task_id
-                    }
+                    },
+                    "timeout": 1000 * 60 * 10,  # 10 minutes
                 }
                 # 前 n - 1 个命令同步执行
                 if idx < len(resp_scripts) - 1:
