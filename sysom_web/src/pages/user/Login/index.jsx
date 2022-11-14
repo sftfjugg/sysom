@@ -79,24 +79,18 @@ const Login = () => {
         message.error(defaultLoginFailureMessage);
       }
     }else if(type==="password"){
-      // console.log(type,values,"lllllllllllll");
       try {
         // 密码修改
         const msg = await ChangePassword({ ...values, type });
-        // console.log(msg,type,values,"lllllllllllll");
 
         if (msg.code === 200) {
           const defaultLoginSuccessMessage = intl.formatMessage({
             id: 'pages.changepassword.success',
             defaultMessage: '密码修改成功！',
           });
-          message.success(defaultLoginSuccessMessage);
 
-          // if (!history) return;
-          // const { query } = history.location;
-          // const { redirect } = query;
-          // history.push(redirect || '/');
-          history.push('/');
+          message.success(defaultLoginSuccessMessage);
+          window.location.replace(location);//刷新当前页面
           return;
         }
 
