@@ -35,3 +35,15 @@ export async function login(body, options) {
     ...(options || {}),
   });
 }
+
+/** 密码修改接口 POST /api/v1/change_password/ */
+export async function ChangePassword(body, options) {
+  return request('/api/v1/change_password/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}

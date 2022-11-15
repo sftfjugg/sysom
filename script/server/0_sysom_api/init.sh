@@ -13,6 +13,7 @@ SERVER_DIR="sysom_server"
 API_DIR=$SERVER_DIR/sysom_api
 DIAGNOSIS_DIR=$SERVER_DIR/sysom_diagnosis
 CHANNEL_DIR=$SERVER_DIR/sysom_channel_v2
+VMCORE_DIR=$SERVER_DIR/sysom_vmcore
 SDK_DIR=$SERVER_DIR/sdk
 WEB_DIR="sysom_web"
 
@@ -103,12 +104,8 @@ init_conf() {
     rm -f apps/*/migrations/00*.py
     python manage.py makemigrations accounts
     python manage.py makemigrations host
-    python manage.py makemigrations vmcore
-    python manage.py makemigrations task
-    python manage.py makemigrations monitor
     python manage.py makemigrations alarm
     python manage.py makemigrations vul
-    python manage.py makemigrations channel
     python manage.py migrate
     popd
 
@@ -118,9 +115,14 @@ init_conf() {
     python manage.py migrate
     popd
 
-
     pushd ${TARGET_PATH}/${CHANNEL_DIR}
     alembic upgrade head
+    popd
+
+    pushd ${TARGET_PATH}/${VMCORE_DIR}
+    rm -f apps/*/migrations/00*.py
+    python manage.py makemigrations vmcore
+    python manage.py migrate
     popd
 }
 
