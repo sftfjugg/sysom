@@ -48,7 +48,8 @@ class Channel(BaseChannel):
         valid_result = valid_params(["instance", "password"], kwargs)
         if len(valid_result) == 0:
             host, password = kwargs.pop("instance"), kwargs.pop("password")
-            success, err_msg = SSH.validate_ssh_host(host, password, **kwargs)
+            port, username = kwargs.pop("port", 22), kwargs.pop("username", "root")
+            success, err_msg = SSH.validate_ssh_host(host, password, port, username)
             if not success:
                 raise ChannelException(err_msg)
         else:
