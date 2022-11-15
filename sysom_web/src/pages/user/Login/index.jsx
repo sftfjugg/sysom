@@ -79,35 +79,31 @@ const Login = () => {
         message.error(defaultLoginFailureMessage);
       }
     }else if(type==="password"){
-      // console.log(type,values,"lllllllllllll");
       try {
         // 密码修改
         const msg = await ChangePassword({ ...values, type });
-        // console.log(msg,type,values,"lllllllllllll");
 
         if (msg.code === 200) {
           const defaultLoginSuccessMessage = intl.formatMessage({
             id: 'pages.changepassword.success',
             defaultMessage: '密码修改成功！',
           });
-          message.success(defaultLoginSuccessMessage);
 
-          if (!history) return;
-          const { query } = history.location;
-          const { redirect } = query;
-          history.push(redirect || '/');
+          message.success(defaultLoginSuccessMessage);
+          window.location.replace(location);//刷新当前页面
           return;
         }
 
-        console.log(msg); // 如果失败去设置用户错误信息
+        // console.log(msg); // 如果失败去设置用户错误信息
 
         setUserPasswordState(msg);
       } catch (error) {
-        const defaultLoginFailureMessage = intl.formatMessage({
-          id: 'pages.password.failure',
-          defaultMessage: '密码修改失败，请重试！',
-        });
-        message.error(defaultLoginFailureMessage);
+        // message.error("111");
+        // const defaultLoginFailureMessage = intl.formatMessage({
+        //   id: 'pages.password.failure',
+        //   defaultMessage: '密码修改失败，请重试！',
+        // });
+        // message.error(defaultLoginFailureMessage);
       }
     }
     
