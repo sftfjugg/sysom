@@ -12,7 +12,7 @@ APP_NAME="sysom"
 SERVER_DIR="sysom_server"
 API_DIR=$SERVER_DIR/sysom_api
 DIAGNOSIS_DIR=$SERVER_DIR/sysom_diagnosis
-CHANNEL_DIR=$SERVER_DIR/sysom_channel
+CHANNEL_DIR=$SERVER_DIR/sysom_channel_v2
 VMCORE_DIR=$SERVER_DIR/sysom_vmcore
 SDK_DIR=$SERVER_DIR/sdk
 WEB_DIR="sysom_web"
@@ -116,9 +116,7 @@ init_conf() {
     popd
 
     pushd ${TARGET_PATH}/${CHANNEL_DIR}
-    rm -f apps/*/migrations/00*.py
-    python manage.py makemigrations channel
-    python manage.py migrate
+    alembic upgrade head
     popd
 
     pushd ${TARGET_PATH}/${VMCORE_DIR}
