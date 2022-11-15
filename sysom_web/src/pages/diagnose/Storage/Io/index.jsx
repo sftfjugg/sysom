@@ -43,7 +43,7 @@ const IOList = () => {
       });
       ioList.push({
         diskname: item.diskname,
-        delays: msg.data.result.stat[index].delays,
+        delays: msg.result.stat[index].delays,
       });
       return ioList
     }, [])
