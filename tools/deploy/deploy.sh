@@ -40,6 +40,7 @@ fi
 
 SERVER_HOME=${APP_HOME}/server
 
+export APP_NAME=${APP_NAME}
 export APP_HOME=${APP_HOME}
 export SERVER_HOME=${APP_HOME}/server
 export NODE_HOME=${APP_HOME}/node
