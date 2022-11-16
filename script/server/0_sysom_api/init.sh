@@ -61,11 +61,7 @@ init_conf() {
 }
 
 start_app() {
-    systemctl enable nginx.service
-    systemctl enable redis.service
     systemctl enable supervisord.service
-    systemctl restart nginx.service
-    systemctl restart redis.service
     systemctl restart supervisord.service
 }
 
