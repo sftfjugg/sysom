@@ -51,6 +51,8 @@ touch_virtualenv() {
             exit 1
         fi
     fi
+    echo "INFO: activate virtualenv..."
+    source ${VIRTUALENV_HOME}/bin/activate || exit 1
 }
 
 check_requirements() {
