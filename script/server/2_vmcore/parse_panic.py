@@ -30,7 +30,8 @@ if sys.version[0] == '2':
 # 3:bugon_file
 #}
 nfs_root = '/usr/vmcore-nfs'
-root_url = 'http://127.0.0.1:7001'
+root_url = 'http://localhost'
+
 ltime_pattern = re.compile(r'^\[\s*([0-9]+)\..*\]')
 rip_pattern = re.compile(r'\[\s*\S+\] RIP: 0010:.*\[<([0-9a-f]+)>\] (.+)')
 rip_pattern_1 = re.compile(r'\[\s*\S+\] RIP: 0010:(\S+)')
@@ -531,8 +532,13 @@ def unmount_nfs():
 
 def main():
     global nfs_root
+    global root_url
+    server_port = 80
     if len(sys.argv) > 1:
         nfs_root = sys.argv[1]
+    if len(sys.argv) > 2:
+        server_port = sys.argv[2]
+    root_url = root_url + ":" + server_port
     dirs_list = []
     #while True:
     hasnfs = mount_nfs()

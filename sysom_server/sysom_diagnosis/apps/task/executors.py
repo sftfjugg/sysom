@@ -206,23 +206,24 @@ class TaskDispatcher(CecClient):
                     "params": {
                         **data,
                         "instance": script.get("instance", "Unknown"),
-                        "command": script.get("cmd", "Unknown")
+                        "command": script.get("cmd", "Unknown"),
                     },
                     "echo": {
                         "task_id": task_id
-                    }
+                    },
+                    "timeout": 1000 * 60 * 10,  # 10 minutes
                 }
                 # 前 n - 1 个命令同步执行
                 if idx < len(resp_scripts) - 1:
                     job_result = default_channel_job_executor.dispatch_job(**job_params) \
-                        .execute(timeout=5000)
+                        .execute()
                     if job_result.code != 0:
                         raise Exception(
                             f"Task execute failed: {job_result.err_msg}")
                 else:
                     # 最后一个命令异步执行
                     default_channel_job_executor.dispatch_job(**job_params) \
-                        .execute_async(self._process_task_result)
+                        .execute_async_with_callback(self._process_task_result)
             # 任务创建成功，返回任务ID
             return {
                 "success": True,

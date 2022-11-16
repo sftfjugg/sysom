@@ -19,8 +19,6 @@ INSTALLED_APPS = [
     'apps.vul',
     'apps.accounts',
     'apps.host',
-    'apps.monitor',
-    'apps.vmcore',
     'apps.alarm',
 
     'rest_framework',
@@ -141,6 +139,12 @@ SYSOM_CEC_CHANNEL_RESULT_TOPIC = "SYSOM_CEC_CHANNEL_RESULT_TOPIC"
 SYSOM_CEC_PLUGIN_TOPIC = "SYSOM_CEC_PLUGIN_TOPIC"
 # API主机模块消费组
 SYSOM_CEC_API_HOST_CONSUMER_GROUP = "SYSOM_CEC_API_HOST_CONSUMER_GROUP"
+
+# 主机模块CEC配置
+SYSOM_HOST_LISTEN_TOPIC = "SYSOM_HOST_LISTEN_TOPIC"
+SYSOM_HOST_CONSUME_GROUP = "SYSOM_HOST_CONSUME_GROUP"
+SYSOM_HOST_CEC_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}&channel_job_listen_topic={SYSOM_HOST_LISTEN_TOPIC}&channel_job_consumer_group={SYSOM_HOST_CONSUME_GROUP}"
+
 
 SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
 ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')

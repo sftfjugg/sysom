@@ -1,10 +1,11 @@
-'''
-@File: ssh.py
-@Time: 2022-08-30 11:13:55
-@Author: DM
-@Email: wb-msm261421@alibaba-inc.com
-@Desc: ssh通道
-'''
+# -*- coding: utf-8 -*- #
+"""
+Time                2022/11/14 14:32
+Author:             mingfeng (SunnyQjm)
+Email               mfeng@linux.alibaba.com
+File                ssh.py
+Description:
+"""
 
 # SSH args eg:
 #	"channel": "ssh",        选填 (默认ssh)
@@ -13,50 +14,54 @@
 
 
 import logging
-from lib.utils import valid_params
-from lib.ssh import SSH
+from typing import Optional
+from lib.ssh import AsyncSSH
 
-from .base import BaseChannel, ChannelException
+from .base import BaseChannel, ChannelResult
 
 
 logger = logging.getLogger(__name__)
 
 
 class Channel(BaseChannel):
+    DEFAULT_TIMEOUT = 1000
     FIELDS = ('instance', 'command')
 
     def __init__(self, *args, **kwargs) -> None:
-        self.kwargs = kwargs
-        self.ssh = None
-        self.shell_script = None
+        self._kwargs = kwargs
+        self._ssh_client: Optional[AsyncSSH] = None
+        self._command: str = ""
 
-        self.validate_kwargs()
+        self._validate_kwargs()
 
-    def validate_kwargs(self):
-        for item in filter(
-            lambda x: not x[1], [(field, self.kwargs.get(field, None))
-                                 for field in self.FIELDS]
-        ):
-            raise Exception(f'parameter: {item[0]} not found!')
+    def _validate_kwargs(self):
+        if "instance" not in self._kwargs:
+            raise Exception(f"parameter: instance not found")
+        if "command" not in self._kwargs:
+            raise Exception("parameter: command not found")
 
-        if not self.ssh:
-            self.ssh = SSH(hostname=self.kwargs['instance'])
-            self.shell_script = self.kwargs['command']
-            
+        if self._ssh_client is None:
+            self._ssh_client = AsyncSSH(self._kwargs['instance'])
+            self._command = self._kwargs["command"]
+
     @staticmethod
     def initial(**kwargs) -> bool:
-        valid_result = valid_params(["instance", "password"], kwargs)
-        if len(valid_result) == 0:
-            host, password = kwargs.pop("instance"), kwargs.pop("password")
-            success, err_msg = SSH.validate_ssh_host(host, password, **kwargs)
-            if not success:
-                raise ChannelException(err_msg)
-        else:
-            raise ChannelException(f"Missing parameters: {', '.join(valid_result)}")
-        return 0, ""
-    
-    def client(self):
-        return self.ssh if self.ssh else SSH(hostname=self.kwargs['instance'])
+        result = ChannelResult()
+        try:
+            AsyncSSH(kwargs.pop("instance", ""), **kwargs).add_public_key(
+                timeout=kwargs.pop("timeout", Channel.DEFAULT_TIMEOUT)
+            )
+            result.code = 0
+            result.result = ""
+        except Exception as e:
+            result.code = 1
+            result.err_msg = str(e)
+        return result
 
-    def run_command(self):
-        return self.ssh.run_command(self.shell_script)
+    def run_command(self, **kwargs):
+        res = self._ssh_client.run_command(self._command, **kwargs)
+        return ChannelResult(
+            code=res.get("exit_status", 0),
+            result=res.get("total_out", ""),
+            err_msg=res.get("err_msg", "")
+        )

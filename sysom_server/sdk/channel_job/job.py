@@ -8,6 +8,10 @@ Description:
 """
 from typing import Optional, Callable, List, Dict
 import threading
+import anyio
+import requests
+import json
+# from schedule import Scheduler
 from cec_base.consumer import Consumer, dispatch_consumer
 from cec_base.producer import Producer, dispatch_producer
 from cec_base.admin import Admin, dispatch_admin
@@ -43,14 +47,19 @@ class ChannelJob:
         self._final_result: Optional[JobResult] = None
         self._finish_conn: threading.Condition = threading.Condition()
 
-    def execute(self, chunk_callback: Callable[[JobResult], None] = None, timeout: int = None) -> JobResult:
+        # # timeout check scheduler
+        # self._timeout_task_scheduler = Scheduler()
+
+    def execute(
+        self, chunk_callback: Callable[[JobResult], None] = None,
+        **kwargs
+    ) -> JobResult:
         """Get results by synchronization
 
         Args:
             chunk_callback(Callable[[JobResult], None]): A callback function that is 
             called every time a return result is received and can be used to fetch 
             streaming data.
-            timeout(int): Maximum waiting time in millisecond
 
         Raises:
             ChannlJobException: Unexpected errors occur during job execution
@@ -58,6 +67,9 @@ class ChannelJob:
         """
         # 1. Bind optional chunk callback
         self._chunk_callback = chunk_callback
+
+        self.job_entry.timeout = kwargs.get("timeout", self.job_entry.timeout)
+        timeout = self.job_entry.timeout
 
         with self._finish_conn:
             # 2. Delivery job to CEC
@@ -75,12 +87,24 @@ class ChannelJob:
                 )
             return self._final_result
 
-    def execute_async(
+    async def execute_async(
+        self, chunk_callback: Callable[[JobResult], None] = None
+    ) -> JobResult:
+        """Execute channel by asynchronous
+
+        Args:
+            chunk_callback(Callable[[JobResult], None]): A callback function that is
+        """
+        return anyio.to_thread.run_sync(
+            self.execute, chunk_callback
+        )
+
+    def execute_async_with_callback(
         self,
         finish_callback: Callable[[JobResult], None],
         chunk_callback: Callable[[JobResult], None] = None,
     ):
-        """Get results by asynchronous
+        """Get results by asynchronous with callback
 
         """
         self._finish_callback = finish_callback
@@ -116,40 +140,148 @@ class ChannelJob:
 
     def _update_chunk(self, result: JobResult):
         """Invoke each chunk is received"""
-        if self._chunk_callback is not None:
-            self._chunk_callback(result)
-        self._results.append(result)
+        def invoke_chunk_callback(result: JobResult):
+            if self._chunk_callback is not None:
+                self._chunk_callback(result)
+
         if result.is_finished:
-            # Job is finished and no exception has been thrown, collect all result
-            final_result: JobResult = JobResult.parse_by_other_job_result(result)
-            final_result.result = ""
-            final_result.err_msg = ""
-            for chunk in self._results:
-                final_result.result += chunk.result
-                final_result.err_msg += chunk.err_msg
-            self._final_result = final_result
+            if len(self._results) <= 0:
+                self._results.append(result)
+                invoke_chunk_callback(result)
+            self._final_result = result
             with self._finish_conn:
                 self._finish_conn.notify()
             if self._finish_callback is not None:
-                self._finish_callback(final_result)
+                self._finish_callback(result)
+        else:
+            invoke_chunk_callback(result)
+            self._results.append(result)
+
+
+class ChannelFileJob:
+    _OPT_TABLE = {
+        "send-file": "/api/v1/channel/file/send",
+        "get-file": "/api/v1/channel/file/get"
+    }
+
+    def __init__(
+        self, base_url: str,
+        opt: str = "send-file",
+        local_path: str = "",
+        remote_path: str = "",
+        instances: List[str] = [],
+        instance: str = "",
+    ) -> None:
+        self.base_url: str = base_url
+        self.opt: str = opt
+        self.local_path: str = local_path
+        self.remote_path: str = remote_path
+        self.instances: str = instances
+        self.instance = instance
+
+    def _send_file(self) -> JobResult:
+        url = f"{self.base_url}{self._OPT_TABLE[self.opt]}"
+        payload = {
+            "target_path": self.remote_path,
+            "target_instances": ";".join(self.instances)
+        }
+        files = [
+            ('file', (self.local_path, open(
+                self.local_path, 'rb'), 'application/octet-stream'))
+        ]
+        headers = {
+            'User-Agent': 'sysom_channel_job/1.0.0'
+        }
+        response = requests.request(
+            "POST", url, headers=headers, data=payload, files=files)
+        return JobResult(
+            code=response.status_code,
+            err_msg="" if response.status_code == 200 else f"{response.reason}: {response.text}",
+            result=response.text
+        )
+
+    def _get_file(self) -> JobResult:
+        url = f"{self.base_url}{self._OPT_TABLE[self.opt]}"
+        payload = {
+            "target_instance": self.instance,
+            "remote_path": self.remote_path,
+        }
+        headers = {
+            'User-Agent': 'sysom_channel_job/1.0.0',
+            'Content-Type': 'application/json'
+        }
+        with requests.get(url, headers=headers, data=json.dumps(payload)) as r:
+            with open(self.local_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1024*1024):
+                    if chunk:
+                        f.write(chunk)
+            if r.status_code == 200:
+                return JobResult(
+                    code=0,
+                    result=""
+                )
+            else:
+                return JobResult(
+                    code=r.status_code,
+                    err_msg=r.text,
+                    result=""
+                )
+
+    def execute(self) -> JobResult:
+        if self.opt == "send-file":
+            return self._send_file()
+        elif self.opt == "get-file":
+            return self._get_file()
+
+    async def execute_async(self) -> JobResult:
+        return anyio.to_thread.run_sync(self.execute)
+
+
+class ChannelJobExecutorConfig:
+    def __init__(self, host: str = "") -> None:
+        pass
 
 
 class ChannelJobExecutor:
 
-    def __init__(self, url: Optional[str] = None) -> None:
+    def __init__(self) -> None:
         self._consumer: Optional[Consumer] = None
         self._producer: Optional[Producer] = None
         self._admin: Optional[Admin] = None
         self._target_topic = ""
         self._listen_topic = ""
+        self._channel_base_url = ""
         self._job_mapper: Dict[str, ChannelJob] = {
 
         }
-        if url is not None:
-            self.init_config(url)
 
-    def init_config(self, url: str):
-        cec_url = CecUrl.parse(url)
+    def initial_from_remote_server(self, channel_server_url: str):
+        """Auto initial ChannelJobExecutor
+
+        1. First pull the configuration from the remote server;
+        2. Automatic initialization based on the configuration returned by the server
+
+        Args:
+            channel_server_url(str): Channel server http url
+        """
+        # 1. First pull config from server
+        try:
+            response = requests.get(channel_server_url)
+            if response.status_code == 200:
+                configs = json.loads(response.json()["data"])
+                self.init_config(**configs)
+                pass
+            else:
+                raise ChannelJobException(
+                    f"Request config from {channel_server_url} failed: {response.status_code}")
+        except Exception as e:
+            raise ChannelJobException(e)
+
+    def init_config(
+        self, cec_url: str, channel_base_url: str = "http://127.0.0.1:7003"
+    ):
+        cec_url = CecUrl.parse(cec_url)
+        self._channel_base_url = channel_base_url
 
         # 1. Check require params
         self._target_topic = cec_url.params.pop(
@@ -195,11 +327,26 @@ class ChannelJobExecutor:
                 pass
 
     def dispatch_job(self, channel_type: str = "ssh", channel_opt: str = "cmd",
-                     params: dict = {}, echo: dict = {}) -> ChannelJob:
+                     params: dict = {}, echo: dict = {}, **kwargs) -> ChannelJob:
+        """Dispatch one channel job to channel services
+
+        Args:
+            channel_type(str): The type of channel used to execute job
+            channel_opt(str): The operation type, eg.: cmd, init
+            params(dict): Channl job parameters
+            echo(dict): Echo information
+
+        Keyword Args:
+            timeout: The maximum time to wait for a channel job to
+                     execute. (ms)
+            auto_retry: If the channel is not established successfully, it is
+                        automatically retried before the timeout period expires.
+        """
         # 1. Generate JobEntry
         job_entry = JobEntry(
             channel_type=channel_type, channel_opt=channel_opt,
-            params=params, echo=echo, listen_topic=self._listen_topic
+            params=params, echo=echo, listen_topic=self._listen_topic,
+            **kwargs
         )
 
         # 2. Cache job instance, used to trigger callback while result received
@@ -207,6 +354,9 @@ class ChannelJobExecutor:
         channel_job._bind_producer(self._producer, self._target_topic)
         self._job_mapper[job_entry.job_id] = channel_job
         return channel_job
+
+    def dispatch_file_job(self, opt: str = "send-file", params: dict = {}) -> ChannelFileJob:
+        return ChannelFileJob(base_url=self._channel_base_url, opt=opt, **params)
 
     def _deal_received_event(self, event: Event):
         job_result = JobResult.parse_by_cec_event_value(event.value)
