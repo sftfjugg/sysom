@@ -27,75 +27,9 @@ fi
 
 mkdir -p ${SERVER_HOME}
 
-check_selinux_status()
-{
-    ###check selinux rpm###
-    rpm -qa | grep selinux-policy
-    if [ $? -eq 0 ]
-    then
-        cat /etc/selinux/config  | grep "SELINUX=disabled"
-        if [ $? -eq 0 ]
-        then
-            echo "selinux disable..."
-        else
-            echo "selinux enable, please set selinux disable"
-            exit 1
-        fi
-    else
-        echo "selinux rpm package not install"
-    fi
-}
-
-touch_virtualenv() {
-    mkdir -p ~/.pip
-    cp pip.conf ~/.pip/
-    if [ -d ${VIRTUALENV_HOME} ]; then
-        echo "virtualenv exists, skip"
-    else
-        virtualenv-3  ${VIRTUALENV_HOME}
-        if [ "$?" = 0 ]; then
-            echo "INFO: create virtualenv success"
-        else
-            echo "ERROR: create virtualenv failed"
-            exit 1
-        fi
-    fi
+source_virtualenv() {
     echo "INFO: activate virtualenv..."
     source ${VIRTUALENV_HOME}/bin/activate || exit 1
-}
-
-check_requirements() {
-    echo "INFO: begin install requirements..."
-
-    if ! [ -d ${SERVER_HOME}/logs/ ]; then
-        mkdir -p ${SERVER_HOME}/logs/ || exit 1
-    fi
-
-    local requirements_log="${SERVER_HOME}/logs/${APP_NAME}_requirements.log"
-    local requirements="requirements.txt"
-    touch "$requirements_log" || exit
-    pip install pytest-runner cffi requests
-    pip install -r ${requirements} -i "${ALIYUN_MIRROR}" |tee -a "${requirements_log}" || exit 1
-    local pip_res=$?
-    if [ $pip_res -ne 0 ]; then
-        echo "ERROR: requirements not satisfied and auto install failed, please check ${requirements_log}"
-        exit 1
-    fi
-}
-
-setup_database() {
-    echo "INFO: begin create db..."
-
-    systemctl restart mariadb.service
-    systemctl enable mariadb.service
-    mysql -uroot -e "create user if not exists 'sysom'@'%' identified by 'sysom_admin';"
-    mysql -uroot -e "grant usage on *.* to 'sysom'@'localhost' identified by 'sysom_admin'"
-    mysql -uroot -e "drop database if exists sysom;"
-    mysql -uroot -e "create database sysom character set utf8;"
-    mysql -uroot -e "create database grafana character set utf8;"
-    mysql -uroot -e "grant all privileges on sysom.* to 'sysom'@'%';"
-    mysql -uroot -e "grant all privileges on grafana.* to 'sysom'@'%';"
-    mysql -uroot -e "flush privileges;"
 }
 
 init_conf() {
@@ -126,15 +60,6 @@ init_conf() {
     popd
 }
 
-install_sdk() {
-    pushd ${TARGET_PATH}/${SDK_DIR}
-    python setup_cec_base.py develop
-    python setup_cec_redis.py develop
-    python setup_channel_job.py develop
-    sudo rm -r *.egg-info build dist
-    popd
-}
-
 start_app() {
     systemctl enable nginx.service
     systemctl enable redis.service
@@ -145,11 +70,7 @@ start_app() {
 }
 
 deploy() {
-    check_selinux_status
-    touch_virtualenv
-    check_requirements
-    install_sdk
-    setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
+    source_virtualenv
     init_conf
     start_app
 }
