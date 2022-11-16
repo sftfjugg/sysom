@@ -11,11 +11,9 @@ worker_class = 'gevent'  # 工作模式线程, 默认为sync模式
 
 max_requests = 2000      # 设置最大并发数量为2000 (每个worker处理请求的工作线程)
 
-accesslog = '/usr/local/sysom/server/logs/diagnosis-service.log'
+accesslog = '/usr/local/sysom/server/logs/sysom-diagnosis-access.log'
 
-errorlog = '/usr/local/sysom/server/logs/diagnosis-service-error.log'
-
-loglevel = 'info'
+loglevel = 'error'
 
 proc_name = 'diagnosis_service'
 
