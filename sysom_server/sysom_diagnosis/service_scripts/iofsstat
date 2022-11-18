@@ -1,0 +1,38 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  如前端入参是这个：
+##  {
+##    "instance":"192.168.1.101",
+##    "diag_time":"15"
+##    "disk":"vda"
+##  }
+###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["instance"]
+cmd0_arg_T = args.get("diag_time","15")
+if int(cmd0_arg_T) <= 0:
+	cmd0_arg_T = 15
+disk = args.get("disk","")
+if len(disk) > 0:
+    cmd0_arg_device = ' -d '+disk
+iosdiag_cmd = "sysak iofsstat -m -P -j /tmp/iofsstat.json -c "+str(cmd0_arg_T)+" -T "+str(cmd0_arg_T)+cmd0_arg_device
+cmd0['cmd'] = "rm /tmp/iofsstat.json -f && "+iosdiag_cmd+" && cat /tmp/iofsstat.json"
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)

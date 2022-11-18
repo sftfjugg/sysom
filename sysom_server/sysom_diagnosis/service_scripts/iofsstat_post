@@ -1,0 +1,50 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+
+def iofsstatJoinData(raw):
+    if raw.find("diskstats") == -1:
+        print({"status": "fail"})
+        return
+
+    stat = {}
+    stat["diskIOstat"] = {"data": []}
+    s = raw.split('\n')
+    obj = json.loads(s[0])
+    if "diskstats" in str(s[0]):
+        stat["diskIOstat"]["data"] = obj["diskstats"]
+
+    obj = json.loads(s[1])
+    stat["taskIOstat"] = {"data": []}
+    if "mstats" in str(s[1]):
+        stat["taskIOblocksize"] = {"data": []}
+        stat["taskIOstat"]["data"] = obj["mstats"]
+        for o in obj["mstats"]:
+            pat = {'comm': o['comm'], 'pid': o['pid']}
+            for key, value in o.items():
+                if 'pat' in key:
+                    if o['iops_wr'] == 0 or value == 0:
+                        pat[key] = '0'
+                    else:
+                        pat[key] = \
+                            format(value/(o['iops_wr']*1.0)*100, '.2f')+'%'
+                    del o[key]
+            o['file'] = str(o['file'])
+            stat["taskIOblocksize"]["data"].append(pat)
+            if o.has_key('bufferio'):
+                o['children'] = o['bufferio']
+                del o['bufferio']
+    s = json.dumps(stat, indent=4)
+    print(s)
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+    res, _ = extract_params()
+    iofsstatJoinData(res)
