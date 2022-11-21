@@ -103,7 +103,6 @@ init_conf() {
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
     cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
     sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${DIAGNOSIS_DIR}/conf/diagnosis_gunicorn.py
-    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${CHANNEL_DIR}/conf/channel_gunicorn.py
 }
 
 start_script_server() {
