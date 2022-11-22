@@ -65,6 +65,8 @@ check_requirements() {
     local requirements_log="${SERVER_HOME}/logs/${APP_NAME}_requirements.log"
     local requirements="requirements.txt"
     touch "$requirements_log" || exit
+    ### atomic-0.7.3 need cffi, we show install cffi first###
+    pip install cffi
     pip install -r ${requirements} -i "${ALIYUN_MIRROR}" |tee -a "${requirements_log}" || exit 1
     local pip_res=$?
     if [ $pip_res -ne 0 ]; then
