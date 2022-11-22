@@ -23,6 +23,10 @@ import asyncssh
 logger = logging.getLogger(__name__)
 
 
+CHANNEL_PARAMS_TIMEOUT = "__channel_params_timeout"
+CHANNEL_PARAMS_AUTO_RETRY = "__channel_params_auto_retry"
+
+
 class ChannelListener(CecClient):
     """ A cec-based channel listener
 
@@ -97,7 +101,7 @@ class ChannelListener(CecClient):
 
     def _do_run_command(self, channel_type: str, task: dict) -> ChannelResult:
         """cmd opt"""
-        def on_data_received(data: str, data_type: asyncssh.DataType): 
+        def on_data_received(data: str, data_type: asyncssh.DataType):
             echo = task.get("echo", {})
             bind_result_topic = task.get("bind_result_topic", None)
             if bind_result_topic is not None:
@@ -108,8 +112,11 @@ class ChannelListener(CecClient):
                     "result": data
                 })
         params = task.get("params", {})
+        timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
+        auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
         res = self._get_channel(channel_type)(**params).run_command_auto_retry(
-            timeout=params.get("timeout", None),
+            timeout=timeout,
+            auto_retry=auto_retry,
             on_data_received=on_data_received
         )
         return res
@@ -117,7 +124,11 @@ class ChannelListener(CecClient):
     def _do_init_channel(self, channel_type: str, task: dict) -> ChannelResult:
         """init opt"""
         params = task.get("params", {})
-        return self._get_channel(channel_type).initial(**params)
+        timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
+        auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
+        return self._get_channel(channel_type).initial(
+            **params, timeout=timeout, auto_retry=auto_retry
+        )
 
     def _process_each_task(self, consumer: Consumer, event: Event):
         """
