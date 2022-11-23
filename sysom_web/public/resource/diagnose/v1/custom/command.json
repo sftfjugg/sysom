@@ -1,0 +1,29 @@
+{
+    "servicename": "command",
+    "version":1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP"
+        },
+        {
+            "type": "text",
+            "name": "command",
+            "initialValue": "",
+            "label": "命令",
+            "tooltips": "请输入你需要执行的命令"
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "CommandResult",
+            "type": "stat",
+            "title": "Command Result:",
+            "datasource": "CommandResult"
+        }
+    ]
+}
