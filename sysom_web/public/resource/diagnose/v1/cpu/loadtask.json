@@ -1,0 +1,86 @@
+{
+    "servicename": "loadtask",
+    "version":1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP， 我们将在会这台机器内部发起SysAK诊断"
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "事件总览",
+            "type": "stat",
+            "title": "事件总览",
+            "datasource": "dataresult",
+            "fieldConfig": {
+                "mappings": [
+                    {
+                        "type": "value", 
+                        "options": {
+                            "true": {
+                                "color": "red",
+                                "text": "异常"
+                            },
+                            "false": {
+                                "color": "green",
+                                "text": "正常"
+                            }
+                        }
+                    }
+                ],
+                "thresholds": {
+                    "mode": "absolute", 
+                    "steps": [
+                        {
+                            "color": "red",
+                            "value": 20
+                        },
+                        {
+                            "color": "green",
+                            "value": 0
+                        }
+                    ]
+                },
+                "unit": ""
+            }
+        },
+        {
+            "key": "pieRow",
+            "type": "row",
+            "title": "测试行",
+            "datasource": "",
+            "children": [
+                {
+                    "key": "alltasks",
+                    "type": "piechart",
+                    "title": "R/D状态进程数量",
+                    "datasource": "datataskcount"
+                },
+                {
+                    "key": "dtasks",
+                    "type": "piechart",
+                    "title": "D状态负载影响度",
+                    "datasource": "datauninterruptload"
+                },
+                {
+                    "key": "rtasks",
+                    "type": "piechart",
+                    "title": "R状态负载影响度",
+                    "datasource": "datarunningload"
+                }
+            ]
+        },
+        {
+            "key": "火焰图",
+            "type": "svg",
+            "title": "调度火焰图",
+            "datasource": "dataflamegraph"
+        }
+    ]
+
+}
