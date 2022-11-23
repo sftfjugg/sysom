@@ -4,7 +4,8 @@
         "menu.diagnose.memory": "内存诊断中心",
         "menu.diagnose.storage": "存储诊断中心",
         "menu.diagnose.net": "网络诊断中心",
-        "menu.diagnose.cpu": "调度诊断中心"
+        "menu.diagnose.cpu": "调度诊断中心",
+        "menu.diagnose.custom": "自定义诊断中心"
     },
     "dashboard": {
         "menu.diagnose.memory.memgraph": "内存大盘",
@@ -12,6 +13,7 @@
         "menu.diagnose.memory.oomcheck": "OOM诊断",
         "menu.diagnose.cpu.schedmoni": "调度抖动诊断",
 	"menu.diagnose.cpu.loadtask": "系统负载诊断",
-        "menu.diagnose.storage.iofsstat": "IO流量分析"
+        "menu.diagnose.storage.iofsstat": "IO流量分析",
+        "menu.diagnose.custom.command": "命令诊断"
     }
 }
