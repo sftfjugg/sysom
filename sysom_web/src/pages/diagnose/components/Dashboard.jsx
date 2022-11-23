@@ -114,7 +114,7 @@ const Dashboard = (props) => {
 
   let initialValiable = []
   variableDesc.forEach(varDesc => {
-    if (datas[varDesc.datasource].data) {
+    if (datas[varDesc.datasource].data && datas[varDesc.datasource].data.length > 0) {
       initialValiable.push({
         name: varDesc.key,
         value: datas[varDesc.datasource].data[0].value
