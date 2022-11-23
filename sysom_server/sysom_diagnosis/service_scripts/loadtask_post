@@ -40,6 +40,7 @@ def cpuflamegraph(file):
 
 def parse_log(file):
     parse_data=collections.OrderedDict()
+    new_parse_data=collections.OrderedDict()
     reason=collections.OrderedDict()
     tasks = {}
     count = {}
@@ -117,7 +118,41 @@ def parse_log(file):
     parse_data["uninterrupt load"] = d_task_list
     parse_data["running load"] = r_task_list
     parse_data["flamegraph"] = cpuflamegraph_str
-    out = json.dumps(parse_data, indent=4)
+
+    new_parse_data["dataresult"] = {"data": {}}
+    new_parse_data["dataresult"]["data"] = [
+        {"key": "系统平均负载", "value": reason["loadavg"]},
+        {"key": "Sys影响检测", "value": reason["sys"]},
+        {"key": "硬件中断影响检测", "value": reason["irq"]},
+        {"key": "软中断影响检测", "value": reason["softirq"]},
+        {"key": "IO影响检测", "value": reason["io"]}
+    ]
+
+    new_parse_data["datataskcount"] = {"data": []}
+    new_parse_data["datataskcount"]["data"] = [
+        {"key": "uninterrupt_tasks", "value": int(count["uninterrupt tasks"])},
+        {"key": "runnig_tasks", "value": int(count["runnig tasks"])},
+    ]
+    new_parse_data["datataskcount"]["data"]
+
+    new_parse_data["datauninterruptload"] = {"data": []}
+    for i in range(len(d_task_list)):
+        tmp_d_task = {}
+        tmp_d_task["key"] = d_task_list[i]["task"]
+        tmp_d_task["value"] = d_task_list[i]["weight"]
+        new_parse_data["datauninterruptload"]["data"].append(tmp_d_task)
+
+    new_parse_data["datarunningload"] = {"data": []}
+    for i in range(len(r_task_list)):
+        tmp_r_task = {}
+        tmp_r_task["key"] = r_task_list[i]["task"]
+        tmp_r_task["value"] = r_task_list[i]["weight"]
+        new_parse_data["datarunningload"]["data"].append(tmp_r_task)
+
+    new_parse_data["dataflamegraph"] = {"data": []}
+    new_parse_data["dataflamegraph"]["data"]= [
+        {"key": 0, "value": cpuflamegraph_str}]
+    out = json.dumps(new_parse_data, indent=4)
     #data = {"catalogue": parse_data["Global lamegraph"]}
     #files = {"file": open(parse_data["Global lamegraph"], 'rb')}
     #requests.post("http://127.0.0.1:8001/api/v1/host/upload_file/", data=data, files=files)
