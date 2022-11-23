@@ -16,10 +16,15 @@ const StatisticPannel = (props) => {
           Object.keys(datas).map((key) => {
             let data = datas[key]
             let [value, color] = fieldModifier(props.configs?.fieldConfig, data.value, data, datas)
-
             return (
               <ProCard key={key}>
-                <Statistic title={datas[key].key} value={value} valueStyle={{ color: color }} />
+                <Statistic
+                  title={datas[key].key} value={value}
+                  valueStyle={{
+                    color: color,
+                    whiteSpace: "pre-wrap"
+                  }}
+                />
               </ProCard>
             )
           })
