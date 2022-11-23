@@ -12,6 +12,9 @@ import uuid
 
 
 class JobEntry:
+    CHANNEL_PARAMS_TIMEOUT = "__channel_params_timeout"
+    CHANNEL_PARAMS_AUTO_RETRY = "__channel_params_auto_retry"
+
     def __init__(self, channel_type: str = "ssh", channel_opt: str = "cmd",
                  params: dict = {}, echo: dict = {},
                  listen_topic: str = "", job_id: Optional[str] = None,
@@ -28,10 +31,10 @@ class JobEntry:
             self.job_id = str(uuid.uuid4())
 
     def to_channel_vlaue(self) -> dict:
-        if "timeout" not in self.params:
-            self.params["timeout"] = self.timeout
-        if "auto_retry" not in self.params:
-            self.params["auto_retry"] = self.auto_retry
+        if self.CHANNEL_PARAMS_TIMEOUT not in self.params:
+            self.params[self.CHANNEL_PARAMS_TIMEOUT] = self.timeout
+        if self.CHANNEL_PARAMS_AUTO_RETRY not in self.params:
+            self.params[self.CHANNEL_PARAMS_AUTO_RETRY] = self.auto_retry
         result = {
             "channel": self.channel_type,
             "type": self.channel_opt,
