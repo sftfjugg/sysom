@@ -1,0 +1,54 @@
+{
+    "servicename": "iofsstat",
+    "version":1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP,我们将在会这台机器内部发起IO流量统计"
+        },
+        {
+            "type": "text",
+            "name": "timeout",
+            "initialValue": "15",
+            "label": "诊断时长",
+            "tooltips": "诊断时长,也是IO流量统计周期,单位秒,建议不超过60秒"
+        },
+        {
+            "type": "text",
+            "name": "disk",
+            "initialValue": "",
+            "label": "目标磁盘",
+            "tooltips": "请输入你要诊断的磁盘,如vda,sda等等,缺省为所有磁盘"
+        }
+    ],
+    "variables": [
+        {
+            "key": "disks",
+            "label": "磁盘",
+            "datasource": "disks"
+        }
+    ],
+    "pannels": [
+        {
+            "key": "diskIOstat",
+            "type": "table",
+            "title": "磁盘IO流量分析",
+            "datasource": "diskIOstat_${disks}"
+        },
+        {
+            "key": "taskIOstat",
+            "type": "table",
+            "title": "进程IO流量分析",
+            "datasource": "taskIOstat_${disks}"
+        },
+        {
+            "key": "taskIOblocksize",
+            "type": "table",
+            "title": "进程IO块大小分布",
+            "datasource": "taskIOblocksize_${disks}"
+        }
+    ]
+}
