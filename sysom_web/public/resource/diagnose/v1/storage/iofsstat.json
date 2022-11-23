@@ -11,38 +11,44 @@
         },
         {
             "type": "text",
-            "name": "value",
+            "name": "timeout",
             "initialValue": "15",
             "label": "诊断时长",
-            "tooltips": "请输入你要诊断的时长,单位秒,建议不超过60秒"
+            "tooltips": "诊断时长,也是IO流量统计周期,单位秒,建议不超过60秒"
         },
         {
             "type": "text",
-            "name": "value",
+            "name": "disk",
             "initialValue": "",
-            "label": "目前磁盘",
+            "label": "目标磁盘",
             "tooltips": "请输入你要诊断的磁盘,如vda,sda等等,缺省为所有磁盘"
         }
     ],
-    "variables": [],
+    "variables": [
+        {
+            "key": "disks",
+            "label": "磁盘",
+            "datasource": "disks"
+        }
+    ],
     "pannels": [
         {
             "key": "diskIOstat",
             "type": "table",
             "title": "磁盘IO流量分析",
-            "datasource": "diskstat"
+            "datasource": "diskIOstat_${disks}"
         },
         {
             "key": "taskIOstat",
             "type": "table",
             "title": "进程IO流量分析",
-            "datasource": "taskIOstat"
+            "datasource": "taskIOstat_${disks}"
         },
         {
             "key": "taskIOblocksize",
             "type": "table",
             "title": "进程IO块大小分布",
-            "datasource": "taskIOblocksize"
+            "datasource": "taskIOblocksize_${disks}"
         }
     ]
 }

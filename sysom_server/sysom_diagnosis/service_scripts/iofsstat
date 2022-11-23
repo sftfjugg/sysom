@@ -7,7 +7,7 @@ import sys
 ##  如前端入参是这个：
 ##  {
 ##    "instance":"192.168.1.101",
-##    "diag_time":"15"
+##    "timeout":"15"
 ##    "disk":"vda"
 ##  }
 ###############################################################################
@@ -23,9 +23,10 @@ result['commands'] = []
 
 cmd0 = {}
 cmd0['instance'] = args["instance"]
-cmd0_arg_T = args.get("diag_time","15")
+cmd0_arg_T = args.get("timeout","15")
 if int(cmd0_arg_T) <= 0:
 	cmd0_arg_T = 15
+cmd0_arg_device = ''
 disk = args.get("disk","")
 if len(disk) > 0:
     cmd0_arg_device = ' -d '+disk
