@@ -124,11 +124,6 @@ export default [
           {
             path: '/diagnose/cpu',
             redirect: '/diagnose/cpu/loadtask',
-          },
-          {
-            path: '/diagnose/cpu/loadtask',
-            name: 'loadtask',
-            component: './diagnose/cpu/loadtask',
           }
         ]
       },
