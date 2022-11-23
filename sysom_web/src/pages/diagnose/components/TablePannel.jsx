@@ -53,6 +53,9 @@ const TablePannel = (props) => {
             bordered
             col
             clapsible
+            tableStyle={{
+              whiteSpace: "pre-wrap"
+            }}
           />
           : <Empty style={{ marginBottom: 20 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
