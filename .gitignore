@@ -21,3 +21,4 @@ sysom_api/sysom/settings.py
 venv/
 sysomRelease*/
 sysom_api/conf/ssh-key
+.env

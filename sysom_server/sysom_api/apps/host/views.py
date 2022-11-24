@@ -59,7 +59,7 @@ class HostModelViewSet(CommonModelViewSet,
         return super(HostModelViewSet, self).list(request, *args, **kwargs)
 
     def perform_create(self, ser):
-        ser.save(created_by=self.request.user)
+        ser.save(created_by=self.request.user.id)
 
     def create(self, request, *args, **kwargs):
         # 检查字段是否满足

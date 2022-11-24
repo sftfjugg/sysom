@@ -1,6 +1,5 @@
 from django.db import models
 from lib.base_model import BaseModel
-from apps.accounts.models import User
 
 
 class HostModel(BaseModel):
@@ -19,8 +18,9 @@ class HostModel(BaseModel):
     status = models.IntegerField(choices=HOST_STATUS_CHOICES, default=2, verbose_name="主机状态")
     client_deploy_cmd = models.TextField(verbose_name="client部署命令", default="")
     cluster = models.ForeignKey('Cluster', on_delete=models.CASCADE, related_name='hosts', default="")
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="c_hosts")
-    deleted_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name="d_hosts")
+    # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="c_hosts")
+    created_by = models.IntegerField(verbose_name='创建用户')
+    # deleted_by = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name="d_hosts")
 
     class Meta:
         db_table = "sys_host"
