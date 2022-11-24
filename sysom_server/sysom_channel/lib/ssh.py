@@ -16,7 +16,7 @@ import concurrent
 from conf.settings import *
 from lib.channels.base import ChannelException
 
-DEFAULT_CONNENT_TIMEOUT = 5    # 默认ssh链接超时时间 5s
+DEFAULT_CONNENT_TIMEOUT = 5000    # 默认ssh链接超时时间 5s
 DEFAULT_NODE_USER = 'root'     # 默认节点用户名 root
 
 logger = logging.getLogger(__name__)
@@ -125,8 +125,9 @@ class AsyncSSH:
             "total_out": "",
             "err_msg": ""
         }
-        self.connect_args["connect_timeout"] = 1 if timeout is None else timeout / 1000 * 0.8
         try:
+            timeout /= 1000
+            self.connect_args["connect_timeout"] = timeout
             async with asyncssh.connect(self._hostname, **self.connect_args) as conn:
                 chan, session = await conn.create_session(
                     lambda: EasySSHCallbackForwarder(on_data_received), command
