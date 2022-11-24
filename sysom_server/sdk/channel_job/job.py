@@ -95,7 +95,7 @@ class ChannelJob:
         Args:
             chunk_callback(Callable[[JobResult], None]): A callback function that is
         """
-        return anyio.to_thread.run_sync(
+        return await anyio.to_thread.run_sync(
             self.execute, chunk_callback
         )
 
