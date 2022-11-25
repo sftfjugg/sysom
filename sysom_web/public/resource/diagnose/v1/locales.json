@@ -12,8 +12,9 @@
         "menu.diagnose.memory.filecache": "Cache分析",
         "menu.diagnose.memory.oomcheck": "OOM诊断",
         "menu.diagnose.cpu.schedmoni": "调度抖动诊断",
-	"menu.diagnose.cpu.loadtask": "系统负载诊断",
+        "menu.diagnose.cpu.loadtask": "系统负载诊断",
         "menu.diagnose.storage.iofsstat": "IO流量分析",
+        "menu.diagnose.storage.iohang": "IO HANG诊断",
         "menu.diagnose.custom.command": "命令诊断"
     }
 }

@@ -1,0 +1,55 @@
+{
+    "servicename": "iohang",
+    "version":1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP,我们将在会这台机器内部发起IO HANG诊断"
+        },
+        {
+            "type": "text",
+            "name": "timeout",
+            "initialValue": "10",
+            "label": "诊断时长",
+            "tooltips": "请输入你要诊断的时长,单位秒"
+        },
+        {
+            "type": "text",
+            "name": "threshold",
+            "initialValue": "5000",
+            "label": "时间阈值",
+            "tooltips": "保留IO HANG住时间超过阈值的IO,单位毫秒"
+        },
+        {
+            "type": "text",
+            "name": "disk",
+            "initialValue": "",
+            "label": "目标磁盘",
+            "tooltips": "请输入你要诊断的磁盘,如vda,sda等等,缺省为所有磁盘"
+        }
+    ],
+    "variables": [
+        {
+            "key": "disks",
+            "label": "磁盘",
+            "datasource": "disks"
+        }
+    ],
+    "pannels": [
+        {
+            "key": "iohangOverview",
+            "type": "table",
+            "title": "IO HANG总览",
+            "datasource": "iohangOverview_${disks}"
+        },
+        {
+            "key": "singleIO",
+            "type": "table",
+            "title": "TOP10个IO详情",
+            "datasource": "singleIO_${disks}"
+        }
+    ]
+}
