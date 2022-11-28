@@ -133,12 +133,7 @@ export default [
         routes: [
           {
             path: '/diagnose/storage',
-            redirect: '/diagnose/storage/io',
-          },
-          {
-            path: '/diagnose/storage/io',
-            name: 'io',
-            component: './diagnose/Storage/Io',
+            redirect: '/diagnose/storage/iolatency',
           }
         ]
       },
@@ -226,7 +221,7 @@ export default [
       {
         path: '/security/setting',
         component: './security/Setting',
-      },      
+      },
     ],
   },
   {
