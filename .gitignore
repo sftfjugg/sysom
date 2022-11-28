@@ -2,7 +2,6 @@
 *.tar.gz
 .idea/
 db.sqlite3
-migrations/
 node_modules/
 /logs/*
 /.vscode/
