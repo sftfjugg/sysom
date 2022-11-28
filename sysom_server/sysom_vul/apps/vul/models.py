@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from lib.base_model import BaseModel, human_datetime
 from apps.host.models import HostModel
-from apps.accounts.models import User
+# from apps.accounts.models import User
 
 
 # Create your models here.
@@ -86,7 +86,8 @@ class SecurityAdvisoryFixHistoryModel(BaseModel):
     cve_id = models.CharField(max_length=100)
     vul_level = models.CharField(max_length=100)
     fixed_at = models.CharField(max_length=20, default=human_datetime, verbose_name="修复时间")
-    created_by = models.ForeignKey(User, on_delete=models.SET_DEFAULT, default=None)
+    # created_by = models.ForeignKey(User, on_delete=models.SET_DEFAULT, default=None)
+    created_by = models.IntegerField(default='创建者ID')
     status = models.CharField(max_length=20, default="success", verbose_name="修复状态")
     host = models.ManyToManyField(to=HostModel, verbose_name='关联主机', through="SaFixHistToHost")
 

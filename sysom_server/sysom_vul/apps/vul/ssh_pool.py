@@ -10,8 +10,10 @@ import queue
 import logging
 import multiprocessing
 import time
+from django.conf import settings
+from channel_job.job import default_channel_job_executor, JobResult
 
-from lib.ssh import SSH
+# from lib.ssh import SSH
 
 
 class SshProcessQueueManager:
@@ -26,22 +28,27 @@ class SshProcessQueueManager:
         self.forks = min(len(self.hosts), max(self.DEFAULT_FORKS, cpu_count))
 
     def ssh_command(self, que, host, cmd):
-        ssh_cli = SSH(hostname=host.ip, port=host.port, username=host.username)
+        # ssh_cli = SSH(hostname=host.ip, port=host.port, username=host.username)
         # ssh_cli = SSH(host.ip, host.port, host.username, host.private_key)
-        try:
-            status, result = ssh_cli.run_command(cmd)
-            que.put({'host': host.hostname,
-                        'ret': {
-                            "status": status,
-                            "result": result
-                        }})
-        except Exception as e:
-            logging.error(e)
-            que.put({'host': host.hostname,
-                     'ret': {
-                         "status": 1,
-                         "result": e
-                     }})
+        default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
+        default_channel_job_executor.start()
+
+        job_result = default_channel_job_executor.dispatch_job(
+                channel_type="ssh",
+                channel_opt='cmd',
+                params={
+                    'instance': host.ip,
+                    "command": cmd
+                },
+                timeout=5000,
+                auto_retry=True
+            ).execute()
+        # status, result = ssh_cli.run_command(cmd)
+        que.put({'host': host,
+                 'ret': {
+                     "status": job_result.code,
+                     "result": job_result.result
+                 }})
 
     def run_subprocess(self, hosts, func, *args):
         que = multiprocessing.Queue()

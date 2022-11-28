@@ -1,4 +1,5 @@
 import logging
+import sys
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 logger = logging.getLogger(__name__)
@@ -10,28 +11,37 @@ class VulConfig(AppConfig):
 
     def ready(self) -> None:
         post_migrate.connect(initialization_vul_config, sender=self)
-        bind_ssh_key()
+        from django.conf import settings
+        if ('runserver' in sys.argv or 'manage.py' not in sys.argv):
+            from cec_base.log import LoggerHelper, LoggerLevel
+            from channel_job.job import default_channel_job_executor
+            LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
+            # 初始化 channel_job sdk
+            default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
+            default_channel_job_executor.start()
+        else:
+            # from cec_base.log import LoggerHelper, LoggerLevel
+            # from channel_job.job import default_channel_job_executor
+            # LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
+            # # 初始化 channel_job sdk
+            # default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
+            # default_channel_job_executor.start()
+            
+            # job_result = default_channel_job_executor.dispatch_job(
+            #     channel_type="ssh",
+            #     channel_opt='cmd',
+            #     params={
+            #         'instance': "127.0.0.1",
+            #         "command": "pwd",
+            #     },
+            #     timeout=5000,
+            #     auto_retry=True
+            # ).execute()
+            # print(job_result.code)
+            # print(job_result.result)
+            # 这边执行数据库迁移等操作的时候执行一些处理代码
+            pass
         logger.info(">>> Vul module loading success")
-
-
-def bind_ssh_key():
-    from django.conf import settings
-    from lib.ssh import SSH
-
-    def private_key_getter() -> str:
-        result = ""
-        with open(settings.SSH_CHANNEL_KEY_PRIVATE) as f:
-            result = f.read()
-        return result
-
-    def public_key_getter() -> str:
-        result = ""
-        with open(settings.SSH_CHANNEL_KEY_PUB) as f:
-            result = f.read()
-        return result
-
-    SSH.set_private_key_getter(private_key_getter)
-    SSH.set_public_key_getter(public_key_getter)
 
 
 def initialization_vul_config(sender, **kwargs):
