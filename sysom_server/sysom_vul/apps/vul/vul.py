@@ -11,6 +11,7 @@ import requests
 import datetime
 import json
 import re
+from loguru import logger
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework import status
@@ -320,7 +321,7 @@ def fix_cve(hosts, cve_id, user):
     spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
     results = spqm.run(spqm.ssh_command, cmd)
     fixed_time = human_datetime()
-    user_obj = user
+    user_obj = user.get('id', 1)
     vul_level = SecurityAdvisoryModel.objects.filter(cve_id=cve_id).first().vul_level
     cve_status = "success"
     init = True

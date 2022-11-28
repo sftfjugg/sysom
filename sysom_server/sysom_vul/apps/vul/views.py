@@ -11,8 +11,9 @@ from django_apscheduler.jobstores import register_job
 from tzlocal import get_localzone
 from django.utils.timezone import localdate, localtime
 from django_filters.rest_framework import DjangoFilterBackend
+from loguru import logger as log
 from lib.response import *
-from apps.accounts.authentication import Authentication
+# from apps.accounts.authentication import Authentication
 from apps.vul.models import *
 from apps.vul.vul import update_sa as upsa, update_vul as upvul
 from apps.vul.vul import fix_cve, get_unfix_cve
@@ -37,7 +38,7 @@ scheduler.start()
 
 
 class VulListView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def get(self, request, format=None):
         """
@@ -104,7 +105,7 @@ class VulListView(APIView):
 
 
 class VulDetailsView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def get(self, request, cve_id, format=None):
         """
@@ -169,7 +170,7 @@ class VulDetailsView(APIView):
 
 
 class VulSummaryView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def get(self, request, format=None):
         """
@@ -219,7 +220,7 @@ class VulSummaryView(APIView):
 
 
 class SaFixHistListView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def get(self, request, format=None):
         sa_fix_hist = SecurityAdvisoryFixHistoryModel.objects.all()
@@ -233,7 +234,7 @@ class SaFixHistListView(APIView):
 
 
 class SaFixHistDetailsView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def get_cve2host_details(self, sa_fix_host_obj):
         hostname = sa_fix_host_obj.host.hostname
@@ -262,7 +263,7 @@ class SaFixHistDetailsView(APIView):
 
 
 class SaFixHistDetailHostView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def get(self, request, pk, hostname, format=None):
         sa_fix_hist_details_host = SaFixHistToHost.objects.filter(sa_fix_hist_id=pk, host__hostname=hostname).first()
@@ -275,7 +276,7 @@ class SaFixHistDetailHostView(APIView):
 
 
 class UpdateSaView(APIView):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
 
     def post(self, request):
         """
@@ -304,7 +305,7 @@ class UpdateSaView(APIView):
 
 
 class VulAddrViewSet(viewsets.ModelViewSet):
-    authentication_classes = [Authentication]
+    # authentication_classes = [Authentication]
     queryset = VulAddrModel.objects.all()
     serializer_class = VulAddrListSerializer
     filter_backends = [DjangoFilterBackend]
@@ -355,7 +356,7 @@ class VulAddrViewSet(viewsets.ModelViewSet):
             headers[
                 "User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) Chrome/99.0.4844.51"
 
-        if body.get("authorization_type").lower() == "basic" and body.get("authorization_body"):
+        if body.get("authorization_body") and body.get("authorization_type").lower() == "basic":
             authorization_body = body.get("authorization_body")
             auth = (authorization_body["username"], authorization_body["password"])
         else:
