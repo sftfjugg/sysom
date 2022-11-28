@@ -126,7 +126,7 @@ const token = localStorage.getItem('token');
   }
 
   export async function getDBlist(options){
-    return await request('/api/v1/vul-config/', {
+    return await request('/api/v1/vul/config/', {
       method: 'GET',
       headers: {
         'Authorization': token,
@@ -136,7 +136,7 @@ const token = localStorage.getItem('token');
   }
 
   export async function addDB(body, options) {
-    return request('/api/v1/vul-config/', {
+    return request('/api/v1/vul/config/', {
       method: 'POST',
       headers: {
         'Authorization': token,
@@ -147,7 +147,7 @@ const token = localStorage.getItem('token');
   }
 
   export async function updateDB(body, id, options) {
-    return request(`/api/v1/vul-config/${id}/`, {
+    return request(`/api/v1/vul/config/${id}/`, {
       method: 'PUT',
       headers: {
         'Authorization': token,
@@ -158,7 +158,7 @@ const token = localStorage.getItem('token');
   }
 
   export async function testConnect(body, options) {
-    return request('/api/v1/vul-config/test_connect/', {
+    return request('/api/v1/vul/config/test_connect/', {
       method: 'POST',
       headers: {
         'Authorization': token,
@@ -169,7 +169,7 @@ const token = localStorage.getItem('token');
   }
 
   export async function deleteDB(id, options) {
-    return request(`/api/v1/vul-config/${id}/`, {
+    return request(`/api/v1/vul/config/${id}/`, {
       method: 'DELETE',
       headers: {
         'Authorization': token,
