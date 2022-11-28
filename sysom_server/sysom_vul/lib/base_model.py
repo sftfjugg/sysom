@@ -13,7 +13,7 @@ from lib.utils import human_datetime
 class BaseModel(models.Model):
     """abstract model"""
     created_at = models.CharField(max_length=20, default=human_datetime, verbose_name="创建时间")
-    updated_at = models.CharField(max_length=20, default=human_datetime, verbose_name="更新时间")
+    deleted_at = models.CharField(max_length=20, null=True)
 
     class Meta:
         abstract = True
