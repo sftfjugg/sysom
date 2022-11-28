@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+import re
+
+def iosdiagJoinData(raw):
+    if raw.startswith('fail'):
+        data = {"status":"fail"}
+        print(data)
+
+    disks = []
+    stat = {}
+    stat["disks"] = {"data": []}
+    for s in raw.split('\n'):
+        try:
+            obj = json.loads(s)
+        except Exception:
+            continue
+        if "percent" in str(obj):
+            disks = [s['diskname'] for s in obj['summary'] \
+                if s['diskname'] not in disks]
+            stat["disks"]["data"] = \
+                [{'key':disks.index(d), 'value':d} for d in disks]
+            for s in obj['summary']:
+                diskIdx = 'iolatencyOverview_'+s['diskname']
+                if diskIdx not in stat.keys():
+                    stat[diskIdx] = {"data": []}
+                for delay in s['delays']:
+                    stat[diskIdx]["data"].append(
+                        {"key": delay['component'], "title": delay['component'],
+                        "value": delay['percent'], "text": 
+                        'Max_us: '+str(round(delay['max'], 1))+
+                        '\nAVG_us: '+str(round(delay['avg'], 1))+
+                        '\nMin_us: '+str(round(delay['min'], 1))})
+        elif 'totaldelay' in str(obj) or 'abnormal' in str(obj):
+            for s in obj['summary']:
+                isSeqData = False
+                diskIdx = 'singleIO_'+s['diskname']
+                if 'totaldelay' in str(obj):
+                    diskIdx = 'singleIOMetrics_'+s['diskname']
+                    isSeqData = True
+
+                if diskIdx not in stat.keys():
+                    stat[diskIdx] = {"data": []}
+
+                idx = -1
+                dupRm = []
+                slowIOs = s['slow ios']
+                for delay in slowIOs:
+                    idx += 1
+                    if idx > 0 and delay["time"] == slowIOs[idx-1]["time"]:
+                        if (isSeqData and delay["totaldelay"] <= \
+                            slowIOs[idx-1]["totaldelay"]) or (not isSeqData and
+                            float(re.split(':| ', delay['abnormal'])[-2]) <= \
+                            float(re.split(':| ', slowIOs[idx-1]['abnormal'])[-2])):
+                            dupRm.append(delay)
+                        else:
+                            dupRm.append(slowIOs[idx-1])
+                for d in dupRm:
+                    slowIOs.remove(d)
+
+                if not isSeqData:
+                    slowIOs = \
+                        sorted(slowIOs,\
+                            key=lambda e:float(re.split(':| ', e['abnormal'])[-2]),\
+                            reverse=True)[:10]
+                    stat[diskIdx]["data"] = slowIOs
+                else:
+                    for delay in slowIOs:
+                        entry = {
+                            "time": delay['time'], "total": delay['totaldelay']}
+                        for d in delay['delays']:
+                            entry[d['component']] = d['delay']
+                        stat[diskIdx]["data"].append(entry)
+
+    s = json.dumps(stat, indent=4)
+    with open('/root/lgs_debug/iolatency.log', 'w+') as f:
+        f.write(s)
+    print(s)
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+    res, _ = extract_params()
+    iosdiagJoinData(res)
