@@ -201,9 +201,6 @@ const FlowPannelPannel = (props) => {
             if (configs?.links?.defalut?.pannel)
                 showModalPannel(configs.links.defalut.pannel, node.data)
         })
-    }, [configs.flowconfigs])
-
-    useEffect(() => {
         if (configs.flowconfigs) {
             configs.flowconfigs.nodes = configs.flowconfigs.nodes.map(node => {
                 const nodeData = data?.find((i) => i.key == node.id)
@@ -211,6 +208,7 @@ const FlowPannelPannel = (props) => {
             })
             data && graph.fromJSON(configs.flowconfigs)
         }
+
     }, [configs.flowconfigs, data])
 
     return (
