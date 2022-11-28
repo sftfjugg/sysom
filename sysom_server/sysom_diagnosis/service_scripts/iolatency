@@ -1,0 +1,46 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  如前端入参是这个：
+##  {
+##    "instance":"192.168.1.101",
+##    "threshold":"1",
+##    "timeout":"10"
+##    "disk":"vda"
+##  }
+###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["instance"]
+cmd0_arg_t = args.get("threshold","5000")
+if int(cmd0_arg_t) < 0:
+	cmd0_arg_t = 0
+cmd0_arg_T = args.get("timeout","10")
+if int(cmd0_arg_T) <= 0:
+	cmd0_arg_T = 10
+cmd0_arg_device = args.get("disk","")
+dump_log_cmd = "cat /var/log/sysak/iosdiag/latency/result.log.stat 2>/dev/null;\
+    echo \"\";cat /var/log/sysak/iosdiag/latency/result.log.seq 2>/dev/null;\
+    echo \"\";cat /var/log/sysak/iosdiag/latency/result.log 2>/dev/null;"
+iosdiag_cmd = "sysak iosdiag latency -t "+str(cmd0_arg_t)+" -T "+str(cmd0_arg_T)+" "+cmd0_arg_device+" > /dev/null"
+print_result_cmd = "if [ ! -e /var/log/sysak/iosdiag/latency/result.log.seq ]; then "+\
+    "echo \"fail\"; elif [ -e /var/log/sysak/iosdiag/latency/result.log.stat ]; then "+dump_log_cmd+\
+    "else echo \"\"; fi"
+cmd0['cmd'] = "rm /var/log/sysak/iosdiag/latency/* -f && "+iosdiag_cmd+" && "+print_result_cmd
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)
