@@ -15,11 +15,12 @@ const FlowPannelPannel = (props) => {
     let graph = null
 
     useEffect(() => {
-        if (!graph && data) {
+        if (!graph && data && configs.flowconfigs) {
             graph = new Graph({
                 container: ref.current,
-                width: 800,
+                // width: 800,
                 height: 400,
+                autoResize: true,
                 connecting: {
                     router: {
                         name: 'manhattan',
@@ -34,7 +35,7 @@ const FlowPannelPannel = (props) => {
                         },
                     },
                     anchor: 'center',
-                    //connectionPoint: 'anchor',
+                    // connectionPoint: 'anchor',
                     allowBlank: false,
                     snap: {
                         radius: 20,
@@ -203,11 +204,13 @@ const FlowPannelPannel = (props) => {
     }, [configs.flowconfigs])
 
     useEffect(() => {
-        configs.flowconfigs.nodes = configs.flowconfigs.nodes.map(node => {
-            const nodeData = data?.find((i) => i.key == node.id)
-            return { ...node, ...nodeData, data: nodeData }
-        })
-        data && graph.fromJSON(configs.flowconfigs)
+        if (configs.flowconfigs) {
+            configs.flowconfigs.nodes = configs.flowconfigs.nodes.map(node => {
+                const nodeData = data?.find((i) => i.key == node.id)
+                return { ...node, ...nodeData, data: nodeData }
+            })
+            data && graph.fromJSON(configs.flowconfigs)
+        }
     }, [configs.flowconfigs, data])
 
     return (
@@ -218,6 +221,12 @@ const FlowPannelPannel = (props) => {
                         description={
                             <div>Datasource  <Text type="danger"> {configs?.datasource} </Text> no data</div>
                         } />
+            }
+            {
+                !configs.flowconfigs && <Empty style={{ marginBottom: 20 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={
+                        <div>flowconfigs missing</div>
+                    } />
             }
         </ProCard>
     )
