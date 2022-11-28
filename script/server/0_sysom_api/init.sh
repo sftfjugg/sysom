@@ -27,11 +27,6 @@ source_virtualenv() {
 init_conf() {
     mkdir -p /run/daphne
     pushd ${TARGET_PATH}/${API_DIR}
-    rm -f apps/*/migrations/00*.py
-    python manage.py makemigrations accounts
-    python manage.py makemigrations host
-    python manage.py makemigrations alarm
-    python manage.py makemigrations vul
     python manage.py migrate
     popd
 
