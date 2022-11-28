@@ -18,8 +18,9 @@ const FlowPannelPannel = (props) => {
         if (!graph && data && configs.flowconfigs) {
             graph = new Graph({
                 container: ref.current,
-                width: 800,
+                // width: 800,
                 height: 400,
+                autoResize: true,
                 connecting: {
                     router: {
                         name: 'manhattan',
@@ -34,7 +35,7 @@ const FlowPannelPannel = (props) => {
                         },
                     },
                     anchor: 'center',
-                    //connectionPoint: 'anchor',
+                    // connectionPoint: 'anchor',
                     allowBlank: false,
                     snap: {
                         radius: 20,
@@ -223,9 +224,9 @@ const FlowPannelPannel = (props) => {
             }
             {
                 !configs.flowconfigs && <Empty style={{ marginBottom: 20 }} image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={
-                    <div>flowconfigs missing</div>
-                } />
+                    description={
+                        <div>flowconfigs missing</div>
+                    } />
             }
         </ProCard>
     )
