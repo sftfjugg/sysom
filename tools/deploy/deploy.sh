@@ -99,8 +99,6 @@ init_conf() {
     sed -i "s;SERVER_PORT;${SERVER_PORT};g" /etc/nginx/conf.d/sysom.conf
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
-    cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
-    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${DIAGNOSIS_DIR}/conf/diagnosis_gunicorn.py
 }
 
 start_script_server() {
