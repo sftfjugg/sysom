@@ -17,10 +17,30 @@ def get_host_instance(model, **kwargs):
     """async orm"""
     return model.objects.filter(**kwargs).first()
 
+def bind_ssh_key():
+    from django.conf import settings
+    from lib.ssh import SSH
+
+    def private_key_getter() -> str:
+        result = ""
+        with open(settings.SSH_CHANNEL_KEY_PRIVATE) as f:
+            result = f.read()
+        return result
+
+    def public_key_getter() -> str:
+        result = ""
+        with open(settings.SSH_CHANNEL_KEY_PUB) as f:
+            result = f.read()
+        return result
+
+    SSH.set_private_key_getter(private_key_getter)
+    SSH.set_public_key_getter(public_key_getter)
+
 
 class SshConsumer(WebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        bind_ssh_key()
         self.user = None
         self.host_ip = None
         self.start_cmd = None
