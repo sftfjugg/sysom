@@ -25,6 +25,8 @@ init_conf() {
     cp ${SERVICE_NAME}.ini /etc/supervisord.d/
     ###change the install dir base on param $1###
     sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/${SERVICE_NAME}.ini
+    cpu_num=`cat /proc/cpuinfo | grep processor | wc -l`
+    sed -i "s/threads = 3/threads = $cpu_num/g" ${TARGET_PATH}/${DIAGNOSIS_DIR}/conf/diagnosis_gunicorn.py
 }
 
 start_app() {
