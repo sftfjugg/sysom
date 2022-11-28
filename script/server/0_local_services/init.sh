@@ -23,6 +23,7 @@ start_app() {
     systemctl enable redis.service
     systemctl restart nginx.service
     systemctl restart redis.service
+    systemctl start supervisord
 }
 
 deploy() {
