@@ -29,13 +29,14 @@ then
        export SERVER_PORT=80
 fi
 
+config=conf
 basedir=`dirname $0`
 
 cd $basedir
 
 if [ $FIRST_INIT_DONE == 0 ]
 then
-	for dir in `ls`
+	for dir in `cat $config`
 	do
 		if [ -d $dir ]
 		then

@@ -1,0 +1,14 @@
+[base]
+0_env
+0_local_services
+0_sysom_api
+0_sysom_channel
+
+[monitor]
+1_monitor
+
+[vmcore]
+2_vmcore
+
+[diagnosis]
+3_sysom_diagnosis
