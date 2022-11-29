@@ -16,6 +16,9 @@
         "menu.diagnose.storage.iolatency": "IO时延分析",
         "menu.diagnose.storage.iofsstat": "IO流量分析",
         "menu.diagnose.storage.iohang": "IO HANG诊断",
-        "menu.diagnose.custom.command": "命令诊断"
+        "menu.diagnose.custom.command": "命令诊断",
+        "menu.diagnose.net.packetdrop": "丢包诊断",
+        "menu.diagnose.net.jitter": "抖动诊断",
+        "menu.diagnose.net.retran": "重传诊断"
     }
 }

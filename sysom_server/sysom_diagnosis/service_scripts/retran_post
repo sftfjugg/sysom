@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+
+
+def drop_result(raw):
+    '''
+    fd = open("./test.json", 'r')
+    raw = fd.read().strip()
+    fd.close()
+    '''
+    outdata = {}
+    if raw.find("tcp_state") == -1 and len(raw) != 0:
+        outdata = {"status": "fail"}
+        print(outdata)
+        return
+    
+    
+    newdrop = {}
+
+    newdrop["RetranStat"] = {}
+    newdrop["RetranStat"]["data"] = []
+
+    if len(raw) != 0:
+        for s in raw.split('\n'):
+            item = json.loads(s)
+            newdrop["RetranStat"]["data"].append({
+                "key": str(cnt), "ip地址": item["ap"], "tcp状态": item["tcp_state"], "拥塞状态": item["ca_state"], "重传次数": item["times"]
+            })
+        
+    print(json.dumps(newdrop, ensure_ascii=False))
+
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+    res, _ = extract_params()
+    drop_result(res)
