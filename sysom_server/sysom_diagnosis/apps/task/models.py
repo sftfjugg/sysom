@@ -12,9 +12,10 @@ class JobModel(BaseModel):
     )
     task_id = models.CharField(max_length=64, default="", verbose_name="任务实例ID")
     status = models.CharField(max_length=32, choices=JOB_STATUS_CHOICES, default='Ready', verbose_name="任务状态")
+    service_name = models.CharField(max_length=128, verbose_name="")
     command = models.TextField(verbose_name="shell文本")
-    result = models.JSONField(default=dict, verbose_name="shell结果")
-    params = models.JSONField(default=dict, verbose_name="params")
+    result = models.TextField(verbose_name="shell结果")
+    params = models.TextField(verbose_name="params")
     host_by = models.TextField(max_length=64, default="", verbose_name="host_jobs")
     created_by = models.IntegerField(verbose_name='创建人')
 

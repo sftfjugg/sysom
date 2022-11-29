@@ -40,7 +40,7 @@ def decode_token(token: str) -> dict:
     return result
 
 
-class TaskAuthentication(BaseAuthentication):
+class TokenAuthentication(BaseAuthentication):
     def authenticate(self, request: Request):
         token = request.META.get('HTTP_AUTHORIZATION')
         payload = decode_token(token)
