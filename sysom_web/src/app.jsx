@@ -1,7 +1,6 @@
 import { PageLoading } from '@ant-design/pro-layout';
 import { history, addLocale, request as requestURL } from 'umi';
-import { extend } from 'umi-request';
-import _, { find } from "lodash";
+import _ from "lodash";
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import { currentUser as queryCurrentUser } from './pages/user/Login/service';
@@ -68,6 +67,7 @@ export async function getInitialState() {
   };
 } // ProLayout 支持的api https://procomponents.ant.design/components/layout
 
+// https://procomponents.ant.design/components/layout/#%E5%92%8C-umi-%E4%B8%80%E8%B5%B7%E4%BD%BF%E7%94%A8
 export const layout = ({ initialState }) => {
   return {
     rightContentRender: () => <RightContent />,
@@ -91,6 +91,21 @@ export const layout = ({ initialState }) => {
 
 let extraGrafanaRoutes = [];
 let extraDiagnoseRoute = [];
+// Saved menu_name -> service_name
+// @see menuName => config/routes.js
+// @see servierName => /api/v1/services/list
+let menuNameMapServiceName = {
+  user: "sysom_api",
+  welcome: "sysom_api",
+  host: "sysom_api",
+  journal: "sysom_api",
+  monitor: "sysom_monitor",
+  vmcore: "sysom_vmcore",
+  diagnose: "sysom_diagnosis",
+  migtaion: "sysom_migration",
+  security: "sysom_vul",
+}
+let enable_services = [];
 
 function customizer(objValue, srcValue) {
   if (_.isArray(objValue)) {
@@ -102,6 +117,16 @@ export function patchRoutes({ routes }) {
   //Insert the grafana dashboard item to monitor memu. 
   routes.find((item) => item.path == "/").routes.find((item) => item.name == "monitor")
     .routes.splice(-1, 0, ...extraGrafanaRoutes)
+
+  let rootPath = routes.find((item) => item.path == "/")
+  for (let i = 0; i < rootPath.routes.length; i++) {
+    if (!!rootPath.routes[i].name && !!menuNameMapServiceName[rootPath.routes[i].name]) {
+      if (!enable_services.find(v => v == menuNameMapServiceName[rootPath.routes[i].name])) {
+        rootPath.routes[i].disabled = true
+        rootPath.routes[i].hideChildrenInMenu = true
+      }
+    }
+  }
 
   //Find the array of diagonse's children. ex: io, net, memory
   let diagnose = routes.find((item) => item.path == "/")
@@ -123,6 +148,7 @@ export function patchRoutes({ routes }) {
     const new_routes = _.keyBy(extraDiagnoseRoute, 'path')[item.path]?.routes
     if (item.routes && new_routes) {
       item.routes = item.routes.concat(new_routes);
+
     }
     if (!item.routes && new_routes) {
       item.routes = new_routes
@@ -163,31 +189,46 @@ export function render(oldRender) {
     })
 
   //Add diagnose dashboard dynamically
-  requestURL('/resource/diagnose/v1/locales.json').then((res) => {
-    addLocale('zh-CN', res.folder)
-    addLocale('zh-CN', res.dashboard)
-    Object.entries(res.dashboard).map(item => {
-      let configPath = item[0].split('.')
-      configPath.shift()
+  requestURL('/resource/diagnose/v1/locales.json')
+    .then((res) => {
+      addLocale('zh-CN', res.folder)
+      addLocale('zh-CN', res.dashboard)
+      Object.entries(res.dashboard).map(item => {
+        let configPath = item[0].split('.')
+        configPath.shift()
 
-      let path = []
-      path.push({
-        path: `/${configPath.join('/')}`,
-        name: configPath.pop(),
-        f_: `/${configPath.join('/')}`,
-        component: diagnose
+        let path = []
+        path.push({
+          path: `/${configPath.join('/')}`,
+          name: configPath.pop(),
+          f_: `/${configPath.join('/')}`,
+          component: diagnose
+        })
+
+        let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
+          .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
+          .value();
+        let route_item = _.keyBy(extraDiagnoseRoute, 'path')[currentExtraDiagnoseRoute[0].path]
+        if (!!route_item) {
+          route_item.routes = route_item.routes.concat(currentExtraDiagnoseRoute[0].routes)
+        } else {
+          extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
+        }
       })
-
-      let currentExtraDiagnoseRoute = _.chain(path).groupBy('f_').toPairs()
-        .map(Item => _.merge(_.zipObject(["path", "routes"], Item), { "name": Item[0].split('/').pop() }))
-        .value();
-      let route_item = _.keyBy(extraDiagnoseRoute, 'path')[currentExtraDiagnoseRoute[0].path]
-      if (!!route_item) {
-        route_item.routes = route_item.routes.concat(currentExtraDiagnoseRoute[0].routes)
-      } else {
-        extraDiagnoseRoute = extraDiagnoseRoute.concat(currentExtraDiagnoseRoute)
-      }
+      // Request services list, used to disable not running services
+      return requestURL("/api/v1/services/")
     })
-    oldRender();
-  })
+    .then(res => {
+      console.log(res);
+      if (res.code == 200) {
+        for (let i = 0; i < res.data.length; i++) {
+          enable_services.push(res.data[i].service_name);
+        }
+      }
+      oldRender();
+    })
+    .catch(err => {
+      console.log(err);
+      oldRender();
+    })
 }
