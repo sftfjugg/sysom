@@ -1,0 +1,93 @@
+{
+    "servicename": "jitter",
+    "version": 1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "instance",
+            "initialValue": "",
+            "label": "实例IP",
+            "tooltips": "请输入你要诊断的IP， 我们将在会这台机器内部发起SysAK诊断"
+        },
+        {
+            "type": "text",
+            "name": "time",
+            "initialValue": "10",
+            "label": "运行时间",
+            "tooltips": "请输入你要诊断的时间，单位秒"
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "flowchart",
+            "type": "flow",
+            "title": "发送报文路径",
+            "flowconfigs": {
+                "nodes": [
+                    {
+                        "id": "send",
+                        "x": "40",
+                        "y": "40"
+                    },
+                    {
+                        "id": "out",
+                        "x": "40",
+                        "y": "140"
+                    },
+                    {
+                        "id" : "recv",
+                        "x": "40",
+                        "y": "240"
+                    }
+                ],
+                "edges": [
+                    {
+                        "source": "send",
+                        "target": {
+                            "cell": "out",
+                            "port": "top"
+                        }
+                    },
+                    {
+                        "source": "out",
+                        "target": {
+                            "cell": "recv",
+                            "port": "top"
+                        }
+                    }
+                ]
+            },
+            "datasource": "senderflow"
+        },
+        {
+            "key": "flowchart",
+            "type": "flow",
+            "title": "发送报文路径",
+            "flowconfigs": {
+                "nodes": [
+                    {
+                        "id": "recv",
+                        "x": "40",
+                        "y": "40"
+                    },
+                    {
+                        "id" : "send",
+                        "x": "40",
+                        "y": "200"
+                    }
+                ],
+                "edges": [
+                    {
+                        "source": "recv",
+                        "target": {
+                            "cell": "send",
+                            "port": "top"
+                        }
+                    }
+                ]
+            },
+            "datasource": "receiverflow"
+        }
+    ]
+}

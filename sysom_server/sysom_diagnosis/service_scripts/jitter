@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+# coding=utf-8
+import json
+import sys
+
+###############################################################################
+##  {
+##    "service_name":"packetdrop",
+##    "instance":"192.168.1.101"
+##  }
+##  解析参数方法：
+##  sysak memgraph -j /var/log/sysak/memgraph.json -g -l -f -k -c 3 &&  cat /var/log/sysak/memgraph.json
+##  cat /var/log/sysak/memgraph.json 是memgraph诊断结果
+##
+###############################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["instance"]
+
+time = args["time"]
+rtrace_cmd = "sysak rtrace latency --json --duration {} --proto icmp > /var/log/sysak/jitter.json".format(time)
+
+cmd0['cmd'] = "mkdir -p /var/log/sysak && " + rtrace_cmd +  " &&  cat /var/log/sysak/jitter.json"
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)

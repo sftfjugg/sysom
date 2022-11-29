@@ -1,0 +1,64 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+
+
+def jitter_result(raw):
+    '''
+    fd = open("./test.json", 'r')
+    raw = fd.read().strip()
+    fd.close()
+    '''
+    outdata = {}
+    if raw.find("sender") == -1:
+        outdata = {"status": "fail"}
+        print(outdata)
+        return
+    rawdata = json.loads(raw)
+
+    newjitter = {}
+
+    send_max = int(int(rawdata["sender_max"]["send"])/1000000)
+    out_max = int(int(rawdata["sender_max"]["out"])/1000000)
+    recv_max = int(int(rawdata["sender_max"]["recv"])/1000000)
+    send_avg = int(int(rawdata["sender_avg"]["send"])/1000000)
+    out_avg = int(int(rawdata["sender_avg"]["out"])/1000000)
+    recv_avg = int(int(rawdata["sender_avg"]["recv"])/1000000)
+    send_min = int(int(rawdata["sender_min"]["send"])/1000000)
+    out_min = int(int(rawdata["sender_min"]["out"])/1000000)
+    recv_min = int(int(rawdata["sender_min"]["recv"])/1000000)
+
+    newjitter["senderflow"] = {}
+    newjitter["senderflow"]["data"] = [
+        {"key": "send", "title": "内核发送", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(send_max, send_avg, send_min)},
+        {"key": "out", "title": "外部链路", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(out_max, out_avg, out_min)},
+        {"key": "recv", "title": "内核接收", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(recv_max, recv_avg, recv_min)},
+    ]
+
+    send_max = int(int(rawdata["receiver_max"]["send"])/1000000)
+    recv_max = int(int(rawdata["receiver_max"]["recv"])/1000000)
+    send_avg = int(int(rawdata["receiver_avg"]["send"])/1000000)
+    recv_avg = int(int(rawdata["receiver_avg"]["recv"])/1000000)
+    send_min = int(int(rawdata["receiver_min"]["send"])/1000000)
+    recv_min = int(int(rawdata["receiver_min"]["recv"])/1000000)
+
+    newjitter["receiverflow"] = {}
+    newjitter["receiverflow"]["data"] = [
+        {"key": "recv", "title": "内核接收", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(recv_max, recv_avg, recv_min)},
+        {"key": "send", "title": "内核发送", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(send_max, send_avg, send_min)},
+    ]
+
+    print(json.dumps(newjitter, ensure_ascii=False))
+
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+    res, _ = extract_params()
+    jitter_result(res)
