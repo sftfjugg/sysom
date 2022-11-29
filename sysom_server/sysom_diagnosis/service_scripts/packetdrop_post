@@ -1,0 +1,45 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import json
+import random
+
+
+def drop_result(raw):
+    '''
+    fd = open("./test.json", 'r')
+    raw = fd.read().strip()
+    fd.close()
+    '''
+    outdata = {}
+    if raw.find("reasons") == -1:
+        outdata = {"status": "fail"}
+        print(outdata)
+        return
+    rawdata = json.loads(raw)
+
+    newdrop = {}
+
+    newdrop["DropStat"] = {}
+    newdrop["DropStat"]["data"] = []
+
+    for cnt in range(len(rawdata["reasons"])):
+        item = rawdata["reasons"][cnt]
+        newdrop["DropStat"]["data"].append({
+            "key": str(cnt), "丢包点": item[0], "丢包计数": str(item[1]), "丢包原因": item[2]
+        })
+        cnt += 1
+
+    
+    print(json.dumps(newdrop, ensure_ascii=False))
+
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+    res, _ = extract_params()
+    drop_result(res)
