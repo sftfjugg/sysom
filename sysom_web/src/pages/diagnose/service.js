@@ -10,7 +10,7 @@ import _ from "lodash";
 //源IP:"xxx"}
 export async function postTask(params, options) {
   const token = localStorage.getItem('token');
-  return request('/api/v2/tasks/', {
+  return request('/api/v1/tasks/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
