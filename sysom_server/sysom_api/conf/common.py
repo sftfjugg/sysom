@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.host',
     'apps.alarm',
+    'apps.services',
 
     'rest_framework',
     'corsheaders',
