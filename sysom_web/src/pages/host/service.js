@@ -116,7 +116,6 @@ export async function getHostName(options) {
     ...(options || {}),
   });
   const array = msg.data
-  console.log(msg, array);
   const results = array?.map(item => {
     return {
       label: item.hostname,
@@ -131,7 +130,6 @@ export async function getHostIP(options) {
     ...(options || {}),
   });
   const array = msg.data
-  console.log(msg, array);
   const results = array?.map(item => {
     return {
       label: item.ip,
