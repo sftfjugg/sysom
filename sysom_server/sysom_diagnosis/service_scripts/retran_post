@@ -12,25 +12,24 @@ def drop_result(raw):
     fd.close()
     '''
     outdata = {}
-    if raw.find("reasons") == -1:
+    if raw.find("tcp_state") == -1 and len(raw) != 0:
         outdata = {"status": "fail"}
         print(outdata)
         return
-    rawdata = json.loads(raw)
-
+    
+    
     newdrop = {}
 
-    newdrop["DropStat"] = {}
-    newdrop["DropStat"]["data"] = []
+    newdrop["RetranStat"] = {}
+    newdrop["RetranStat"]["data"] = []
 
-    for cnt in range(len(rawdata["reasons"])):
-        item = rawdata["reasons"][cnt]
-        newdrop["DropStat"]["data"].append({
-            "key": str(cnt), "丢包点": item[0], "丢包计数": str(item[1]), "丢包原因": item[2]
-        })
-        cnt += 1
-
-    
+    if len(raw) != 0:
+        for s in raw.split('\n'):
+            item = json.loads(s)
+            newdrop["RetranStat"]["data"].append({
+                "key": str(cnt), "ip地址": item["ap"], "tcp状态": item["tcp_state"], "拥塞状态": item["ca_state"], "重传次数": item["times"]
+            })
+        
     print(json.dumps(newdrop, ensure_ascii=False))
 
 
