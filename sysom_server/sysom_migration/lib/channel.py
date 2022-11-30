@@ -13,7 +13,7 @@ def sync_job(ip, cmd, echo=dict(), timeout=5000):
         timeout=timeout,
         auto_retry=True
     )
-    job = default_channel_job_executor.dispatch_job(data)
+    job = default_channel_job_executor.dispatch_job(**data)
     result = job.execute()
     return result, data
 
@@ -30,7 +30,7 @@ def async_job(ip, cmd, echo=dict(), timeout=5000, chunk=None, finish=None):
         timeout=timeout,
         auto_retry=True
     )
-    job = default_channel_job_executor.dispatch_job(data)
+    job = default_channel_job_executor.dispatch_job(**data)
     job.execute_async_with_callback(finish, chunk)
     return data
 
