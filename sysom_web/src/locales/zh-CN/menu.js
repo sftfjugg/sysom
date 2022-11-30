@@ -4,6 +4,8 @@ export default {
   'menu.host.list': '主机列表',
   'menu.host.cluster': '集群列表',
   'menu.host.terminal': '主机终端',
+  'menu.migrate': '操作系统迁移',
+  'menu.migrate.implement': '迁移实施',
   'menu.monitor': '监控中心',
   'menu.monitor.': '监控中心',
   'menu.monitor.dashboard': '系统监控',

@@ -1,0 +1,79 @@
+
+.container {
+  position: relative;
+  width: 100vw;
+  min-height: calc(100vh - 48px);
+  padding: 20px 25px 10px 25px;
+  background-color: #000;
+  :global {
+    .ant-skeleton-content {
+      padding: 20px;
+      padding-bottom: 6px;
+      .ant-skeleton-title {
+        height: 12px;
+        margin-top: 0;
+        background-color: #2a2a2a;
+      }
+      .ant-skeleton-paragraph {
+        margin-top: 12px;
+        li {
+          height: 10px;
+          margin-top: 10px;
+          background-color: #2a2a2a;
+        }
+      }
+    }
+    .ant-empty {
+      color: rgba(255, 255, 255, 0.65);
+    }
+  }
+}
+
+:global {
+  .updateModal {
+    .ant-modal-body {
+      padding: 20px 30px;
+      background-color: #fff;
+      .ant-descriptions {
+        margin-bottom: 24px;
+        .ant-descriptions-item-label {
+          width: 20%;
+          background-color: #fafafa;
+        }
+        .ant-descriptions-item-content {
+          padding: 4px 16px;
+          .ant-input-disabled {
+            color: rgba(0, 0, 0, 0.85);
+            background-color: #fff;
+            border: none;
+            cursor: text;
+          }
+          .ant-select-disabled {
+            .ant-select-selection-item {
+              color: rgba(0, 0, 0, 0.85);
+            }
+            .ant-select-selector {
+              cursor: text;
+              .ant-select-selection-search-input {
+                cursor: text;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  .switch-is-default {
+    width: 300px;
+    .ant-popover-title {
+      padding: 20px 20px 0;
+      border-bottom: none;
+    }
+    .ant-popover-inner-content {
+      padding: 0 20px 20px 40px;
+      color: #666;
+      font-size: 12px;
+      line-height: 22px;
+    }
+  }
+}

@@ -1,0 +1,54 @@
+.banner {
+  background-color: #141414;
+  border-radius: 4px;
+  
+  :global {
+    .ant-card-body {
+      padding: 0;
+    }
+    .ant-row {
+      padding: 24px;
+      padding-bottom: 14px;
+    }
+    .ant-statistic {
+      .ant-statistic-title {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 16px;
+      }
+      .ant-statistic-content {
+        text-indent: 2px;
+      }
+    }
+    // .ant-card-head{
+    //   padding: 0;
+    // }
+    .operate-btn {
+      text-align: right;
+      .ant-statistic-title {
+        .ant-btn {
+          height: 20px;
+          padding: 0;
+          line-height: 20px;
+        }
+      }
+    }
+  }
+}
+
+:global {
+  .dashboard-operate-cluster.ant-dropdown {
+    .ant-dropdown-menu {
+      background-color: #333;
+      .ant-dropdown-menu-item {
+        color: #fff;
+      }
+      .ant-dropdown-menu-item:hover,
+      .ant-dropdown-menu-submenu-title:hover {
+        background-color: #1a1a1a;
+      }
+    }
+  }
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled){
+    background: rgba(255, 255, 255, 0.08);
+  }
+}

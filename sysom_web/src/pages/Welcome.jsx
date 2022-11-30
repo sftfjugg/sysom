@@ -30,6 +30,9 @@ const Welcome = () => {
             <Menu.Item key="hostlist"><a href="/host/list">主机列表</a></Menu.Item>
             <Menu.Item key="cluster"><a href="/host/cluster">集群列表</a></Menu.Item>
           </SubMenu>
+          <SubMenu key="migrate" title="操作系统迁移">
+            <Menu.Item key="implement"><a href="/migrate/implement">迁移实施</a></Menu.Item>
+          </SubMenu>
           <SubMenu key="monitor" title="监控中心">
             <Menu.Item key="dashboard"><a href="/monitor/dashboard">系统监控</a></Menu.Item>
           </SubMenu>
