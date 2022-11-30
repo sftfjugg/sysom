@@ -118,12 +118,14 @@ export function patchRoutes({ routes }) {
   routes.find((item) => item.path == "/").routes.find((item) => item.name == "monitor")
     .routes.splice(-1, 0, ...extraGrafanaRoutes)
 
-  let rootPath = routes.find((item) => item.path == "/")
-  for (let i = 0; i < rootPath.routes.length; i++) {
-    if (!!rootPath.routes[i].name && !!menuNameMapServiceName[rootPath.routes[i].name]) {
-      if (!enable_services.find(v => v == menuNameMapServiceName[rootPath.routes[i].name])) {
-        rootPath.routes[i].disabled = true
-        rootPath.routes[i].hideChildrenInMenu = true
+  if (enable_services.length > 0) {
+    let rootPath = routes.find((item) => item.path == "/")
+    for (let i = 0; i < rootPath.routes.length; i++) {
+      if (!!rootPath.routes[i].name && !!menuNameMapServiceName[rootPath.routes[i].name]) {
+        if (!enable_services.find(v => v == menuNameMapServiceName[rootPath.routes[i].name])) {
+          rootPath.routes[i].disabled = true
+          rootPath.routes[i].hideChildrenInMenu = true
+        }
       }
     }
   }
