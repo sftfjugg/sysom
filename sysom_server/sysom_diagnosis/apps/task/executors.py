@@ -191,7 +191,8 @@ class TaskDispatcher(CecClient):
                 "command": json.dumps(resp_scripts),
                 "task_id": task_id,
                 "created_by": user_id,
-                "params": params,
+                "params": json.dumps(params),
+                "service_name": service_name,
                 "status": "Running"
             }
             try:
@@ -254,6 +255,8 @@ class TaskDispatcher(CecClient):
         """
         def update_job(instance: JobModel, **kwargs):
             try:
+                if isinstance(kwargs.get("result", ""), dict):
+                    kwargs['result'] = json.dumps(kwargs.get('result', ""))
                 instance.__dict__.update(**kwargs)
                 instance.save()
             except Exception as e:
@@ -275,6 +278,8 @@ class TaskDispatcher(CecClient):
                 return
             # 如果任务执行成功，则执行后处理脚本
             params = instance.params
+            if isinstance(params, str):
+                params = json.loads(params)
             service_name = params.get("service_name", "unknown")
             # 执行后处理脚本，将结果整理成前端可识别的规范结构
             SCRIPTS_DIR = settings.SCRIPTS_DIR

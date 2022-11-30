@@ -11,7 +11,7 @@ from apps.task.models import JobModel
 from apps.task.filter import TaskFilter
 from lib.base_view import CommonModelViewSet
 from lib.response import success, other_response, not_found, ErrorResponse
-from lib.authentications import TaskAuthentication
+from lib.authentications import TokenAuthentication
 from .executors import TaskDispatcher
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class TaskAPIView(CommonModelViewSet,
     search_fields = ('id', 'task_id', 'created_by__id',
                      'status', 'params')  # 模糊查询
     filterset_class = TaskFilter  # 精确查询
-    authentication_classes = [TaskAuthentication]
+    authentication_classes = [TokenAuthentication]
     create_requird_fields = ['service_name']
     
     def __init__(self, **kwargs) -> None:

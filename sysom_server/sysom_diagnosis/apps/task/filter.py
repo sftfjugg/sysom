@@ -4,7 +4,7 @@ import django_filters
 from apps.task.models import JobModel
 
 class TaskFilter(django_filters.FilterSet):
-    service_name = django_filters.CharFilter(field_name='params__service_name')
+    service_name = django_filters.CharFilter(field_name='service_name')
 
     class Meta:
         model = JobModel
