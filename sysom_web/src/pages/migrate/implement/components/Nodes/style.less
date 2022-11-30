@@ -1,0 +1,143 @@
+
+.nodes {
+  background-color: #141414;
+  border-radius: 4px;
+  .numGreen {
+    :global {
+      .ant-progress-text {
+        color: #52c41a;
+      }
+    }
+  }
+  .numRed {
+    :global {
+      .ant-progress-text {
+        color: #ff4d4f;
+      }
+    }
+  }
+  .numZero {
+    :global {
+      .ant-progress-text {
+        color: #999999;
+      }
+    }
+  }
+  :global {
+    .ant-card-extra {
+      display: flex;
+      align-items: center;
+    }
+    .ant-card {
+      background-color: #141414;
+      border-radius: 4px;
+      .ant-card-head {
+        // padding: 0 15px;
+        padding-right: 24px;
+        color: #fff;
+        border-bottom: 1px solid #2a2a2a;
+        .ant-card-head-title {
+          padding: 19px 0;
+          em {
+            font-size: 16px;
+            font-style: normal;
+          }
+          i {
+            font-weight: normal;
+            font-size: 13px;
+            font-style: normal;
+          }
+        }
+      }
+      .ant-card-body {
+        padding: 0;
+        .ant-pro-table {
+          margin: 10px;
+          margin-top: 5px;
+          margin-bottom: 30px;
+          background-color: #141414;
+          .ant-dropdown {
+            .ant-dropdown-menu {
+              background-color: #333 !important;
+              .ant-dropdown-menu-item {
+                color: #fff;
+              }
+              .ant-dropdown-menu-item:last-child {
+                color: #ff4d4f;
+              }
+              .ant-dropdown-menu-item:hover,
+              .ant-dropdown-menu-submenu-title:hover {
+                background-color: #1a1a1a;
+              }
+            }
+          }
+          .ant-table-row .ant-table-cell:first-child {
+            padding-right: 0;
+            padding-left: 5px;
+          }
+          .ant-table-content {
+            background-color: #141414;
+            tr:first-child > th:first-child {
+              padding-right: 0;
+              padding-left: 5px;
+            }
+            .ant-table-thead > tr > th {
+              padding-right: 0;
+              padding-left: 0;
+              color: rgba(255, 255, 255, 0.85);
+              background-color: #141414;
+              border-bottom: 1px solid #2a2a2a;
+            }
+            .ant-table-tbody > tr > td {
+              padding-right: 0;
+              padding-left: 0;
+              color: rgba(255, 255, 255, 0.65);
+              background-color: #141414;
+              border-bottom: 1px solid #2a2a2a;
+              .ant-typography {
+                color: rgba(255, 255, 255, 0.65);
+              }
+              // .ant-pro-table-dropdown {
+              //   .anticon {
+              //     color: #389e0d;
+              //   }
+              // }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+:global {
+  .node-row:hover > td {
+    background-color: #2a2a2a !important;
+  }
+  .dashboard-operate-node.ant-dropdown {
+    .ant-dropdown-menu {
+      background-color: #333;
+      .ant-dropdown-menu-item {
+        color: #fff;
+      }
+      .ant-dropdown-menu-item:hover,
+      .ant-dropdown-menu-submenu-title:hover {
+        background-color: #1a1a1a;
+      }
+    }
+  }
+  // overlayClassName 失效
+  .ant-dropdown-menu {
+    background-color: #333;
+    .ant-dropdown-menu-item {
+      color: #fff;
+    }
+    .ant-dropdown-menu-item-disabled {
+      color: rgba(255, 255, 255, 0.4);
+    }
+    .ant-dropdown-menu-item:hover,
+    .ant-dropdown-menu-submenu-title:hover {
+      background-color: #1a1a1a;
+    }
+  }
+}

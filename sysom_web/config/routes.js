@@ -49,6 +49,22 @@ export default [
     ],
   },
   {
+    path: '/migrate',
+    name: 'migrate',
+    routes: [
+      {
+        path: '/migrate',
+        redirect: '/migrate/implement',
+      },
+      {
+        path: '/migrate/implement',
+        name: 'implement',
+        hideInBreadcrumb: true,
+        component: './migrate/implement',
+      },
+    ]
+  },
+  {
     path: '/monitor',
     name: 'monitor',
     routes: [
