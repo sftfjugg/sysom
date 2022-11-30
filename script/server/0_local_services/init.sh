@@ -3,6 +3,11 @@
 # ScriptName: start local service
 # Author: huangtuquan
 #***************************************************************#
+OSS_URL=https://sysom.oss-cn-beijing.aliyuncs.com/redis
+REDIS_DL_URL=https://download.redis.io/releases
+REDIS_DIR=redis-5.0.14
+REDIS_PKG=redis-5.0.14.tar.gz
+
 usr_local_redis=0
 
 setup_database() {
@@ -30,12 +35,28 @@ setup_nginx() {
 setup_redis() {
     ###we need redis version >= 5.0.0, check redis version###
     redis_version=`yum list all | grep "^redis.x86_64" | awk '{print $2}' | awk -F"." '{print $1}'`
-    if [ $redis_version < 5 ]
+    echo ${redis_version}
+    if [ $redis_version -lt 5 ]
     then
         echo "redis version in yum repo is less than 5.0.0, we will compile redis(5.0.14) and install it."
-        tar -zvf redis-5.0.14.tar.gz
-        pushd redis-5.0.14
-        make & make install
+        if [ ! -e ${REDIS_PKG} ]
+        then
+            wget ${OSS_URL}/${REDIS_PKG} || wget ${REDIS_DL_URL}/${REDIS_PKG}
+            if [ ! -e ${REDIS_PKG} ]
+            then
+                echo "download ${REDIS_PKG} fail"
+                exit 1
+            fi
+        fi
+        echo "now uncompress ${REDIS_PKG}, then compile and install it."
+        tar -zxvf ${REDIS_PKG}
+        pushd ${REDIS_DIR}
+        make && make install
+        if [ $? -ne 0 ]
+        then
+            echo "redis compile or install error, exit 1"
+            exit 1
+        fi
         usr_local_redis=1
         popd
     fi
@@ -62,6 +83,7 @@ start_app() {
 deploy() {
     setup_database | tee -a ${SERVER_HOME}/logs/${APP_NAME}_setup_database.log 2>&1
     setup_nginx
+    setup_redis
     start_app
 }
 
