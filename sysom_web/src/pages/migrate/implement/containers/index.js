@@ -1,5 +1,5 @@
-import React, { useEffect, useReducer, createContext } from 'react';
-import { withRouter } from 'umi';
+import React, {useEffect, useReducer, createContext} from 'react';
+import {withRouter} from 'umi';
 import rootReducer from './reducers';
 // import { SET_DATA } from './constants';
 // import { qyeryMachineInfo, qyeryLog, qyeryReport,getBannerList } from '../../service';
@@ -30,29 +30,27 @@ const initState = {
   // 机器组列表
   machineGroupsList: [],
   // 机器列表
-  machineList:[],
+  machineList: [],
   // 选中机器组id
   activeMachineGroupId: '',
   // 开始迁移弹窗机器ip
-  startMigrateIp: '', 
+  startMigrateIp: '',
 };
 
 // 创建需要共享全量数据的 Context
 export const WrapperContext = createContext();
 
 export default withRouter((props) => {
-  
   // 使用 useReducer 取代 useState 集中管理数据
   const [state, dispatch] = useReducer(rootReducer, initState);
 
   useEffect(() => {
     (async () => {
-     
     })();
   }, []);
 
   // 使用 Provider 提供 Context 的值，Provider所包含的子树都可以直接访问 Context 的值
   return (
-    <WrapperContext.Provider value={{ state, dispatch }}>{props.children}</WrapperContext.Provider>
+    <WrapperContext.Provider value={{state, dispatch}}>{props.children}</WrapperContext.Provider>
   );
 });

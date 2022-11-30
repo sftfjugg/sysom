@@ -1,5 +1,5 @@
-import { request } from 'umi';
-import { stringify } from 'qs';
+import {request} from 'umi';
+import {stringify} from 'qs';
 
 const token = localStorage.getItem('token');
 
@@ -7,13 +7,13 @@ const token = localStorage.getItem('token');
 
 // 迁移机器组列表
 export async function getBannerList(params) {
-  return request(`/api/v1/migration/group/`, {
+  return request('/api/v1/migration/group/', {
     method: 'GET',
   });
 }
 
 // 机器列表
-export async function getNodesList(params) { //id=1
+export async function getNodesList(params) {
   return request(`/api/v1/implementation/list/?${stringify(params)}`, {
     method: 'GET',
   });
@@ -42,7 +42,7 @@ export async function qyeryReport(params) {
 
 // 停止迁移
 export async function stopMigration(params) {
-  return request(`/api/v1/implementation/stop/`, {
+  return request('/api/v1/implementation/stop/', {
     method: 'POST',
     data: params,
   });
@@ -50,7 +50,7 @@ export async function stopMigration(params) {
 
 // 批量迁移 & 开始迁移
 export async function BulkMigration(params) {
-  return request(`/api/v1/implementation/migrate/`, {
+  return request('/api/v1/implementation/migrate/', {
     method: 'POST',
     data: params,
   });
@@ -58,7 +58,7 @@ export async function BulkMigration(params) {
 
 // 重启机器
 export async function rebootMachine(params) {
-  return request(`/api/v1/implementation/reboot/`, {
+  return request('/api/v1/implementation/reboot/', {
     method: 'post',
     data: params,
   });
