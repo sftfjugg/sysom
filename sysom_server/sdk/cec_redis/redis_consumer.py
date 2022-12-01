@@ -301,10 +301,14 @@ class RedisConsumer(Consumer, ClientBase):
             if StaticConst.REDIS_CEC_EVENT_VALUE_KEY not in message_tuple[1]:
                 continue
 
-            message_content = message_tuple[1][
-                StaticConst.REDIS_CEC_EVENT_VALUE_KEY]
-            if self.auto_convert_to_dict:
+            message_content = message_tuple[1].get(
+                StaticConst.REDIS_CEC_EVENT_VALUE_KEY)
+            message_type = message_tuple[1].get(
+                StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_KEY, 0)
+            if message_type == StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_DICT:
                 message_content = json.loads(message_content)
+            elif message_type == StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_BYTES:
+                message_content = message_content.encode(encoding="utf-8")
             msg = Event(message_content, message_tuple[0])
             messages.append(msg)
             LoggerHelper.get_lazy_logger().debug(

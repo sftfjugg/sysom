@@ -26,7 +26,8 @@ class Event:
         event_id(str): Event ID
     """
 
-    def __init__(self, value: Union[bytes, dict] = None, event_id: str = ""):
+    def __init__(self, value: Union[bytes, str, dict] = None,
+                 event_id: str = ""):
         if value is None:
             value = {}
         self.value = value

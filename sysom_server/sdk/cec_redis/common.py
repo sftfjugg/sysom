@@ -19,6 +19,10 @@ class StaticConst:
     CEC_REDIS_PREFIX = "CEC-REDIS:"
 
     REDIS_CEC_EVENT_VALUE_KEY = "redis-cec-event-value-key"
+    REDIS_CEC_EVENT_VALUE_TYPE_KEY = "rcev-type-key"
+    REDIS_CEC_EVENT_VALUE_TYPE_DICT = "DICT"
+    REDIS_CEC_EVENT_VALUE_TYPE_BYTES = "BYTES"
+    REDIS_CEC_EVENT_VALUE_TYPE_STRING = "STRING"
     _REDIS_ADMIN_META_PREFIX = f"{CEC_REDIS_PREFIX}META:"
 
     # Indicates a collection => holds the keys of all Streams

@@ -26,7 +26,7 @@ class Producer(Connectable, metaclass=ABCMeta):
     proto_dict = {}
 
     @abstractmethod
-    def produce(self, topic_name: str, message_value: Union[bytes, dict],
+    def produce(self, topic_name: str, message_value: Union[bytes, str, dict],
                 callback: Callable[[Exception, Event], None] = None, **kwargs):
         """Generate a new event, then put it to event center
 
@@ -36,7 +36,7 @@ class Producer(Connectable, metaclass=ABCMeta):
 
         Args:
             topic_name(str): Topic name
-            message_value(bytes | dict): Event value
+            message_value(bytes | str | dict): Event value
             callback(Callable[[Exception, Event], None]): Event delivery
                                                           results callback
 
