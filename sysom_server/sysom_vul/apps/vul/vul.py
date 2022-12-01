@@ -17,7 +17,7 @@ from django.db.models import Q
 from rest_framework import status
 from apps.vul.models import *
 from apps.host.models import HostModel
-from apps.vul.ssh_pool import SshProcessQueueManager
+from apps.vul.ssh_pool import SshProcessQueueManager, VulTaskManager
 
 from lib.utils import human_datetime
 
@@ -217,8 +217,12 @@ for i in "${cve_array[@]}"; do
   echo $cve_id $rpm_source_name $rpm_version $dist
 done
 '''
-    spqm = SshProcessQueueManager(list(HostModel.objects.all()))
-    results = spqm.run(spqm.ssh_command, cmd)
+    # spqm = SshProcessQueueManager(list(HostModel.objects.all()))
+    # results = spqm.run(spqm.ssh_command, cmd)
+
+    hosts = [item['ip'] for item in HostModel.objects.all().values('ip')]
+    vtm = VulTaskManager(hosts, cmd)
+    results = vtm.run(VulTaskManager.run_command)
     #
     # cve2host_info={"cve1":[(host,software,version,os)]}
     # [{'host': 'GqYLM32pIZaNH0rOjd7JViwxPs', 'ret': {'status': 1, 'result': timeout('timed out')}}]
@@ -275,7 +279,7 @@ def update_sa_db(cveinfo):
         hosts = [cve_detail[0] for cve_detail in new_cveinfo[cve_id] if
                  cve_detail[1] == software_name and cve_detail[2] == fixed_version and cve_detail[3] == os]
         # 新增漏洞关联主机
-        sacve.host.add(*HostModel.objects.filter(hostname__in=hosts))
+        sacve.host.add(*HostModel.objects.filter(ip__in=hosts))
 
     # [("cve_id", "software_name", "fixed_version", "os")]
     update_cves = new_cves & current_cves
@@ -318,8 +322,12 @@ def parse_sa_result(result):
 
 def fix_cve(hosts, cve_id, user):
     cmd = 'dnf update --cve {} -y'.format(cve_id)
-    spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
-    results = spqm.run(spqm.ssh_command, cmd)
+    # spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
+    # results = spqm.run(spqm.ssh_command, cmd)
+    hosts = [host.ip for host in hosts]
+    vtm = VulTaskManager(hosts, cmd)
+    results = vtm.run(VulTaskManager.run_command)
+    logger.info(results)
     fixed_time = human_datetime()
     user_obj = user.get('id', 1)
     vul_level = SecurityAdvisoryModel.objects.filter(cve_id=cve_id).first().vul_level
@@ -327,11 +335,11 @@ def fix_cve(hosts, cve_id, user):
     init = True
     for ret in results:
         hostname = ret["host"]
-        host_obj = HostModel.objects.filter(hostname=hostname).first()
+        host_obj = HostModel.objects.filter(ip=hostname).first()
         if ret["ret"]["status"] == 0:
             status = "success"
             details = ret["ret"]["result"]
-            sa_obj = SecurityAdvisoryModel.objects.filter(host__hostname=hostname, cve_id=cve_id).first()
+            sa_obj = SecurityAdvisoryModel.objects.filter(host__ip=hostname, cve_id=cve_id).first()
             sa_obj.host.remove(host_obj)
         else:
             status = "fail"
