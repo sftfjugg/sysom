@@ -1,9 +1,10 @@
 #!/bin/bash
-start_app() {
-    systemctl start mariadb.service
-    systemctl start nginx.service
-    systemctl start redis.service
-    systemctl start supervisord.service
+SERVICE_NAME=sysom-api
+stop_app() {
+    for service in `supervisorctl status | grep ${SERVICE_NAME} | awk '{print $1}'`
+    do
+        supervisorctl start $service
+    done
 }
 
-start_app
+stop_app
