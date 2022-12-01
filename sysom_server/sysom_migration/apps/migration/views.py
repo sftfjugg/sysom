@@ -81,7 +81,7 @@ class MigImpView(CommonModelViewSet):
                 info[key] = tmp
 
             mig_info.new_info = json.dumps(info)
-            if not mig_imp.old_info:
+            if not mig_info.old_info:
                 mig_info.old_info = json.dumps(info)
             mig_info.save()
             return 200, 'success', info
