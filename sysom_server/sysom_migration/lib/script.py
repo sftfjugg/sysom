@@ -6,9 +6,14 @@ echo soft_info:操作系统版本=$(cat /etc/os-release | grep '^PRETTY_NAME=' |
 
 run_imp_script = '''
 wget https://mirrors.openanolis.cn/anolis/migration/anolis-migration.repo -O /etc/yum.repos.d/anolis-migration.repo
-pip list | grep requests && pip uninstall requests urllib3 -y
+yum install -y python-pip
+pip uninstall requests urllib3 -y
 yum -y install leapp
-yum -y install python-urllib3 python-requests
+leapp answer --section remove_pam_pkcs11_module_check.confirm=True
 leapp preupgrade --no-rhsm
 leapp upgrade --no-rhsm
 '''
+
+
+def get_run_script(script):
+    return ' && '.join(script.strip().split('\n'))
