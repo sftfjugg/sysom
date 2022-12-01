@@ -15,7 +15,8 @@ setuptools.setup(
     url="",
     packages=["cec_base"],
     install_requires=[
-        "loguru>=0.6.0"
+        "loguru>=0.6.0",
+        "anyio>=3.6.2"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
