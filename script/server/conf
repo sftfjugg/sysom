@@ -5,10 +5,10 @@
 0_sysom_channel
 
 [monitor]
-1_monitor
+1_sysom_monitor
 
 [vmcore]
-2_vmcore
+2_sysom_vmcore
 
 [diagnosis]
 3_sysom_diagnosis
