@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import logging
 import requests
@@ -52,8 +53,9 @@ class MigImpView(CommonModelViewSet):
         mig_info = MigImpInfoModel.objects.filter(ip=host_ip).first()
         if mig_info and mig_info.new_info:
             result = dict()
-            result.update(mig_info.new_info)
-            result.update(mig_info.mig_info)
+            result.update(json.loads(mig_info.new_info))
+            if mig_info.mig_info:
+                result.update(json.loads(mig_info.mig_info))
             return success(result=result)
         else:
             code, message, data = self.init_info(host_ip, mig_info)
@@ -61,6 +63,8 @@ class MigImpView(CommonModelViewSet):
 
 
     def init_info(self, host_ip, mig_info):
+        if not mig_info:
+            return 200, 'success', None
         result, data = sync_job(host_ip, init_info_script)
         if result.code == 0:
             info = dict()
@@ -71,12 +75,13 @@ class MigImpView(CommonModelViewSet):
                     t = j.split('=')
                     tmp.append(dict(name=t[0], value=t[1]))
                 info[key] = tmp
-            mig_info.old_info = info
-            mig_info.new_info = info
+            mig_info.old_info = json.dumps(info)
+            mig_info.new_info = json.dumps(info)
             mig_info.save()
             res = dict()
             res.update(info)
-            res.update(mig_info.mig_info)
+            if mig_info.mig_info:
+                res.update(json.loads(mig_info.mig_info))
             return 200, 'success', res
         else:
             return 400, result.err_msg, None
@@ -95,7 +100,7 @@ class MigImpView(CommonModelViewSet):
         host_ip = request.GET.get('ip')
         mig_info = MigImpInfoModel.objects.filter(ip=host_ip).first()
         if mig_info and mig_info.cmp_info:
-            return success(result=mig_info.cmp_info)
+            return success(result=json.loads(mig_info.cmp_info))
         else:
             return success()
 
@@ -121,13 +126,15 @@ class MigImpView(CommonModelViewSet):
         info.append(dict(name='迁移内核', value=data.get('kernel')))
         info.append(dict(name='repo类型', value=data.get('repo_type')))
         info.append(dict(name='repo地址', value=data.get('repo_url')))
-        mig_info.mig_info = dict(migration_info=info)
+        mig_info.mig_info = json.dumps(dict(migration_info=info))
         mig_info.save()
 
         threading.Thread(target=self.get_imp_log, args=(ip,), daemon=True).start()
         threading.Thread(target=self.run_imp, args=(ip,), daemon=True).start()
+        mig_imp.status = 'running'
+        mig_imp.save()
 
-    
+
     def get_imp_log(self, ip):
         mig_id = None
         while True:
@@ -172,7 +179,7 @@ class MigImpView(CommonModelViewSet):
 
         echo = dict(mig_id = mig_id, mig_ip = ip)
         data = async_job(ip, run_imp_script, echo=echo, timeout=3600000, finish=finish)
-        mig_job.job_data = data
+        mig_job.job_data = json.dumps(data)
         mig_job.save()
 
 
