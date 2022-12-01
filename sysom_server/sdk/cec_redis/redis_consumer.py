@@ -304,7 +304,8 @@ class RedisConsumer(Consumer, ClientBase):
             message_content = message_tuple[1].get(
                 StaticConst.REDIS_CEC_EVENT_VALUE_KEY)
             message_type = message_tuple[1].get(
-                StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_KEY, 0)
+                StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_KEY,
+                StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_DICT)
             if message_type == StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_DICT:
                 message_content = json.loads(message_content)
             elif message_type == StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_BYTES:
