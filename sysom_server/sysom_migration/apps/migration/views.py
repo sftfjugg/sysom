@@ -76,7 +76,7 @@ class MigImpView(CommonModelViewSet):
                     t = j.split('=')
                     tmp.append(dict(name=t[0], value=t[1]))
                     if t[0] == '操作系统版本':
-                        mig_imp.version = t[0]
+                        mig_imp.version = t[1]
                         mig_imp.save()
                 info[key] = tmp
 
