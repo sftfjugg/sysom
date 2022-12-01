@@ -66,6 +66,7 @@ start_app() {
     systemctl enable nginx.service
     systemctl restart nginx.service
     if [ $usr_local_redis == 1 ]
+    then
         ###if redis systemd service has been start, we need stop it first###
         systemctl status redis
         if [ $? -eq 0 ]
@@ -73,7 +74,7 @@ start_app() {
             systemctl stop redis
         fi
         /usr/local/bin/redis-server &
-    then
+    else
         systemctl enable redis.service
         systemctl restart redis.service
     fi
