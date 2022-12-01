@@ -292,7 +292,7 @@ def update_sa_db(cveinfo):
                                                          fixed_version=fixed_version,
                                                          os=os).first()
         sacve_obj.host.clear()
-        sacve_obj.host.add(*HostModel.objects.filter(hostname__in=hosts))
+        sacve_obj.host.add(*HostModel.objects.filter(ip__in=hosts))
 
     # 更新漏洞数据库数据至sa
     for sacve_obj in set(
