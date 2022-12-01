@@ -1,7 +1,7 @@
 #!/bin/bash -x
 disable_cron()
 {
-    sed -i '/prometheus/d' /var/spool/cron/root 
+    sed -i '/prometheus/s;^;#;g' /var/spool/cron/root
 }
 
 main()
