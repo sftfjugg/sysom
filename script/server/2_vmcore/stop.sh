@@ -1,5 +1,5 @@
 #!/bin/bash
-SERVICE_NAME=sysom-channel
+SERVICE_NAME=sysom-vmcore
 stop_app() {
     sed -i '/vmcore/d' /var/spool/cron/root
     sed -i '/vmcore/d' /etc/exports
