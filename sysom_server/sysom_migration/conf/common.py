@@ -133,8 +133,8 @@ SYSOM_API_URL = 'http://127.0.0.1:7001'
 SYSOM_CHANNEL_URL = 'http://127.0.0.1:7003'
 
 MIG_IMP_DIR = '/tmp/migration'
-MIG_IMP_LOG = '/var/log/leapp/leapp-upgrade.txt'
-MIG_IMP_RATE = '/var/log/leapp/leapp-upgrade.txt'
+MIG_IMP_LOG = '/var/log/leapp/leapp-upgrade.log'
+MIG_IMP_RATE = '/var/tmp/state.json'
 
 
 #########################################################################################

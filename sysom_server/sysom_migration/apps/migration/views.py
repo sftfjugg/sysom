@@ -11,7 +11,7 @@ from lib.utils import uuid_8
 from lib.base_view import CommonModelViewSet
 from lib.response import success, other_response, not_found, ErrorResponse
 from lib.channel import sync_job, async_job, send_file, get_file
-from lib.script import init_info_script, run_imp_script
+from lib.script import get_run_script, init_info_script, run_imp_script
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ class MigImpView(CommonModelViewSet):
 
     def get_host_info(self, request):
         host_ip = request.GET.get('ip')
+        mig_imp = MigImpModel.objects.filter(ip=host_ip).first()
         mig_info = MigImpInfoModel.objects.filter(ip=host_ip).first()
         if mig_info and mig_info.new_info:
             result = dict()
@@ -58,14 +59,14 @@ class MigImpView(CommonModelViewSet):
                 result.update(json.loads(mig_info.mig_info))
             return success(result=result)
         else:
-            code, message, data = self.init_info(host_ip, mig_info)
+            code, message, data = self.init_info(host_ip, mig_imp, mig_info)
             return success(code=code, message=message, result=data)
 
 
-    def init_info(self, host_ip, mig_info):
-        if not mig_info:
+    def init_info(self, host_ip, mig_imp, mig_info):
+        if not mig_imp or not mig_info:
             return 200, 'success', None
-        result, data = sync_job(host_ip, init_info_script)
+        result, data = sync_job(host_ip, get_run_script(init_info_script))
         if result.code == 0:
             info = dict()
             for i in result.result.splitlines():
@@ -74,15 +75,16 @@ class MigImpView(CommonModelViewSet):
                 for j in value.split(','):
                     t = j.split('=')
                     tmp.append(dict(name=t[0], value=t[1]))
+                    if t[0] == '操作系统版本':
+                        mig_imp.version = t[0]
+                        mig_imp.save()
                 info[key] = tmp
-            mig_info.old_info = json.dumps(info)
+
             mig_info.new_info = json.dumps(info)
+            if not mig_imp.old_info:
+                mig_info.old_info = json.dumps(info)
             mig_info.save()
-            res = dict()
-            res.update(info)
-            if mig_info.mig_info:
-                res.update(json.loads(mig_info.mig_info))
-            return 200, 'success', res
+            return 200, 'success', info
         else:
             return 400, result.err_msg, None
 
@@ -129,56 +131,75 @@ class MigImpView(CommonModelViewSet):
         mig_info.mig_info = json.dumps(dict(migration_info=info))
         mig_info.save()
 
-        threading.Thread(target=self.get_imp_log, args=(ip,), daemon=True).start()
-        threading.Thread(target=self.run_imp, args=(ip,), daemon=True).start()
+        mig_id = uuid_8()
+        threading.Thread(target=self.get_imp_log, args=(ip, mig_id), daemon=True).start()
+        threading.Thread(target=self.run_imp, args=(ip, mig_id), daemon=True).start()
         mig_imp.status = 'running'
         mig_imp.save()
 
 
-    def get_imp_log(self, ip):
-        mig_id = None
+    def get_imp_log(self, ip, mig_id):
+        MigJobModel.objects.create(**dict(ip=ip, mig_id=mig_id, mig_type='imp', job_name='get_imp_log'))
         while True:
             time.sleep(5)
-            if mig_id is None:
-                mig_id = uuid_8()
-                mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=mig_id, mig_type='imp', job_name='get_imp_log'))
-                continue
+            mig_job = MigJobModel.objects.filter(ip=ip, mig_id=mig_id, job_name='get_imp_log').first()
+            imp_path = os.path.join(settings.MIG_IMP_DIR, ip)
+            if not os.path.exists(imp_path):
+                os.makedirs(imp_path)
 
-            mig_imp = MigImpModel.objects.filter(ip=ip).first()
-            mig_info = MigImpInfoModel.objects.filter(ip=ip).first()
-            mig_job = MigJobModel.objects.filter(ip=ip, mig_id=mig_id).first()
-            if mig_job.job_status != 'running':
-                break
-
-            log_path = os.path.join(settings.MIG_IMP_DIR, ip)
-            if not os.path.exists(log_path):
-                os.makedirs(log_path)
-            log_file = os.path.join(log_path, 'mig_imp.log')
+            log_file = os.path.join(imp_path, 'mig_imp.log')
             mig_log = get_file(ip, log_file, settings.MIG_IMP_LOG)
             if mig_log.code == 0:
                 with open(log_file, 'r', encoding='utf-8') as f:
                     p = f.read()
+                mig_info = MigImpInfoModel.objects.filter(ip=ip).first()
                 mig_info.log = p
                 mig_info.save()
 
+            rate_file = os.path.join(imp_path, 'mig_rate.log')
+            mig_rate = get_file(ip, rate_file, settings.MIG_IMP_RATE)
+            if mig_rate.code == 0:
+                with open(rate_file, 'r', encoding='utf-8') as f:
+                    p = f.read()
+                rate = json.loads(p).get('Progress', 0)
+                rate = 100 if rate >= 100 else rate
+                mig_imp = MigImpModel.objects.filter(ip=ip).first()
+                mig_imp.rate = rate
+                mig_imp.save()
 
-    def run_imp(self, ip):
-        mig_id = uuid_8()
+            if rate >= 100:
+                mig_job.job_status = 'success'
+                break
+            if mig_job.job_status != 'running':
+                break
+
+
+    def run_imp(self, ip, mig_id):
         mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=mig_id, mig_type='imp', job_name='run_imp'))
 
         def finish(job_result):
             time.sleep(5)
             mig_id = job_result.echo.get('mig_id')
             mig_ip = job_result.echo.get('mig_ip')
-            mig_job = MigJobModel.objects.filter(ip=mig_ip, mig_id=mig_id).first()
+            mig_imp = MigImpModel.objects.filter(ip=mig_ip).first()
+            imp_log = MigJobModel.objects.filter(ip=mig_ip, mig_id=mig_id, job_name='get_imp_log').first()
+            run_imp = MigJobModel.objects.filter(ip=mig_ip, mig_id=mig_id, job_name='run_imp').first()
+            run_imp.job_result = json.dumps(job_result.__dict__)
             if job_result.code == 0:
-                mig_job.job_status = 'success'
+                mig_imp.status = 'success'
+                mig_imp.rate = 100
+                imp_log.job_status = 'success'
+                run_imp.job_status = 'success'
             else:
-                mig_job.job_status = 'fail'
-            mig_job.save()
+                mig_imp.status = 'fail'
+                imp_log.job_status = 'fail'
+                run_imp.job_status = 'fail'
+            mig_imp.save()
+            imp_log.save()
+            run_imp.save()
 
         echo = dict(mig_id = mig_id, mig_ip = ip)
-        data = async_job(ip, run_imp_script, echo=echo, timeout=3600000, finish=finish)
+        data = async_job(ip, get_run_script(run_imp_script), echo=echo, timeout=3600000, finish=finish)
         mig_job.job_data = json.dumps(data)
         mig_job.save()
 
