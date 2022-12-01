@@ -6,11 +6,13 @@ Email               mfeng@linux.alibaba.com
 File                consumer.py
 Description:
 """
+import functools
 import importlib
 import uuid
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import List
+import anyio
 from .event import Event
 from .base import Connectable
 from .exceptions import CecProtoAlreadyExistsException, \
@@ -50,8 +52,6 @@ class Consumer(Connectable, metaclass=ABCMeta):
 
     Keyword Args:
         default_batch_consume_limit(int): Default batch consume limit
-        auto_convert_to_dict(bool): Whether to automatically treat the event as
-                                    json and convert it to dict
 
     Attributes:
         topic_name(str):  Topic name (unique identification of the subject)
@@ -59,8 +59,6 @@ class Consumer(Connectable, metaclass=ABCMeta):
         group_id(str): Consumer ID, which uniquely identifies a consumer group
         start_from_now(bool): Does consumption begin with the earliest events
         default_batch_consume_limit(int): Default batch consume limit
-        auto_convert_to_dict(bool): Whether to automatically treat the event as
-                                    json and convert it to dict
 
     """
     proto_dict = {
@@ -74,7 +72,6 @@ class Consumer(Connectable, metaclass=ABCMeta):
         self.default_batch_consume_limit = kwargs.get(
             "default_batch_consume_limit", 10
         )
-        self.auto_convert_to_dict = kwargs.get("auto_convert_to_dict", True)
         if consumer_id is None or consumer_id == "":
             self.consumer_id = Consumer.generate_consumer_id()
         self.group_id = group_id
@@ -131,6 +128,20 @@ class Consumer(Connectable, metaclass=ABCMeta):
             >>> consumer.consume(200, auto_ack=False, batch_consume_limit=20)
         """
 
+    async def consume_async(
+            self, timeout: int = -1, auto_ack: bool = False,
+            batch_consume_limit: int = 0, **kwargs
+    ) -> List[Event]:
+        """Consuming events from the Event Center by async
+
+        See Also: Consumer.consume()
+        """
+        # run_sync doesn't accept 'kwargs', so bind them in here
+        func = functools.partial(self.consume, **kwargs)
+        return await anyio.to_thread.run_sync(
+            func, timeout, auto_ack, batch_consume_limit
+        )
+
     @abstractmethod
     def ack(self, event: Event, **kwargs) -> int:
         """Confirm that the specified event has been successfully consumed
@@ -173,7 +184,7 @@ class Consumer(Connectable, metaclass=ABCMeta):
         Returns:
 
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     @staticmethod
     def generate_consumer_id() -> str:
