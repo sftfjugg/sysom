@@ -23,7 +23,7 @@ export default withRouter(
     const initialValues = {
       kernel: 'ANCK',
       repo_type: 'public',
-      verson: 'Anolis OS 8',
+      version: 'Anolis OS 8',
     };
     
     const handleAdd = async () => {
@@ -152,7 +152,7 @@ export default withRouter(
             </FormItem>
           }
           <FormItem 
-            name="verson" 
+            name="version" 
             label="迁移版本" 
             rules={[{ required: true, message: "迁移版本不能为空" }]}
           >
