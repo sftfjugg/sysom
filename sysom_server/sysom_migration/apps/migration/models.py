@@ -18,10 +18,10 @@ class MigImpModel(BaseModel):
 class MigImpInfoModel(BaseModel):
 
     ip = models.CharField(max_length=100, unique=True, verbose_name='ip')
-    mig_info = models.JSONField(default=dict, verbose_name='迁移配置')
-    old_info = models.JSONField(default=dict, verbose_name='迁移前信息')
-    new_info = models.JSONField(default=dict, verbose_name='迁移后信息')
-    cmp_info = models.JSONField(default=dict, verbose_name='迁移对比')
+    mig_info = models.TextField(verbose_name='迁移配置')
+    old_info = models.TextField(verbose_name='迁移前信息')
+    new_info = models.TextField(verbose_name='迁移后信息')
+    cmp_info = models.TextField(verbose_name='迁移对比')
     log = models.TextField(verbose_name='实施日志')
     report = models.TextField(verbose_name='实施报告')
 
@@ -35,9 +35,9 @@ class MigJobModel(BaseModel):
     mig_id = models.CharField(max_length=32, verbose_name='任务ID')
     mig_type = models.CharField(max_length=32, verbose_name='任务类型')
     job_name = models.CharField(max_length=32, verbose_name='名称')
-    job_data = models.JSONField(default=dict, verbose_name='参数')
+    job_data = models.TextField(verbose_name='参数')
     job_status = models.CharField(max_length=32, default='running', verbose_name='状态')
-    job_result = models.JSONField(default=dict, verbose_name='结果')
+    job_result = models.TextField(verbose_name='结果')
 
     class Meta:
         db_table = 'mig_job'
