@@ -1,8 +1,8 @@
 #!/bin/bash
 SERVICE_NAME=sysom-vmcore
 stop_app() {
-    sed -i '/vmcore/d' /var/spool/cron/root
-    sed -i '/vmcore/d' /etc/exports
+    sed -i '/vmcore/s;^;#;g' /var/spool/cron/root
+    sed -i '/vmcore/s;^;#;g' /etc/exports
     exportfs -rv
     systemctl stop nfs-server
     systemctl stop rpcbind
