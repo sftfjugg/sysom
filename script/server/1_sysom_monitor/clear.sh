@@ -1,5 +1,6 @@
 #!/bin/bash -x
-disable_cron()
+SERVICE_NAME=sysom-prometheus
+del_cron()
 {
     sed -i '/prometheus/d' /var/spool/cron/root 
 }
@@ -10,13 +11,14 @@ main()
     yum erase -y grafana
     ##del grafana runtime conf
     rm -rf /etc/grafana/
-    systemctl stop prometheus
-    systemctl disable prometheus
-    rm -f /usr/lib/systemd/system/prometheus.service
+
+    rm -rf /etc/supervisord.d/${SERVICE_NAME}.ini
+    ###use supervisorctl update to stop and clear services###
+    supervisorctl update
 
     systemctl stop influxdb
     yum erase -y influxdb
-    disable_cron
+    del_cron
 }
 
 main

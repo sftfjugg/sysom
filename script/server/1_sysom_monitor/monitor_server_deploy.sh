@@ -18,28 +18,9 @@ NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
 NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_init
 NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_delete
+SERVICE_NAME=sysom-prometheus
 
 BASE_DIR=`dirname $0`
-
-service_head="
-[Unit]
-Description=SysOM Monitor Prometheus
-Documentation=SysOM Monitor Prometheus
-Wants=network-online.target
-After=network-online.target
-
-[Service]
-"
-
-service_tail="
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-"
-
-service_task="ExecStart="
 
 start_grafana_service()
 {
@@ -102,28 +83,30 @@ EOF
    cp prometheus_get_node.py ${RESOURCE_DIR}/prometheus/
 }
 
+init_conf() {
+    cp ${SERVICE_NAME}.ini /etc/supervisord.d/
+    ###change the install dir base on param $1###
+    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/supervisord.d/${SERVICE_NAME}.ini
+}
+
+start_app() {
+    ###if supervisor service started, we need use "supervisorctl update" to start new conf####
+    supervisorctl update
+    supervisorctl status ${SERVICE_NAME}
+    if [ $? -eq 0 ]
+    then
+        echo "supervisorctl start ${SERVICE_NAME} success..."
+        return 0
+    fi
+    echo "${SERVICE_NAME} service start fail, please check log"
+    exit 1
+}
+
 start_prometheus_service()
 {
-    ##create prometheus service
-    prometheus_dir=${RESOURCE_DIR}/prometheus/
-    prometheus_exec="bash -c \"cd $prometheus_dir && ./prometheus\""
-    
-    prometheus_service_task="$service_task$prometheus_exec"
-
-    cat << EOF > prometheus.service
-$service_head
-$prometheus_service_task
-$service_tail
-EOF
-
-    cat prometheus.service
-
     add_auto_discovery
-
-    mv prometheus.service /usr/lib/systemd/system
-    systemctl daemon-reload
-    systemctl enable prometheus
-    systemctl start prometheus
+    init_conf
+    start_app
 }
 
 ##download and install prometheus
