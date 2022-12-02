@@ -1,4 +1,6 @@
 #!/bin/bash -x
+SERVICE_NAME=sysom-prometheus
+
 disable_cron()
 {
     sed -i '/prometheus/s;^;#;g' /var/spool/cron/root
@@ -7,7 +9,7 @@ disable_cron()
 main()
 {
     systemctl stop grafana-server
-    systemctl stop prometheus
+    supervisorctl stop $SERVICE_NAME
     systemctl stop influxdb
     disable_cron
 }
