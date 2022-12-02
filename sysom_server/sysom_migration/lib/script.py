@@ -9,8 +9,8 @@ wget https://mirrors.openanolis.cn/anolis/migration/anolis-migration.repo -O /et
 yum install -y python-pip
 pip uninstall requests urllib3 -y
 yum -y install leapp
-leapp answer --section remove_pam_pkcs11_module_check.confirm=True
 leapp preupgrade --no-rhsm
+leapp answer --section remove_pam_pkcs11_module_check.confirm=True
 leapp upgrade --no-rhsm
 '''
 

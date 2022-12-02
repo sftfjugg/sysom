@@ -166,6 +166,8 @@ class MigImpView(CommonModelViewSet):
                 mig_imp = MigImpModel.objects.filter(ip=ip).first()
                 mig_imp.rate = rate
                 mig_imp.save()
+            else:
+                rate = 0
 
             if rate >= 100:
                 mig_job.job_status = 'success'
