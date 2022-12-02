@@ -57,26 +57,60 @@ def update_vul_db():
 class VulDataParse(object):
     def __init__(self, vul_addr_obj: VulAddrModel):
         self.vul_addr_obj = vul_addr_obj
-        self.cve_data_path = list(filter(None, self.vul_addr_obj.parser["cve_item_path"].split('/')))
+        # self.cve_data_path = list(filter(None, self.vul_addr_obj.parser["cve_item_path"].split('/')))
+        self.cve_data_path = list(filter(None, self._parser_cve_item_path))
+
+    @property
+    def _parser_cve_item_path(self) -> list:
+        json_attr: dict = json.loads(self.vul_addr_obj.parser)
+        cve_item_path = json_attr.get('cve_item_path', None)
+        if not cve_item_path:
+            return [] 
+        return cve_item_path.split('/')
+    
+    def _generate_url(self, instance: VulAddrModel, url) -> dict:
+        """
+        构造请求
+        """
+        # authorization_body = json.loads(instance.authorization_body)
+        authorization_body = instance.authorization_body or {}
+        if instance.authorization_type.lower() == "basic" and authorization_body:
+            auth = (
+                authorization_body.get('username'),
+                authorization_body.get('password')
+            )
+        else:
+            auth = ()
+        return {
+            'method': instance.get_method_display(),
+            'url': url,
+            'headers': json.loads(instance.headers),
+            'data': json.loads(instance.body),
+            'params': json.loads(instance.params),
+            'auth': auth
+        }
 
     def get_vul_data(self):
         vul_data = []
         try:
-            if self.vul_addr_obj.authorization_type.lower() == "basic" and self.vul_addr_obj.authorization_body:
-                auth = (
-                    self.vul_addr_obj.authorization_body["username"], self.vul_addr_obj.authorization_body["password"])
-            else:
-                auth = ()
+            # if self.vul_addr_obj.authorization_type.lower() == "basic" and self.vul_addr_obj.authorization_body:
+            #     auth = (
+            #         self.vul_addr_obj.authorization_body["username"], self.vul_addr_obj.authorization_body["password"])
+            # else:
+            #     auth = ()
 
             flag = True
             url = self.vul_addr_obj.url
             while flag:
                 logging.info(url)
-                resp = requests.request(self.vul_addr_obj.get_method_display(), url,
-                                        headers=self.vul_addr_obj.headers,
-                                        data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
-                                        auth=auth)
+                # resp = requests.request(self.vul_addr_obj.get_method_display(), url,
+                #                         headers=self.vul_addr_obj.headers,
+                #                         data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
+                #                         auth=auth)
+                resp = requests.request(**self._generate_url(self.vul_addr_obj, url))
+                # resp.headers
                 body = json.loads(resp.text)
+
                 cve_path = self.cve_data_path
                 cve_data = body
                 next_url_data = body
