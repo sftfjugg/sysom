@@ -5,7 +5,7 @@ start_redis() {
     echo ${redis_version}
     if [ $redis_version -lt 5 ]
     then
-        /usr/local/bin/redis-server &
+        /usr/local/bin/redis-server /usr/local/bin/redis.conf &
     else
         systemctl start redis.service
     fi

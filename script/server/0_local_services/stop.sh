@@ -5,7 +5,7 @@ stop_redis() {
     echo ${redis_version}
     if [ $redis_version -lt 5 ]
     then
-        pkill redis-server
+        kill -9 `ps -e | grep redis-server | awk '{print $1}'`
     else
         systemctl stop redis.service
     fi

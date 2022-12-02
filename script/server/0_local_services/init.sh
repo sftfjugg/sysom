@@ -52,6 +52,7 @@ setup_redis() {
         tar -zxvf ${REDIS_PKG}
         pushd ${REDIS_DIR}
         make && make install
+        cp redis.conf /usr/local/bin/
         if [ $? -ne 0 ]
         then
             echo "redis compile or install error, exit 1"
@@ -73,7 +74,7 @@ start_app() {
         then
             systemctl stop redis
         fi
-        /usr/local/bin/redis-server &
+        /usr/local/bin/redis-server /usr/local/bin/redis.conf &
     else
         systemctl enable redis.service
         systemctl restart redis.service
