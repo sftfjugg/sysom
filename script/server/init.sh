@@ -49,7 +49,7 @@ then
         then
             pushd $dir
             bash -x init.sh || exit 1
-            setup_web_menu_enable $1
+            setup_web_menu_enable $dir
             popd
         fi
     done
