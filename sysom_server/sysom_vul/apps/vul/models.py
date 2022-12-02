@@ -25,13 +25,12 @@ class VulAddrModel(models.Model):
     description = models.TextField(default="")
     method = models.SmallIntegerField(choices=REQUEST_METHOD_CHOICES, default=0, verbose_name="request method")
     url = models.URLField()
-    headers = models.JSONField(default=dict)
-    params = models.JSONField(default=dict)
-    body = models.JSONField(default=dict)
+    headers = models.TextField(verbose_name="请求头")
+    params = models.TextField(verbose_name="请求路径参数")
+    body = models.TextField(verbose_name="请求体")
     authorization_type = models.CharField(max_length=30, blank=True)
-    authorization_body = models.JSONField(default=dict)
-    parser = models.JSONField(verbose_name="parse vul data structure",
-                              default=dict)
+    authorization_body = models.TextField(verbose_name="请求认证体")
+    parser = models.TextField(verbose_name="parse vul data structure")
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=2, verbose_name="vul database status")
     is_edited = models.BooleanField(verbose_name="Is the vulnerability database editable", default=True)
 
