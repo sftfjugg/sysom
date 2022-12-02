@@ -15,7 +15,7 @@ stop_app() {
     systemctl stop nginx.service
     systemctl stop mariadb.service
     systemctl stop supervisord
-    stop_redis()
+    stop_redis
 }
 
 stop_app
