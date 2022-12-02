@@ -63,8 +63,7 @@ update_target() {
 }
 
 start_script_server() {
-   systemctl daemon-reload
-   systemctl start sysom-server.service
+    bash -x ${APP_HOME}/init_scripts/server/init.sh
 }
 
 generate_service_env() {
@@ -80,7 +79,6 @@ EOF
 }
 
 deploy() {
-    touch_env_rpms
     update_target
     generate_service_env
     start_script_server
