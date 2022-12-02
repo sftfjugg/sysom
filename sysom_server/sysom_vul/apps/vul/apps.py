@@ -1,5 +1,6 @@
 import logging
 import sys
+import json
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 logger = logging.getLogger(__name__)
@@ -45,14 +46,30 @@ class VulConfig(AppConfig):
 
 
 def initialization_vul_config(sender, **kwargs):
+    """
+    初始化vul_db表数据
+    """
+    parser = {
+        "cve_item_path": "data/data",
+        "cve_id_flag": "cve_id",
+        "score_flag": "score",
+        "pub_time_flag": "publish_date"
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\
+             (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
+    }
+
+    fields = {
+        "name": "Anolis 漏洞数据",
+        "description": "Anolis 漏洞数据",
+        "url": "https://anas.openanolis.cn/api/portal/v1/cves/?format=json&page_num=1&page_size=50",
+        "parser": json.dumps(parser),
+        "headers": json.dumps(headers)
+    }
+
     try:
         from .models import VulAddrModel
-        VulAddrModel.objects.create(
-            name="Anolis 漏洞数据",
-            description="Anolis 漏洞数据",
-            url="https://anas.openanolis.cn/api/portal/v1/cves/?page_num=1&page_size=50",
-            parser={"cve_item_path": "data/data", "cve_id_flag": "cve_id",
-                    "score_flag": "score", "pub_time_flag": "publish_date"}
-        )
+        VulAddrModel.objects.create(**fields)
     except Exception as e:
         pass

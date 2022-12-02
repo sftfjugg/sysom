@@ -72,9 +72,9 @@ class VulDataParse(object):
         """
         构造请求
         """
-        # authorization_body = json.loads(instance.authorization_body)
-        authorization_body = instance.authorization_body or {}
-        if instance.authorization_type.lower() == "basic" and authorization_body:
+        authorization_body = json.loads(instance.authorization_body)
+        # authorization_body = instance.authorization_body
+        if instance.authorization_type.lower() == "basic":
             auth = (
                 authorization_body.get('username'),
                 authorization_body.get('password')
@@ -144,16 +144,17 @@ class VulDataParse(object):
     def parse_and_store_vul_data(self, body):
         cve_data = body
         logging.info("Update sys_vul vul data")
+        parser = json.loads(self.vul_addr_obj.parser)
         for cve in cve_data:
-            cve_id = cve[self.vul_addr_obj.parser["cve_id_flag"]]
+            cve_id = cve[parser["cve_id_flag"]]
             cve_obj_search = VulModel.objects.filter(cve_id=cve_id)
-            pub_time = cve.get(self.vul_addr_obj.parser["pub_time_flag"], None)
-            if "level_flag" in self.vul_addr_obj.parser:
-                vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
+            pub_time = cve.get(parser["pub_time_flag"], None)
+            if "level_flag" in parser:
+                vul_level = cve.get(parser["level_flag"], None)
             else:
                 vul_level = None
             if vul_level is None:
-                vul_score = cve.get(self.vul_addr_obj.parser["score_flag"], None)
+                vul_score = cve.get(parser["score_flag"], None)
                 if vul_score is None:
                     vul_level = ""
                 else:

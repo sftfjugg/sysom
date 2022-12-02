@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from lib.base_model import BaseModel, human_datetime
@@ -25,12 +26,12 @@ class VulAddrModel(models.Model):
     description = models.TextField(default="")
     method = models.SmallIntegerField(choices=REQUEST_METHOD_CHOICES, default=0, verbose_name="request method")
     url = models.URLField()
-    headers = models.TextField(verbose_name="请求头")
-    params = models.TextField(verbose_name="请求路径参数")
-    body = models.TextField(verbose_name="请求体")
+    headers = models.TextField(verbose_name="请求头", default=json.dumps({}))
+    params = models.TextField(verbose_name="请求路径参数", default=json.dumps({}))
+    body = models.TextField(verbose_name="请求体", default=json.dumps({}))
     authorization_type = models.CharField(max_length=30, blank=True)
-    authorization_body = models.TextField(verbose_name="请求认证体")
-    parser = models.TextField(verbose_name="parse vul data structure")
+    authorization_body = models.TextField(verbose_name="请求认证体", default=json.dumps({}))
+    parser = models.TextField(verbose_name="parse vul data structure", default=json.dumps({}))
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=2, verbose_name="vul database status")
     is_edited = models.BooleanField(verbose_name="Is the vulnerability database editable", default=True)
 
