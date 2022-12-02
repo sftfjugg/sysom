@@ -14,7 +14,7 @@ stop_redis() {
 stop_app() {
     systemctl stop nginx.service
     systemctl stop supervisord
-    stop_redis()
+    stop_redis
 }
 
 clear_db() {

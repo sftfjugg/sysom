@@ -15,7 +15,7 @@ start_app() {
     systemctl start mariadb.service
     systemctl start nginx.service
     systemctl start supervisord
-    start_redis()
+    start_redis
 }
 
 start_app
