@@ -139,9 +139,8 @@ class MigImpView(CommonModelViewSet):
         info.append(dict(name='repo类型', value=data.get('repo_type')))
         info.append(dict(name='repo地址', value=data.get('repo_url')))
         mig_info.mig_info = json.dumps(dict(migration_info=info))
-        mig_info.cmp_info = None
-        mig_info.log = None
-        mig_info.report = None
+        mig_info.log = '运行中，请稍后'
+        mig_info.report = '运行中，请稍后'
         mig_info.save()
 
         mig_imp.status = 'running'
