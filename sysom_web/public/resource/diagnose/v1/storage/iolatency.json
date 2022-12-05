@@ -19,7 +19,7 @@
         {
             "type": "text",
             "name": "threshold",
-            "initialValue": "5000",
+            "initialValue": "1000",
             "label": "时间阈值",
             "tooltips": "保留IO延迟大于设定时间阈值的IO（时间单位：ms）"
         },
