@@ -196,7 +196,7 @@ main()
     configure_grafana
     configure_cron
 
-    install_and_config_influxdb
+    # install_and_config_influxdb
 }
 
 main
