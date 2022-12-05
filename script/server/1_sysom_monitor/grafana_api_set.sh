@@ -41,14 +41,14 @@ then
     exit 1
 fi
 
-curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
---header 'Content-Type: application/json' \
---data '{"name":"sysom-influxdb","type":"influxdb","access":"proxy","url":"http://localhost:8086","user":"admin","database":"sysom_monitor","secureJsonData":{"password":"sysom_admin"}}'
-if [ $? -ne 0 ]
-then
-    echo "grafana configure influxdb datasource error"
-    exit 1
-fi
+#curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
+#--header 'Content-Type: application/json' \
+#--data '{"name":"sysom-influxdb","type":"influxdb","access":"proxy","url":"http://localhost:8086","user":"admin","database":"sysom_monitor","secureJsonData":{"password":"sysom_admin"}}'
+#if [ $? -ne 0 ]
+#then
+#    echo "grafana configure influxdb datasource error"
+#    exit 1
+#fi
 
 
 ##initial sysom-dashborad
@@ -61,14 +61,14 @@ then
     exit 1
 fi
 
-curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
---header 'Content-Type: application/json' \
--d @"sysom-netinfo-dashboard.json"
-if [ $? -ne 0 ]
-then
-    echo "grafana configure dashboard error"
-    exit 1
-fi
+#curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
+#--header 'Content-Type: application/json' \
+#-d @"sysom-netinfo-dashboard.json"
+#if [ $? -ne 0 ]
+#then
+#    echo "grafana configure dashboard error"
+#    exit 1
+#fi
 
 
 rm -f cookie
