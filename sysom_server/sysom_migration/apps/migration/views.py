@@ -101,8 +101,8 @@ class MigImpView(CommonModelViewSet):
     def get_host_report(self, request):
         host_ip = request.GET.get('ip')
         mig_info = MigImpInfoModel.objects.filter(ip=host_ip).first()
-        if mig_info and mig_info.cmp_info:
-            return success(result=json.loads(mig_info.cmp_info))
+        if mig_info and mig_info.report:
+            return success(result=mig_info.report)
         else:
             return success()
 
@@ -111,31 +111,47 @@ class MigImpView(CommonModelViewSet):
         res = self.extract_specific_params(request, ['ip', 'version', 'kernel', 'repo_type', 'repo_url'])
         if not res['success']:
             return ErrorResponse(msg=res['message'])
+        err = []
         for i in request.data.get('ip', []):
-            self.init_mig_task(i, request.data)
+            msg = self.init_mig_task(i, request.data)
+            if msg:
+                err.append(msg)
+        if err:
+            return success(code=400, message='\n'.join(err))
         return success()
 
 
     def init_mig_task(self, ip, data):
         mig_imp = MigImpModel.objects.filter(ip=ip).first()
-        if not mig_imp or mig_imp.status != 'waiting':
-            return
+        if not mig_imp:
+            return f'主机{ip}尚未初始化。'
+        if mig_imp.status == 'success':
+            return f'主机{ip}已完成迁移，无需再次迁移。'
+        if 'CentOS Linux 7' not in mig_imp.version:
+            return f'不支持主机{ip}的操作系统版本进行迁移。'
         mig_info = MigImpInfoModel.objects.filter(ip=ip).first()
         if not mig_info:
-            return
+            return f'主机{ip}尚未初始化。'
+
         info = []
         info.append(dict(name='迁移版本', value=data.get('version')))
         info.append(dict(name='迁移内核', value=data.get('kernel')))
         info.append(dict(name='repo类型', value=data.get('repo_type')))
         info.append(dict(name='repo地址', value=data.get('repo_url')))
         mig_info.mig_info = json.dumps(dict(migration_info=info))
+        mig_info.cmp_info = None
+        mig_info.log = None
+        mig_info.report = None
         mig_info.save()
+
+        mig_imp.status = 'running'
+        mig_imp.rate = 0
+        mig_imp.save()
 
         mig_id = uuid_8()
         threading.Thread(target=self.get_imp_log, args=(ip, mig_id), daemon=True).start()
         threading.Thread(target=self.run_imp, args=(ip, mig_id), daemon=True).start()
-        mig_imp.status = 'running'
-        mig_imp.save()
+        return
 
 
     def get_imp_log(self, ip, mig_id):
@@ -147,7 +163,7 @@ class MigImpView(CommonModelViewSet):
             if not os.path.exists(imp_path):
                 os.makedirs(imp_path)
 
-            log_file = os.path.join(imp_path, 'mig_imp.log')
+            log_file = os.path.join(imp_path, 'mig_imp_log.log')
             mig_log = get_file(ip, log_file, settings.MIG_IMP_LOG)
             if mig_log.code == 0:
                 with open(log_file, 'r', encoding='utf-8') as f:
@@ -156,7 +172,16 @@ class MigImpView(CommonModelViewSet):
                 mig_info.log = p
                 mig_info.save()
 
-            rate_file = os.path.join(imp_path, 'mig_rate.log')
+            report_file = os.path.join(imp_path, 'mig_imp_report.log')
+            mig_report = get_file(ip, report_file, settings.MIG_IMP_REPORT)
+            if mig_report.code == 0:
+                with open(report_file, 'r', encoding='utf-8') as f:
+                    p = f.read()
+                mig_info = MigImpInfoModel.objects.filter(ip=ip).first()
+                mig_info.report = p
+                mig_info.save()
+
+            rate_file = os.path.join(imp_path, 'mig_imp_rate.log')
             mig_rate = get_file(ip, rate_file, settings.MIG_IMP_RATE)
             if mig_rate.code == 0:
                 with open(rate_file, 'r', encoding='utf-8') as f:
