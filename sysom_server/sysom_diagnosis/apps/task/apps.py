@@ -13,7 +13,8 @@ class TaskConfig(AppConfig):
         from django.conf import settings
         if ('runserver' in sys.argv or 'manage.py' not in sys.argv):
             from cec_base.log import LoggerHelper, LoggerLevel
-            from apps.task.executors import TaskDispatcher
+            # from apps.task.executors import TaskDispatcher
+            from apps.task.executor import DiagnosisTaskExecutor
             from channel_job.job import default_channel_job_executor
             LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
 
@@ -24,9 +25,7 @@ class TaskConfig(AppConfig):
             # 这边微服务正式启动的时候执行一些处理代码
             # 启动任务结果处理线程
             try:
-                TaskDispatcher(
-                    settings.SYSOM_CEC_URL,
-                ).start_dispatcher()
+                DiagnosisTaskExecutor().start()
             except Exception as e:
                 logger.exception(e)
         else:
