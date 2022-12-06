@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Card, Col, Row, Empty, Skeleton } from 'antd';
+import { Card, Col, Row, Empty, Skeleton, Popover } from 'antd';
 import { AppstoreOutlined, HddOutlined } from '@ant-design/icons';
 import { WrapperContext } from '../../../../containers';
 import { ReactComponent as SoftIcon } from '@/pages/migrate/static/softIcon.svg';
@@ -23,12 +23,14 @@ export default function MachineMessage() {
             </>
           }
         >
-          <Row>
+          <Row gutter={[0, 20]}>
             {systemMessage.base_info && systemMessage.base_info.length !== 0 ? (
               <>
                 {systemMessage.base_info.map((item) => (
                   <Col span={12} key={nanoid()}>
-                    {item.name}：{item.value}
+                    <Popover content={<pre style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</pre>} placement="bottomLeft">
+                      <div className={styles.machineItem}>{item.name}：{item.value}</div>
+                    </Popover>
                   </Col>
                 ))}
               </>
@@ -53,7 +55,9 @@ export default function MachineMessage() {
               <>
                 {systemMessage.hard_info.map((item) => (
                   <Col span={12} key={nanoid()}>
-                    {item.name}：{item.value}
+                    <Popover content={<pre style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</pre>} placement="bottomLeft">
+                      <div className={styles.machineItem}>{item.name}：{item.value}</div>
+                    </Popover>
                   </Col>
                 ))}
               </>
@@ -65,6 +69,7 @@ export default function MachineMessage() {
           </Row>
         </Card>
         <Card
+          className={styles.card}
           title={
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <SoftIcon style={{ marginRight: 12 }} />
@@ -77,7 +82,9 @@ export default function MachineMessage() {
               <>
                 {systemMessage.soft_info.map((item) => (
                   <Col span={12} key={nanoid()}>
-                    {item.name}：{item.value}
+                    <Popover content={<pre style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</pre>} placement="bottomLeft">
+                      <div className={styles.machineItem}>{item.name}：{item.value}</div>
+                    </Popover>
                   </Col>
                 ))}
               </>
@@ -102,7 +109,9 @@ export default function MachineMessage() {
               <>
                 {systemMessage.migration_info.map((item) => (
                   <Col span={12} key={nanoid()}>
-                    {item.name}：{item.value}
+                    <Popover content={<pre style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</pre>} placement="topLeft">
+                      <div className={styles.machineItem}>{item.name}：{item.value}</div>
+                    </Popover>
                   </Col>
                 ))}
               </>

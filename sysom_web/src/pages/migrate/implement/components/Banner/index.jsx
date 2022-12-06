@@ -44,13 +44,13 @@ const machineGroup = (props) => {
       }else{
         getNoData()
       }
-      dispatch({
-        type: SET_DATA,
-        payload: {
-          loadingVisible: false,
-        },
-      });
     }
+    dispatch({
+      type: SET_DATA,
+      payload: {
+        loadingVisible: false,
+      },
+    });
   }
 
   // 获取机器列表
@@ -64,7 +64,8 @@ const machineGroup = (props) => {
     const {code, data} = await getNodesList({id:myid});
     if (code === 200) {
       if(data && data.length !== 0){
-        handleMachineName(data[0])
+        handleMachineName(data[0]);
+        machineListByCycle(myid)
         dispatch({
           type: SET_DATA,
           payload: {
@@ -102,6 +103,32 @@ const machineGroup = (props) => {
     });
   }
 
+  // 轮询机器列表
+  const machineListByCycle = (myid) => {
+    console.log(myid,"myid")
+    const timer = setInterval(async () => {
+      const {
+        code,
+        data,
+      } = await getNodesList({ id: myid });
+      if (code === 200) {
+        if(data && data.length !== 0){
+          dispatch({
+            type: SET_DATA,
+            payload: {
+              machineList: data,
+              nodeTotal: data.length,
+              abnormalNodeTotal: data.filter((i)=>i.status === "waiting").length,
+            },
+          });
+        }else{
+          getNoData()
+        }
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }
+
   const handleMachineName = (r) => {
     dispatch({
       type: SET_DATA,
@@ -115,12 +142,6 @@ const machineGroup = (props) => {
       getLog(r.ip),
       getReport(r.ip),
     ]).then((res) => {
-      console.log(res,'jaja')
-      const [
-        { data: systemMessage },
-        { data: logtMessage },
-        { data: reportMessage },
-      ] = res;
       dispatch({
         type: SET_DATA,
         payload: {
@@ -134,29 +155,6 @@ const machineGroup = (props) => {
       hide();
       console.log(error,'error')
     })
-    // Promise.all([
-    //   qyeryMachineInfo({ ip: r.ip}),
-    //   qyeryLog({ ip: r.ip }),
-    //   qyeryReport({ ip: r.ip }),
-    // ]).then((res) => {
-    //   hide();
-    //   const [
-    //     { data: systemMessage },
-    //     { data: logtMessage },
-    //     { data: reportMessage },
-    //   ] = res;
-    //   dispatch({
-    //     type: SET_DATA,
-    //     payload: {
-    //       systemMessage,
-    //       logtMessage,
-    //       reportMessage,
-    //       tableIp: r.ip,
-    //       tableIpVersion: r.version ? `${r.ip} (${r.version})` : `${r.ip}`,
-    //       machineDetailLoading: false,
-    //     },
-    //   });
-    // })
   }
   
   const getMachineInfo = async (ip) => {
@@ -166,7 +164,7 @@ const machineGroup = (props) => {
         dispatch({
           type: SET_DATA,
           payload: {
-            systemMessage: data,
+            systemMessage: data ? data : {},
           },
         });
         return true;

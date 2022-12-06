@@ -1,7 +1,7 @@
 import React from 'react';
 import {Row, Col} from 'antd';
 // import { connect } from 'dva';
-import "./index.less";
+import './index.less';
 import Wrapper from './containers';
 import Banner from './components/Banner';
 import Nodes from './components/Nodes';
@@ -33,6 +33,6 @@ const migrate = (props) => {
       </Wrapper>
     </div>
   );
-}
+};
 
 export default migrate;

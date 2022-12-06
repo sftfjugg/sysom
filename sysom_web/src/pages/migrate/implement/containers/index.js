@@ -6,9 +6,9 @@ import rootReducer from './reducers';
 
 // 初始化全量数据（全部的分类、应用数据）
 const initState = {
-  loadingVisible: true,
-  machineTableLoading: true,
-  machineDetailLoading: true,
+  loadingVisible: false,
+  machineTableLoading: false,
+  machineDetailLoading: false,
   // 机器总数
   nodeTotal: 0,
   // 待迁移机器数

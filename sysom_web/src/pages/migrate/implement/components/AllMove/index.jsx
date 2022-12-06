@@ -35,7 +35,7 @@ export default withRouter(
           params.ip = [startMigrateIp];
         }
         try {
-          const { code } = await BulkMigration(params);
+          const {code,msg} = await BulkMigration(params);
           if (code === 200) {
             try {
               const {
@@ -60,7 +60,7 @@ export default withRouter(
               return false;
             }
           }
-          message.error('开始迁移失败，请重试!');
+          message.error(msg);
           return false;
         } catch (error) {
           message.error(error);

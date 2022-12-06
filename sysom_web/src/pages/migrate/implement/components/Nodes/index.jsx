@@ -21,7 +21,7 @@ export default withRouter(
   () => {
     const {
       dispatch,
-      state: { loadingVisible, machineList, nodeTotal, activeMachineGroupId, machineTableLoading },
+      state: { machineList, nodeTotal, activeMachineGroupId, machineTableLoading, tableIp, tableIpVersion },
     } = useContext(WrapperContext);
 
     const columns = [
@@ -50,6 +50,9 @@ export default withRouter(
           success: {
             text: <span style={{ fontSize: 13, color: '#52C41A' }}>迁移完</span>,
           },
+          fail: {
+            text: <span style={{ fontSize: 13, color: '#a61e25' }}>迁移失败</span>,
+          }
         },
       },
       {
@@ -220,6 +223,19 @@ export default withRouter(
       },
     ];
 
+    useEffect(()=>{
+       // 轮询日志和报告
+      const timer = setInterval(async () => {
+      Promise.all([
+        getLog(tableIp),
+        getReport(tableIp),
+      ]).catch((error)=>{
+        console.log(error,'error')
+      })
+    }, 5000);
+    return () => clearInterval(timer);
+    },[tableIp])
+
     const handleMachineName = async (r) => {
       dispatch({
         type: SET_DATA,
@@ -234,12 +250,6 @@ export default withRouter(
         getLog(r.ip),
         getReport(r.ip),
       ]).then((res) => {
-        console.log(res,'jaja')
-        const [
-          { data: systemMessage },
-          { data: logtMessage },
-          { data: reportMessage },
-        ] = res;
         dispatch({
           type: SET_DATA,
           payload: {
@@ -253,43 +263,6 @@ export default withRouter(
         hide();
         console.log(error,'error')
       })
-      // Promise.all([
-      //   qyeryMachineInfo({ ip: r.ip}),
-      //   qyeryLog({ ip: r.ip }),
-      //   qyeryReport({ ip: r.ip }),
-      // ]).then((res) => {
-      //   console.log(res,'jaja')
-      //   const [
-      //     { data: systemMessage },
-      //     { data: logtMessage },
-      //     { data: reportMessage },
-      //   ] = res;
-      //   dispatch({
-      //     type: SET_DATA,
-      //     payload: {
-      //       systemMessage,
-      //       logtMessage,
-      //       reportMessage,
-      //       tableIp: r.ip,
-      //       tableIpVersion: r.version ? `${r.ip} (${r.version})` : `${r.ip}`,
-      //       machineDetailLoading: false,
-      //     },
-      //   });
-      //   hide();
-      // }).catch((error)=>{
-      //   hide();
-      //   console.log(error,'error')
-      // })
-
-      // dispatch({
-      //   type: SET_DATA,
-      //   payload: {
-      //     tableIp: r.ip,
-      //     tableIpVersion: r.version ? `${r.ip} (${r.version})` : `${r.ip}`,
-      //     machineDetailLoading: false,
-      //   },
-      // });
-      // hide();
     }
    
     const getMachineInfo = async (ip) => {
@@ -299,7 +272,7 @@ export default withRouter(
           dispatch({
             type: SET_DATA,
             payload: {
-              systemMessage: data,
+              systemMessage: data ? data : {},
             },
           });
           return true;
@@ -412,9 +385,6 @@ export default withRouter(
               })}
             />
           </Skeleton>
-          {/* <Skeleton loading={loadingVisible} />
-          <Skeleton loading={loadingVisible} />
-          <Skeleton loading={loadingVisible} /> */}
         </Card>
       </div>
     );
