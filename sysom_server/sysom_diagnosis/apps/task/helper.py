@@ -41,7 +41,10 @@ class DiagnosisHelper:
 
         # 1. Determines if there is a task with the same parameters
         #    and a status of Running.
-        if JobModel.objects.filter(status="Running", params=data).first() \
+        if JobModel.objects.filter(
+            status__in=["Ready", "Running"], service_name=service_name,
+            params=json.dumps(params)
+        ).first() \
                 is not None:
             raise Exception(
                 f"node:{data.get('instance', '')}, There are tasks in progress, {service_name}")
@@ -177,7 +180,8 @@ class DiagnosisHelper:
             code = job_result.code
             err_msg = job_result.err_msg
             if code != 0:
-                DiagnosisHelper._update_job(instance, status="Fail", result=err_msg)
+                DiagnosisHelper._update_job(
+                    instance, status="Fail", result=err_msg)
                 return
             # 如果任务执行成功，则执行后处理脚本
             params = instance.params
