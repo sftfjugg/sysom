@@ -1,9 +1,6 @@
-import logging
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from apps.host.models import HostModel, Cluster
-
-logger = logging.getLogger(__name__)
 
 
 class HostSerializer(serializers.ModelSerializer):

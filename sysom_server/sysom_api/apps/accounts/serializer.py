@@ -1,10 +1,8 @@
-import logging
 from rest_framework import serializers
 
 from . import models
 from lib.utils import JWT
 
-logger = logging.getLogger(__name__)
 
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()

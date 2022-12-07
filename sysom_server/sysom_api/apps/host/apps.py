@@ -1,9 +1,7 @@
-import logging
+from loguru import logger
 import sys
 from django.apps import AppConfig
 from channel_job import default_channel_job_executor
-
-logger = logging.getLogger(__name__)
 
 
 class HostConfig(AppConfig):

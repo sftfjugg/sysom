@@ -7,16 +7,12 @@ File                views.py
 Description:
 """
 
-import logging
 from rest_framework import mixins
 from apps.common.common_model_viewset import CommonModelViewSet
 from lib.response import success
 from apps.accounts.authentication import Authentication
 from apps.services import serializer
 from apps.services.models import ServiceInfo
-
-
-logger = logging.getLogger(__name__)
 
 
 class ServicesAPIView(CommonModelViewSet,

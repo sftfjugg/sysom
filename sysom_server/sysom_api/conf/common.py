@@ -147,87 +147,11 @@ SYSOM_HOST_CONSUME_GROUP = "SYSOM_HOST_CONSUME_GROUP"
 SYSOM_HOST_CEC_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}&channel_job_listen_topic={SYSOM_HOST_LISTEN_TOPIC}&channel_job_consumer_group={SYSOM_HOST_CONSUME_GROUP}"
 
 
-SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_info.log')
-ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_om_error.log')
-if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
-    os.makedirs(os.path.join(BASE_DIR, 'logs'))
-
-
 # JWT Token Decode DIR
 JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
 if not os.path.exists(JWT_TOKEN_DECODE_DIR):
     os.makedirs(JWT_TOKEN_DECODE_DIR)
 
-# 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日志:
-# 格式:[日期][模块.函数名称():行号] [级别] 信息
-STANDARD_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
-    '- <%(module)s:%(lineno)d>: %(message)s'
-CONSOLE_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
-    '- <%(module)s:%(lineno)d>: %(message)s'
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            'format': STANDARD_LOG_FORMAT
-        },
-        'console': {
-            'format': CONSOLE_LOG_FORMAT,
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-        'file': {
-            'format': CONSOLE_LOG_FORMAT,
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': SERVER_LOGS_FILE,
-            'maxBytes': 1024 * 1024 * 100,  # 100 MB
-            'backupCount': 5,  # 最多备份5个
-            'formatter': 'standard',
-            'encoding': 'utf-8',
-        },
-        'error': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': ERROR_LOGS_FILE,
-            'maxBytes': 1024 * 1024 * 100,  # 100 MB
-            'backupCount': 3,  # 最多备份3个
-            'formatter': 'standard',
-            'encoding': 'utf-8',
-        },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        }
-    },
-    'loggers': {
-        # default日志
-        '': {
-            'handlers': ['console', 'error', 'file'],
-            'level': 'INFO',
-        },
-        'django': {
-            'handlers': ['console', 'error', 'file'],
-            'level': 'INFO',
-        },
-        'scripts': {
-            'handlers': ['console', 'error', 'file'],
-            'level': 'INFO',
-        },
-        # 数据库相关日志
-        'django.db.backends': {
-            'handlers': [],
-            'propagate': True,
-            'level': 'INFO',
-        },
-    }
-}
 
 # Config log format
 from cec_base.log import LoggerHelper, LoggerLevel
