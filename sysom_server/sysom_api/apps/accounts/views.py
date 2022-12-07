@@ -1,5 +1,5 @@
 from datetime import datetime
-import logging
+from loguru import logger
 from typing import Union
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
@@ -15,8 +15,6 @@ from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
 from lib.response import success, other_response
-
-logger = logging.getLogger(__name__)
 
 
 class UserModelViewSet(

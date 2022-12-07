@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import traceback
 
 from django.db.models import ProtectedError
@@ -8,8 +8,6 @@ from rest_framework.exceptions import APIException as DRFAPIException, Authentic
 
 from .response import ErrorResponse
 
-
-logger = logging.getLogger(__name__)
 
 
 class APIException(Exception):

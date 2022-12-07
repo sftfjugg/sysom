@@ -1,8 +1,6 @@
-import logging
+from loguru import logger
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate
-
-logger = logging.getLogger(__name__)
 
 
 class AlarmConfig(AppConfig):

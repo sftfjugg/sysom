@@ -1,5 +1,4 @@
-import logging
-import json
+from loguru import logger
 from threading import Thread
 from urllib import parse
 from channels.generic.websocket import WebsocketConsumer, JsonWebsocketConsumer
@@ -9,8 +8,6 @@ import os
 from django.conf import settings
 from cec_base.consumer import Consumer, dispatch_consumer
 
-
-logger = logging.getLogger(__name__)
 
 
 def get_host_instance(model, **kwargs):

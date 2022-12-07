@@ -1,11 +1,7 @@
-import logging
 from io import BytesIO
 import pandas as pd
 from xlwt import Workbook
 from django.http import StreamingHttpResponse, HttpResponse
-
-
-logger = logging.getLogger(__name__)
 
 
 class Excel:

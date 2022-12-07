@@ -6,10 +6,8 @@ Email               mfeng@linux.alibaba.com
 File                apps.py
 Description:
 """
-import logging
+from loguru import logger
 from django.apps import AppConfig
-
-logger = logging.getLogger(__name__)
 
 
 class ServicesConfig(AppConfig):

@@ -6,7 +6,7 @@
 @Software: PyCharm
 """
 import os
-import logging
+from loguru import logger
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from rest_framework.exceptions import AuthenticationFailed
@@ -15,8 +15,6 @@ from rest_framework.request import Request
 from lib.utils import JWT, import_module
 
 from apps.accounts.models import User
-
-logger = logging.getLogger(__name__)
 
 
 class Authentication(BaseAuthentication):
