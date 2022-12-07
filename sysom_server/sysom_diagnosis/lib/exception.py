@@ -1,15 +1,11 @@
-import logging
 import traceback
-
+from loguru import logger
 from django.db.models import ProtectedError
 from rest_framework.views import set_rollback
 from rest_framework import exceptions
 from rest_framework.exceptions import APIException as DRFAPIException, AuthenticationFailed, NotAuthenticated
 
 from .response import ErrorResponse
-
-
-logger = logging.getLogger(__name__)
 
 
 class APIException(Exception):

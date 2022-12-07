@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import functools
 from apps.task.models import JobModel
 from django.conf import settings
@@ -7,8 +7,6 @@ from cec_base.event import Event
 from cec_base.consumer import Consumer
 from channel_job import JobResult
 from .helper import DiagnosisHelper
-
-logger = logging.getLogger(__name__)
 
 
 class DiagnosisTaskExecutor(MultiConsumer):

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from django.http.response import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
@@ -14,7 +14,6 @@ from lib.response import success, other_response, not_found, ErrorResponse
 from lib.authentications import TokenAuthentication
 from .helper import DiagnosisHelper
 
-logger = logging.getLogger(__name__)
 
 
 class TaskAPIView(CommonModelViewSet,
