@@ -41,9 +41,25 @@
     "pannels": [
         {
             "key": "iohangOverview",
-            "type": "table",
+            "type": "stat",
             "title": "IO HANG总览",
-            "datasource": "iohangOverview_${disks}"
+            "datasource": "iohangOverview_${disks}",
+            "fieldConfig": {
+                "mappings": [{
+                  "type": "value", 
+                  "options": {
+                    "normal": { "color": "green" },
+                    "abnormal": { "color": "red" }
+                  }
+                }],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": 1 },
+                    { "color": "green", "value": 0 }
+                  ]
+                }
+              }
         },
         {
             "key": "singleIO",

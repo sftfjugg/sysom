@@ -33,6 +33,12 @@
     ],
     "pannels": [
         {
+            "key": "summary",
+            "type": "table",
+            "title": "诊断结论",
+            "datasource": "summary"
+        },
+        {
             "key": "diskIOstat",
             "type": "table",
             "title": "磁盘IO流量分析",
