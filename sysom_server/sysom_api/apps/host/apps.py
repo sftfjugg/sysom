@@ -13,12 +13,10 @@ class HostConfig(AppConfig):
     def ready(self):
         if 'runserver' in sys.argv or 'manage.py' not in sys.argv:
             from django.conf import settings
-            from cec_base.log import LoggerHelper, LoggerLevel
             # 这边微服务正式启动的时候执行一些处理代码
             # 启动任务结果处理线程
             default_channel_job_executor.init_config(
                 settings.SYSOM_HOST_CEC_URL).start()
-            LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
         else:
             # 这边执行数据库迁移等操作的时候执行一些处理代码
             pass
