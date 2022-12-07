@@ -24,7 +24,7 @@ result['commands'] = []
 
 cmd0 = {}
 cmd0['instance'] = args["instance"]
-cmd0_arg_t = args.get("threshold","5000")
+cmd0_arg_t = args.get("threshold","1000")
 if int(cmd0_arg_t) < 0:
 	cmd0_arg_t = 0
 cmd0_arg_T = args.get("timeout","10")
