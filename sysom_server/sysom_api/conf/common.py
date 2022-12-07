@@ -1,4 +1,5 @@
 import os
+import sys
 import socket
 import datetime
 from pathlib import Path
@@ -227,3 +228,9 @@ LOGGING = {
         },
     }
 }
+
+# Config log format
+from cec_base.log import LoggerHelper, LoggerLevel
+log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)
