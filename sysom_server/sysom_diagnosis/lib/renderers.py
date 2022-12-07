@@ -1,4 +1,3 @@
-import logging
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.core.handlers.asgi import ASGIRequest
@@ -6,7 +5,6 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 

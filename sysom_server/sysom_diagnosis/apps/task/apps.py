@@ -1,8 +1,6 @@
-import logging
 import sys
+from loguru import logger
 from django.apps import AppConfig
-
-logger = logging.getLogger(__name__)
 
 
 class TaskConfig(AppConfig):
