@@ -12,7 +12,7 @@ from apps.task.filter import TaskFilter
 from lib.base_view import CommonModelViewSet
 from lib.response import success, other_response, not_found, ErrorResponse
 from lib.authentications import TokenAuthentication
-from .executors import TaskDispatcher
+from .helper import DiagnosisHelper
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +31,9 @@ class TaskAPIView(CommonModelViewSet,
     filterset_class = TaskFilter  # 精确查询
     authentication_classes = [TokenAuthentication]
     create_requird_fields = ['service_name']
-    
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        # 构造任务执行器，并使用它来进行任务下发和结果处理（结果处理在 apps.py）
-        # 【v2 基于事件中心接口相关功能】
-        self._task_executor: TaskDispatcher = TaskDispatcher(
-            settings.SYSOM_CEC_URL)
 
     def get_authenticators(self):
         if self.request.path.endswith("svg/"):
@@ -89,25 +85,22 @@ class TaskAPIView(CommonModelViewSet,
 
     def create_task_v2(self, request, *args, **kwargs):
         try:
-            # 检查参数是否缺失
+            # 1. Check required params
             res = self.require_param_validate(
                 request, ['service_name'])
             if not res['success']:
-                return other_response(message=res.get('message', 'Missing parameters'), code=400)
+                return ErrorResponse(message=res.get('message', 'Missing parameters'))
             data = request.data
-            data['user'] = getattr(request, 'user')
-            return self._delivery_task(data)
+
+            # 3. Create Task
+            instance = DiagnosisHelper.init(data, getattr(request, 'user'))
+            self.produce_event_to_cec(
+                settings.SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC,
+                {
+                    "task_id": instance.task_id
+                }
+            )
+            return success("")
         except Exception as e:
             logger.error(e, exc_info=True)
-            return other_response(message=str(e), code=400, success=False)
-
-    def _delivery_task(self, data: dict):
-        """
-        将任务发布到事件中心
-        【v2 基于事件中心接口相关功能】
-        """
-        res = self._task_executor.delivery_task(data)
-        if res['success']:
-            return success(result=res["result"])
-        else:
-            return ErrorResponse(msg=res["message"])
+            return ErrorResponse(msg=str(e))

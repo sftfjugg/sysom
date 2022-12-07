@@ -54,14 +54,14 @@ class ErrorResponse(Response):
     默认错误码返回400, 也可以指定其他返回码:ErrorResponse(code=xxx)
     """
 
-    def __init__(self, data=None, msg='error', code=400, status=None, template_name=None, headers=None,
+    def __init__(self, data=None, msg='error', code=400, template_name=None, headers=None,
                  exception=False, content_type=None):
         std_data = {
             "code": code,
             "data": data or {},
             "message": msg
         }
-        super().__init__(std_data, status, template_name, headers, exception, content_type)
+        super().__init__(std_data, code, template_name, headers, exception, content_type)
 
 
 class FileResponseAlter(FileResponse):
