@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 from typing import List
 from django.conf import settings
@@ -9,7 +9,6 @@ from rest_framework.authentication import BaseAuthentication
 from .utils import import_module
 
 
-logger = logging.getLogger(__name__)
 
 
 def get_jwt_decode_classes() -> List[BaseAuthentication]:
@@ -23,7 +22,7 @@ def get_jwt_decode_classes() -> List[BaseAuthentication]:
             m = getattr(module, 'JWTTokenDecode')
             jwt_decode_classes.append(m)
         except Exception as exc:
-            logger.warn(exc)
+            logger.warning(exc)
     return jwt_decode_classes
 
 

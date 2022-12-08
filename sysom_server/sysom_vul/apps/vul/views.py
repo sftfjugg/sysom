@@ -11,7 +11,7 @@ from django_apscheduler.jobstores import register_job
 from tzlocal import get_localzone
 from django.utils.timezone import localdate, localtime
 from django_filters.rest_framework import DjangoFilterBackend
-from loguru import logger as log
+from loguru import logger
 from lib.response import *
 # from apps.accounts.authentication import Authentication
 from apps.vul.models import *
@@ -19,7 +19,6 @@ from apps.vul.vul import update_sa as upsa, update_vul as upvul
 from apps.vul.vul import fix_cve, get_unfix_cve
 from apps.vul.serializer import VulAddrListSerializer, VulAddrModifySerializer
 
-logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler(timezone=f'{get_localzone()}')
 

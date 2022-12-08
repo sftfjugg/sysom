@@ -10,7 +10,6 @@ import json
 from collections import OrderedDict
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
-from loguru import logger
 from apps.vul.models import VulAddrModel
 
 
