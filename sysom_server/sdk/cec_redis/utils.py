@@ -6,6 +6,7 @@ Email               mfeng@linux.alibaba.com
 File                utils.py
 Description:
 """
+import threading
 from redis import Redis
 import redis
 from cec_base.url import CecUrl
@@ -154,3 +155,33 @@ def transfer_pending_list(redis_client: Redis, topic: str, group: str,
                 pending_ids
             )]]
     return _message_ret
+
+
+class AtomicLong:
+    """An atomic int based on thread lock"""
+
+    def __init__(self, initial_value: int) -> None:
+        self._value = initial_value
+        self._lock = threading.Lock()
+
+    @property
+    def value(self) -> int:
+        """Get current value
+        """
+        return self._value
+
+    def inc(self, count: int = 1):
+        with self._lock:
+            self._value += count
+            return self._value
+
+    def set_and_get(self, target_value: int) -> int:
+        with self._lock:
+            self._value = target_value
+            return self._value
+
+    def get_and_set(self, target_value: int) -> int:
+        with self._lock:
+            pre_value = self._value
+            self._value = target_value
+            return pre_value
