@@ -106,9 +106,7 @@ def init_channel():
     AsyncSSH.set_public_key_getter(lambda: ssh_keys["public_key"])
 
     # 6. Start Channel executor
-    from cec_base.log import LoggerHelper, LoggerLevel
     from app.executor import ChannelListener
-    LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
     try:
         ChannelListener().start()
     except Exception as e:
