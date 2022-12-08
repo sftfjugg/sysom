@@ -14,7 +14,9 @@ from .utils import import_module
 def get_jwt_decode_classes() -> List[BaseAuthentication]:
     jwt_decode_classes = []
     import_strings = [
-        f'lib.decode.{f.replace(".py", "")}' for f in os.listdir(settings.JWT_TOKEN_DECODE_DIR)
+        f'lib.decode.{f.replace(".py", "")}' for f in
+        filter(lambda f: f.endswith(".py"), os.listdir(
+            settings.JWT_TOKEN_DECODE_DIR))
     ]
     for string in import_strings:
         module = import_module(string)
