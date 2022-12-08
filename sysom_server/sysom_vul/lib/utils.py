@@ -10,10 +10,9 @@ import time
 import uuid as UUID
 from typing import List
 import json
-import logging
 import jwt
 import requests
-
+from loguru import logger
 from importlib import import_module
 from datetime import datetime, date as datetime_date
 from decimal import Decimal
@@ -23,8 +22,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from paramiko.rsakey import RSAKey
 from io import StringIO
 
-
-logger = logging.getLogger(__name__)
 
 job_defaults = {
     'max_instances': 10,
