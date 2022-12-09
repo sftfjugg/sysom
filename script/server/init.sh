@@ -31,12 +31,21 @@ fi
 
 config=conf
 basedir=`dirname $0`
+SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
+SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
+SYSOM_DATABASE_PORT=`cat $SYSOM_CONF | grep "'PORT'" | awk -F"'" '{print $4}'`
+SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep "'USER'" | awk -F"'" '{print $4}'`
+SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep PASSWORD | awk -F"'" '{print $4}'`
 
 ###enable the service web menu###
 setup_web_menu_enable()
 {
     service=`echo $1 | grep sysom | awk -F"sysom_" '{print $NF}'`
-    mysql -usysom -psysom_admin -e "use sysom;insert into sys_service_info(service_name, created_at) values ('sysom_${service}', current_timestamp);"
+    if [ "$service" != "" ]
+    then
+        mysql -h ${SYSOM_DATABASE_HOST} -P ${SYSOM_DATABASE_PORT} -u ${SYSOM_DATABASE_USER} -p${SYSOM_DATABASE_PASSWORD} \
+        -e "use sysom;insert into sys_service_info(service_name, created_at) values ('sysom_${service}', current_timestamp);"
+    fi
 }
 
 cd $basedir
