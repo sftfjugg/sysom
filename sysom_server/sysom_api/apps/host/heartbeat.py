@@ -4,7 +4,7 @@ from threading import Thread
 from schedule import Scheduler
 from loguru import logger
 from .models import HostModel
-from channel_job import default_channel_job_executor, JobResult
+from channel_job import ChannelJobExecutor
 from django.db import connection
 from django.conf import settings
 
@@ -18,8 +18,9 @@ class HeartBeat:
         self._heartbeat_interval = heartbeat_interval
         self._heartbeat_listen_thread: Optional[Thread] = None
         self._heartbeat_host_schedule: Scheduler = Scheduler()
-        default_channel_job_executor.init_config(
-            settings.SYSOM_HOST_CEC_URL).start()
+        
+        self._channel_job = ChannelJobExecutor()
+        self._channel_job.init_config(settings.SYSOM_HOST_CEC_URL).start()
 
     def _send_host_heart_beat(self, instance: HostModel) -> None:
         """
@@ -34,10 +35,10 @@ class HeartBeat:
             "instance": instance.ip,
             "command": "ls"
         }
-        params['timeout'] = 1000
+        params['timeout'] = 5000
         params['auto_retry'] = True
 
-        default_channel_job_executor.dispatch_job(**params)\
+        self._channel_job.dispatch_job(**params)\
             .execute_async_with_callback(
                 finish_callback=functools.partial(self._finish_callback, instance))
 
@@ -55,7 +56,7 @@ class HeartBeat:
                 connection.close()
 
     def _task(self):
-        queryset = HostModel.objects.all().order_by('-created_at')
+        queryset = HostModel.objects.exclude(status=1)
         for instance in queryset:
             self._send_host_heart_beat(instance)
 
