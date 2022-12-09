@@ -4,6 +4,10 @@
 # Author: huangtuquan
 #***************************************************************#
 SERVICE_NAME=sysom-redis
+OSS_URL=https://sysom.oss-cn-beijing.aliyuncs.com/redis
+REDIS_DL_URL=https://download.redis.io/releases
+REDIS_DIR=redis-5.0.14
+REDIS_PKG=redis-5.0.14.tar.gz
 usr_local_redis=0
 
 setup_database() {
@@ -41,12 +45,35 @@ setup_redis() {
     echo ${redis_version}
     if [ $redis_version -lt 5 ]
     then
-        init_conf
+        echo "redis version in yum repo is less than 5.0.0, we will compile redis(5.0.14) and install it."
+        if [ ! -e ${REDIS_PKG} ]
+        then
+            wget ${OSS_URL}/${REDIS_PKG} || wget ${REDIS_DL_URL}/${REDIS_PKG}
+            if [ ! -e ${REDIS_PKG} ]
+            then
+                echo "download ${REDIS_PKG} fail"
+                exit 1
+            fi
+        fi
+        echo "now uncompress ${REDIS_PKG}, then compile and install it."
+        tar -zxvf ${REDIS_PKG}
+        pushd ${REDIS_DIR}
+        make
+        mkdir -p ${SERVER_HOME}/redis
+        cp redis.conf ${SERVER_HOME}/redis/
+        cp src/redis-server ${SERVER_HOME}/redis/
+        if [ $? -ne 0 ]
+        then
+            echo "redis compile or install error, exit 1"
+            exit 1
+        fi
         usr_local_redis=1
+        popd
     fi
 }
 
 start_local_redis() {
+    init_conf
     ###if supervisor service started, we need use "supervisorctl update" to start new conf####
     supervisorctl update
     supervisorctl status ${SERVICE_NAME}
@@ -62,6 +89,7 @@ start_local_redis() {
 start_app() {
     systemctl enable nginx.service
     systemctl restart nginx.service
+    systemctl start supervisord
     if [ $usr_local_redis == 1 ]
     then
         ###if redis systemd service has been start, we need stop it first###
@@ -75,7 +103,6 @@ start_app() {
         systemctl enable redis.service
         systemctl restart redis.service
     fi
-    systemctl start supervisord
 }
 
 deploy() {
