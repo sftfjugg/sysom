@@ -118,7 +118,7 @@ def oomcheck_result(raw):
             result['oomTask']['data'].append({"key":cnt, "进程名":task_info['task'], "使用的内存":task_info['rss']})
             cnt += 1
 
-
+    result['summary'] = res['result']
     print(json.dumps(result))
 
 def extract_params():
