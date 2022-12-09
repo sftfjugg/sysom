@@ -5,16 +5,13 @@
 @Author  : DM
 @Software: PyCharm
 """
-import os
 from loguru import logger
-from django.conf import settings
 from django.utils.translation import ugettext as _
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.request import Request
-from lib.utils import JWT, import_module
-
 from apps.accounts.models import User
+from lib.authentications import get_jwt_decode_classes
 
 
 class Authentication(BaseAuthentication):
@@ -35,32 +32,16 @@ class Authentication(BaseAuthentication):
         return user, token
 
     @staticmethod
-    def get_jwt_decode_classes():
-        jwt_decode_classes = []
-        import_strings = [
-            f'lib.decode.{f.replace(".py", "")}' for f in os.listdir(settings.JWT_TOKEN_DECODE_DIR)
-        ]
-        for string in import_strings:
-            module = import_module(string)
-            try:
-                m = getattr(module, 'JWTTokenDecode')
-                jwt_decode_classes.append(m())
-            except Exception as exc:
-                logger.error(exc)
-        
-        return jwt_decode_classes
-
-    @staticmethod
     def _check_payload(token):
         error_message, state = "", False
-        for t in Authentication.get_jwt_decode_classes():
+        for t in get_jwt_decode_classes():
             r, s = t.decode(token)
             if not s:
                 error_message += r
                 continue
             else:
                 state = s
-                break            
+                break
 
         if not state:
             raise AuthenticationFailed(error_message)
@@ -72,7 +53,8 @@ class Authentication(BaseAuthentication):
         id = payload.get('id', None) or payload.get('sub', None)
         if not username:
             raise AuthenticationFailed('令牌错误, 用户不存在!')
-        u, _ = User.objects.get_or_create(username=username, is_agree=True, id=int(id))
+        u, _ = User.objects.get_or_create(
+            username=username, is_agree=True, id=int(id))
         return u
 
     @staticmethod
