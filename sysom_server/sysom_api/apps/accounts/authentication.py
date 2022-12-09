@@ -11,7 +11,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.request import Request
 from apps.accounts.models import User
-from lib.authentications import get_jwt_decode_classes
+from lib.authentications import decode_token
 
 
 class Authentication(BaseAuthentication):
@@ -26,26 +26,10 @@ class Authentication(BaseAuthentication):
                 return None
         if not token:
             raise AuthenticationFailed("没有令牌")
-        payload = self._check_payload(token)
+        payload = decode_token(token)
         user = self._check_user(payload=payload)
         logger.info(f"{user.username} 身份通过")
         return user, token
-
-    @staticmethod
-    def _check_payload(token):
-        error_message, state = "", False
-        for t in get_jwt_decode_classes():
-            r, s = t.decode(token)
-            if not s:
-                error_message += r
-                continue
-            else:
-                state = s
-                break
-
-        if not state:
-            raise AuthenticationFailed(error_message)
-        return r
 
     @staticmethod
     def _check_user(payload) -> User:
