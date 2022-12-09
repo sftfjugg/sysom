@@ -11,10 +11,10 @@ export default function MachineMessage() {
     state: { systemMessage, machineDetailLoading },
   } = useContext(WrapperContext);
   
-  const showItemDom = (item) => {
+  const showItemDom = (item,index) => {
     return (
-      <Col span={12} key={nanoid()}>
-        {Number(item.name ? item.name.length : 0) + Number(item.value ? item.value.length : 0) > 25 ? 
+      <Col span={12} key={index}>
+        {Number(item.name ? item.name.length : 0) + Number(item.value ? item.value.length : 0) > 25 ?
           <Popover content={<pre style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</pre>} placement="bottomLeft">
             <div className={styles.machineItem}>{item.name}：{item.value}</div>
           </Popover>
@@ -40,8 +40,8 @@ export default function MachineMessage() {
           <Row gutter={[0, 20]}>
             {systemMessage.base_info && systemMessage.base_info.length !== 0 ? (
               <>
-                {systemMessage.base_info.map((item) => (
-                  showItemDom(item)
+                {systemMessage.base_info.map((item,index) => (
+                  showItemDom(item,index)
                 ))}
               </>
             ) : (
@@ -63,8 +63,8 @@ export default function MachineMessage() {
           <Row gutter={[0, 20]}>
             {systemMessage.hard_info && systemMessage.hard_info.length !== 0  ? (
               <>
-                {systemMessage.hard_info.map((item) => (
-                  showItemDom(item)
+                {systemMessage.hard_info.map((item,index) => (
+                  showItemDom(item,index)
                 ))}
               </>
             ) : (
@@ -86,8 +86,8 @@ export default function MachineMessage() {
           <Row gutter={[0, 20]}>
             {systemMessage.soft_info && systemMessage.soft_info.length !== 0  ? (
               <>
-                {systemMessage.soft_info.map((item) => (
-                  showItemDom(item)
+                {systemMessage.soft_info.map((item,index) => (
+                  showItemDom(item,index)
                 ))}
               </>
             ) : (

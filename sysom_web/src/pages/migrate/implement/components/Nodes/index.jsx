@@ -221,15 +221,15 @@ export default withRouter(
 
     useEffect(()=>{
       // 轮询日志和报告
-     const timer = setInterval(async () => {
-     Promise.all([
-       getLog(tableIp),
-     ]).catch((error)=>{
-      console.log(error,'error')
-     })
-   }, 5000);
-   return () => clearInterval(timer);
-   },[tableIp])
+      const timer = setInterval(async () => {
+        Promise.all([
+          getLog(tableIp),
+        ]).catch((error)=>{
+          console.log(error,'error')
+        })
+      }, 5000);
+      return () => clearInterval(timer);
+    },[tableIp])
 
     const showItemModal = (ip,step,text) =>{
       Modal.confirm({
