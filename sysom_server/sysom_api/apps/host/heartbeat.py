@@ -43,8 +43,8 @@ class HeartBeat:
                 finish_callback=functools.partial(self._finish_callback, instance))
 
     def _finish_callback(self, instance, res):
-        if instance.status != res.code:
-            status = 0 if res.code == 0 else 2
+        status = 0 if res.code == 0 else 2
+        if instance.status != status:
             try:
                 instance.status = status
                 instance.save()
