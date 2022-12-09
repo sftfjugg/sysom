@@ -9,8 +9,6 @@ from rest_framework.authentication import BaseAuthentication
 from .utils import import_module
 
 
-
-
 def get_jwt_decode_classes() -> List[BaseAuthentication]:
     jwt_decode_classes = []
     import_strings = [
