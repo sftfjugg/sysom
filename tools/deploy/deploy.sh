@@ -7,7 +7,7 @@
 # Function: deploy sysom
 #***************************************************************#
 APP_NAME="sysom"
-SERVER_DIR="server"
+SERVER_DIR="sysom_server"
 WEB_DIR="sysom_web"
 SCRIPT_DIR="script"
 APP_HOME=/usr/local/sysom
@@ -55,9 +55,11 @@ update_target() {
     if [ -d "${TARGET_PATH}" ]; then
         rm -rf ${TARGET_PATH}
     fi
+    mkdir -p ${TARGET_PATH}
     echo "INFO: copy project file..."
-    cp -r ${SERVER_DIR}/* ${SERVER_HOME}/
+    cp -r ${SERVER_DIR} ${WEB_DIR} ${TARGET_PATH}
     cp -r ${SCRIPT_DIR} ${APP_HOME}/init_scripts
+    cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
 }
 
 start_script_server() {

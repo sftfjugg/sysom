@@ -9,7 +9,7 @@ fi
 
 if [ "$APP_HOME" == "" ]
 then
-    export APP_HOME=/usr/local/sysom/
+    export APP_HOME=/usr/local/sysom
     export SERVER_HOME=/usr/local/sysom/server
     export NODE_HOME=/usr/local/sysom/node
 fi
