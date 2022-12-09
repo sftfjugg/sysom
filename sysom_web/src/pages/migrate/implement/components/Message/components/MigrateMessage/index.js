@@ -3,12 +3,12 @@ import { Card, Col, Row, Empty, Skeleton, Popover } from 'antd';
 import { AppstoreOutlined, HddOutlined } from '@ant-design/icons';
 import { WrapperContext } from '../../../../containers';
 import { ReactComponent as SoftIcon } from '@/pages/migrate/static/softIcon.svg';
-import styles from './style.less';
+import styles from '../MachineMessage/style.less';
 import { nanoid } from 'nanoid';
 
-export default function MachineMessage() {
+export default function MigrateMessage() {
   const {
-    state: { systemMessage, machineDetailLoading },
+    state: {migMessage, machineDetailLoading},
   } = useContext(WrapperContext);
   
   const showItemDom = (item) => {
@@ -33,14 +33,14 @@ export default function MachineMessage() {
           title={
             <>
               <AppstoreOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-              基本信息
+              迁移配置
             </>
           }
         >
           <Row gutter={[0, 20]}>
-            {systemMessage.base_info && systemMessage.base_info.length !== 0 ? (
+            {migMessage.migration_info && migMessage.migration_info.length !== 0 ? (
               <>
-                {systemMessage.base_info.map((item) => (
+                {migMessage.migration_info.map((item) => (
                   showItemDom(item)
                 ))}
               </>
@@ -56,37 +56,14 @@ export default function MachineMessage() {
           title={
             <>
               <HddOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-              硬件信息
+              实施步骤
             </>
           }
         >
           <Row gutter={[0, 20]}>
-            {systemMessage.hard_info && systemMessage.hard_info.length !== 0  ? (
+            {migMessage.migration_step && migMessage.migration_step.length !== 0  ? (
               <>
-                {systemMessage.hard_info.map((item) => (
-                  showItemDom(item)
-                ))}
-              </>
-            ) : (
-              <Col span={24} key={nanoid()}>
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
-              </Col>
-            )}
-          </Row>
-        </Card>
-        <Card
-          className={styles.card}
-          title={
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <SoftIcon style={{ marginRight: 12 }} />
-              软件信息
-            </div>
-          }
-        >
-          <Row gutter={[0, 20]}>
-            {systemMessage.soft_info && systemMessage.soft_info.length !== 0  ? (
-              <>
-                {systemMessage.soft_info.map((item) => (
+                {migMessage.migration_step.map((item) => (
                   showItemDom(item)
                 ))}
               </>

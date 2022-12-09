@@ -1,16 +1,18 @@
 import React, { useContext } from 'react';
 import { Skeleton, Empty } from 'antd';
 import { WrapperContext } from '../../../../containers';
+import './index.less';
 
-export default () => {
+export default (props) => {
+  const {data} = props;
   const {
-    state: { machineDetailLoading, logtMessage },
+    state: { machineDetailLoading },
   } = useContext(WrapperContext);
   return (
-    <div style={{ height: 'calc(100vh - 48px)', overflow: 'scroll' }}>
+    <div className='log-container'>
       <Skeleton loading={machineDetailLoading}>
-        {logtMessage ? (
-          <pre style={{ color: 'rgba(255,255,255,0.65)' }}>{logtMessage}</pre>
+        {data ? (
+          <pre style={{ color: 'rgba(255,255,255,0.65)' }}>{data}</pre>
         ) : (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ marginTop: 100 }} />
         )}

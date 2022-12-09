@@ -2,7 +2,7 @@ import React, {useEffect, useReducer, createContext} from 'react';
 import {withRouter} from 'umi';
 import rootReducer from './reducers';
 // import { SET_DATA } from './constants';
-// import { qyeryMachineInfo, qyeryLog, qyeryReport,getBannerList } from '../../service';
+// import { qyeryMachineInfo, qyeryLog,getBannerList } from '../../service';
 
 // 初始化全量数据（全部的分类、应用数据）
 const initState = {
@@ -17,15 +17,21 @@ const initState = {
   isDefault: false,
   // 机器信息
   systemMessage: {},
+  // 迁移信息
+  migMessage: {},
   // 迁移日志
   logtMessage: '',
   // 迁移报告
-  reportMessage: {},
+  reportMessage: '',
+  // 实施日志
+  impLogMessage: '',
+  // 实施报告
+  impReportMessage: '',
   // 当前展示的机器ip(系统版本)
   tableIpVersion: '',
   // 当前展示的机器ip
   tableIp: '',
-  // 批量迁移
+  // 批量配置
   allMoveVisible: false,
   // 机器组列表
   machineGroupsList: [],

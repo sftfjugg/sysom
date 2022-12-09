@@ -14,7 +14,11 @@ const errorHandler = function (error) {
       message.error(Object.values(error.data.message))
     }
     else {
-      message.error(error.data.message);
+      if(error.data.message){
+        message.error(error.data.message);
+      }else if(error.data.msg){
+        message.error(error.data.msg);
+      }
     }
   } else {
     message.error(error.message);
