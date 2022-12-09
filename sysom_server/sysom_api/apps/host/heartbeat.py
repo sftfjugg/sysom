@@ -56,7 +56,7 @@ class HeartBeat:
                 connection.close()
 
     def _task(self):
-        queryset = HostModel.objects.exclude(status=1)
+        queryset = HostModel.objects.filter(status__in=[0, 2])
         for instance in queryset:
             self._send_host_heart_beat(instance)
 
