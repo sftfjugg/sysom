@@ -29,6 +29,7 @@ then
        export SERVER_PORT=80
 fi
 
+mkdir -p ${SERVER_HOME}/logs
 config=conf
 basedir=`dirname $0`
 SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
