@@ -70,6 +70,16 @@ then
     exit 1
 fi
 
+curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
+--header 'Content-Type: application/json' \
+-d @"sysom-migration-dashboard.json"
+if [ $? -ne 0 ]
+then
+    echo "grafana configure sysom-migration-dashboard error"
+    exit 1
+fi
+
+
 #curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/dashboards/db' \
 #--header 'Content-Type: application/json' \
 #-d @"sysom-netinfo-dashboard.json"
