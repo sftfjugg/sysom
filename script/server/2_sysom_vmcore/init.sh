@@ -4,6 +4,7 @@ VMCORE_DIR=${SERVER_DIR}/sysom_vmcore
 VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
 TARGET_PATH=${SERVER_HOME}/target
 SERVICE_NAME=sysom-vmcore
+VIRTUALENV_PYTHON3=${SERVER_HOME}/virtualenv/bin/python3
 
 source_virtualenv() {
     echo "INFO: activate virtualenv..."
@@ -55,7 +56,7 @@ start_cron()
 {
     cp parse_panic.py ${SERVER_HOME}/vmcore
     cp vmcore_const.py ${SERVER_HOME}/vmcore
-    echo "* * * * * pushd ${SERVER_HOME}/vmcore;python3 parse_panic.py ${file_path} ${SERVER_PORT};popd" >> /var/spool/cron/root
+    echo "* * * * * pushd ${SERVER_HOME}/vmcore;${VIRTUALENV_PYTHON3} parse_panic.py ${file_path} ${SERVER_PORT};popd" >> /var/spool/cron/root
 }
 
 deploy() {
