@@ -3,18 +3,18 @@ import { Card, Col, Row, Empty, Skeleton, Popover } from 'antd';
 import { AppstoreOutlined, HddOutlined } from '@ant-design/icons';
 import { WrapperContext } from '../../../../containers';
 import { ReactComponent as SoftIcon } from '@/pages/migrate/static/softIcon.svg';
-import styles from './style.less';
+import styles from '../MachineMessage/style.less';
 import { nanoid } from 'nanoid';
 
-export default function MachineMessage() {
+export default function MigrateMessage() {
   const {
-    state: { systemMessage, machineDetailLoading },
+    state: {migMessage, machineDetailLoading},
   } = useContext(WrapperContext);
   
-  const showItemDom = (item,index) => {
+  const showItemDom = (item) => {
     return (
-      <Col span={12} key={index}>
-        {Number(item.name ? item.name.length : 0) + Number(item.value ? item.value.length : 0) > 25 ?
+      <Col span={12} key={nanoid()}>
+        {Number(item.name ? item.name.length : 0) + Number(item.value ? item.value.length : 0) > 25 ? 
           <Popover content={<pre style={{ color: 'rgba(255,255,255,0.65)' }}>{item.value}</pre>} placement="bottomLeft">
             <div className={styles.machineItem}>{item.name}：{item.value}</div>
           </Popover>
@@ -33,15 +33,15 @@ export default function MachineMessage() {
           title={
             <>
               <AppstoreOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-              基本信息
+              迁移配置
             </>
           }
         >
           <Row gutter={[0, 20]}>
-            {systemMessage.base_info && systemMessage.base_info.length !== 0 ? (
+            {migMessage.migration_info && migMessage.migration_info.length !== 0 ? (
               <>
-                {systemMessage.base_info.map((item,index) => (
-                  showItemDom(item,index)
+                {migMessage.migration_info.map((item) => (
+                  showItemDom(item)
                 ))}
               </>
             ) : (
@@ -56,38 +56,15 @@ export default function MachineMessage() {
           title={
             <>
               <HddOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-              硬件信息
+              实施步骤
             </>
           }
         >
           <Row gutter={[0, 20]}>
-            {systemMessage.hard_info && systemMessage.hard_info.length !== 0  ? (
+            {migMessage.migration_step && migMessage.migration_step.length !== 0  ? (
               <>
-                {systemMessage.hard_info.map((item,index) => (
-                  showItemDom(item,index)
-                ))}
-              </>
-            ) : (
-              <Col span={24} key={nanoid()}>
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
-              </Col>
-            )}
-          </Row>
-        </Card>
-        <Card
-          className={styles.card}
-          title={
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <SoftIcon style={{ marginRight: 12 }} />
-              软件信息
-            </div>
-          }
-        >
-          <Row gutter={[0, 20]}>
-            {systemMessage.soft_info && systemMessage.soft_info.length !== 0  ? (
-              <>
-                {systemMessage.soft_info.map((item,index) => (
-                  showItemDom(item,index)
+                {migMessage.migration_step.map((item) => (
+                  showItemDom(item)
                 ))}
               </>
             ) : (

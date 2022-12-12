@@ -6,8 +6,8 @@ import {
   getBannerList,
   getNodesList,
   qyeryMachineInfo,
+  qyeryMigrateInfo,
   qyeryLog,
-  qyeryReport,
 } from '../../../service';
 import styles from './style.less';
 
@@ -44,13 +44,13 @@ const machineGroup = (props) => {
       }else{
         getNoData()
       }
-      dispatch({
-        type: SET_DATA,
-        payload: {
-          loadingVisible: false,
-        },
-      });
     }
+    dispatch({
+      type: SET_DATA,
+      payload: {
+        loadingVisible: false,
+      },
+    });
   }
 
   // 获取机器列表
@@ -64,7 +64,7 @@ const machineGroup = (props) => {
     const {code, data} = await getNodesList({id:myid});
     if (code === 200) {
       if(data && data.length !== 0){
-        handleMachineName(data[0])
+        handleMachineName(data[0]);
         dispatch({
           type: SET_DATA,
           payload: {
@@ -94,8 +94,11 @@ const machineGroup = (props) => {
         nodeTotal: 0,
         abnormalNodeTotal: 0,
         systemMessage: {},
+        migMessage: {},
         logtMessage: '',
-        reportMessage: {},
+        reportMessage: '',
+        impLogMessage: '',
+        impReportMessage: '',
         tableIp: '',
         tableIpVersion: '',
       },
@@ -112,20 +115,14 @@ const machineGroup = (props) => {
     const hide = message.loading('loading...', 0);
     Promise.all([
       getMachineInfo(r.ip),
+      getMigrateInfo(r.ip),
       getLog(r.ip),
-      getReport(r.ip),
     ]).then((res) => {
-      console.log(res,'jaja')
-      const [
-        { data: systemMessage },
-        { data: logtMessage },
-        { data: reportMessage },
-      ] = res;
       dispatch({
         type: SET_DATA,
         payload: {
           tableIp: r.ip,
-          tableIpVersion: r.version ? `${r.ip} (${r.version})` : `${r.ip}`,
+          tableIpVersion: r.old_ver ? `${r.ip} (${r.old_ver})` : `${r.ip}`,
           machineDetailLoading: false,
         },
       });
@@ -134,29 +131,6 @@ const machineGroup = (props) => {
       hide();
       console.log(error,'error')
     })
-    // Promise.all([
-    //   qyeryMachineInfo({ ip: r.ip}),
-    //   qyeryLog({ ip: r.ip }),
-    //   qyeryReport({ ip: r.ip }),
-    // ]).then((res) => {
-    //   hide();
-    //   const [
-    //     { data: systemMessage },
-    //     { data: logtMessage },
-    //     { data: reportMessage },
-    //   ] = res;
-    //   dispatch({
-    //     type: SET_DATA,
-    //     payload: {
-    //       systemMessage,
-    //       logtMessage,
-    //       reportMessage,
-    //       tableIp: r.ip,
-    //       tableIpVersion: r.version ? `${r.ip} (${r.version})` : `${r.ip}`,
-    //       machineDetailLoading: false,
-    //     },
-    //   });
-    // })
   }
   
   const getMachineInfo = async (ip) => {
@@ -166,7 +140,7 @@ const machineGroup = (props) => {
         dispatch({
           type: SET_DATA,
           payload: {
-            systemMessage: data,
+            systemMessage: data ? data : {},
           },
         });
         return true;
@@ -182,49 +156,56 @@ const machineGroup = (props) => {
       return false;
     }
   }
-  
-  const getLog = async (ip) => {
+
+  const getMigrateInfo = async (ip) => {
     try {
-      const { code,data } = await qyeryLog({ ip });
+      const { code,data } = await qyeryMigrateInfo({ ip });
       if (code === 200) {
         dispatch({
           type: SET_DATA,
           payload: {
-            logtMessage: data,
+            migMessage: data ? data : {},
           },
         });
         return true;
       }
+      return false;
+    } catch (e) {
+      dispatch({
+        type: SET_DATA,
+        payload: {
+          migMessage: {},
+        },
+      });
+      return false;
+    }
+  }
+  
+  const getLog = async (ip) => {
+    try {
+      const {code,data,msg} = await qyeryLog({ ip });
+      if (code === 200 && data) {
+        dispatch({
+          type: SET_DATA,
+          payload: {
+            logtMessage: data.ass_log ? data.ass_log : '',
+            reportMessage: data.ass_report ? data.ass_report : '',
+            impLogMessage: data.imp_log ? data.imp_log : '',
+            impReportMessage: data.imp_report ? data.imp_report : '',
+          },
+        });
+        return true;
+      }
+      message.error(msg);
       return false;
     } catch (e) {
       dispatch({
         type: SET_DATA,
         payload: {
           logtMessage: '',
-        },
-      });
-      return false;
-    }
-  }
-
-  const getReport = async (ip) => {
-    try {
-      const { code,data } = await qyeryReport({ ip });
-      if (code === 200) {
-        dispatch({
-          type: SET_DATA,
-          payload: {
-            reportMessage: data,
-          },
-        });
-        return true;
-      }
-      return false;
-    } catch (e) {
-      dispatch({
-        type: SET_DATA,
-        payload: {
-          reportMessage: {},
+          reportMessage: '',
+          impLogMessage: '',
+          impReportMessage: '',
         },
       });
       return false;
