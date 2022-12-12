@@ -35,7 +35,7 @@ class HeartBeat:
             "instance": instance.ip,
             "command": "ls"
         }
-        params['timeout'] = self._heartbeat_interval
+        params['timeout'] = self._heartbeat_interval * 1000
         params['auto_retry'] = True
 
         self._channel_job.dispatch_job(**params)\
