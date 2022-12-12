@@ -41,9 +41,18 @@ then
     exit 1
 fi
 
-#curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
-#--header 'Content-Type: application/json' \
-#--data '{"name":"sysom-influxdb","type":"influxdb","access":"proxy","url":"http://localhost:8086","user":"admin","database":"sysom_monitor","secureJsonData":{"password":"sysom_admin"}}'
+curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
+--header 'Content-Type: application/json' \
+--data '{"name": "sysom-mysql", "type": "mysql", "url": "localhost:3306","access": "proxy", "user":"sysom", "database": "sysom", "secureJsonData": {"password": "sysom_admin"}}'
+if [ $? -ne 0 ]
+then
+    echo "grafana configure prometheus datasource error"
+    exit 1
+fi
+
+# curl -c cookie -b cookie --location --request POST 'http://127.0.0.1:3000/api/datasources' \
+# --header 'Content-Type: application/json' \
+# --data '{"name":"sysom-influxdb","type":"influxdb","access":"proxy","url":"http://localhost:8086","user":"admin","database":"sysom_monitor","secureJsonData":{"password":"sysom_admin"}}'
 #if [ $? -ne 0 ]
 #then
 #    echo "grafana configure influxdb datasource error"
