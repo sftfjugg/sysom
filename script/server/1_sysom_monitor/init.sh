@@ -19,6 +19,7 @@ NODE_INIT_PKG=sysom_node_init.tar.gz
 NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_init
 NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_delete
 SERVICE_NAME=sysom-prometheus
+VIRTUALENV_PYTHON3=${SERVER_HOME}/virtualenv/bin/python3
 
 BASE_DIR=`dirname $0`
 
@@ -175,8 +176,8 @@ configure_grafana()
 
 configure_cron()
 {
-    echo "* * * * * python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
-    echo "* * * * * sleep 30;python3 ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
+    echo "* * * * * ${VIRTUALENV_PYTHON3} ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
+    echo "* * * * * sleep 30;${VIRTUALENV_PYTHON3} ${RESOURCE_DIR}/prometheus/prometheus_get_node.py ${SERVER_PORT}" >> /var/spool/cron/root
 }
 
 main()
