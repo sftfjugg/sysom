@@ -1,5 +1,5 @@
-from loguru import logger
 import sys
+from loguru import logger
 from django.apps import AppConfig
 from channel_job import default_channel_job_executor
 
@@ -16,8 +16,9 @@ class HostConfig(AppConfig):
             default_channel_job_executor.init_config(
                 settings.SYSOM_HOST_CEC_URL).start()
             try:
-                from .heartbeat import HeartBeat
-                HeartBeat.start()
+                from .heartbeat import HeartBeat, HeartBeatProcess
+                # HeartBeat.start()
+                HeartBeatProcess().start()
             except Exception as e:
                 logger.warning(f'主机心跳未启动: {e}')
         else:
