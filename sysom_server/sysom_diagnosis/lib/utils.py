@@ -7,13 +7,9 @@
 @Software: PyCharm
 """
 import uuid as UUID
-import logging
 from datetime import datetime
 from paramiko.rsakey import RSAKey
 from io import StringIO
-
-
-logger = logging.getLogger(__name__)
 
 
 CHAR_SET = ("a", "b", "c", "d", "e", "f",

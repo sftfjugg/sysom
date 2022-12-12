@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from typing import Dict
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
@@ -15,9 +15,6 @@ import datetime
 import re
 
 import os
-
-logger = logging.getLogger(__name__)
-
 
 
 # Create your views here.

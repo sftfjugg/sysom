@@ -1,5 +1,5 @@
 import re
-import logging
+from loguru import logger
 import os
 import threading
 from typing import Any
@@ -24,9 +24,6 @@ from lib.excel import Excel
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
 from channel_job import default_channel_job_executor
-
-
-logger = logging.getLogger(__name__)
 
 
 class HostModelViewSet(CommonModelViewSet,

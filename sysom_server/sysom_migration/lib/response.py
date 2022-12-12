@@ -7,10 +7,10 @@ def _response(data=None, status=None):
     return Response(data=data, status=status)
 
 
-def success(result=None, message="success", success=True, code=status.HTTP_200_OK, **kwargs):
+def success(result=None, msg="success", success=True, code=status.HTTP_200_OK, **kwargs):
     data = {
         "code": code,
-        "message": message,
+        "msg": msg,
         "data": result,
         "success": success
     }
@@ -18,29 +18,29 @@ def success(result=None, message="success", success=True, code=status.HTTP_200_O
     return _response(data=data, status=code)
 
 
-def not_found(code=status.HTTP_404_NOT_FOUND, success=False, message="Not Found"):
+def not_found(code=status.HTTP_404_NOT_FOUND, success=False, msg="Not Found"):
     data = {
         "code": code,
-        "message": message,
+        "msg": msg,
         "success": success,
     }
 
     return _response(data=data, status=code)
 
 
-def not_permission(code=status.HTTP_403_FORBIDDEN, success=False, message="Not Permission"):
+def not_permission(code=status.HTTP_403_FORBIDDEN, success=False, msg="Not Permission"):
     data = {
         "code": code,
         "success": success,
-        "message": message
+        "msg": msg
     }
     return _response(data=data, status=code)
 
 
-def other_response(result=dict(), message="", success=True, code=status.HTTP_200_OK, **kwargs):
+def other_response(result=dict(), msg="", success=True, code=status.HTTP_200_OK, **kwargs):
     data = {
         "code": code,
-        "message": message,
+        "msg": msg,
         "data": result,
         "success": success
     }
@@ -59,7 +59,7 @@ class ErrorResponse(Response):
         std_data = {
             "code": code,
             "data": data or {},
-            "message": msg
+            "msg": msg
         }
         super().__init__(std_data, status, template_name, headers, exception, content_type)
 

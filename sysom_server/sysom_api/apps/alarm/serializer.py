@@ -1,7 +1,5 @@
-import logging
 from rest_framework import serializers
 from apps.alarm.models import AlarmModel, SubscribeModel
-logger = logging.getLogger(__name__)
 
 
 class AlarmSerializer(serializers.ModelSerializer):

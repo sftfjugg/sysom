@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 from typing import List
 from django.conf import settings
@@ -9,13 +9,12 @@ from rest_framework.authentication import BaseAuthentication
 from .utils import import_module
 
 
-logger = logging.getLogger(__name__)
-
-
 def get_jwt_decode_classes() -> List[BaseAuthentication]:
     jwt_decode_classes = []
     import_strings = [
-        f'lib.decode.{f.replace(".py", "")}' for f in os.listdir(settings.JWT_TOKEN_DECODE_DIR)
+        f'lib.decode.{f.replace(".py", "")}' for f in
+        filter(lambda f: f.endswith(".py"), os.listdir(
+            settings.JWT_TOKEN_DECODE_DIR))
     ]
     for string in import_strings:
         module = import_module(string)
@@ -23,7 +22,7 @@ def get_jwt_decode_classes() -> List[BaseAuthentication]:
             m = getattr(module, 'JWTTokenDecode')
             jwt_decode_classes.append(m)
         except Exception as exc:
-            logger.warn(exc)
+            logger.warning(exc)
     return jwt_decode_classes
 
 

@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import sys
 import os
 from pathlib import Path
 
@@ -159,86 +160,6 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'lib.exception.exception_handler'
 }
 
-#########################################################################################
-# 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日志:
-# 格式:[日期][模块.函数名称():行号] [级别] 信息
-#########################################################################################
-STANDARD_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
-    '- <%(module)s:%(lineno)d>: %(message)s'
-CONSOLE_LOG_FORMAT = '[%(levelname).4s] -- %(asctime)s -- P_%(process) -- d_T_%(thread)d ' \
-    '- <%(module)s:%(lineno)d>: %(message)s'
-
-if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
-    os.makedirs(os.path.join(BASE_DIR, 'logs'))
-
-SERVER_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_vul_info.log')
-ERROR_LOGS_FILE = os.path.join(BASE_DIR, 'logs', 'sys_vul_error.log')
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            'format': STANDARD_LOG_FORMAT
-        },
-        'console': {
-            'format': CONSOLE_LOG_FORMAT,
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-        'file': {
-            'format': CONSOLE_LOG_FORMAT,
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    },
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': SERVER_LOGS_FILE,
-            'maxBytes': 1024 * 1024 * 100,  # 100 MB
-            'backupCount': 5,  # 最多备份5个
-            'formatter': 'standard',
-            'encoding': 'utf-8',
-        },
-        'error': {
-            'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': ERROR_LOGS_FILE,
-            'maxBytes': 1024 * 1024 * 100,  # 100 MB
-            'backupCount': 3,  # 最多备份3个
-            'formatter': 'standard',
-            'encoding': 'utf-8',
-        },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        }
-    },
-    'loggers': {
-        # default日志
-        '': {
-            'handlers': ['console', 'error', 'file'],
-            'level': 'INFO',
-        },
-        'django': {
-            'handlers': ['console', 'error', 'file'],
-            'level': 'INFO',
-        },
-        'scripts': {
-            'handlers': ['console', 'error', 'file'],
-            'level': 'INFO',
-        },
-        # 数据库相关日志
-        'django.db.backends': {
-            'handlers': [],
-            'propagate': True,
-            'level': 'INFO',
-        },
-    }
-}
-
-
 ##################################################################
 # Cec settings
 ##################################################################
@@ -266,3 +187,9 @@ SYSOM_CEC_VUL_CONSUMER_GROUP = "SYSOM_CEC_VUL_CONSUMER_GROUP"
 CHANNEL_JOB_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}" \
                   f"&channel_job_listen_topic={SYSOM_CEC_CHANNEL_VUL_TOPIC}" \
                   f"&channel_job_consumer_group={SYSOM_CEC_VUL_CONSUMER_GROUP}"
+
+# Config log format
+from cec_base.log import LoggerHelper, LoggerLevel
+log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)

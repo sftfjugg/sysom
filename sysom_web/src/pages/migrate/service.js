@@ -26,29 +26,21 @@ export async function qyeryMachineInfo(params) {
   });
 }
 
-// 迁移日志
+// 迁移信息
+export async function qyeryMigrateInfo(params) {
+  return request(`/api/v1/implementation/mig/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 日志和报告
 export async function qyeryLog(params) {
   return request(`/api/v1/implementation/log/?${stringify(params)}`, {
     method: 'GET',
   });
 }
 
-// 迁移报告
-export async function qyeryReport(params) {
-  return request(`/api/v1/implementation/report/?${stringify(params)}`, {
-    method: 'GET',
-  });
-}
-
-// 停止迁移
-export async function stopMigration(params) {
-  return request('/api/v1/implementation/stop/', {
-    method: 'POST',
-    data: params,
-  });
-}
-
-// 批量迁移 & 开始迁移
+// 批量配置 & 开始迁移
 export async function BulkMigration(params) {
   return request('/api/v1/implementation/migrate/', {
     method: 'POST',
@@ -56,9 +48,9 @@ export async function BulkMigration(params) {
   });
 }
 
-// 重启机器
-export async function rebootMachine(params) {
-  return request('/api/v1/implementation/reboot/', {
+// 迁移操作 (环境准备step=1，系统备份step=2，迁移评估step=3，迁移实施setp=4，重启机器step=5，系统还原step=101，重置状态step=102）
+export async function operateMachine(params) {
+  return request('/api/v1/implementation/migrate/', {
     method: 'post',
     data: params,
   });

@@ -1,7 +1,7 @@
 import json
 import os
 import subprocess
-import logging
+from loguru import logger
 import tempfile
 import ast
 from typing import Callable
@@ -12,7 +12,6 @@ from lib.utils import uuid_8
 from channel_job.job import default_channel_job_executor, JobResult
 
 
-logger = logging.getLogger(__name__)
 
 
 class DiagnosisHelper:

@@ -42,11 +42,11 @@ class CommonModelViewSet(GenericViewSet):
             if len(missing_param_list) > 0:
                 return {
                     "success": False,
-                    "message": f"Missing parameters: {', '.join(missing_param_list)}"
+                    "msg": f"Missing parameters: {', '.join(missing_param_list)}"
                 }
         return {
             "success": True,
-            "message": ""
+            "msg": ""
         }
 
     def extract_specific_params(self, request, params_list, require_all: bool = False):
@@ -72,7 +72,7 @@ class CommonModelViewSet(GenericViewSet):
 
         return {
             "success": True,
-            "message": "",
+            "msg": "",
         }
 
     def get_format_err_msg_for_validation_error(self, data: dict, err: ValidationError) -> str:

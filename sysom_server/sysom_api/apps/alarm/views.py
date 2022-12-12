@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
 from django.db.models import Q
@@ -13,7 +13,6 @@ from cec_base.producer import Producer, dispatch_producer
 from cec_base.admin import Admin, dispatch_admin
 
 
-logger = logging.getLogger(__name__)
 producer: Producer = dispatch_producer(settings.SYSOM_CEC_URL)
 admin: Admin = dispatch_admin(settings.SYSOM_CEC_URL)
 

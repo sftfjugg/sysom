@@ -1,5 +1,5 @@
 /* eslint-disable prefer-promise-reject-errors */
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, Fragment } from 'react';
 import { Form, Input, Modal, Select, Button, Radio, message } from 'antd';
 import { withRouter } from 'umi';
 
@@ -19,23 +19,26 @@ export default withRouter(
     } = useContext(WrapperContext);
     // Repo配置选择项
     const [repoType, setRepoType] = useState(false);
+    // 备份配置选择项
+    const [backupType, setBackupType] = useState(false);
     const [form] = Form.useForm();
     const initialValues = {
       kernel: 'ANCK',
       repo_type: 'public',
       version: 'Anolis OS 8',
+      backup_type: 'no',
     };
     
     const handleAdd = async () => {
       form.validateFields().then(async (values) => {
         if (typeof values === 'undefined') return true;
-        const hide = message.loading('开始迁移中...', 0);
-        let params = {...values}
+        const hide = message.loading(`${startMigrateIp === '' ? "批量配置": '迁移配置'}中...`, 0);
+        let params = {...values,step:0}
         if(startMigrateIp !== ""){
           params.ip = [startMigrateIp];
         }
         try {
-          const { code } = await BulkMigration(params);
+          const {code,msg} = await BulkMigration(params);
           if (code === 200) {
             try {
               const {
@@ -43,7 +46,7 @@ export default withRouter(
                 data: nodeList,
               } = await getNodesList({ id: activeMachineGroupId });
               if (queryCode === 200) {
-                message.success('开始迁移成功');
+                message.success(`${startMigrateIp === '' ? "批量配置": '迁移配置'}成功`);
                 dispatch({
                   type: SET_DATA,
                   payload: {
@@ -60,13 +63,14 @@ export default withRouter(
               return false;
             }
           }
-          message.error('开始迁移失败，请重试!');
+          message.error(msg);
           return false;
         } catch (error) {
-          message.error(error);
           return false;
         } finally {
           hide();
+          setRepoType(false);
+          setBackupType(false);
           form.resetFields();
         }
       })
@@ -81,6 +85,14 @@ export default withRouter(
       }
     }
 
+    const handleBackup = (e) => {
+      if(e.target.value === "no"){
+        setBackupType(false);
+      }else if(e.target.value === "NFS"){
+        setBackupType(true);
+      }
+    }
+
     return (
       <Modal
         wrapClassName="addModal"
@@ -88,7 +100,7 @@ export default withRouter(
         width={960}
         destroyOnClose
         afterClose={() => form.resetFields()}
-        title="批量迁移机器"
+        title={startMigrateIp === '' ? "批量配置": '迁移配置'}
         visible={allMoveVisible}
         onCancel={() => {
           dispatch({
@@ -105,6 +117,8 @@ export default withRouter(
                 type: SET_DATA,
                 payload: { allMoveVisible: false },
               })
+              setRepoType(false);
+              setBackupType(false);
             }}
           >
             取消
@@ -184,15 +198,33 @@ export default withRouter(
           {
             repoType && 
             <FormItem name="repo_url" label colon={false}>
-              <TextArea rows={3} placeholder="请输入内网地址" maxLength={150} />
+              <Input placeholder="请输入内网地址"/>
             </FormItem>
           }
-          <FormItem name="backup_pwd" label="备份路径">
-            <TextArea rows={3} placeholder="请输入备份路径" maxLength={150} />
+          <FormItem 
+            name="backup_type" 
+            label="备份配置" 
+            rules={[{ required: true, message: "备份配置不能为空" }]}
+          >
+            <Radio.Group onChange={handleBackup}>
+              <Radio value="no">不备份</Radio>
+              <Radio value="NFS">NFS备份</Radio>
+            </Radio.Group>
           </FormItem>
-          <FormItem name="backup_dir" label="备份目录">
-            <TextArea rows={3} placeholder="请输入备份目录" maxLength={150} />
-          </FormItem>
+          {
+            backupType && 
+            <Fragment>
+              <FormItem name="backup_url" label colon={false}>
+                <Input placeholder="请输入NFS地址"/>
+              </FormItem>
+              <FormItem name="backup_pwd" label colon={false}>
+                <Input placeholder="请输入备份路径"/>
+              </FormItem>
+              <FormItem name="backup_dir" label colon={false}>
+                <Input placeholder="请输入备份目录"/>
+              </FormItem>
+            </Fragment>
+          }
         </Form>
       </Modal>
     );
