@@ -4,36 +4,34 @@ from lib.base_model import BaseModel
 
 class MigImpModel(BaseModel):
 
-    cluster_id = models.IntegerField(verbose_name='cluster id')
-    hostname = models.CharField(max_length=100, verbose_name='hostname')
-    ip = models.CharField(max_length=100, unique=True, verbose_name='ip')
-    version = models.CharField(max_length=100, verbose_name='系统版本')
-    status = models.CharField(max_length=32, default='waiting', verbose_name='迁移实施状态')
-    rate = models.IntegerField(default=0, verbose_name='迁移实施进度')
+    ip = models.CharField(max_length=100, verbose_name='ip')
+    status = models.CharField(max_length=32, default='waiting', verbose_name='实施状态')
+    step = models.IntegerField(default=0, verbose_name='实施步骤')
+    detail = models.TextField(verbose_name='步骤详情')
+    rate = models.IntegerField(default=0, verbose_name='实施进度')
+    config = models.TextField(verbose_name='实施配置')
+    old_ver = models.CharField(max_length=100, verbose_name='迁移前版本')
+    new_ver = models.CharField(max_length=100, verbose_name='迁移后版本')
+    old_info = models.TextField(verbose_name='迁移前信息')
+    new_info = models.TextField(verbose_name='迁移后信息')
+    mig_info = models.TextField(verbose_name='迁移配置')
+    mig_step = models.TextField(verbose_name='迁移步骤')
+    ass_log = models.TextField(verbose_name='实施日志')
+    ass_report = models.TextField(verbose_name='实施日志')
+    imp_log = models.TextField(verbose_name='实施日志')
+    imp_report = models.TextField(verbose_name='实施日志')
+    cmp_info = models.TextField(verbose_name='迁移对比')
 
     class Meta:
         db_table = 'mig_implementation'
-
-
-class MigImpInfoModel(BaseModel):
-
-    ip = models.CharField(max_length=100, unique=True, verbose_name='ip')
-    mig_info = models.TextField(verbose_name='迁移配置')
-    old_info = models.TextField(verbose_name='迁移前信息')
-    new_info = models.TextField(verbose_name='迁移后信息')
-    cmp_info = models.TextField(verbose_name='迁移对比')
-    log = models.TextField(verbose_name='实施日志')
-    report = models.TextField(verbose_name='实施报告')
-
-    class Meta:
-        db_table = 'mig_implementation_info'
+        ordering = ['-id']
 
 
 class MigJobModel(BaseModel):
 
     ip = models.CharField(max_length=100, verbose_name='ip')
-    mig_id = models.CharField(max_length=32, verbose_name='任务ID')
-    mig_type = models.CharField(max_length=32, verbose_name='任务类型')
+    mig_id = models.CharField(max_length=32, verbose_name='迁移ID')
+    mig_type = models.CharField(max_length=32, verbose_name='迁移类型')
     job_name = models.CharField(max_length=32, verbose_name='名称')
     job_data = models.TextField(verbose_name='参数')
     job_status = models.CharField(max_length=32, default='running', verbose_name='状态')
@@ -41,3 +39,4 @@ class MigJobModel(BaseModel):
 
     class Meta:
         db_table = 'mig_job'
+        ordering = ['-id']
