@@ -4,16 +4,37 @@ echo hard_info:CPU架构=$(arch),CPU型号=$(lscpu |grep '^Model name' | awk -F 
 echo soft_info:操作系统版本=$(cat /etc/os-release | grep '^PRETTY_NAME=' | awk -F '"' '{print $2}'),内核版本=$(uname -r),gcc版本=$(rpm -qa gcc),glibc版本=$(rpm -qa glibc)
 '''
 
-run_imp_script = '''
-wget https://mirrors.openanolis.cn/anolis/migration/anolis-migration.repo -O /etc/yum.repos.d/anolis-migration.repo
+deploy_tools_script = '''
+wget REPO_URL/anolis/migration/anolis-migration.repo -O /etc/yum.repos.d/anolis-migration.repo
+sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/yum.repos.d/anolis-migration.repo
+sed -i "s#gpgkey=https://mirrors.openanolis.cn/#gpgkey=REPO_URL/#" /etc/yum.repos.d/anolis-migration.repo
 yum install -y python-pip
-pip uninstall requests urllib3 -y 2>/dev/null || echo "not installed"
+yum remove -y python-requests python-urllib3; pip uninstall requests urllib3 -y 2>/dev/null || echo "not installed"
 yum -y install leapp
-leapp preupgrade --no-rhsm
-leapp answer --section remove_pam_pkcs11_module_check.confirm=True
-leapp upgrade --no-rhsm
+sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/leapp/files/leapp_upgrade_repositories.repo
 '''
 
+backup_script = '''
+yum install migration-rear -y
+'''
 
-def get_run_script(script):
+mig_ass_script = '''
+mkdir -p REPLACE_DIR
+leapp preupgrade --no-rhsm > REPLACE_FILE
+'''
+
+mig_imp_script = '''
+mkdir -p REPLACE_DIR
+leapp upgrade --no-rhsm > REPLACE_FILE
+'''
+
+restore_script = '''
+yum install migration-rear -y
+'''
+
+def run_script(script):
     return ' && '.join(script.strip().split('\n'))
+
+
+def run_script_ignore(script):
+    return '; '.join(script.strip().split('\n'))

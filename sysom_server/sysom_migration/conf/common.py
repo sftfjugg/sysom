@@ -132,8 +132,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SYSOM_API_URL = 'http://127.0.0.1:7001'
 SYSOM_CHANNEL_URL = 'http://127.0.0.1:7003'
 
+MIG_PUBLIC_URL = 'https://mirrors.openanolis.cn'
 MIG_IMP_DIR = '/tmp/migration'
-MIG_IMP_LOG = '/var/log/leapp/leapp-upgrade.log'
+MIG_ASS_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_RATE = '/var/tmp/state.json'
 
