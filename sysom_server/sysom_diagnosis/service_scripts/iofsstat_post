@@ -146,8 +146,16 @@ def iofsstatJoinData(raw):
 
     stat = {}
     stat["disks"] = {"data": []}
-    stat["summary"] = {"data": []}
-    stat["summary"]["data"] = dataToSummary(raw)
+    stat["overview"] = {"data": []}
+    stat["overview"]["data"] = dataToSummary(raw)
+    stat["summary"] = "diagnose results: No IO traffic detected"
+    if stat["overview"]["data"]:
+        stat["summary"] = \
+            "diagnose results: %s, caused by \n%ssolution:%s" % (
+            stat["overview"]["data"][0]['result'],
+            stat["overview"]["data"][0]['reason'],
+            stat["overview"]["data"][0]['solution'],
+        )
     for s in raw.split('\n'):
         try:
             obj = json.loads(s)

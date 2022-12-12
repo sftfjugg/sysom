@@ -33,10 +33,10 @@
     ],
     "pannels": [
         {
-            "key": "summary",
+            "key": "overview",
             "type": "table",
-            "title": "诊断结论",
-            "datasource": "summary"
+            "title": "diagnose overview",
+            "datasource": "overview"
         },
         {
             "key": "diskIOstat",

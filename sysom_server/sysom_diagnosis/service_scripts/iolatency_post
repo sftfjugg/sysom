@@ -16,6 +16,7 @@ def iosdiagJoinData(raw):
     stat["iolatencyOverview_overview"] = {
         "data": [{'key': 'Check Result', "value": "normal"},
         {'key': "IOs of over threshold", "value": 0}]}
+    stat["summary"] = "diagnose results: Normal, No slow IO over threshold"
     for s in raw.split('\n'):
         try:
             obj = json.loads(s)
@@ -84,6 +85,16 @@ def iosdiagJoinData(raw):
             stat["iolatencyOverview_"+d] = {
                 "data": [{'key': 'Check Result', "value": "abnormal"},
                 {'key': "IOs of over threshold", "value": count}]}
+        if 'iolatencyDistribution_'+d in stat.keys():
+            if 'Abnormal' not in stat["summary"]:
+                stat["summary"] = "diagnose results: Abnormal, "
+            delays = sorted(stat['iolatencyDistribution_'+d]["data"],
+                            key=lambda e: (float(e['value'].strip('%'))),
+                            reverse=True)
+            maxDelayComp = delays[0]['key']
+            stat["summary"] += \
+                ("The IO of disk %s is slow, caused by high %s latency;" % (
+                    d, maxDelayComp))
 
     s = json.dumps(stat, indent=4)
     with open('/root/lgs_debug/iolatency.log', 'w+') as f:
