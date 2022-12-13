@@ -29,19 +29,19 @@
         {
             "key": "jitterEvent",
             "type": "stat",
-            "title": "事件总览",
+            "title": "Event overview",
             "datasource": "jitterEventSummary"
         },
         {
             "key": "timeseriesTable",
             "type": "timeseries",
-            "title": "抖动时间线图",
+            "title": "Timeline Diagram",
             "datasource": "jitterTimeSeries"
         },
         {
             "key": "jitterTable",
             "type": "table",
-            "title": "调度抖动详情",
+            "title": "Scheduling Jitter Details",
             "datasource": "jitterTable"
         }
     ]
