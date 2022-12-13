@@ -42,7 +42,11 @@ const Dashboard = () => {
             </ProCard>
           </ProCard.Group>
           <ProCard.Divider style={{ margin: "8px" }} />
-          <ServerList onClick={(ip) => setHostIP(ip)} />
+          <ServerList onClick={(ip) => setHostIP(ip)} onLoad={dataSource => {
+            if (dataSource.length > 0 && !!dataSource[0].ip) {
+                setHostIP(dataSource[0].ip)
+            }
+          }} />
         </ProCard>
         <ProCard onClick={onCollapsed} hoverable colSpan="25px"
           bodyStyle={{ padding: '5px 5px 5px 5px', textAlign: "center" }} >
