@@ -1,4 +1,5 @@
 import sys
+import os
 from loguru import logger
 from django.apps import AppConfig
 from channel_job import default_channel_job_executor
@@ -18,7 +19,7 @@ class HostConfig(AppConfig):
             try:
                 from .heartbeat import HeartBeat, HeartBeatProcess
                 # HeartBeat.start()
-                HeartBeatProcess().start()
+                HeartBeatProcess(pid=os.getpid()).start()
             except Exception as e:
                 logger.warning(f'主机心跳未启动: {e}')
         else:
