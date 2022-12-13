@@ -8,7 +8,7 @@ import ServerList from './components/ServerList';
 const GrafanaWrap = (props) => {
   return (
     <iframe
-      src = {`/grafana/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
+      src = {`/grafana/d/migration-dashboard/migration-dashboard?orgId=1&refresh=5s&var-instance=${props.host}:9100&from=now-1h&to=now&kiosk=tv`}
       width="100%"
       frameBorder="0"
       style={{ marginLeft: "8px", height:"calc(100vh - 80px)" }}
