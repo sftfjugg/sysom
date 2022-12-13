@@ -35,25 +35,25 @@
         {
             "key": "overview",
             "type": "table",
-            "title": "diagnose overview",
+            "title": "diagnose result",
             "datasource": "overview"
         },
         {
             "key": "diskIOstat",
             "type": "table",
-            "title": "磁盘IO流量分析",
+            "title": "Disk IO traffic analysis",
             "datasource": "diskIOstat_${disks}"
         },
         {
             "key": "taskIOstat",
             "type": "table",
-            "title": "进程IO流量分析",
+            "title": "Process IO traffic analysis",
             "datasource": "taskIOstat_${disks}"
         },
         {
             "key": "taskIOblocksize",
             "type": "table",
-            "title": "进程IO块大小分布",
+            "title": "Process IO Block Size Distribution",
             "datasource": "taskIOblocksize_${disks}"
         }
     ]
