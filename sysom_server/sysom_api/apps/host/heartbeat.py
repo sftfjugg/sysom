@@ -142,16 +142,17 @@ class HeartBeatProcess(Process):
 
     def _finish_callback(self, instance: HostModel, res: JobResult):
         status = 0 if res.code == 0 else 2
-        result = res.result.split('\n')
-        host_info = {
-            "release": result[1],
-            "kernel_version": result[0],
-        }
+        host_info = dict()
 
         try:
             if instance.status != status:
                 instance.status = status
-            instance.host_info = json.dumps(host_info)
+            if status == 0:
+                results = res.result.split('\n')
+                if len(results) > 2:
+                    host_info['release'] = results[1]
+                    host_info['kernel_version'] = results[0]
+                    instance.host_info = json.dumps(host_info)
             instance.save()
         except Exception as e:
             logger.error(str(e))
