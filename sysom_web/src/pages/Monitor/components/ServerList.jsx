@@ -70,6 +70,7 @@ const ServerList = (props) => {
             }}
             defaultSize="small"
             search={false}
+            {...props}
         />
     );
 }
