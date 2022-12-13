@@ -16,6 +16,7 @@ class HostModel(BaseModel):
     private_key = models.TextField(null=True)
     description = models.CharField(max_length=255, null=True)
     status = models.IntegerField(choices=HOST_STATUS_CHOICES, default=2, verbose_name="主机状态")
+    host_info = models.TextField(verbose_name='主机信息', default="")
     client_deploy_cmd = models.TextField(verbose_name="client部署命令", default="")
     cluster = models.ForeignKey('Cluster', on_delete=models.CASCADE, related_name='hosts', default="")
     # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="c_hosts")

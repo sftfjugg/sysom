@@ -68,6 +68,9 @@ class MigImpView(CommonModelViewSet):
                 for j in value.split(','):
                     t = j.split('=')
                     tmp.append(dict(name=t[0], value=t[1]))
+                    if t[0] == '内存':
+                        res, _ = sync_job(mig_imp.ip, 'df -h')
+                        tmp.append(dict(name='磁盘空间', value=res.result))
                     if t[0] == '操作系统版本':
                         mig_imp.old_ver = t[1]
                 info[key] = tmp
@@ -398,21 +401,9 @@ class MigImpView(CommonModelViewSet):
                 flag = True
                 break
 
-        imp_path = os.path.join(settings.MIG_IMP_DIR, mig_imp.ip)
-        if not os.path.exists(imp_path):
-            os.makedirs(imp_path)
-
-        rate_file = os.path.join(imp_path, 'mig_imp_rate.log')
-        mig_rate = get_file(mig_imp.ip, rate_file, settings.MIG_IMP_RATE)
-        if mig_rate.code == 0:
-            with open(rate_file, 'r', encoding='utf-8') as f:
-                p = f.read()
-            rate = json.loads(p).get('Progress', 0)
-            rate = 100 if rate >= 100 else rate
-            mig_imp.rate = rate
-
         if flag:
             self.init_info(mig_imp)
+            mig_imp.rate = 100
             mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
             mig_imp.status = 'success'
             mig_imp.detail = '迁移完成'

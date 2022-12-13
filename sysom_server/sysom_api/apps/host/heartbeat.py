@@ -1,10 +1,12 @@
+import time
+import json
 import functools
 from typing import Optional
 from threading import Thread
 from schedule import Scheduler
 from loguru import logger
 from .models import HostModel
-from channel_job import ChannelJobExecutor
+from channel_job import ChannelJobExecutor, JobResult
 from django.db import connection
 from django.conf import settings
 from multiprocessing import Process
@@ -96,6 +98,9 @@ class HeartBeatProcess(Process):
 
     def _register_task(self):
         queryset = HostModel.objects.filter(status__in=[0, 2])
+        if len(queryset) == 0:
+            logger.debug('No node!')
+            return
         for instance in queryset:
             self._send_host_heart_beat(instance)
 
@@ -110,6 +115,7 @@ class HeartBeatProcess(Process):
                 self._heartbeat_host_schedule.run_pending()
             else:
                 break
+            time.sleep(max(1, int(self._heartbeat_interval / 2)))
 
     def _send_host_heart_beat(self, instance: HostModel) -> None:
         """
@@ -119,10 +125,13 @@ class HeartBeatProcess(Process):
         # logger.info(f'检查机器: IP {instance.ip} 心跳')
         logger.opt(lazy=True).info(f'检查机器: IP {instance.ip} 心跳')
 
+        cmd = r"""
+        uname -r && cat /etc/os-release | grep "PRETTY_NAME" | awk -F"\"" '{print $2}'
+        """
         params = dict()
         params['params'] = {
             "instance": instance.ip,
-            "command": "ls"
+            "command": cmd
         }
         params['timeout'] = self._heartbeat_interval * 1000
         params['auto_retry'] = True
@@ -131,13 +140,20 @@ class HeartBeatProcess(Process):
             .execute_async_with_callback(
                 finish_callback=functools.partial(self._finish_callback, instance))
 
-    def _finish_callback(self, instance, res):
+    def _finish_callback(self, instance: HostModel, res: JobResult):
         status = 0 if res.code == 0 else 2
-        if instance.status != status:
-            try:
+        result = res.result.split('\n')
+        host_info = {
+            "release": result[1],
+            "kernel_version": result[0],
+        }
+
+        try:
+            if instance.status != status:
                 instance.status = status
-                instance.save()
-            except Exception as e:
-                logger.error(str(e))
-            finally:
-                connection.close()
+            instance.host_info = json.dumps(host_info)
+            instance.save()
+        except Exception as e:
+            logger.error(str(e))
+        finally:
+            connection.close()

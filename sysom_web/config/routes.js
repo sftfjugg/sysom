@@ -83,6 +83,16 @@ export default [
         component: './Monitor/SystemDashboard',
       },
       {
+        path: 'migration',
+        name: 'migration',
+        hideInBreadcrumb: true,
+        component: './Monitor/MigrationDashboard',
+      },
+      {
+        path: 'migration/:host?',
+        component: './Monitor/MigrationDashboard',
+      },
+      {
         component: './404',
       },
     ],

@@ -9,6 +9,7 @@ export default {
   'menu.monitor': '监控中心',
   'menu.monitor.': '监控中心',
   'menu.monitor.dashboard': '系统监控',
+  'menu.monitor.migration': '迁移监控',
   'menu.monitor.netinfo': 'NetInfo',
   'menu.vmcore': '宕机中心',
   'menu.vmcore.list': '宕机列表',
