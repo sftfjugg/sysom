@@ -1,83 +1,17 @@
-import ProTable from '@ant-design/pro-table';
 import { Statistic } from 'antd';
-import { useIntl, useRequest, useParams, FormattedMessage } from 'umi';
-import { useState, useRef } from 'react'
+import { useIntl, useRequest, useParams } from 'umi';
+import { useState } from 'react'
 import { getHost } from '../host/service';
 import ProCard from '@ant-design/pro-card';
-
-const ServerList = (props) => {
-  const actionRef = useRef();
-  const ServerListColumns = [
-    {
-      title: "机器HostName（IP）",
-      dataIndex: 'ip',
-      render: (dom, entity) => {
-        return (
-          <a
-            onClick={() => {
-              props?.onClick?.(entity.ip)
-            }}
-          >
-            {dom}
-          </a>
-        );
-      },
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      initialValue: 'all',
-      filters: true,
-      onFilter: true,
-      valueEnum: {
-        0: {
-          text: (
-            <FormattedMessage id="pages.hostTable.status.running" defaultMessage="Running" />
-          ),
-          status: 'Success',
-        },
-        1: {
-          text: (
-            <FormattedMessage id="pages.hostTable.status.abnormal" defaultMessage="Abnormal" />
-          ),
-          status: 'Error',
-        },
-        2: {
-          text: (
-            <FormattedMessage id="pages.hostTable.status.offline" defaultMessage="Offline" />
-          ),
-          status: 'Default',
-        },
-      },
-    },
-  ];
-
-  return (
-    <ProTable
-      style={{ width: "100%" }}
-      headerTitle="机器列表"
-      actionRef={actionRef}
-      request={getHost}
-      cardBordered={true}
-      columns={ServerListColumns}
-      rowKey="id"
-      pagination={{
-        showQuickJumper: true,
-        pageSize: 10,
-      }}
-      defaultSize="small"
-      search={false}
-    />
-  );
-}
+import ServerList from './components/ServerList';
 
 const GrafanaWrap = (props) => {
   return (
     <iframe
-      src = {`/grafana/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
+      src={`/grafana/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
       width="100%"
       frameBorder="0"
-      style={{ marginLeft: "8px", height:"calc(100vh - 80px)" }}
+      style={{ marginLeft: "8px", height: "calc(100vh - 80px)" }}
     />
   )
 }
@@ -108,7 +42,11 @@ const Dashboard = () => {
             </ProCard>
           </ProCard.Group>
           <ProCard.Divider style={{ margin: "8px" }} />
-          <ServerList onClick={(ip) => setHostIP(ip)} />
+          <ServerList onClick={(ip) => setHostIP(ip)} onLoad={dataSource => {
+            if (dataSource.length > 0 && !!dataSource[0].ip) {
+              setHostIP(dataSource[0].ip)
+            }
+          }} />
         </ProCard>
         <ProCard onClick={onCollapsed} hoverable colSpan="25px"
           bodyStyle={{ padding: '5px 5px 5px 5px', textAlign: "center" }} >
