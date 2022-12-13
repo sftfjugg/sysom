@@ -1,6 +1,7 @@
 import time
 import json
 import functools
+import subprocess
 from typing import Optional
 from threading import Thread
 from schedule import Scheduler
@@ -87,29 +88,60 @@ class HeartBeatProcess(Process):
     def __init__(
         self,
         heartbeat_interval: int = 5,
+        pid: int = 0,
     ) -> None:
         super().__init__(daemon=True)
         self._heartbeat_interval = heartbeat_interval
         self._heartbeat_host_schedule: Scheduler = Scheduler()
+        self._channel_job: Optional[ChannelJobExecutor] = None
+        self._total_process_num = 1
+        self._current_process_idx = 0
+        self._pid = pid
 
-    def _initializer_channel_job(self):
+    def _initializer(self):
+        # 1. Init channel_job
         self._channel_job = ChannelJobExecutor()
         self._channel_job.init_config(settings.SYSOM_HOST_CEC_URL).start()
+
+        # 2. Get total process num and idx
+        try:
+            # Example as follow: <idx> <>
+            # 0 2575977
+            # 1 2575978
+            # 2 2575979
+            # 3 2575980
+            ret = subprocess.run(
+                "supervisorctl status | grep sysom-api | awk '{print $1\" \"$4}' | awk -F\",\" '{print $1}' | awk -F\":\" '{print $NF}'",
+                stdout=subprocess.PIPE, encoding="utf-8", shell=True
+            )
+
+            if ret.returncode == 0:
+                processes = ret.stdout.strip().split("\n")
+                self._total_process_num = len(processes)
+                for process_info in processes:
+                    infos = process_info.split(' ')
+                    if len(infos) >= 2 and int(infos[1]) == self._pid:
+                        self._current_process_idx = int(infos[0])
+                        break
+        except Exception as exc:
+            logger.error(f"Get process num and idx faild: {str(exc)}")
 
     def _register_task(self):
         queryset = HostModel.objects.filter(status__in=[0, 2])
         if len(queryset) == 0:
             logger.debug('No node!')
             return
-        for instance in queryset:
-            self._send_host_heart_beat(instance)
+        for idx, instance in enumerate(queryset):
+            # Each process handles part of the heartbeat task.
+            if idx % self._total_process_num == self._current_process_idx:
+                self._send_host_heart_beat(instance)
 
     def run(self) -> None:
         logger.info(f'守护进程PID: {self.pid}')
         self._heartbeat_host_schedule.every(self._heartbeat_interval)\
             .seconds.do(self._register_task)
 
-        self._initializer_channel_job()
+        self._initializer()
         while True:
             if self.is_alive():
                 self._heartbeat_host_schedule.run_pending()
