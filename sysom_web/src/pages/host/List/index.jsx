@@ -250,6 +250,18 @@ const HostList = () => {
       },
     },
     {
+      title: (<FormattedMessage id="pages.hostTable.hostRelease" defaultMessage="hostRelease"></FormattedMessage>),
+      hideInSearch: true,
+      sorter: (a, b) => a.host_info.release - b.host_info.release,
+      renderText: (_, record) => record.host_info.release
+    },
+    {
+      title: (<FormattedMessage id="pages.hostTable.hostKernelVersion" defaultMessage="hostKernelVersion"></FormattedMessage>),
+      hideInSearch: true,
+      sorter: (a, b) => a.host_info.kernel_version - b.host_info.kernel_version,
+      renderText: (_, record) => record.host_info.kernel_version
+    },
+    {
       title: (
         <FormattedMessage
           id="pages.hostTable.hostUpdatedAt"
