@@ -144,8 +144,8 @@ class HeartBeatProcess(Process):
         status = 0 if res.code == 0 else 2
         result = res.result.split('\n')
         host_info = {
-            "release": result[0],
-            "kernel_version": result[1],
+            "release": result[1],
+            "kernel_version": result[0],
         }
 
         try:
