@@ -42,7 +42,7 @@
         {
             "key": "iohangOverview",
             "type": "stat",
-            "title": "IO HANG总览",
+            "title": "IO HANG overview",
             "datasource": "iohangOverview_${disks}",
             "fieldConfig": {
                 "mappings": [{
@@ -64,7 +64,7 @@
         {
             "key": "singleIO",
             "type": "table",
-            "title": "TOP10个IO详情",
+            "title": "More details of TOP 10 IO",
             "datasource": "singleIO_${disks}"
         }
     ]

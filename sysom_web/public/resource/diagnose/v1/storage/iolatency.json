@@ -42,7 +42,7 @@
         {
             "key": "iolatencyOverview",
             "type": "stat",
-            "title": "iolatency总览",
+            "title": "Iolatency overview",
             "datasource": "iolatencyOverview_${disks}",
             "fieldConfig": {
                 "mappings": [{
@@ -64,7 +64,7 @@
         {
             "key": "iolatencyDistribution",
             "type": "flow",
-            "title": "整体IO时延分布",
+            "title": "Overall delay distribution",
             "flowconfigs": {
                 "nodes": [
                     {
@@ -117,13 +117,13 @@
         {
             "key": "singleIOMetrics",
             "type": "timeseries",
-            "title": "单IO时延metrics展示",
+            "title": "Single IO delay metrics display",
             "datasource": "singleIOMetrics_${disks}"
         },
         {
             "key": "singleIO",
             "type": "table",
-            "title": "TOP10 IO详情",
+            "title": "More details of TOP 10 IO",
             "datasource": "singleIO_${disks}"
         }
     ]
