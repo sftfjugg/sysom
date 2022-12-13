@@ -21,7 +21,7 @@ import time
 ######################################################################
 class Param(dict):
     def __missing__(self,key):
-        sys.stderr.write("入参检查失败，没有检查到入参'%s'"%key)
+        sys.stderr.write("The input parameter check failed, there have no parameter '%s'"%key)
         exit(1)
 
 args = Param(json.loads(sys.argv[1]))
