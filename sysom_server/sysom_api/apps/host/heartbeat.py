@@ -143,10 +143,11 @@ class HeartBeatProcess(Process):
     def _finish_callback(self, instance: HostModel, res: JobResult):
         status = 0 if res.code == 0 else 2
         result = res.result.split('\n')
-        host_info = {
-            "release": result[1],
-            "kernel_version": result[0],
-        }
+        host_info = dict()
+
+        if status == 0:
+            host_info['release'] = result[1]
+            host_info['kernel_version'] = result[0]
 
         try:
             if instance.status != status:
