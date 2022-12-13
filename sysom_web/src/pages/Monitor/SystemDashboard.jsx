@@ -8,10 +8,10 @@ import ServerList from './components/ServerList';
 const GrafanaWrap = (props) => {
   return (
     <iframe
-      src = {`/grafana/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
+      src={`/grafana/d/sysom-dashboard/sysom-dashboard?orgId=1&refresh=1m&var-node=${props.host}:9100&kiosk=tv`}
       width="100%"
       frameBorder="0"
-      style={{ marginLeft: "8px", height:"calc(100vh - 80px)" }}
+      style={{ marginLeft: "8px", height: "calc(100vh - 80px)" }}
     />
   )
 }
@@ -42,7 +42,11 @@ const Dashboard = () => {
             </ProCard>
           </ProCard.Group>
           <ProCard.Divider style={{ margin: "8px" }} />
-          <ServerList onClick={(ip) => setHostIP(ip)} />
+          <ServerList onClick={(ip) => setHostIP(ip)} onLoad={dataSource => {
+            if (dataSource.length > 0 && !!dataSource[0].ip) {
+              setHostIP(dataSource[0].ip)
+            }
+          }} />
         </ProCard>
         <ProCard onClick={onCollapsed} hoverable colSpan="25px"
           bodyStyle={{ padding: '5px 5px 5px 5px', textAlign: "center" }} >
