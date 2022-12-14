@@ -37,6 +37,9 @@ export default withRouter(
         if(startMigrateIp !== ""){
           params.ip = [startMigrateIp];
         }
+        if(params.backup_type === 'no'){
+          params.backup_type = '';
+        }
         try {
           const {code,msg} = await BulkMigration(params);
           if (code === 200) {
@@ -214,14 +217,14 @@ export default withRouter(
           {
             backupType && 
             <Fragment>
-              <FormItem name="backup_url" label colon={false}>
-                <Input placeholder="请输入NFS地址"/>
+              <FormItem name="backup_ip" label colon={false}>
+                <Input placeholder="请输入NFS服务的IP地址"/>
               </FormItem>
-              <FormItem name="backup_pwd" label colon={false}>
-                <Input placeholder="请输入备份路径"/>
+              <FormItem name="backup_path" label colon={false}>
+                <Input placeholder="请输入备份存放在NFS的目录"/>
               </FormItem>
-              <FormItem name="backup_dir" label colon={false}>
-                <Input placeholder="请输入备份目录"/>
+              <FormItem name="backup_exclude" label colon={false}>
+                <Input placeholder="请输入本机无需备份的目录"/>
               </FormItem>
             </Fragment>
           }
