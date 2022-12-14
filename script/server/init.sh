@@ -32,11 +32,32 @@ fi
 mkdir -p ${SERVER_HOME}/logs
 config=conf
 basedir=`dirname $0`
+
 SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
 SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
 SYSOM_DATABASE_PORT=`cat $SYSOM_CONF | grep "'PORT'" | awk -F"'" '{print $4}'`
 SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep "'USER'" | awk -F"'" '{print $4}'`
 SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep PASSWORD | awk -F"'" '{print $4}'`
+UPLOAD_DIR=${SERVER_HOME}/target/sysom_web/download/
+NODE_INIT_DIR=sysom_node_init
+NODE_INIT_PKG=sysom_node_init.tar.gz
+NODE_DIR=${basedir}/../node
+
+###initial download sysom_node_init.tar.gz###
+init_sysom_node_init()
+{
+    mkdir -p ${UPLOAD_DIR}/${NODE_INIT_DIR}
+    cp ${NODE_DIR}/init.sh ${UPLOAD_DIR}/${NODE_INIT_DIR}
+    cp ${NODE_DIR}/clear.sh ${UPLOAD_DIR}/${NODE_INIT_DIR}
+}
+
+tar_sysom_node_init()
+{
+    pushd ${UPLOAD_DIR}
+    tar -zcf ${NODE_INIT_PKG} ${NODE_INIT_DIR}
+    rm -rf ${NODE_INIT_DIR}
+    popd
+}
 
 ###enable the service web menu###
 setup_web_menu_enable()
@@ -49,10 +70,11 @@ setup_web_menu_enable()
     fi
 }
 
-cd $basedir
+pushd $basedir
 
 if [ $FIRST_INIT_DONE == 0 ]
 then
+    init_sysom_node_init
     for dir in `cat $config`
     do
         if [ -d $dir ]
@@ -63,6 +85,7 @@ then
             popd
         fi
     done
+    tar_sysom_node_init
     sed -i 's/^FIRST_INIT_DONE=0/FIRST_INIT_DONE=1/g' $0
 else
     for dir in `ls`
@@ -75,3 +98,4 @@ else
         fi
     done
 fi
+popd
