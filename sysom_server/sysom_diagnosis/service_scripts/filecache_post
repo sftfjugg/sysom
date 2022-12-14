@@ -17,6 +17,7 @@ def filecache_result(raw):
     cache_type = rawdata['type']
     podid = cache_type
     data = rawdata['data']
+    cache['summary'] = "success"
     for key, _value in data.items():
         for value in _value:
             if len(value['sort_file']) == 0:

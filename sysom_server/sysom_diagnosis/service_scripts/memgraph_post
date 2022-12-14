@@ -24,6 +24,9 @@ def memgraph_result(raw):
     memgraph["kernel"] = rawdata["memGraph"]["kernelUsed"]
 
     newmemgraph = {}
+    newmemgraph["summary"] = "success"
+    if "summary" in rawdata:
+        newmemgraph["summary"] = rawdata["summary"]
     newmemgraph["dataMemEvent"] = {"data": {}}
     newmemgraph["dataMemEvent"]["data"] = [
         {"key": "Util", "value": round(rawdata["event"]["util"], 2)},
