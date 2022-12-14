@@ -23,13 +23,16 @@ def drop_result(raw):
     newdrop["RetranStat"] = {}
     newdrop["RetranStat"]["data"] = []
 
+    retran_cnt = 0
     if len(raw) != 0:
         for s in raw.split('\n'):
+            retran_cnt += 1
             item = json.loads(s)
             newdrop["RetranStat"]["data"].append({
-                "key": str(cnt), "ip地址": item["ap"], "tcp状态": item["tcp_state"], "拥塞状态": item["ca_state"], "重传次数": item["times"]
+                "id": str(retran_cnt), "ip": item["ap"], "tcpState": item["tcp_state"], "caState": item["ca_state"], "retranCnt": item["times"]
             })
-        
+    
+    newdrop["summary"] = "diagnones result: total capture {} retransmits".format(retran_cnt)
     print(json.dumps(newdrop, ensure_ascii=False))
 
 
