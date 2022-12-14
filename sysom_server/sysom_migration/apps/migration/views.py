@@ -189,9 +189,9 @@ class MigImpView(CommonModelViewSet):
             info.append(dict(name='repo地址', value=data.get('repo_url')))
         if data.get('backup_type') == 'nfs':
             info.append(dict(name='备份类型', value='NFS备份'))
-            info.append(dict(name='NFS地址', value=data.get('backup_url')))
-            info.append(dict(name='备份路径', value=data.get('backup_pwd')))
-            info.append(dict(name='备份目录', value=data.get('backup_dir')))
+            info.append(dict(name='NFSIP', value=data.get('backup_ip')))
+            info.append(dict(name='存放路径', value=data.get('backup_path')))
+            info.append(dict(name='忽略目录', value=data.get('backup_exclude')))
         else:
             info.append(dict(name='备份类型', value='不备份'))
         mig_imp.mig_info = json.dumps(dict(migration_info=info))
@@ -230,16 +230,24 @@ class MigImpView(CommonModelViewSet):
     def mig_backup(self, mig_imp, data):
         config = json.loads(mig_imp.config)
         backup_type = config.get('backup_type')
-        if backup_type != 'nfs':
-            mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
-            mig_imp.status = 'pending'
-            mig_imp.detail = '请执行下一步'
-            mig_imp.step += 1
-            mig_imp.save()
+
+        if backup_type == 'nfs':
+            backup_ip = config.get('backup_ip')
+            backup_path = config.get('backup_path')
+            backup_exclude = config.get('backup_exclude')
+            if backup_exclude:
+                script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path} --exclude '{backup_exclude}'"
+            else:
+                script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path}"
+            cmd = run_script_ignore(backup_script.replace('BACKUP_SCRIPT', script))
+            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=3600000)
             return
-        
-        cmd = run_script(backup_script)
-        self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=3600000)
+
+        mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
+        mig_imp.status = 'pending'
+        mig_imp.detail = '请执行下一步'
+        mig_imp.step += 1
+        mig_imp.save()
         return
 
 
@@ -249,7 +257,7 @@ class MigImpView(CommonModelViewSet):
 
         cmd = run_script_ignore(mig_ass_script.replace('REPLACE_DIR', ass_path).replace('REPLACE_FILE', ass_file))
         mig_job = self.run_async_job(mig_imp, 'mig_ass', cmd, timeout=3600000)
-        threading.Thread(target=self.get_log_report, args=(mig_imp, 'mig_ass_log', mig_job)).start()
+        threading.Thread(target=self.get_log_report, args=(mig_imp, 'mig_ass_log', mig_job.id)).start()
         return
 
 
@@ -259,14 +267,14 @@ class MigImpView(CommonModelViewSet):
 
         cmd = run_script_ignore(mig_imp_script.replace('REPLACE_DIR', imp_path).replace('REPLACE_FILE', imp_file))
         mig_job = self.run_async_job(mig_imp, 'mig_imp', cmd, timeout=3600000)
-        threading.Thread(target=self.get_log_report, args=(mig_imp, 'mig_imp_log', mig_job)).start()
+        threading.Thread(target=self.get_log_report, args=(mig_imp, 'mig_imp_log', mig_job.id)).start()
         return
 
 
     def mig_reboot(self, mig_imp, data):
         sync_job(mig_imp.ip, 'reboot')
         mig_imp.status = 'running'
-        mig_imp.detail = ''
+        mig_imp.detail = '重启中'
         mig_imp.save()
         threading.Thread(target=self.run_reboot_job, args=(mig_imp, )).start()
         return
@@ -275,15 +283,20 @@ class MigImpView(CommonModelViewSet):
     def mig_restore(self, mig_imp, data):
         if mig_imp.status in ['running', 'success', 'unsupported']:
             return f'主机{mig_imp.ip}当前状态无法进行此操作。'
+        if mig_imp.step < 3:
+            return f'主机{mig_imp.ip}尚未进行备份，无法还原。'
 
         config = json.loads(mig_imp.config)
         backup_type = config.get('backup_type')
-        if backup_type != 'nfs':
-            return f'主机{mig_imp.ip}没有配置备份方案，无法还原.'
 
-        cmd = run_script(restore_script)
-        async_job(mig_imp.ip, cmd, echo=dict(), timeout=60000)
-        return
+        if backup_type == 'nfs':
+            mig_imp.status = 'running'
+            mig_imp.detail = '还原中'
+            mig_imp.save()
+            threading.Thread(target=self.run_restore_job, args=(mig_imp, )).start()
+            return
+
+        return f'主机{mig_imp.ip}没有配置备份方案，无需还原.'
 
 
     def mig_init(self, mig_imp, data):
@@ -325,7 +338,7 @@ class MigImpView(CommonModelViewSet):
         return mig_job
 
 
-    def get_log_report(self, mig_imp, job_name, main_job):
+    def get_log_report(self, mig_imp, job_name, main_job_id):
         MigJobModel.objects.create(**dict(ip=mig_imp.ip, mig_id=mig_imp.id, mig_type='imp', job_name=job_name))
         while True:
             time.sleep(5)
@@ -387,18 +400,20 @@ class MigImpView(CommonModelViewSet):
             mig_job = MigJobModel.objects.filter(ip=mig_imp.ip, mig_id=mig_imp.id, job_name=job_name).first()
             if rate >= 100:
                 mig_job.job_status = 'success'
-                mig_imp.save()
+                mig_job.save()
                 break
+            main_job = MigJobModel.objects.filter(id=main_job_id).first()
             if main_job.job_status != 'running':
                 mig_job.job_status = main_job.job_status
-                mig_imp.save()
+                mig_job.save()
                 break
 
 
     def run_reboot_job(self, mig_imp):
+        time.sleep(15)
         flag = False
         i = 0
-        while i < 60:
+        while i < int(settings.MIG_IMP_REBOOT):
             i += 1
             time.sleep(15)
             result, _ = sync_job(mig_imp.ip, 'cat /etc/os-release')
@@ -418,3 +433,40 @@ class MigImpView(CommonModelViewSet):
             mig_imp.status = 'fail'
             mig_imp.detail = '重启失败'
         mig_imp.save()
+
+
+    def run_restore_job(self, mig_imp):
+        result, _ = sync_job(mig_imp.ip, run_script(restore_script))
+        if result.code != 0:
+            mig_imp.status = 'fail'
+            mig_imp.detail = result.result
+            mig_imp.save()
+            return
+
+        sync_job(mig_imp.ip, 'reboot')
+        mig_imp.status = 'running'
+        mig_imp.detail = '重启中'
+        mig_imp.save()
+
+        time.sleep(15)
+        flag = False
+        i = 0
+        while i < int(settings.MIG_IMP_REBOOT):
+            i += 1
+            time.sleep(15)
+            result, _ = sync_job(mig_imp.ip, 'cat /etc/os-release')
+            if result.code == 0:
+                flag = True
+                break
+
+        if flag:
+            mig_imp.status = 'success'
+            mig_imp.detail = '还原成功'
+            mig_imp.save()
+            time.sleep(5)
+            MigImpModel.objects.create(**dict(ip=mig_imp.ip))
+            return
+        else:
+            mig_imp.status = 'fail'
+            mig_imp.detail = '还原失败'
+            mig_imp.save()

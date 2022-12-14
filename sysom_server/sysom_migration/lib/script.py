@@ -15,7 +15,10 @@ sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/leapp/
 '''
 
 backup_script = '''
-yum install migration-rear -y
+yum install rear genisoimage syslinux nfs-utils python3 wget -y
+wget https://gitee.com/src-anolis-sig/leapp-repository/raw/wip_migrear/migrear -O /usr/sbin/migrear
+chmod +x /usr/sbin/migrear
+BACKUP_SCRIPT
 '''
 
 mig_ass_script = '''
@@ -29,7 +32,7 @@ leapp upgrade --no-rhsm > REPLACE_FILE
 '''
 
 restore_script = '''
-yum install migration-rear -y
+/usr/sbin/migrear --recover_preset yes
 '''
 
 def run_script(script):
