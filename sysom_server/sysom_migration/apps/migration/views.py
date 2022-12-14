@@ -137,7 +137,7 @@ class MigImpView(CommonModelViewSet):
             if not mig_imp:
                 err.append(f'主机{i}尚未初始化。')
                 continue
-            if mig_imp.status in ['running', 'success', 'unsupported']:
+            if step < 101 and mig_imp.status in ['running', 'success', 'unsupported']:
                 err.append(f'主机{i}当前状态无法进行此操作。')
                 continue
             if step < 101 and mig_imp.step != step:
@@ -273,6 +273,9 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_restore(self, mig_imp, data):
+        if mig_imp.status in ['running', 'success', 'unsupported']:
+            return f'主机{mig_imp.ip}当前状态无法进行此操作。'
+
         config = json.loads(mig_imp.config)
         backup_type = config.get('backup_type')
         if backup_type != 'nfs':
@@ -284,6 +287,8 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_init(self, mig_imp, data):
+        if mig_imp.status in ['running']:
+            return f'主机{mig_imp.ip}当前状态无法进行此操作。'
         MigImpModel.objects.create(**dict(ip=mig_imp.ip))
         return
 
