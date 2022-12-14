@@ -5,7 +5,6 @@ from django.conf import settings
 from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask
 from cec_base.event import Event
 from cec_base.consumer import Consumer
-from channel_job import JobResult
 from .helper import DiagnosisHelper
 
 
