@@ -247,6 +247,12 @@ const HostList = () => {
           ),
           status: 'Default',
         },
+        3: {
+          text: (
+            <FormattedMessage id="pages.hostTable.status.migrating" defaultMessage="Migrating" />
+          ),
+          status: 'Warning',
+        }
       },
     },
     {

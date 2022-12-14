@@ -54,6 +54,7 @@ export default {
   'pages.hostTable.status.offline': '离线',
   'pages.hostTable.status.running': '运行中',
   'pages.hostTable.status.abnormal': '异常',
+  'pages.hostTable.status.migrating': '迁移中',
   'pages.hostTable.port': '端口',
   'pages.hostTable.port_required': '端口是必填项！',
   'pages.hostTable.script_required': '客户端部署脚本是必填项',
