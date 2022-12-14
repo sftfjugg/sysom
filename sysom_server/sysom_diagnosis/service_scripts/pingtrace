@@ -37,7 +37,7 @@ result['commands'] = []
 cmd0_arg = int(int(args["pkg_num"]) * int(args["time_gap"]) / 1000) + 5
 cmd0 = {}
 cmd0['instance'] = args["target_instance"]
-cmd0['cmd'] = "sysak pingtrace -s -t "+str(cmd0_arg)+" > /dev/null 2>&1 &"
+cmd0['cmd'] = "sysak -g pingtrace -s -t "+str(cmd0_arg)+" > /dev/null 2>&1 &"
 
 cmd1 = {}
 cmd1['instance'] = args["origin_instance"]
