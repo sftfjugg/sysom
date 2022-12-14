@@ -69,46 +69,33 @@
                 "nodes": [
                     {
                         "id": "os(block)",
-                        "x": 40,
-                        "y": 40
+                        "tips": "指IO在OS内核通用块层部分的耗时（时间单位：us)" 
                     },
                     {
                         "id": "os(driver)",
-                        "x": 300,
-                        "y": 40
+                        "tips":"指IO在OS内核磁盘驱动部分的耗时（时间单位：us）"
                     },
                     {
                         "id": "disk",
-                        "x": 560,
-                        "y": 40
+                        "tips": "指IO在硬件磁盘侧的耗时（时间单位：us）"
                     },
                     {
                         "id": "os(complete)",
-                        "x": 820,
-                        "y": 40
+                        "tips": "指IO在硬件磁盘侧的耗时（时间单位：us"
                     }
                 ],
                 "edges": [
                     {
                         "source": "os(block)",
-                        "target": {
-                            "cell": "os(driver)",
-                            "port": "left"
-                        }
+                        "target": "os(driver)"
                     },
                     {
                         "source": "os(driver)",
-                        "target": {
-                            "cell": "disk",
-                            "port": "left"
-                        }
+                        "target": "disk"
                     },
                     {
                         "source": "disk",
-                        "target": {
-                            "cell": "os(complete)",
-                            "port": "left"
-                        }
+                        "target": "os(complete)"
                     }
                 ]
             },
