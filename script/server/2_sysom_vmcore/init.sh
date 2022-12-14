@@ -1,10 +1,13 @@
 #! /bin/bash
+NODE_INIT_DIR=${SERVER_HOME}/target/sysom_web/download/sysom_node_init
 SERVER_DIR="sysom_server"
 VMCORE_DIR=${SERVER_DIR}/sysom_vmcore
 VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
 TARGET_PATH=${SERVER_HOME}/target
 SERVICE_NAME=sysom-vmcore
 VIRTUALENV_PYTHON3=${SERVER_HOME}/virtualenv/bin/python3
+
+BASE_DIR=`dirname $0`
 
 source_virtualenv() {
     echo "INFO: activate virtualenv..."
@@ -59,7 +62,14 @@ start_cron()
     echo "* * * * * pushd ${SERVER_HOME}/vmcore;${VIRTUALENV_PYTHON3} parse_panic.py ${file_path} ${SERVER_PORT};popd" >> /var/spool/cron/root
 }
 
+prepare_node_init_tar()
+{
+    mkdir -p ${NODE_INIT_DIR}
+    cp -r ${BASE_DIR}/../../node/vmcore ${NODE_INIT_DIR}
+}
+
 deploy() {
+    prepare_node_init_tar
     source_virtualenv
     init_conf
     start_app

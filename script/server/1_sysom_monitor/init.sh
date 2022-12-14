@@ -1,6 +1,5 @@
 #!/bin/bash -x
-
-UPLOAD_DIR=${SERVER_HOME}/target/sysom_web/download/
+NODE_INIT_DIR=${SERVER_HOME}/target/sysom_web/download/sysom_node_init
 RESOURCE_DIR=${SERVER_HOME}/monitor
 GRAFANA_PKG=grafana-9.2.2-1.x86_64.rpm
 PROMETHEUS_VER=2.29.1
@@ -14,8 +13,6 @@ OSS_URL=https://sysom.oss-cn-beijing.aliyuncs.com/monitor
 GRAFANA_DL_URL=https://dl.grafana.com/oss/release
 PROMETHEUS_DL_URL=https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VER}
 NODE_DL_URL=https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VER}
-NODE_INIT_DIR=sysom_node_init
-NODE_INIT_PKG=sysom_node_init.tar.gz
 NODE_INIT_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_init
 NODE_DELETE_SCRIPT=${SERVER_HOME}/target/sysom_server/sysom_diagnosis/service_scripts/node_delete
 SERVICE_NAME=sysom-prometheus
@@ -151,12 +148,8 @@ download_node_exporter()
 prepare_node_init_tar()
 {
     mkdir -p ${NODE_INIT_DIR}
-    mkdir -p ${UPLOAD_DIR}
-    cp -r ${BASE_DIR}/../../node/* ${NODE_INIT_DIR}
+    cp -r ${BASE_DIR}/../../node/monitor ${NODE_INIT_DIR}
     cp ${RESOURCE_DIR}/${NODE_EXPORTER_TAR} ${NODE_INIT_DIR}/monitor/
-    tar -zvcf ${NODE_INIT_PKG} ${NODE_INIT_DIR}
-    rm -rf ${NODE_INIT_DIR}
-    mv ${NODE_INIT_PKG} ${UPLOAD_DIR}
 }
 
 set_node_init_cmd()
