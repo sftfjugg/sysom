@@ -69,19 +69,19 @@
                 "nodes": [
                     {
                         "id": "os(block)",
-                        "tips": "指IO在OS内核通用块层部分的耗时（时间单位：us)" 
+                        "tips": "The time delay of the general block layer in OS kernel(unit: us)" 
                     },
                     {
                         "id": "os(driver)",
-                        "tips":"指IO在OS内核磁盘驱动部分的耗时（时间单位：us）"
+                        "tips":"The time delay of OS kernel driver(unit: us)"
                     },
                     {
                         "id": "disk",
-                        "tips": "指IO在硬件磁盘侧的耗时（时间单位：us）"
+                        "tips": "The time delay of disk(unit: us)"
                     },
                     {
                         "id": "os(complete)",
-                        "tips": "指IO在硬件磁盘侧的耗时（时间单位：us"
+                        "tips": "The time delay of io complete in OS kernel(unit: us)"
                     }
                 ],
                 "edges": [

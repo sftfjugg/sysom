@@ -31,13 +31,22 @@ def iosdiagJoinData(raw):
                 diskIdx = 'iolatencyDistribution_'+s['diskname']
                 if diskIdx not in stat.keys():
                     stat[diskIdx] = {"data": []}
+                maxPercent = sorted(s['delays'],
+                            key=lambda e: (float(e['percent'].strip('%'))),
+                            reverse=True)[0]['percent']
                 for delay in s['delays']:
-                    stat[diskIdx]["data"].append(
-                        {"key": delay['component'], "title": delay['component'],
-                        "value": delay['percent'], "text": 
-                        'Max_us: '+str(round(delay['max'], 1))+
-                        '\nAVG_us: '+str(round(delay['avg'], 1))+
-                        '\nMin_us: '+str(round(delay['min'], 1))})
+                    text = 'Max: '+str(round(delay['max'], 1))+
+                        ' AVG: '+str(round(delay['avg'], 1))+
+                        ' Min: '+str(round(delay['min'], 1))
+                    node = {
+                        "key": delay['component'], "title": delay['component'],
+                        "value": delay['percent'], "text": text}
+                    percent = float(delay['percent'].strip('%'))
+                    if delay['component'] != disk and percent > 10:
+                        node['level'] = 'warning'
+                    if delay['percent'] == maxPercent:
+                        node['level'] = 'error'
+                    stat[diskIdx]["data"].append(node)
         elif 'totaldelay' in str(obj) or 'abnormal' in str(obj):
             for s in obj['summary']:
                 isSeqData = False
