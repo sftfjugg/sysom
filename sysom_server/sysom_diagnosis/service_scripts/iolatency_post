@@ -97,8 +97,6 @@ def iosdiagJoinData(raw):
                     d, maxDelayComp))
 
     s = json.dumps(stat, indent=4)
-    with open('/root/lgs_debug/iolatency.log', 'w+') as f:
-        f.write(s)
     print(s)
 
 def extract_params():
