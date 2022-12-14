@@ -23,13 +23,17 @@ def drop_result(raw):
     newdrop["DropStat"] = {}
     newdrop["DropStat"]["data"] = []
 
+    total_drop_cnt = 0
     for cnt in range(len(rawdata["reasons"])):
         item = rawdata["reasons"][cnt]
-        newdrop["DropStat"]["data"].append({
-            "key": str(cnt), "丢包点": item[0], "丢包计数": str(item[1]), "丢包原因": item[2]
-        })
-        cnt += 1
+        if item[1] != 0:
+            newdrop["DropStat"]["data"].append({
+                "key": str(cnt), "dropIndex": item[0], "dropCount": str(item[1]), "dropReason": item[2]
+            })
+            cnt += 1
+            total_drop_cnt += item[1]
 
+    newdrop["summary"] = "diagnones result: total capture {} packet drops".format(total_drop_cnt)
     
     print(json.dumps(newdrop, ensure_ascii=False))
 
