@@ -6,7 +6,8 @@ class HostModel(BaseModel):
     HOST_STATUS_CHOICES = (
         (0, 'running'),
         (1, 'error'),
-        (2, 'offline')
+        (2, 'offline'),
+        (3, 'migrating')
     )
 
     hostname = models.CharField(max_length=100, unique=True)
