@@ -11,10 +11,11 @@ import queue
 import logging
 import multiprocessing
 import time
+from loguru import logger
 from multiprocessing.pool import Pool
 from typing import List, Callable, Dict
 from django.conf import settings
-from channel_job.job import default_channel_job_executor, JobResult
+from channel_job.job import default_channel_job_executor, ChannelJobExecutor
 
 # from lib.ssh import SSH
 
@@ -31,29 +32,23 @@ class VulTaskManager:
         self._command = command
         self._result: list = []
         self.processes = min(len(hosts), os.cpu_count())
-        self._pool = Pool(processes=self.processes,
-                          initializer=self._initializer_pool)
-                          
-    @staticmethod
-    def _initializer_pool():
-        """
-        ProcessPool初始化Channel_Job
-        """
-        default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
-        default_channel_job_executor.start()
+        self._pool = Pool(processes=self.processes)
 
     @staticmethod
     def run_command(ip: str, command: str) -> Dict:
-        job_result: JobResult = default_channel_job_executor.dispatch_job(
-            channel_type="ssh",
-            channel_opt='cmd',
-            params={
-                        'instance': ip,
-                        "command": command
-            },
-            timeout=5000,
-            auto_retry=True
-        ).execute()
+        logger.info(f'Processing tasks ip: {ip}')
+        channel_job = ChannelJobExecutor()
+        channel_job.init_config(settings.CHANNEL_JOB_URL)
+        channel_job.start()
+
+        params: dict = {}
+        params['channel_type'] = 'ssh'
+        params['channel_opt'] = 'cmd'
+        params['params'] = {'instance': ip, "command": command}
+        params['timeout'] = 20 * 1000
+        params['auto_retry'] = True
+
+        job_result = channel_job.dispatch_job(**params).execute()
 
         return {
             'host': ip,
