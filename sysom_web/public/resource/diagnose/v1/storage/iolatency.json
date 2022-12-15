@@ -66,6 +66,9 @@
             "type": "flow",
             "title": "Overall delay distribution",
             "flowconfigs": {
+                "layout":{
+                    "type": "linear"
+                },
                 "nodes": [
                     {
                         "id": "os(block)",
