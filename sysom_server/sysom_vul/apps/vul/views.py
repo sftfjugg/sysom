@@ -288,7 +288,8 @@ class UpdateSaView(APIView):
                 return success(message="forbidden",
                                result="The data has been updated recently,no need to update it again")
             # 默认间隔时间为10分
-            interval_time = 60 * 10
+            # interval_time = 60 * 10
+            interval_time = 10
             current_time = localtime()
             if (current_time - last_update_sa_time).seconds < interval_time:
                 return success(message="forbidden",

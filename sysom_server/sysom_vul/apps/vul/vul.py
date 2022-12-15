@@ -6,7 +6,6 @@
 @Email   : weidong@uniontech.com
 @Software: PyCharm
 """
-import logging
 import requests
 import datetime
 import json
@@ -40,18 +39,18 @@ def update_vul_db():
     """
     更新漏洞数据库数据
     """
-    logging.debug("Begin to get vul db address")
+    logger.info("Begin to get vul db address")
     vul_addrs = VulAddrModel.objects.all()
     for vul_addr in vul_addrs:
-        logging.info("Try to get vul db info")
+        logger.info("Try to get vul db info")
         vul_addr_obj = VulDataParse(vul_addr)
         try:
             body = vul_addr_obj.get_vul_data()
             if body:
                 vul_addr_obj.parse_and_store_vul_data(body)
         except Exception as e:
-            logging.warning(e)
-            logging.warning(f"failed in {vul_addr.url}")
+            logger.warning(e)
+            logger.warning(f"failed in {vul_addr.url}")
 
 
 class VulDataParse(object):
@@ -102,7 +101,7 @@ class VulDataParse(object):
             flag = True
             url = self.vul_addr_obj.url
             while flag:
-                logging.info(url)
+                logger.info(url)
                 # resp = requests.request(self.vul_addr_obj.get_method_display(), url,
                 #                         headers=self.vul_addr_obj.headers,
                 #                         data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
@@ -138,12 +137,12 @@ class VulDataParse(object):
             return vul_data
         except Exception as e:
             self.set_vul_data_status_down()
-            logging.warning(e)
+            logger.warning(e)
             return vul_data
 
     def parse_and_store_vul_data(self, body):
         cve_data = body
-        logging.info("Update sys_vul vul data")
+        logger.info("Update sys_vul vul data")
         parser = json.loads(self.vul_addr_obj.parser)
         for cve in cve_data:
             cve_id = cve[parser["cve_id_flag"]]
@@ -167,7 +166,7 @@ class VulDataParse(object):
                     else:
                         vul_level = "critical"
 
-            logging.debug(f"Update sys_vul {cve_id} data")
+            logger.debug(f"Update sys_vul {cve_id} data")
             try:
                 if len(cve_obj_search) == 0:
                     # print(f"0 {cve_id}")
@@ -183,8 +182,8 @@ class VulDataParse(object):
                             vul_level=vul_level,
                             update_time=timezone.now())
             except Exception as e:
-                logging.warning(e)
-                logging.warning(f"Create or update {cve_id} failed")
+                logger.warning(e)
+                logger.warning(f"Create or update {cve_id} failed")
 
     def set_vul_data_status(self, status):
         self.vul_addr_obj.status = status
