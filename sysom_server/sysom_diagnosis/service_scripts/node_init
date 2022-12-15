@@ -25,7 +25,7 @@ result['commands'] = []
 cmd0 = {}
 cmd0['instance'] = host_ip
 mkdir_cmd = "rm -rf "+node_home+" && mkdir -p "+node_home+" && cd "+node_home
-download_res_cmd = "wget -T 3 -t 1 http://"+server_local_ip+":"+server_port+"/download/sysom_node_init.tar.gz || wget -T 3 -t 1 http://"+server_public_ip+":"+server_port+"/download/sysom_node_init.tar.gz"
+download_res_cmd = "wget -T 3 -t 1 http://`env | grep SSH_CONNECTION | awk '{print $1}' | awk -F\"=\" '{print $NF}'`:"+server_port+"/download/sysom_node_init.tar.gz"
 do_check_wget = "if [ ! -e sysom_node_init.tar.gz ];then  exit 1; fi && tar -xf sysom_node_init.tar.gz && cd sysom_node_init"
 do_init_conf = "echo SERVER_LOCAL_IP="+server_local_ip+" > conf"
 do_init_conf = do_init_conf + " && echo SERVER_PUBLIC_IP="+server_public_ip+" >> conf"
