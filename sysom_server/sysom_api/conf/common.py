@@ -1,3 +1,4 @@
+from cec_base.log import LoggerHelper, LoggerLevel
 import os
 import sys
 import socket
@@ -140,6 +141,8 @@ SYSOM_CEC_CHANNEL_RESULT_TOPIC = "SYSOM_CEC_CHANNEL_RESULT_TOPIC"
 SYSOM_CEC_PLUGIN_TOPIC = "SYSOM_CEC_PLUGIN_TOPIC"
 # API主机模块消费组
 SYSOM_CEC_API_HOST_CONSUMER_GROUP = "SYSOM_CEC_API_HOST_CONSUMER_GROUP"
+# HOST用于接收其他模块发出的异步请求的主题
+SYSOM_CEC_API_HOST_TOPIC = "SYSOM_CEC_API_HOST_TOPIC"
 
 # 主机模块CEC配置
 SYSOM_HOST_LISTEN_TOPIC = "SYSOM_HOST_LISTEN_TOPIC"
@@ -154,7 +157,8 @@ if not os.path.exists(JWT_TOKEN_DECODE_DIR):
 
 
 # Config log format
-from cec_base.log import LoggerHelper, LoggerLevel
 log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
-LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
-LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO,
+                 format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING,
+                 format=log_format, colorize=True)
