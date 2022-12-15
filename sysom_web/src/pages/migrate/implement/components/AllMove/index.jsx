@@ -91,7 +91,7 @@ export default withRouter(
     const handleBackup = (e) => {
       if(e.target.value === "no"){
         setBackupType(false);
-      }else if(e.target.value === "NFS"){
+      }else if(e.target.value === "nfs"){
         setBackupType(true);
       }
     }
@@ -211,7 +211,7 @@ export default withRouter(
           >
             <Radio.Group onChange={handleBackup}>
               <Radio value="no">不备份</Radio>
-              <Radio value="NFS">NFS备份</Radio>
+              <Radio value="nfs">NFS备份</Radio>
             </Radio.Group>
           </FormItem>
           {
