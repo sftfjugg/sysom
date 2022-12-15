@@ -139,6 +139,13 @@ MIG_IMP_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_RATE = '/var/tmp/state.json'
 MIG_IMP_REBOOT = 120
 
+##################################################################
+# Cec settings
+##################################################################
+SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000&cec_auto_mk_topic=true"
+# HOST用于接收其他模块发出的异步请求的主题
+SYSOM_CEC_API_HOST_TOPIC = "SYSOM_CEC_API_HOST_TOPIC"
+
 
 #########################################################################################
 # rest_framework settings
