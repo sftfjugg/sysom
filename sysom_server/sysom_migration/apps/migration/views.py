@@ -281,7 +281,7 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_restore(self, mig_imp, data):
-        if mig_imp.status in ['running', 'success', 'unsupported']:
+        if mig_imp.status == 'running':
             return f'主机{mig_imp.ip}当前状态无法进行此操作。'
         if mig_imp.step < 3:
             return f'主机{mig_imp.ip}尚未进行备份，无法还原。'
@@ -300,7 +300,7 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_init(self, mig_imp, data):
-        if mig_imp.status in ['running']:
+        if mig_imp.status == 'running':
             return f'主机{mig_imp.ip}当前状态无法进行此操作。'
         MigImpModel.objects.create(**dict(ip=mig_imp.ip))
         return
