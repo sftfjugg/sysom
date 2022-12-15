@@ -137,6 +137,7 @@ MIG_IMP_DIR = '/tmp/migration'
 MIG_ASS_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_RATE = '/var/tmp/state.json'
+MIG_IMP_REBOOT = 120
 
 
 #########################################################################################
