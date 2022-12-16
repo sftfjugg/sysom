@@ -1,7 +1,7 @@
 from channel_job.job import default_channel_job_executor
 
 
-def sync_job(ip, cmd, echo=dict(), timeout=5000):
+def sync_job(ip, cmd, echo=dict(), timeout=15000):
     data = dict(
         channel_type="ssh", 
         channel_opt="cmd", 
@@ -18,7 +18,7 @@ def sync_job(ip, cmd, echo=dict(), timeout=5000):
     return result, data
 
 
-def async_job(ip, cmd, echo=dict(), timeout=5000, chunk=None, finish=None):
+def async_job(ip, cmd, echo=dict(), timeout=15000, chunk=None, finish=None):
     data = dict(
         channel_type="ssh", 
         channel_opt="cmd", 
