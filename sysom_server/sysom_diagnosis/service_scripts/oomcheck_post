@@ -39,12 +39,18 @@ def analyze_root(oomres):
         reason = "%sKB shared memory used and may cause OOM" % oomres['shmem']
     return reason
 
-def advise_root(root):
+def advise_root(res):
+    root = res["root"]
+    tcp_mem = res["tcp_mem"]
+    tcp_task = res["tcp_task"][0]
     advice = ""
     if root == "limit" or root == "plimit":
         advice = "Adjust the memory use of services."
     elif root == "memleak":
-        advice = "Use SysAK memleak to in-depth investigation"
+        if tcp_mem != 0:
+            advice = "Check task %s socket Recv-Q/Send-Q or killall %s"%(tcp_task,tcp_task)
+        else:
+            advice = "Use SysAK memleak to in-depth investigation"
     elif root == "fork":
         advice = "Adjust the memory use and oom_score_adj of services."
     elif root == "cpuset":
@@ -83,7 +89,7 @@ def oomcheck_result(raw):
         result['oomResult']['data'][1]["value"] = res['total_oom']
         result['oomResult']['data'][2]["value"] = "Host OOM"
         result['oomAnalysis']['data'][0]["value"] = analyze_root(res)
-        result['oomAnalysis']['data'][1]["value"] = advise_root(res['root'])
+        result['oomAnalysis']['data'][1]["value"] = advise_root(res)
 
         result['oomDetail']['data'] = [{"key":0, "Free":res['host_free']
             ,"Low watermark":res['host_low'], "RSS":res['total_rss']}]
