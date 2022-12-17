@@ -11,14 +11,14 @@
         },
         {
             "type": "text",
-            "name": "diag_time",
+            "name": "timeout",
             "initialValue": "20",
             "label": "诊断时间",
             "tooltips": "本次的期望的诊断时间，默认20秒"
 	},
         {
             "type": "text",
-            "name": "thresh",
+            "name": "threshold",
             "initialValue": "20",
             "label": "诊断阈值",
             "tooltips": "延迟的阈值，超过这个阈值就记录，默认20ms"
