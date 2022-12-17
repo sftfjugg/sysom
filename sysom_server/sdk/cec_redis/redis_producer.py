@@ -145,7 +145,7 @@ class RedisProducer(Producer, ClientBase):
             event_id = self._redis_client.xadd(inner_topic_name, {
                 StaticConst.REDIS_CEC_EVENT_VALUE_KEY: value,
                 StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_KEY: value_type
-            })
+            }, **kwargs)
             # Additional processing if topice does not exist
             if event_id is None:
                 err = TopicNotExistsException(
