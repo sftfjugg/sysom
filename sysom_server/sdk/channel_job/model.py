@@ -14,6 +14,7 @@ import uuid
 class JobEntry:
     CHANNEL_PARAMS_TIMEOUT = "__channel_params_timeout"
     CHANNEL_PARAMS_AUTO_RETRY = "__channel_params_auto_retry"
+    CHANNEL_PARAMS_RETURN_AS_STREAM = "__channel_params_return_as_stream"
 
     def __init__(self, channel_type: str = "ssh", channel_opt: str = "cmd",
                  params: dict = {}, echo: dict = {},
@@ -27,6 +28,9 @@ class JobEntry:
         self.listen_topic = listen_topic
         self.timeout = kwargs.get("timeout", 1000)
         self.auto_retry = kwargs.get("auto_retry", False)
+        # This field indicates whether the execution results need to
+        # be returned as streamed
+        self.return_as_stream = False
         if self.job_id is None:
             self.job_id = str(uuid.uuid4())
 
@@ -35,6 +39,8 @@ class JobEntry:
             self.params[self.CHANNEL_PARAMS_TIMEOUT] = self.timeout
         if self.CHANNEL_PARAMS_AUTO_RETRY not in self.params:
             self.params[self.CHANNEL_PARAMS_AUTO_RETRY] = self.auto_retry
+        if self.CHANNEL_PARAMS_RETURN_AS_STREAM not in self.params:
+            self.params[self.CHANNEL_PARAMS_RETURN_AS_STREAM] = self.return_as_stream
         result = {
             "channel": self.channel_type,
             "type": self.channel_opt,
