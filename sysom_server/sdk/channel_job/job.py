@@ -129,6 +129,8 @@ class ChannelJob:
         Args:
             entry(JobEntry): Channel job entry
         """
+        if self._chunk_callback is not None:
+            entry.return_as_stream = True 
         if self._producer is None or self._target_topic == "":
             raise ChannelJobException(
                 "ChannelJob not bind producer or target_topic")

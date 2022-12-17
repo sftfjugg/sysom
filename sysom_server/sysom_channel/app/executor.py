@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 CHANNEL_PARAMS_TIMEOUT = "__channel_params_timeout"
 CHANNEL_PARAMS_AUTO_RETRY = "__channel_params_auto_retry"
-
+CHANNEL_PARAMS_RETURN_AS_STREAM = "__channel_params_return_as_stream"
 
 class ChannelListener(MultiConsumer):
     """ A cec-based channel listener
@@ -120,10 +120,11 @@ class ChannelListener(MultiConsumer):
         params = task.get("params", {})
         timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
         auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
+        return_as_stream = params.pop(CHANNEL_PARAMS_RETURN_AS_STREAM, False)
         res = self._get_channel(channel_type)(**params).run_command_auto_retry(
             timeout=timeout,
             auto_retry=auto_retry,
-            on_data_received=on_data_received
+            on_data_received=on_data_received if return_as_stream else None
         )
         return res
 
