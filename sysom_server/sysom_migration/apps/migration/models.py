@@ -2,6 +2,27 @@ from django.db import models
 from lib.base_model import BaseModel
 
 
+class MigAssModel(BaseModel):
+
+    hostname = models.CharField(max_length=100, verbose_name='hostname')
+    ip = models.CharField(max_length=100, verbose_name='ip')
+    old_ver = models.CharField(max_length=100, verbose_name='当前版本')
+    new_ver = models.CharField(max_length=100, verbose_name='评估版本')
+    rate = models.IntegerField(default=0, verbose_name='评估进度')
+    status = models.CharField(max_length=32, default='running', verbose_name='评估状态')
+    detail = models.TextField(verbose_name='评估详情')
+    config = models.TextField(verbose_name='评估配置')
+    imp_report = models.TextField(verbose_name='风险评估报告')
+    sys_config = models.TextField(verbose_name='系统评估报告')
+    hard_info = models.TextField(verbose_name='整机信息')
+    hard_result = models.TextField(verbose_name='板卡评估')
+    app_config = models.TextField(verbose_name='应用评估报告')
+
+    class Meta:
+        db_table = 'mig_assessment'
+        ordering = ['-id']
+
+
 class MigImpModel(BaseModel):
 
     ip = models.CharField(max_length=100, verbose_name='ip')
