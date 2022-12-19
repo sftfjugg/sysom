@@ -57,6 +57,17 @@ export default [
         redirect: '/migrate/implement',
       },
       {
+        path: '/migrate/assess',
+        name: 'assess',
+        component: './migrate/assess',
+      },
+      {
+        path: '/migrate/report/:id?',
+        // name: 'report',
+        hideInBreadcrumb: true,
+        component: './migrate/assessReport',
+      },
+      {
         path: '/migrate/implement',
         name: 'implement',
         hideInBreadcrumb: true,

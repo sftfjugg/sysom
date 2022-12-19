@@ -6,6 +6,7 @@ export default {
   'menu.host.terminal': '主机终端',
   'menu.migrate': '操作系统迁移',
   'menu.migrate.implement': '迁移实施',
+  'menu.migrate.assess': '迁移评估',
   'menu.monitor': '监控中心',
   'menu.monitor.': '监控中心',
   'menu.monitor.dashboard': '系统监控',
