@@ -164,6 +164,7 @@ class AsyncSSH:
         try:
             async with asyncssh.connect(self._hostname, **self.connect_args) as conn:
                 if mode == "push":
+                    await conn.run(f"mkdir -p {os.path.dirname(remote_path)}")
                     await asyncssh.scp(local_path, (conn, remote_path))
                 else:
                     await asyncssh.scp((conn, remote_path), local_path)
