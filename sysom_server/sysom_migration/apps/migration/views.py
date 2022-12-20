@@ -2,6 +2,7 @@ import os
 import csv
 import json
 import time
+import tarfile
 import logging
 import requests
 import threading
@@ -168,10 +169,11 @@ class MigAssView(CommonModelViewSet):
         result = get_file(ip, f'{lpath}/result.tar.gz', f'{rpath}/result.tar.gz')
         if result.code != 0:
             return False
-        result = os.system(f'tar zxvf {lpath}/result.tar.gz -C {lpath}')
-        if result == 0:
+        try:
+            with tarfile.open(f'{lpath}/result.tar.gz', 'r') as t:
+                t.extractall(f'{lpath}')
             return True
-        else:
+        except:
             return False
 
 
