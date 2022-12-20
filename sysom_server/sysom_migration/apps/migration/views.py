@@ -1,4 +1,5 @@
 import os
+import csv
 import json
 import time
 import logging
@@ -6,13 +7,395 @@ import requests
 import threading
 
 from django.conf import settings
-from apps.migration.models import MigImpModel, MigJobModel
+from apps.migration.models import MigAssModel, MigImpModel, MigJobModel
 from lib.base_view import CommonModelViewSet
 from lib.response import success, other_response, not_found, ErrorResponse
 from lib.channel import sync_job, async_job, send_file, get_file
-from lib.script import run_script, run_script_ignore, init_info_script, deploy_tools_script, backup_script, mig_ass_script, mig_imp_script, restore_script
+from lib.script import run_script, run_script_ignore, init_ance_script, ass_imp_script, ass_sys_script, ass_hard_script, ass_app_script, init_info_script, deploy_tools_script, backup_script, mig_ass_script, mig_imp_script, restore_script
 
 logger = logging.getLogger(__name__)
+
+
+class MigAssView(CommonModelViewSet):
+    queryset = MigImpModel.objects.all()
+
+    def get_host(self, request):
+        host_url = f'{settings.SYSOM_API_URL}/api/v1/host/'
+        res = requests.get(host_url)
+        if res.status_code == 200:
+            return success(result=res.json().get('data', []))
+        else:
+            return success()
+
+
+    def get_ass_list(self, request):
+        mig_ass = MigAssModel.objects.values('id', 'hostname', 'ip', 'old_ver', 'new_ver', 'rate', 'status', 'detail')
+        return success(result=mig_ass)
+
+
+    def read_csv(self, csv_path):
+        result = None
+        if os.path.exists(csv_path):
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                csv_reader = csv.DictReader(f)
+                result = [i for i in csv_reader]
+        return result
+
+
+    def get_ass_imp(self, request):
+        ass_id = request.GET.get('id')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass and mig_ass.imp_report:
+            return success(result=json.loads(mig_ass.imp_report))
+        else:
+            return success()
+
+
+    def get_ass_sys(self, request):
+        ass_id = request.GET.get('id')
+        ass_type = request.GET.get('type')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass and mig_ass.sys_config:
+            if ass_type:
+                sys_file = json.loads(mig_ass.sys_config).get(ass_type, '')
+                return success(result=self.read_csv(sys_file))
+            else:
+                result = json.loads(mig_ass.sys_config).keys()
+                return success(result=result)
+        else:
+            return success()
+
+
+    def get_ass_hard(self, request):
+        ass_id = request.GET.get('id')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass:
+            res = dict()
+            if mig_ass.hard_info:
+                res.update(dict(hard_info=json.loads(mig_ass.hard_info)))
+            if mig_ass.hard_result:
+                res.update(dict(hard_result=json.loads(mig_ass.hard_result)))
+            return success(result=res)
+        else:
+            return success()
+
+
+    def get_ass_app(self, request):
+        ass_id = request.GET.get('id')
+        rpm_name = request.GET.get('rpm_name')
+        abi_name = request.GET.get('abi_name')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass and mig_ass.app_config:
+            rpm_path = json.loads(mig_ass.app_config).get(rpm_name, '')
+            if abi_name:
+                for i in os.listdir(rpm_path):
+                    if f'dep_require({abi_name})' in i:
+                        abi_file = os.path.join(rpm_path, i)
+                        return success(result=self.read_csv(abi_file))
+                return success()
+            if rpm_name:
+                for i in os.listdir(rpm_path):
+                    if f'dep_rpm' in i:
+                        rpm_file = os.path.join(rpm_path, i)
+                        return success(result=self.read_csv(rpm_file))
+                return success()
+            app_file = json.loads(mig_ass.app_config).get('app_detail', '')
+            return success(result=self.read_csv(app_file))
+        else:
+            return success()
+
+
+    def post_ass_start(self, request):
+        res = self.require_param_validate(request, ['ip', 'version', 'repo_type'])
+        if not res['success']:
+            return ErrorResponse(msg=res['msg'])
+        
+        ip = request.data.pop('ip')
+        version = request.data.get('version')
+        err = []
+        for i in ip:
+            mig_ass = MigAssModel.objects.filter(ip=i, status='running').first()
+            if mig_ass:
+                err.append(f'主机{ip}正在评估中。')
+            else:
+                mig_ass = MigAssModel.objects.create(**dict(ip=i, new_ver=version, config=json.dumps(request.data)))
+                threading.Thread(target=self.run_mig_ass, args=(mig_ass, )).start()
+        if err:
+            return success(code=400, msg='\n'.join(err))
+        return success()
+
+
+    def run_mig_ass(self, mig_ass):
+        host_url = f'{settings.SYSOM_API_URL}/api/v1/host/?ip={mig_ass.ip}'
+        res = requests.get(host_url)
+        if res.status_code != 200:
+            mig_ass.status = 'fail'
+            mig_ass.detail = '获取机器信息异常'
+            mig_ass.save()
+        host_info = res.json().get('data', [])
+        if not host_info:
+            mig_ass.status = 'fail'
+            mig_ass.detail = '机器不存在'
+            mig_ass.save()
+        mig_ass.hostname = host_info[0].get('hostname')
+        result, _ = sync_job(mig_ass.ip, "cat /etc/os-release | grep '^PRETTY_NAME=' | awk -F '\"' '{print $2}'")
+        if result.code != 0:
+            mig_ass.status = 'fail'
+            mig_ass.detail = result.err_msg
+            mig_ass.save()
+            return
+        mig_ass.old_ver = result.result
+        mig_ass.save()
+
+        for func in [self.mig_imp, self.init_ance, self.mig_sys, self.mig_hard, self.mig_app]:
+            mig_ass = MigAssModel.objects.filter(id=mig_ass.id).first()
+            if mig_ass.status != 'running':
+                break
+            func(mig_ass.id, mig_ass.ip, mig_ass.config)
+        else:
+            mig_ass = MigAssModel.objects.filter(id=mig_ass.id).first()
+            mig_ass.rate = 100
+            mig_ass.status = 'success'
+            mig_ass.detail = '评估完成'
+            mig_ass.save()
+
+
+    def get_result_tar(self, ip, lpath, rpath):
+        cmd = f'cd {rpath}; rm -rf result.tar.gz; tar zcvf result.tar.gz *'
+        result, _ = sync_job(ip, cmd, timeout=60000)
+        if result.code != 0:
+            return False
+        result = get_file(ip, f'{lpath}/result.tar.gz', f'{rpath}/result.tar.gz')
+        if result.code != 0:
+            return False
+        result = os.system(f'tar zxvf {lpath}/result.tar.gz -C {lpath}')
+        if result == 0:
+            return True
+        else:
+            return False
+
+
+    def init_ance(self, id, ip, config):
+        mig_ass = MigAssModel.objects.filter(id=id).first()
+        mig_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        rpm_path = os.path.join(mig_path, 'ance', 'ance-0.1.0-1.x86_64.rpm')
+        sql_path = os.path.join(mig_path, 'ance', 'AnolisOS-8.6-x86_64-dvd.iso.sqlite')
+        result = send_file([mig_ass.ip,], rpm_path, settings.MIG_ASS_RPM)
+        result = send_file([mig_ass.ip,], sql_path, settings.MIG_ASS_SQL)
+        result, _ = sync_job(mig_ass.ip, run_script_ignore(init_ance_script), timeout=300000)
+        if result.code != 0:
+            mig_ass.status = 'fail'
+            mig_ass.detail = result.err_msg
+            mig_ass.save()
+            return
+
+
+    def mig_imp(self, id, ip, config):
+        config = json.loads(config)
+        repo_url = config.get('repo_url')
+        if not repo_url:
+            repo_url = settings.MIG_PUBLIC_URL
+
+        mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_imp'))
+        cmd = run_script_ignore(ass_imp_script.replace('REPO_URL', repo_url))
+        result, res = sync_job(ip, cmd, timeout=3600000)
+        mig_job.job_data = json.dumps(res)
+        mig_job.job_result = json.dumps(result.__dict__)
+
+        imp_result = []
+        if result.code == 0:
+            mig_job.job_status = 'success'
+            mig_job.save()
+
+            imp_path = os.path.join(settings.MIG_ASS_DIR, str(id), 'imp')
+            if not os.path.exists(imp_path):
+                os.makedirs(imp_path)
+            imp_file = os.path.join(imp_path, 'mig_ass_imp.json')
+            mig_imp = get_file(ip, imp_file, settings.MIG_ASS_JSON)
+
+            if mig_imp.code == 0:
+                with open(imp_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                for i in data.get('entries'):
+                    tmp = dict(
+                        title = i.get('title'),
+                        summary = i.get('summary'),
+                        severity = i.get('severity'),
+                        flags = i.get('flags')
+                    )
+                    remediations = i.get('detail', {}).get('remediations', [])
+                    rem = list()
+                    for j in remediations:
+                        s = j.get('context')
+                        if isinstance(s, list):
+                            s = ' '.join(s)
+                        rem.append(dict(
+                            type = j.get('type'),
+                            context = s
+                        ))
+                    tmp['remediations'] = rem if rem else None
+                    imp_result.append(tmp)
+        else:
+            mig_job.job_status = 'fail'
+            mig_job.save()
+        
+        mig_ass = MigAssModel.objects.filter(id=id).first()
+        if imp_result:
+            mig_ass.imp_report = json.dumps(imp_result)
+        mig_ass.rate += 25
+        mig_ass.save()
+
+
+    def mig_sys(self, id, ip, config):
+        mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_sys'))
+        cmd = run_script_ignore(ass_sys_script)
+        result, res = sync_job(ip, cmd, timeout=3600000)
+        mig_job.job_data = json.dumps(res)
+        mig_job.job_result = json.dumps(result.__dict__)
+
+        sys_result = {}
+        if result.code == 0:
+            mig_job.job_status = 'success'
+            mig_job.save()
+
+            sys_path = os.path.join(settings.MIG_ASS_DIR, str(id), 'sys')
+            if not os.path.exists(sys_path):
+                os.makedirs(sys_path)
+            flag = self.get_result_tar(ip, sys_path, settings.MIG_ASS_SYS)
+            if flag:
+                for i in os.listdir(sys_path):
+                    if 'detail.csv' in i:
+                        key = i.split('()')[0]
+                        value = os.path.join(sys_path, i)
+                        sys_result[key] = value
+                for i in os.listdir(os.path.join(sys_path, 'kernel')):
+                    if 'detail.csv' in i:
+                        key = i.split('()')[0]
+                        value = os.path.join(sys_path, 'kernel', i)
+                        sys_result[key] = value
+        else:
+            mig_job.job_status = 'fail'
+            mig_job.save()
+
+        mig_ass = MigAssModel.objects.filter(id=id).first()
+        if sys_result:
+            mig_ass.sys_config = json.dumps(sys_result)
+        mig_ass.rate += 25
+        mig_ass.save()
+
+
+    def mig_hard(self, id, ip, config):
+        mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_hard'))
+        cmd = run_script_ignore(ass_hard_script)
+        result, res = sync_job(ip, cmd, timeout=3600000)
+        mig_job.job_data = json.dumps(res)
+        mig_job.job_result = json.dumps(result.__dict__)
+
+        hard_info = None
+        hard_result = None
+        if result.code == 0:
+            mig_job.job_status = 'success'
+            mig_job.save()
+
+            hard_path = os.path.join(settings.MIG_ASS_DIR, str(id), 'hard')
+            if not os.path.exists(hard_path):
+                os.makedirs(hard_path)
+            flag = self.get_result_tar(ip, hard_path, settings.MIG_ASS_HARD)
+            if flag:
+                hard_info = self.read_csv(os.path.join(hard_path, 'machinfo.csv'))
+                for i in os.listdir(hard_path):
+                    if 'detail.csv' in i:
+                        hard_result = self.read_csv(os.path.join(hard_path, i))
+        else:
+            mig_job.job_status = 'fail'
+            mig_job.save()
+        
+        mig_ass = MigAssModel.objects.filter(id=id).first()
+        if hard_info:
+            mig_ass.hard_info = json.dumps(hard_info)
+        if hard_result:
+            mig_ass.hard_result = json.dumps(hard_result)
+        mig_ass.rate += 25
+        mig_ass.save()
+
+
+    def mig_app(self, id, ip, config):
+        config = json.loads(config)
+        ass_app = config.get('ass_app')
+        if ass_app:
+            cmd = run_script_ignore(ass_app_script.replace('RPM_LIST', f'--rpmlist={ass_app}'))
+        else:
+            cmd = run_script_ignore(ass_app_script.replace('RPM_LIST', ' '))
+
+        mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_app'))
+        result, res = sync_job(ip, cmd, timeout=3600000)
+        mig_job.job_data = json.dumps(res)
+        mig_job.job_result = json.dumps(result.__dict__)
+
+        app_result = {}
+        if result.code == 0:
+            mig_job.job_status = 'success'
+            mig_job.save()
+
+            app_path = os.path.join(settings.MIG_ASS_DIR, str(id), 'app')
+            if not os.path.exists(app_path):
+                os.makedirs(app_path)
+            flag = self.get_result_tar(ip, app_path, settings.MIG_ASS_APP)
+            if flag:
+                app_detail = None
+                for i in os.listdir(app_path):
+                    if 'detail.csv' in i:
+                        app_detail = os.path.join(app_path, i)
+                if app_detail:
+                    app_result['app_detail'] = app_detail
+                    for i in self.read_csv(app_detail):
+                        rpm_name = i.get('rpm_name')
+                        for j in os.listdir(os.path.join(app_path, 'packages')):
+                            if j in rpm_name:
+                                app_result[rpm_name] = os.path.join(app_path, 'packages', j)
+        else:
+            mig_job.job_status = 'fail'
+            mig_job.save()
+        
+        mig_ass = MigAssModel.objects.filter(id=id).first()
+        if app_result:
+            mig_ass.app_config = json.dumps(app_result)
+        mig_ass.rate += 25
+        mig_ass.save()
+
+
+    def post_ass_stop(self, request):
+        res = self.require_param_validate(request, ['id'])
+        if not res['success']:
+            return ErrorResponse(msg=res['msg'])
+
+        ass_id = request.data.get('id')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass and mig_ass.status == 'running':
+            mig_ass.status = 'stop'
+            mig_ass.save()
+            return success()
+        else:
+            return success(code=400, msg='状态异常')
+
+
+    def post_ass_retry(self, request):
+        res = self.require_param_validate(request, ['id'])
+        if not res['success']:
+            return ErrorResponse(msg=res['msg'])
+
+        ass_id = request.data.get('id')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass and mig_ass.status != 'running':
+            mig = MigAssModel.objects.filter(ip=mig_ass.ip, status='running').first()
+            if mig:
+                return success(code=400, msg='有其它相同的评估任务运行中')
+            else:
+                mig = MigAssModel.objects.create(**dict(hostname=mig_ass.hostname, ip=mig_ass.ip, new_ver=mig_ass.new_ver, config=mig_ass.config))
+                threading.Thread(target=self.run_mig_ass, args=(mig, )).start()
+                return success()
+        else:
+            return success(code=400, msg='状态异常')
 
 
 class MigImpView(CommonModelViewSet):
@@ -323,7 +706,7 @@ class MigImpView(CommonModelViewSet):
             else:
                 mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, False))
                 mig_imp.status = 'fail'
-                mig_imp.detail = result.result
+                mig_imp.detail = result.err_msg
                 mig_job.job_status = 'fail'
             mig_imp.save()
             mig_job.save()
@@ -439,7 +822,7 @@ class MigImpView(CommonModelViewSet):
         result, _ = sync_job(mig_imp.ip, run_script(restore_script))
         if result.code != 0:
             mig_imp.status = 'fail'
-            mig_imp.detail = result.result
+            mig_imp.detail = result.err_msg
             mig_imp.save()
             return
 

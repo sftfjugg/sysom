@@ -131,9 +131,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # migration config
 SYSOM_API_URL = 'http://127.0.0.1:7001'
 SYSOM_CHANNEL_URL = 'http://127.0.0.1:7003'
-
 MIG_PUBLIC_URL = 'https://mirrors.openanolis.cn'
-MIG_IMP_DIR = '/tmp/migration'
+
+MIG_ASS_RPM = '/tmp/ance/database/ance-0.1.0-1.x86_64.rpm'
+MIG_ASS_SQL = '/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite'
+MIG_ASS_DIR = '/tmp/migration/ass'
+MIG_ASS_JSON = '/var/log/leapp/leapp-report.json'
+MIG_ASS_SYS = '/tmp/ance/results/os-report-*'
+MIG_ASS_HARD = '/tmp/ance/results/hw-report-*'
+MIG_ASS_APP = '/tmp/ance/results/dep-report-*'
+
+MIG_IMP_DIR = '/tmp/migration/imp'
 MIG_ASS_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_REPORT = '/var/log/leapp/leapp-report.txt'
 MIG_IMP_RATE = '/var/tmp/state.json'
