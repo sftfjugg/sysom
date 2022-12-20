@@ -56,3 +56,90 @@ export async function operateMachine(params) {
   });
 }
 
+/* *************** 迁移评估 *************** */
+// 选择机器
+export async function queryAssessHost(params) {
+  return request('/api/v1/assessment/host/', {
+    method: 'GET',
+  });
+}
+
+// 开始评估
+export async function queryStartAssess(params) {
+  return request('/api/v1/assessment/start/', {
+    method: 'post',
+    data: params,
+  });
+}
+
+// 评估-机器列表 & 评估报告-节点列表
+export async function queryAssessList(params) {
+  return request('/api/v1/assessment/list/', {
+    method: 'GET',
+  });
+}
+
+// 停止评估
+export async function queryStopAssess(params) {
+  return request('/api/v1/assessment/stop/', {
+    method: 'post',
+    data: params,
+  });
+}
+
+// 评估重试
+export async function queryRetryAssess(params) {
+  return request('/api/v1/assessment/retry/', {
+    method: 'post',
+    data: params,
+  });
+}
+
+// 硬件--板卡评估结果列表
+export async function queryHardwareList(params) {
+  return request(`/api/v1/assessment/hard/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 风险--迁移风险评估
+export async function queryRiskList(params) {
+  return request(`/api/v1/assessment/imp/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 应用--应用列表
+export async function queryAppList(params) {
+  return request(`/api/v1/assessment/app/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 应用--acl依赖评估
+export async function queryAclList(params) {
+  return request(`/api/v1/assessment/app/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 应用--abi接口列表
+export async function queryAbiList(params) {
+  return request(`/api/v1/assessment/app/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 系统配置-类型
+export async function querySysType(params) {
+  return request(`/api/v1/assessment/sys/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
+
+// 系统配置-列表
+export async function querySysList(params) {
+  return request(`/api/v1/assessment/sys/?${stringify(params)}`, {
+    method: 'GET',
+  });
+}
