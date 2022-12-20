@@ -18,7 +18,16 @@ class CpingDeamon(object):
                 dPing['stat'] = obj["stat"]
             else:
                 dPing["seq"].append(obj)
-        s = json.dumps(dPing, indent=4)
+        
+        ret = {}
+        ret['pingtraceFlow'] = {}
+        ret["pingtraceFlow"]['data'] = []
+        for stage in dPing['stat']['stage']:
+            ret["pingtraceFlow"]['data'].append(
+                {'key': stage['delay'], 'title': stage['delay'], 'text': "Max:{} Min:{} Avg:{}".format(stage['max'], stage['min'], stage['avg'])}
+            )
+        
+        s = json.dumps(ret, indent=4)
         print(s)
 
 if __name__ == "__main__":
