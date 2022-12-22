@@ -23,6 +23,7 @@ export default {
   'pages.login.submit': 'Login',
   'pages.login.loginWith': 'Login with :',
   'pages.login.registerAccount': 'Register Account',
+  'pages.hostTable.ip_invalid': 'IP address is invalid!',
   'pages.welcome.advancedComponent': 'Advanced Component',
   'pages.welcome.link': 'Welcome',
   'pages.welcome.advancedLayout': 'Advanced Layout',

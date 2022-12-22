@@ -68,6 +68,7 @@ export default {
   'pages.hostTable.createForm.editHost': '编辑主机',
   'pages.hostTable.hostRelease': '主机发行版本',
   'pages.hostTable.hostKernelVersion': '主机内核版本',
+  'pages.hostTable.ip_invalid': 'IP地址格式错误！',
   'pages.clusterTable.title': '集群管理',
   'pages.clusterTable.clusterName': '集群名称',
   'pages.clusterTable.clusterDescription': '集群描述',

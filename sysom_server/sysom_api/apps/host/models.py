@@ -1,5 +1,6 @@
 from django.db import models
 from lib.base_model import BaseModel
+from django.core import validators
 
 
 class HostModel(BaseModel):
@@ -11,8 +12,8 @@ class HostModel(BaseModel):
     )
 
     hostname = models.CharField(max_length=100, unique=True)
-    ip = models.CharField(max_length=100, unique=True)
-    port = models.IntegerField()
+    ip = models.CharField(max_length=100, unique=True, validators=[validators.validate_ipv46_address])
+    port = models.IntegerField(validators=[validators.MaxValueValidator(65535), validators.MinValueValidator(0)])
     username = models.CharField(max_length=100)
     private_key = models.TextField(null=True)
     description = models.CharField(max_length=255, null=True)
