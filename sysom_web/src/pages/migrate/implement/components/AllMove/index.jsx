@@ -5,7 +5,7 @@ import { withRouter } from 'umi';
 
 import { WrapperContext } from '../../containers';
 import { SET_DATA } from '../../containers/constants';
-import { getNodesList,BulkMigration } from '../../../service';
+import { getNodesList,BulkMigration,startMigration } from '../../../service';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -32,42 +32,33 @@ export default withRouter(
     const handleAdd = async () => {
       form.validateFields().then(async (values) => {
         if (typeof values === 'undefined') return true;
-        const hide = message.loading(`${startMigrateIp === '' ? "批量配置": '迁移配置'}中...`, 0);
-        let params = {...values,step:0}
+        const hide = message.loading(`${startMigrateIp === '' ? "批量实施": '迁移配置'}中...`, 0);
+        let params = {...values}
         if(startMigrateIp !== ""){
           params.ip = [startMigrateIp];
+          params.step = 0;
         }
         if(params.backup_type === 'no'){
           params.backup_type = '';
         }
         try {
-          const {code,msg} = await BulkMigration(params);
-          if (code === 200) {
-            try {
-              const {
-                code: queryCode,
-                data: nodeList,
-              } = await getNodesList({ id: activeMachineGroupId });
-              if (queryCode === 200) {
-                message.success(`${startMigrateIp === '' ? "批量配置": '迁移配置'}成功`);
-                dispatch({
-                  type: SET_DATA,
-                  payload: {
-                    machineList: nodeList && nodeList.length !== 0 ? nodeList : [],
-                    nodeTotal: nodeList ? nodeList.length : 0,
-                    allMoveVisible: false,
-                  },
-                });
-                return true;
-              }
-              return false;
-            } catch (e) {
-              console.log(`更新数据获取失败，错误信息：${e}`);
-              return false;
+          if(startMigrateIp === ''){
+            let {code,msg} = await BulkMigration(params);
+            if (code === 200) {
+              getList();
+              return true;
             }
+            message.error(msg);
+            return false;
+          }else{
+            let {code,msg} = await startMigration(params);
+            if (code === 200) {
+              getList();
+              return true;
+            }
+            message.error(msg);
+            return false;
           }
-          message.error(msg);
-          return false;
         } catch (error) {
           return false;
         } finally {
@@ -79,6 +70,31 @@ export default withRouter(
       })
       
     };
+
+    const getList = async () => {
+      try {
+        const {
+          code: queryCode,
+          data: nodeList,
+        } = await getNodesList({ id: activeMachineGroupId });
+        if (queryCode === 200) {
+          message.success(`${startMigrateIp === '' ? "批量实施": '迁移配置'}成功`);
+          dispatch({
+            type: SET_DATA,
+            payload: {
+              machineList: nodeList && nodeList.length !== 0 ? nodeList : [],
+              nodeTotal: nodeList ? nodeList.length : 0,
+              allMoveVisible: false,
+            },
+          });
+          return true;
+        }
+        return false;
+      } catch (e) {
+        console.log(`更新数据获取失败，错误信息：${e}`);
+        return false;
+      }
+    }
     
     const handleRepo = (e) => {
       if(e.target.value === "public"){
@@ -103,7 +119,7 @@ export default withRouter(
         width={960}
         destroyOnClose
         afterClose={() => form.resetFields()}
-        title={startMigrateIp === '' ? "批量配置": '迁移配置'}
+        title={startMigrateIp === '' ? "批量实施": '迁移配置'}
         visible={allMoveVisible}
         onCancel={() => {
           dispatch({
