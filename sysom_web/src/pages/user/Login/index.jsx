@@ -84,7 +84,9 @@ const Login = () => {
     <div className={styles.container}>
       <div className={styles.content}>
         <LoginForm
-          title="系统运维平台"
+          title={intl.formatMessage({
+            id: "pages.layouts.userLayout.title",
+          })}
           subTitle={intl.formatMessage({
             id: "pages.layouts.userLayout.title",
           })}
@@ -106,7 +108,7 @@ const Login = () => {
                     block={true}
                     type="primary"
                   >
-                    登录
+                    <FormattedMessage id="pages.login" />
                   </Button>
                 ) : (
                   <Button
@@ -116,7 +118,7 @@ const Login = () => {
                     block={true}
                     type="primary"
                   >
-                    修改密码
+                    <FormattedMessage id="pages.changepassword" />
                   </Button>
                 );
               return [mod];

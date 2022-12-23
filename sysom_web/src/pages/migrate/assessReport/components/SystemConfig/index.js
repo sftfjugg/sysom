@@ -8,9 +8,9 @@ import { WrapperContext } from '../../containers';
 import { SET_DATA } from '../../containers/constants';
 import './index.less';
 
-const getSysConfigList = async () => {
-  return await querySysConfigList();
-}
+// const getSysConfigList = async () => {
+//   return await querySysConfigList();
+// }
 
 const SYS_CONFIG_TYPE = {
   os_env: '环境变量',
