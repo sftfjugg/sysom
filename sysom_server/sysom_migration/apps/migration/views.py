@@ -210,13 +210,18 @@ class MigAssView(CommonModelViewSet):
 
 
     def mig_imp(self, id, ip, config):
+        ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
+        result = send_file([mig_imp.ip,], os.path.join(ance_path, 'anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+
         config = json.loads(config)
         repo_url = config.get('repo_url')
-        if not repo_url:
-            repo_url = settings.MIG_PUBLIC_URL
+        if repo_url:
+            script = ass_imp_script.replace('REPO_URL', f'leapp customrepo --seturl {repo_url}')
+        else:
+            script = ass_imp_script.replace('REPO_URL', 'pwd')
 
         mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_imp'))
-        cmd = run_script_ignore(ass_imp_script.replace('REPO_URL', repo_url))
+        cmd = run_script_ignore(script)
         result, res = sync_job(ip, cmd, timeout=3600000)
         mig_job.job_data = json.dumps(res)
         mig_job.job_result = json.dumps(result.__dict__)
@@ -654,12 +659,17 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_deploy(self, mig_imp, data):
+        ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
+        result = send_file([mig_imp.ip,], os.path.join(ance_path, 'anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+
         config = json.loads(mig_imp.config)
         repo_url = config.get('repo_url')
-        if not repo_url:
-            repo_url = settings.MIG_PUBLIC_URL
-        
-        cmd = run_script_ignore(deploy_tools_script.replace('REPO_URL', repo_url))
+        if repo_url:
+            script = deploy_tools_script.replace('REPO_URL', f'leapp customrepo --seturl {repo_url}')
+        else:
+            script = deploy_tools_script.replace('REPO_URL', 'pwd')
+
+        cmd = run_script_ignore(script)
         self.run_async_job(mig_imp, 'mig_deploy', cmd)
         return
 
@@ -669,6 +679,9 @@ class MigImpView(CommonModelViewSet):
         backup_type = config.get('backup_type')
 
         if backup_type == 'nfs':
+            ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
+            result = send_file([mig_imp.ip,], os.path.join(ance_path, 'anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+
             backup_ip = config.get('backup_ip')
             backup_path = config.get('backup_path')
             backup_exclude = config.get('backup_exclude')
