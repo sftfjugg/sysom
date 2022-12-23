@@ -498,6 +498,27 @@ class MigImpView(CommonModelViewSet):
             return success()
 
 
+    def post_host_migrate_base(self, ip, step, steps, data):
+        mig_imp = MigImpModel.objects.filter(ip=ip).first()
+        if not mig_imp:
+            return f'主机{ip}尚未初始化。'
+        if step < 101 and mig_imp.status in ['running', 'success', 'unsupported']:
+            return f'主机{ip}当前状态无法进行此操作。'
+        if step < 101 and mig_imp.step != step:
+            return f'主机{ip}无法执行此步骤，请按序执行。'
+        return steps[str(step)](mig_imp, data)
+
+
+    def post_host_migrate_all(self, ip, steps, data):
+        while True:
+            mig_imp = MigImpModel.objects.filter(ip=ip).first()
+            if not mig_imp:
+                break
+            if mig_imp.step > 5:
+                break
+            self.post_host_migrate_base(ip, mig_imp.step, steps, data)
+
+
     def post_host_migrate(self, request):
         res = self.require_param_validate(request, ['step', 'ip'])
         if not res['success']:
@@ -505,30 +526,11 @@ class MigImpView(CommonModelViewSet):
 
         step = request.data.get('step')
         ip = request.data.get('ip')
-        steps = {
-            '0': self.mig_config,
-            '1': self.mig_deploy,
-            '2': self.mig_backup,
-            '3': self.mig_ass,
-            '4': self.mig_imp,
-            '5': self.mig_reboot,
-            '101': self.mig_restore,
-            '102': self.mig_init,
-        }
+        steps = self.get_mig_func()
 
         err = []
         for i in ip:
-            mig_imp = MigImpModel.objects.filter(ip=i).first()
-            if not mig_imp:
-                err.append(f'主机{i}尚未初始化。')
-                continue
-            if step < 101 and mig_imp.status in ['running', 'success', 'unsupported']:
-                err.append(f'主机{i}当前状态无法进行此操作。')
-                continue
-            if step < 101 and mig_imp.step != step:
-                err.append(f'主机{i}无法执行此步骤，请按序执行。')
-                continue
-            res = steps[str(step)](mig_imp, request.data)
+            res = self.post_host_migrate_base(i, step, steps, request.data)
             if res:
                 err.append(res)
         if err:
@@ -536,11 +538,37 @@ class MigImpView(CommonModelViewSet):
         return success()
 
 
+    def post_all_migrate(self, request):
+        res = self.require_param_validate(request, ['ip'])
+        if not res['success']:
+            return ErrorResponse(msg=res['msg'])
+
+        ip = request.data.get('ip')
+        steps = self.get_mig_func()
+        for i in ip:
+            threading.Thread(target=self.post_host_migrate_all, args=(i, steps, request.data)).start()
+        return success()
+
+
+    def get_mig_func(self):
+        steps = {
+            '0': self.mig_config,
+            '1': self.mig_backup,
+            '2': self.mig_deploy,
+            '3': self.mig_ass,
+            '4': self.mig_imp,
+            '5': self.mig_reboot,
+            '101': self.mig_restore,
+            '102': self.mig_init,
+        }
+        return steps
+
+
     def get_mig_step(self, step, flag):
         steps = [
             '实施配置',
-            '环境准备',
             '系统备份',
+            '环境准备',
             '迁移评估',
             '迁移实施',
             '重启机器',
