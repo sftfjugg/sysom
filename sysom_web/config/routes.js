@@ -180,13 +180,8 @@ export default [
         routes: [
           {
             path: '/diagnose/net',
-            redirect: '/diagnose/net/network',
+            redirect: '/diagnose/net/pingtrace',
           },
-          {
-            path: '/diagnose/net/network',
-            name: 'network',
-            component: './diagnose/Net/Network',
-          }
         ]
       },
       {
