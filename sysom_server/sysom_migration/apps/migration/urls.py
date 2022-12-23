@@ -24,6 +24,7 @@ urlpatterns = [
     re_path('^api/v1/implementation/mig/$', views.MigImpView.as_view({'get': 'get_host_mig'})),
     re_path('^api/v1/implementation/log/$', views.MigImpView.as_view({'get': 'get_host_log'})),
     path('api/v1/implementation/migrate/', views.MigImpView.as_view({'post': 'post_host_migrate'})),
+    path('api/v1/implementation/migrate/all/', views.MigImpView.as_view({'post': 'post_all_migrate'})),
 
     path('api/v1/', include(router.urls))
 ]
