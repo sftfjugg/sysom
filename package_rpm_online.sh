@@ -46,7 +46,7 @@ cp -a sysom sysom-2.0
 tar -zcf sysom-2.0.tar.gz sysom-2.0
 cp sysom-2.0.tar.gz /root/rpmbuild/SOURCES/
 pushd /root/rpmbuild/SPECS
-rpmbuild -ba sysom-offline.spec
+rpmbuild -ba sysom.spec
 
 rm -f /usr/bin/python
 mv /usr/bin/python.bak /usr/bin/python
