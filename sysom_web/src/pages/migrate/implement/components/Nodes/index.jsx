@@ -118,13 +118,13 @@ export default withRouter(
               disabled: Number(r.step) === 0 ? false : true,
             },
             {
-              key: 'deploy',
-              name: '环境准备',
+              key: 'backup',
+              name: '系统备份',
               disabled: Number(r.step) === 1 ? false : true,
             },
             {
-              key: 'backup',
-              name: '系统备份',
+              key: 'deploy',
+              name: '环境准备',
               disabled: Number(r.step) === 2 ? false : true,
             },
             {
@@ -166,10 +166,10 @@ export default withRouter(
                         })
                         break;
                       case 'deploy':
-                        showItemModal(r.ip,1,'环境准备')
+                        showItemModal(r.ip,2,'环境准备')
                         break;
                       case 'backup':
-                        showItemModal(r.ip,2,'系统备份')
+                        showItemModal(r.ip,1,'系统备份')
                         break;
                       case 'ass':
                         showItemModal(r.ip,3,'迁移评估')
@@ -414,7 +414,7 @@ export default withRouter(
                   })
                 }}
               >
-                批量配置
+                批量实施
               </Button>
             </>
           }
