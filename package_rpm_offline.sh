@@ -33,6 +33,7 @@ check_cmd /usr/bin/python3
 mv /usr/bin/python /usr/bin/python.bak
 ln -s /usr/bin/python3 /usr/bin/python
 
+rm -rf /root/rpmbuild
 mkdir -p /root/rpmbuild/BUILD
 mkdir -p /root/rpmbuild/SOURCES
 mkdir -p /root/rpmbuild/BUILDROOT
@@ -42,6 +43,8 @@ mkdir -p /root/rpmbuild/SRPMS
 
 cp tools/deploy/sysom-offline.spec /root/rpmbuild/SPECS
 pushd ..
+rm -rf sysom-2.0
+rm -f sysom-2.0.tar.gz
 cp -a sysom sysom-2.0
 tar -zcf sysom-2.0.tar.gz sysom-2.0
 cp sysom-2.0.tar.gz /root/rpmbuild/SOURCES/
