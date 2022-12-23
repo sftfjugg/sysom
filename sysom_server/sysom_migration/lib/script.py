@@ -11,20 +11,20 @@ leapp preupgrade --no-rhsm
 
 init_ance_script = '''
 yum install epel-release -y
-yum install /tmp/ance/database/ance-0.1.0-1.x86_64.rpm -y
+yum install ANCE_RPM_PATH -y
 ance --help
 '''
 
 ass_sys_script = '''
-ance evaluate  --etype=os --os1=/ --os2=/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite --limit=0
+ance evaluate  --etype=os --os1=/ --os2=ANCE_SQL_PATH --limit=0
 '''
 
 ass_hard_script = '''
-ance evaluate  --etype=hardware --os1=/ --os2=/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite
+ance evaluate  --etype=hardware --os1=/ --os2=ANCE_SQL_PATH
 '''
 
 ass_app_script = '''
-ance evaluate  --etype=dep --os1=/ --os2=/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite --repo2=/etc/leapp/files/leapp_upgrade_repositories.repo RPM_LIST
+ance evaluate  --etype=dep --os1=/ --os2=ANCE_SQL_PATH --repo2=/etc/leapp/files/leapp_upgrade_repositories.repo RPM_LIST
 '''
 
 init_info_script = '''

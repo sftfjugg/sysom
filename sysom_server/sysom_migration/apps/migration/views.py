@@ -179,12 +179,29 @@ class MigAssView(CommonModelViewSet):
 
     def init_ance(self, id, ip, config):
         mig_ass = MigAssModel.objects.filter(id=id).first()
-        mig_path = os.path.realpath(__file__).rsplit('/', 3)[0]
-        rpm_path = os.path.join(mig_path, 'ance', 'ance-0.1.0-1.x86_64.rpm')
-        sql_path = os.path.join(mig_path, 'ance', 'AnolisOS-8.6-x86_64-dvd.iso.sqlite')
-        result = send_file([mig_ass.ip,], rpm_path, settings.MIG_ASS_RPM)
-        result = send_file([mig_ass.ip,], sql_path, settings.MIG_ASS_SQL)
-        result, _ = sync_job(mig_ass.ip, run_script_ignore(init_ance_script), timeout=300000)
+        ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
+        rpm_path = None
+        sql_path = None
+        for i in os.listdir(ance_path):
+            if '.rpm' in i:
+                rpm_path = os.path.join(settings.MIG_ASS_ANCE, i)
+                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
+            if '.sqlite' in i:
+                sql_path = os.path.join(settings.MIG_ASS_ANCE, i)
+                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
+        if not rpm_path or not sql_path:
+            mig_ass.status = 'fail'
+            mig_ass.detail = '找不到迁移工具，请正确放置迁移工具。'
+            mig_ass.save()
+            return
+
+        config = json.loads(config)
+        config.update(dict(rpm_path=rpm_path))
+        config.update(dict(sql_path=sql_path))
+        mig_ass.config = json.dumps(config)
+        mig_ass.save()
+
+        result, _ = sync_job(mig_ass.ip, run_script_ignore(init_ance_script.replace('ANCE_RPM_PATH'), rpm_path), timeout=300000)
         if result.code != 0:
             mig_ass.status = 'fail'
             mig_ass.detail = result.err_msg
@@ -249,8 +266,11 @@ class MigAssView(CommonModelViewSet):
 
 
     def mig_sys(self, id, ip, config):
+        config = json.loads(config)
+        sql_path = config.get('sql_path')
+
         mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_sys'))
-        cmd = run_script_ignore(ass_sys_script)
+        cmd = run_script_ignore(ass_sys_script.replace('ANCE_SQL_PATH', sql_path))
         result, res = sync_job(ip, cmd, timeout=3600000)
         mig_job.job_data = json.dumps(res)
         mig_job.job_result = json.dumps(result.__dict__)
@@ -287,8 +307,11 @@ class MigAssView(CommonModelViewSet):
 
 
     def mig_hard(self, id, ip, config):
+        config = json.loads(config)
+        sql_path = config.get('sql_path')
+
         mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_hard'))
-        cmd = run_script_ignore(ass_hard_script)
+        cmd = run_script_ignore(ass_hard_script.replace('ANCE_SQL_PATH', sql_path))
         result, res = sync_job(ip, cmd, timeout=3600000)
         mig_job.job_data = json.dumps(res)
         mig_job.job_result = json.dumps(result.__dict__)
@@ -324,10 +347,11 @@ class MigAssView(CommonModelViewSet):
     def mig_app(self, id, ip, config):
         config = json.loads(config)
         ass_app = config.get('ass_app')
+        sql_path = config.get('sql_path')
         if ass_app:
-            cmd = run_script_ignore(ass_app_script.replace('RPM_LIST', f'--rpmlist={ass_app}'))
+            cmd = run_script_ignore(ass_app_script.replace('ANCE_SQL_PATH', sql_path).replace('RPM_LIST', f'--rpmlist={ass_app}'))
         else:
-            cmd = run_script_ignore(ass_app_script.replace('RPM_LIST', ' '))
+            cmd = run_script_ignore(ass_app_script.replace('ANCE_SQL_PATH', sql_path).replace('RPM_LIST', ' '))
 
         mig_job = MigJobModel.objects.create(**dict(ip=ip, mig_id=id, mig_type='ass', job_name='mig_app'))
         result, res = sync_job(ip, cmd, timeout=3600000)
