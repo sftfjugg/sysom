@@ -31,7 +31,7 @@ check_cmd /usr/bin/python3
 ###/usr/lib/rpm/brp-python-bytecompile /usr/bin/python
 ###sysom run by python3, we should set /usr/bin/python link to /usr/bin/python3
 mv /usr/bin/python /usr/bin/python.bak
-ln -s /usr/bin/python /usr/bin/python3
+ln -s /usr/bin/python3 /usr/bin/python
 
 mkdir -p /root/rpmbuild/BUILD
 mkdir -p /root/rpmbuild/SOURCES
