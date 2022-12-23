@@ -1,30 +1,26 @@
 ass_imp_script = '''
-wget REPO_URL/anolis/migration/anolis-migration.repo -O /etc/yum.repos.d/anolis-migration.repo
-sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/yum.repos.d/anolis-migration.repo
-sed -i "s#gpgkey=https://mirrors.openanolis.cn/#gpgkey=REPO_URL/#" /etc/yum.repos.d/anolis-migration.repo
-yum install -y python-pip
-yum remove -y python-requests python-urllib3; pip uninstall requests urllib3 -y 2>/dev/null || echo "not installed"
-yum -y install leapp
-sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/leapp/files/leapp_upgrade_repositories.repo
+tar -zxvf /tmp/ance/database/anolis_migration_pkgs.tar.gz -C /tmp/ance/database
+cd /tmp/ance/database/pkgs && yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
+REPO_URL
 leapp preupgrade --no-rhsm
 '''
 
 init_ance_script = '''
 yum install epel-release -y
-yum install /tmp/ance/database/ance-0.1.0-1.x86_64.rpm -y
+yum install ANCE_RPM_PATH -y
 ance --help
 '''
 
 ass_sys_script = '''
-ance evaluate  --etype=os --os1=/ --os2=/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite --limit=0
+ance evaluate  --etype=os --os1=/ --os2=ANCE_SQL_PATH --limit=0
 '''
 
 ass_hard_script = '''
-ance evaluate  --etype=hardware --os1=/ --os2=/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite
+ance evaluate  --etype=hardware --os1=/ --os2=ANCE_SQL_PATH
 '''
 
 ass_app_script = '''
-ance evaluate  --etype=dep --os1=/ --os2=/tmp/ance/database/AnolisOS-8.6-x86_64-dvd.iso.sqlite --repo2=/etc/leapp/files/leapp_upgrade_repositories.repo RPM_LIST
+ance evaluate  --etype=dep --os1=/ --os2=ANCE_SQL_PATH --repo2=/etc/leapp/files/leapp_upgrade_repositories.repo RPM_LIST
 '''
 
 init_info_script = '''
@@ -34,18 +30,15 @@ echo soft_info:操作系统版本=$(cat /etc/os-release | grep '^PRETTY_NAME=' |
 '''
 
 deploy_tools_script = '''
-wget REPO_URL/anolis/migration/anolis-migration.repo -O /etc/yum.repos.d/anolis-migration.repo
-sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/yum.repos.d/anolis-migration.repo
-sed -i "s#gpgkey=https://mirrors.openanolis.cn/#gpgkey=REPO_URL/#" /etc/yum.repos.d/anolis-migration.repo
-yum install -y python-pip
-yum remove -y python-requests python-urllib3; pip uninstall requests urllib3 -y 2>/dev/null || echo "not installed"
-yum -y install leapp
-sed -i "s#baseurl=https://mirrors.openanolis.cn/#baseurl=REPO_URL/#" /etc/leapp/files/leapp_upgrade_repositories.repo
+tar -zxvf /tmp/ance/database/anolis_migration_pkgs.tar.gz -C /tmp/ance/database
+cd /tmp/ance/database/pkgs && yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
+REPO_URL
 '''
 
 backup_script = '''
-yum install rear genisoimage syslinux nfs-utils python3 wget -y
-wget https://gitee.com/src-anolis-sig/leapp-repository/raw/wip_migrear/migrear -O /usr/sbin/migrear
+tar -zxvf /tmp/ance/database/anolis_migration_pkgs.tar.gz -C /tmp/ance/database
+cd /tmp/ance/database/pkgs && yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
+cp -rf /tmp/ance/database/pkgs/migrear /usr/sbin/migrear
 chmod +x /usr/sbin/migrear
 BACKUP_SCRIPT
 '''
