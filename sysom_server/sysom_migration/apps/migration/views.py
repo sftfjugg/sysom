@@ -179,7 +179,8 @@ class MigAssView(CommonModelViewSet):
 
     def init_ance(self, id, ip, config):
         mig_ass = MigAssModel.objects.filter(id=id).first()
-        ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
+        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        ance_path = os.path.join(ance_path, 'ance')
         rpm_path = None
         sql_path = None
         for i in os.listdir(ance_path):
@@ -188,7 +189,7 @@ class MigAssView(CommonModelViewSet):
                 result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
             if '.sqlite' in i:
                 sql_path = os.path.join(settings.MIG_ASS_ANCE, i)
-                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
+                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), sql_path)
         if not rpm_path or not sql_path:
             mig_ass.status = 'fail'
             mig_ass.detail = '找不到迁移工具，请正确放置迁移工具。'
@@ -201,7 +202,7 @@ class MigAssView(CommonModelViewSet):
         mig_ass.config = json.dumps(config)
         mig_ass.save()
 
-        result, _ = sync_job(mig_ass.ip, run_script_ignore(init_ance_script.replace('ANCE_RPM_PATH'), rpm_path), timeout=300000)
+        result, _ = sync_job(mig_ass.ip, run_script_ignore(init_ance_script.replace('ANCE_RPM_PATH', rpm_path)), timeout=300000)
         if result.code != 0:
             mig_ass.status = 'fail'
             mig_ass.detail = result.err_msg
@@ -210,8 +211,8 @@ class MigAssView(CommonModelViewSet):
 
 
     def mig_imp(self, id, ip, config):
-        ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
-        result = send_file([mig_imp.ip,], os.path.join(ance_path, 'anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        result = send_file([ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
 
         config = json.loads(config)
         repo_url = config.get('repo_url')
@@ -659,8 +660,8 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_deploy(self, mig_imp, data):
-        ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
-        result = send_file([mig_imp.ip,], os.path.join(ance_path, 'anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
 
         config = json.loads(mig_imp.config)
         repo_url = config.get('repo_url')
@@ -679,8 +680,8 @@ class MigImpView(CommonModelViewSet):
         backup_type = config.get('backup_type')
 
         if backup_type == 'nfs':
-            ance_path = os.path.realpath(__file__).rsplit('/', 2)[0]
-            result = send_file([mig_imp.ip,], os.path.join(ance_path, 'anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+            ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+            result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
 
             backup_ip = config.get('backup_ip')
             backup_path = config.get('backup_path')
@@ -733,7 +734,7 @@ class MigImpView(CommonModelViewSet):
     def mig_restore(self, mig_imp, data):
         if mig_imp.status == 'running':
             return f'主机{mig_imp.ip}当前状态无法进行此操作。'
-        if mig_imp.step < 3:
+        if mig_imp.step < 2:
             return f'主机{mig_imp.ip}尚未进行备份，无法还原。'
 
         config = json.loads(mig_imp.config)
