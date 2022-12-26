@@ -12,8 +12,6 @@ from lib.utils import uuid_8
 from channel_job.job import default_channel_job_executor, JobResult
 
 
-
-
 class DiagnosisHelper:
     """A helper class used to perform diagnosis task"""
 
@@ -37,6 +35,10 @@ class DiagnosisHelper:
         params = data.copy()
         service_name = data.pop("service_name", None)
         task_id = uuid_8()
+
+        for k, v in params.items():
+            if isinstance(v, str):
+                params[k] = v.strip()
 
         # 1. Determines if there is a task with the same parameters
         #    and a status of Running.
@@ -90,7 +92,7 @@ class DiagnosisHelper:
 
             # 3. If the preprocessing script executes with an error
             if resp.returncode != 0:
-                raise(Exception(
+                raise (Exception(
                     f"Execute preprocess script error: {str(resp.stderr.decode('utf-8'))}"
                 ))
 
@@ -102,7 +104,7 @@ class DiagnosisHelper:
 
             # 5. If the preprocessing result not contains 'commands', it's a not expect bug
             if not resp_scripts:
-                raise(Exception(
+                raise (Exception(
                     f"Not find commands, please check the preprocess script return"
                 ))
 
@@ -217,7 +219,7 @@ class DiagnosisHelper:
                     )
 
                 if resp.returncode != 0:
-                    raise(Exception(
+                    raise (Exception(
                         f"Execute postprocess script error: {str(resp.stderr.decode('utf-8'))}"
                     ))
                 stdout = resp.stdout
