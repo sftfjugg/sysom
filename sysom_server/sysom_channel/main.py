@@ -16,7 +16,7 @@ from app.crud import create_setting, get_setting_by_name, update_or_create_chann
 from app.schemas import ChannelSetting
 from lib.ssh import AsyncSSH
 from conf.settings import *
-from app.routers import file, config
+from app.routers import file, config, cec_status
 
 
 app = FastAPI()
@@ -24,6 +24,7 @@ app = FastAPI()
 app.mount("/public", StaticFiles(directory=STATIC_RESOURCE_PATH), name="public")
 app.include_router(file.router, prefix="/api/v1/channel/file")
 app.include_router(config.router, prefix="/api/v1/channel/config")
+app.include_router(cec_status.router, prefix="/api/v1/channel/cec_status")
 
 logger = logging.getLogger(__name__)
 
