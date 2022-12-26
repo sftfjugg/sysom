@@ -1,6 +1,9 @@
 ass_imp_script = '''
 tar -zxvf /tmp/ance/database/anolis_migration_pkgs.tar.gz -C /tmp/ance/database
-cd /tmp/ance/database/pkgs && yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
+cd /tmp/ance/database/pkgs
+yum install -y python-pip
+yum remove -y python-requests python-urllib3; /usr/bin/pip2 uninstall requests urllib3 -y 2>/dev/null || echo "not installed"
+yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
 REPO_URL
 leapp preupgrade --no-rhsm
 '''
@@ -31,7 +34,10 @@ echo soft_info:操作系统版本=$(cat /etc/os-release | grep '^PRETTY_NAME=' |
 
 deploy_tools_script = '''
 tar -zxvf /tmp/ance/database/anolis_migration_pkgs.tar.gz -C /tmp/ance/database
-cd /tmp/ance/database/pkgs && yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
+cd /tmp/ance/database/pkgs
+yum install -y python-pip
+yum remove -y python-requests python-urllib3; /usr/bin/pip2 uninstall requests urllib3 -y 2>/dev/null || echo "not installed"
+yum install -y *.rpm rear genisoimage syslinux nfs-utils python3 wget
 REPO_URL
 '''
 
