@@ -19,6 +19,7 @@ from apps.host.models import HostModel
 from apps.vul.ssh_pool import SshProcessQueueManager, VulTaskManager
 
 from lib.utils import human_datetime
+from .async_fetch import FetchVulData
 
 
 def update_vul():
@@ -45,7 +46,7 @@ def update_vul_db():
         logger.info("Try to get vul db info")
         vul_addr_obj = VulDataParse(vul_addr)
         try:
-            body = vul_addr_obj.get_vul_data()
+            body = vul_addr_obj._get_vul_data()
             if body:
                 vul_addr_obj.parse_and_store_vul_data(body)
         except Exception as e:
@@ -139,6 +140,15 @@ class VulDataParse(object):
             self.set_vul_data_status_down()
             logger.warning(e)
             return vul_data
+
+    def _get_vul_data(self):
+        """
+        异步获取vul
+        """
+        return FetchVulData.run(
+            instance=self.vul_addr_obj,
+            cve_data_path=self.cve_data_path
+        )
 
     def parse_and_store_vul_data(self, body):
         cve_data = body
