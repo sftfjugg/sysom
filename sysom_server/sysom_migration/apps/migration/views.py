@@ -148,6 +148,34 @@ class MigAssView(CommonModelViewSet):
         mig_ass.old_ver = result.result
         mig_ass.save()
 
+        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        ance_path = os.path.join(ance_path, 'ance')
+        tar_path = None
+        rpm_path = None
+        sql_path = None
+        for i in os.listdir(ance_path):
+            if '.tar.gz' in i:
+                tar_path = os.path.join(settings.MIG_ASS_ANCE, i)
+                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), tar_path)
+            if '.rpm' in i:
+                rpm_path = os.path.join(settings.MIG_ASS_ANCE, i)
+                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
+            if '.sqlite' in i:
+                sql_path = os.path.join(settings.MIG_ASS_ANCE, i)
+                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), sql_path)
+        if not tar_path or not rpm_path or not sql_path:
+            mig_ass.status = 'fail'
+            mig_ass.detail = '缺少迁移评估工具，请放置工具后再尝试。'
+            mig_ass.save()
+            return
+
+        config = json.loads(mig_ass.config)
+        config.update(dict(tar_path=tar_path))
+        config.update(dict(rpm_path=rpm_path))
+        config.update(dict(sql_path=sql_path))
+        mig_ass.config = json.dumps(config)
+        mig_ass.save()
+
         for func in [self.mig_imp, self.init_ance, self.mig_sys, self.mig_hard, self.mig_app]:
             mig_ass = MigAssModel.objects.filter(id=mig_ass.id).first()
             if mig_ass.status != 'running':
@@ -178,31 +206,11 @@ class MigAssView(CommonModelViewSet):
 
 
     def init_ance(self, id, ip, config):
-        mig_ass = MigAssModel.objects.filter(id=id).first()
-        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
-        ance_path = os.path.join(ance_path, 'ance')
-        rpm_path = None
-        sql_path = None
-        for i in os.listdir(ance_path):
-            if '.rpm' in i:
-                rpm_path = os.path.join(settings.MIG_ASS_ANCE, i)
-                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
-            if '.sqlite' in i:
-                sql_path = os.path.join(settings.MIG_ASS_ANCE, i)
-                result = send_file([mig_ass.ip,], os.path.join(ance_path, i), sql_path)
-        if not rpm_path or not sql_path:
-            mig_ass.status = 'fail'
-            mig_ass.detail = '找不到迁移工具，请正确放置迁移工具。'
-            mig_ass.save()
-            return
-
         config = json.loads(config)
-        config.update(dict(rpm_path=rpm_path))
-        config.update(dict(sql_path=sql_path))
-        mig_ass.config = json.dumps(config)
-        mig_ass.save()
+        rpm_path = config.get('rpm_path')
 
-        result, _ = sync_job(mig_ass.ip, run_script_ignore(init_ance_script.replace('ANCE_RPM_PATH', rpm_path)), timeout=300000)
+        mig_ass = MigAssModel.objects.filter(id=id).first()
+        result, _ = sync_job(ip, run_script_ignore(init_ance_script.replace('ANCE_RPM_PATH', rpm_path)), timeout=300000)
         if result.code != 0:
             mig_ass.status = 'fail'
             mig_ass.detail = result.err_msg
@@ -540,11 +548,17 @@ class MigImpView(CommonModelViewSet):
 
 
     def post_host_migrate_all(self, ip, steps, data):
+        mig_imp = MigImpModel.objects.filter(ip=ip).first()
+        if not mig_imp:
+            return
+        if mig_imp.status in ['running', 'success']:
+            return
+        mig_imp.status = 'pending'
+        mig_imp.save()
+
         while True:
             mig_imp = MigImpModel.objects.filter(ip=ip).first()
-            if not mig_imp:
-                break
-            if mig_imp.step > 5:
+            if mig_imp.status == 'fail' or mig_imp.step > 5:
                 break
             self.post_host_migrate_base(ip, mig_imp.step, steps, data)
 
