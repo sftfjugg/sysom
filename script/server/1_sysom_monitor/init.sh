@@ -75,6 +75,10 @@ add_auto_discovery()
     - files:
       - "${RESOURCE_DIR}/prometheus/node/node.json"
       refresh_interval: 10s
+  - job_name: "cec_monitor"
+    metrics_path: "/api/v1/channel/cec_status/metrics"
+    static_configs:
+      - targets: ["localhost:7003"]
 EOF
 
    popd
