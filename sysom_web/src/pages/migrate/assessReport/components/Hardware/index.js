@@ -119,11 +119,11 @@ const Hardware = (props, ref) => {
       filters: true,
       onFilter: true,
       valueEnum: {
-        FALSE: {
+        False: {
           text: <span style={{fontSize: 13}}>无</span>,
           status: 'Error',
         },
-        TRUE: {
+        True: {
           text: <span style={{fontSize: 13}}>通过</span>,
           status: 'Success',
         },
