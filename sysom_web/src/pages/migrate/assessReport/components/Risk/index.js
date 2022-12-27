@@ -54,12 +54,16 @@ const Risk = (props, ref) => {
           text: <span style={{fontSize: 13}}>高L1</span>,
           status: false,
         },
-        low: {
+        medium: {
           text: <span style={{fontSize: 13}}>中L2</span>,
           status: false,
         },
-        info: {
+        low: {
           text: <span style={{fontSize: 13}}>低L3</span>,
+          status: false,
+        },
+        info: {
+          text: <span style={{fontSize: 13}}>无</span>,
           status: false,
         },
       },
@@ -72,18 +76,25 @@ const Risk = (props, ref) => {
                   <span>高L1</span>
                 </div>
               );
-            case 'low':
+            case 'medium':
               return (
                 <div style={{fontSize: 13, display:'flex',alignItems:'center'}}>
                   <i style={{background: '#D89614',height: '6px',width:'6px',borderRadius:'3px',marginRight:'7px'}}></i>
                   <span>中L2</span>
                 </div>
               );
-            case 'info':
+            case 'low':
               return (
                 <div style={{fontSize: 13, display:'flex',alignItems:'center'}}>
                   <i style={{background: '#177DDC',height: '6px',width:'6px',borderRadius:'3px',marginRight:'7px'}}></i>
                   <span>低L3</span>
+                </div>
+              );
+            case 'info':
+              return (
+                <div style={{fontSize: 13, display:'flex',alignItems:'center'}}>
+                  <i style={{background: '#49AA19',height: '6px',width:'6px',borderRadius:'3px',marginRight:'7px'}}></i>
+                  <span>无</span>
                 </div>
               );
             default: return '';

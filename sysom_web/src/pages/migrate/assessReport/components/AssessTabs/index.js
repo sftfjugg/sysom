@@ -6,8 +6,9 @@ import Hardware from '../Hardware';
 import Risk from '../Risk';
 import SystemConfig from '../SystemConfig';
 import {queryAppList,queryHardwareList,queryRiskList,querySysType,querySysList} from '../../../service';
-import { WrapperContext } from '../../containers';
-import { SET_DATA } from '../../containers/constants';
+import {WrapperContext} from '../../containers';
+import {SET_DATA} from '../../containers/constants';
+import {SYS_CONFIG_TYPE} from '../../../utils';
 import "./index.less";
 
 const AssessTabs = (props) => {
@@ -45,6 +46,7 @@ const AssessTabs = (props) => {
         activeAppName: '',
         aclActiveName: '',
         aclActiveRpmName: '',
+        aclActiveType: '',
         aclList: [],
         abiList: [],
         abiContent: '',
@@ -185,15 +187,20 @@ const AssessTabs = (props) => {
     try {
       const { code,data } = await querySysType({id:activeId});
       if (code === 200) {
+        let list = data?.length > 0
+            ? data.filter((item) => {
+                if (SYS_CONFIG_TYPE[item]) return item;
+              })
+            : [];
         dispatch({
           type: SET_DATA,
           payload: {
-            sysType: data,
-            activeSysType: data?.length>0?data[0]:''
+            sysType: list,
+            activeSysType: list?.length>0?list[0]:''
           },
         });
-        if(data?.length>0){
-          getSysList(data[0])
+        if(list?.length>0){
+          getSysList(list[0])
         }
         return true;
       }

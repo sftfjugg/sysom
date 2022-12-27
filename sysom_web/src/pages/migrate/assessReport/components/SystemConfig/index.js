@@ -6,22 +6,11 @@ import SystemTable from '../SystemTable/SystemTable.js';
 import {querySysConfigList,querySysList} from '../../../service';
 import { WrapperContext } from '../../containers';
 import { SET_DATA } from '../../containers/constants';
+import {SYS_CONFIG_TYPE} from '../../../utils';
 import './index.less';
 
 const getSysConfigList = async () => {
   return await querySysConfigList();
-}
-
-const SYS_CONFIG_TYPE = {
-  os_env: '环境变量',
-  os_service: '系统服务',
-  os_syscmd: '系统命令',
-  kolist: '内核模块',
-  kconfig: '内核静态配置',
-  kcmdline: '内核启动参数',
-  kparams: '内核动态配置',
-  kabi: 'KABI',
-  ksyscall: '系统调用',
 }
 
 const SystemConfig = (props, ref) => {
@@ -36,8 +25,6 @@ const SystemConfig = (props, ref) => {
     change: '',
     lack: '',
   });
-
-  useEffect
 
   const changeActive = async (key) => {
     if(!sysTableLoading){
@@ -109,15 +96,13 @@ const SystemConfig = (props, ref) => {
             }}
           >
             {
-              sysType?.length > 0 && sysType.map((i)=>{
-                if(SYS_CONFIG_TYPE[i]){
-                  return (
-                    <ProCard.TabPane key={i} tab={SYS_CONFIG_TYPE[i]}>
-                      <SystemTable type={SYS_CONFIG_TYPE[i]} key={i}/>
-                    </ProCard.TabPane>
-                  )
-                }
-            })
+              sysType.map((i)=>{
+                return (
+                  <ProCard.TabPane key={i} tab={SYS_CONFIG_TYPE[i]}>
+                    <SystemTable type={SYS_CONFIG_TYPE[i]} key={i}/>
+                  </ProCard.TabPane>
+                )
+              })
             }
           </ProCard>
           : 

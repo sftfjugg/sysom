@@ -20,19 +20,19 @@ const Application = (props, ref) => {
       dataIndex: 'rpm_name',
       ellipsis: true,
     },
-    {
-      title: '一致度',
-      dataIndex: 'metric',
-      renderText: ((_,record)=>{
-        if(Number(record.metric) === 1){
-          return <div>100%</div>
-        }else if(Number(record.metric) === 0){
-          return <div style={{color:'#D32029'}}>0%</div>
-        }else{
-          return <div style={Number(record.metric) !== 1 ? {color:'#D32029'}: {}}>{(record.metric * 100).toFixed(2)+'%'}</div>
-        }
-      }),
-    },
+    // {
+    //   title: '一致度',
+    //   dataIndex: 'metric',
+    //   renderText: ((_,record)=>{
+    //     if(Number(record.metric) === 1){
+    //       return <div>100%</div>
+    //     }else if(Number(record.metric) === 0){
+    //       return <div style={{color:'#D32029'}}>0%</div>
+    //     }else{
+    //       return <div style={Number(record.metric) !== 1 ? {color:'#D32029'}: {}}>{(record.metric * 100).toFixed(2)+'%'}</div>
+    //     }
+    //   }),
+    // },
     {
       title: '操作',
       dataIndex: 'option',
@@ -56,6 +56,7 @@ const Application = (props, ref) => {
         activeAppName: '',
         aclActiveName: '',
         aclActiveRpmName: '',
+        aclActiveType: '',
         aclList: [],
         abiList: [],
         abiContent: '',
@@ -77,7 +78,7 @@ const Application = (props, ref) => {
       const { code,data } = await queryAclList({id: activeId,rpm_name:r.rpm_name});
       if (code === 200) {
         if(data && data.length>0){
-          let arr = data.filter(i=>i.type==='so');
+          let arr = data.filter(i=>i.type==='so' || i.type==='binary');
           dispatch({
             type: SET_DATA,
             payload: {
@@ -96,6 +97,7 @@ const Application = (props, ref) => {
               aclList: [],
               aclActiveName: '',
               aclActiveRpmName: '',
+              aclActiveType: '',
             },
           });
         }
@@ -109,6 +111,7 @@ const Application = (props, ref) => {
           aclList: [],
           aclActiveName: '',
           aclActiveRpmName: '',
+          aclActiveType: '',
         },
       });
       return false;
@@ -124,12 +127,14 @@ const Application = (props, ref) => {
   }
 
   const getAbiList = async (d) => {
+    // so类型展示abi，dinary类型展示cli
     dispatch({
       type: SET_DATA,
       payload: {
         abiLoading: true,
         aclActiveName: d.name,
         aclActiveRpmName: d.rpm_name,
+        aclActiveType: d.type,
       },
     });
     try {

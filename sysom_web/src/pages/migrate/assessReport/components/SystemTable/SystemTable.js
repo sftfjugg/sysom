@@ -6,8 +6,6 @@ import { WrapperContext } from '../../containers';
 import './SystemTable.less';
 import {assessColumns} from '../../../utils';
 
-
-
 const SystemTable = (props, ref) => {
   const {
     dispatch,
@@ -16,6 +14,7 @@ const SystemTable = (props, ref) => {
   const {type} = props;
   const SYS_TABLE_TITLE = {
     key: type,
+    cmp_type: type,
     symbol_name: type,
     ko_name: type,
     name: type,
@@ -25,7 +24,7 @@ const SystemTable = (props, ref) => {
     metric: '一致度',
     source: '分类'
   }
-
+console.log(type,'type---')
   const showColumnTitle = (data) => {
     if(data.search('_x') !== -1){
       return '源操作系统'
@@ -41,6 +40,8 @@ const SystemTable = (props, ref) => {
     if(list && list.length > 0){
       let keys = Object.keys(list[0]);
       let arr = keys.filter((item)=>item !== 'result' && item !== 'metric');
+    console.log(arr,'arr---')
+
       arr.forEach((item)=>{
         column.push({
           title: SYS_TABLE_TITLE[item]?SYS_TABLE_TITLE[item]:(showColumnTitle(item)?showColumnTitle(item):item),
@@ -67,7 +68,7 @@ const SystemTable = (props, ref) => {
       )
     }
   }
-
+console.log(sysTableLoading,'sysTableLoading')
   return (
     <Skeleton loading={sysTableLoading}>
       <ProCard

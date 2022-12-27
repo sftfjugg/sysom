@@ -14,7 +14,7 @@ import {
 import { WrapperContext } from '../../containers';
 import { SET_DATA } from '../../containers/constants';
 import './index.less';
-import {getUrlParams} from '../../../utils';
+import {getUrlParams,SYS_CONFIG_TYPE} from '../../../utils';
 
 
 const NodeList = (props) => {
@@ -135,6 +135,7 @@ const NodeList = (props) => {
         activeAppName: '',
         aclActiveName: '',
         aclActiveRpmName: '',
+        aclActiveType: '',
         aclList: [],
         abiList: [],
         abiContent: '',
@@ -227,15 +228,20 @@ const NodeList = (props) => {
     try {
       const { code,data } = await querySysType({id});
       if (code === 200) {
+        let list = data?.length > 0
+            ? data.filter((item) => {
+                if (SYS_CONFIG_TYPE[item]) return item;
+              })
+            : [];
         dispatch({
           type: SET_DATA,
           payload: {
-            sysType: data,
-            activeSysType: data?.length>0?data[0]:''
+            sysType: list,
+            activeSysType: list?.length>0?list[0]:''
           },
         });
-        if(data?.length>0){
-          getSysList(id,data[0])
+        if(list?.length>0){
+          getSysList(id,list[0])
         }
         return true;
       }
