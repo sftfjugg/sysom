@@ -1,4 +1,5 @@
 export default {
+  'pages.language': 'English',
   'pages.layouts.userLayout.title': '系统运维平台',
   'pages.login.accountLogin.tab': '账户密码登录',
   'pages.login.passwordLogin.tab': '账户密码修改',
@@ -147,4 +148,7 @@ export default {
   'pages.security.Historical.fix_fail': 'CVE修复失败，失败原因：',
   'pages.security.notification.fix.success': '系统漏洞已修复',
   'pages.security.notification.fix.success.content': '如您正在运行漏洞涉及到的服务，建议您重启相关服务使漏洞修复生效。',
+  'pages.click.enter': '点击进入',
+  'pages.login': '登录',
+  'pages.changepassword': '修改密码',
 };

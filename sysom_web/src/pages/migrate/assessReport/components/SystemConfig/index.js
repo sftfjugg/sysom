@@ -9,9 +9,9 @@ import { SET_DATA } from '../../containers/constants';
 import {SYS_CONFIG_TYPE} from '../../../utils';
 import './index.less';
 
-const getSysConfigList = async () => {
-  return await querySysConfigList();
-}
+// const getSysConfigList = async () => {
+//   return await querySysConfigList();
+// }
 
 const SystemConfig = (props, ref) => {
   const {

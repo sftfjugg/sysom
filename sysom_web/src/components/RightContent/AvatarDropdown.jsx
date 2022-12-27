@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Menu, Spin } from 'antd';
-import { history, useModel } from 'umi';
+import { Avatar, Menu, Spin, Button } from 'antd';
+import { history, useModel, FormattedMessage, setLocale, getLocale } from 'umi';
 import { stringify } from 'querystring';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
@@ -85,13 +85,38 @@ const AvatarDropdown = ({ menu }) => {
       </Menu.Item>
     </Menu>
   );
+  const changLang = () => {
+    const locale = getLocale();
+    console.log(locale);
+    if (!locale || locale === 'zh-CN') {
+      setLocale('en-US');
+    } else {
+      setLocale('zh-CN');
+    }
+  };
   return (
-    <HeaderDropdown overlay={menuHeaderDropdown}>
-      <span className={`${styles.action} ${styles.account}`}>
-        <Avatar size="small" className={styles.avatar} src={currentUser.avatar} alt="avatar" />
-        <span className={`${styles.name} anticon`}>{currentUser.username}</span>
-      </span>
-    </HeaderDropdown>
+    <>
+      <div style={{ float: 'left', }}>
+        <Button
+        size="small"
+        // ghost={theme === 'dark'}
+        style={{
+          margin: '0 8px',
+        }}
+        onClick={() => {
+          changLang();
+        }}
+      >
+        <FormattedMessage id="pages.language" defaultMessage="中文" />
+      </Button>
+      </div>
+      <HeaderDropdown overlay={menuHeaderDropdown}>
+        <span className={`${styles.action} ${styles.account}`}>
+          <Avatar size="small" className={styles.avatar} src={currentUser.avatar} alt="avatar" />
+          <span className={`${styles.name} anticon`}>{currentUser.username}</span>
+        </span>
+      </HeaderDropdown>
+    </>
   );
 };
 

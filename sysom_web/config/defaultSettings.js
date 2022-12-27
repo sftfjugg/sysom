@@ -5,6 +5,7 @@ const Settings = {
     contentWidth: 'Fluid',
     fixedHeader: true,
     fixSiderbar: true,
+    // title: 'System Operation&Maintenance',
     title: '系统运维平台',
     logo: null,
     footerLink: {
