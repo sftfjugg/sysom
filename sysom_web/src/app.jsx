@@ -57,12 +57,16 @@ export async function getInitialState() {
   if (history.location.pathname !== loginPath) {
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
-    const currentUser = await fetchUserInfo(userId, token);
-    return {
-      fetchUserInfo,
-      currentUser,
-      settings: {},
-    };
+    if (!token || !userId) {
+      history.push(loginPath)
+    } else {
+      const currentUser = await fetchUserInfo(userId, token);
+      return {
+        fetchUserInfo,
+        currentUser,
+        settings: {},
+      };
+    }
   }
   return {
     fetchUserInfo,
