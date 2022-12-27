@@ -23,6 +23,7 @@ const initState = {
   // 选中的acl依赖项
   aclActiveName: '',
   aclActiveRpmName: '',
+  aclActiveType: '', // so 、 binary
   // abi报告列表
   abiList: [],
   // abi报告列表loading

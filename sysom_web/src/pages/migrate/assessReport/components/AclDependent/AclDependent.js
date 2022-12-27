@@ -17,7 +17,7 @@ const AclDependent = (props) => {
       aclLoading,
       aclList,
       aclActiveName,
-      aclActiveRpmName,
+      aclActiveType,
       abiList,
       abiLoading,
       abiContentLoading,
@@ -27,7 +27,7 @@ const AclDependent = (props) => {
   } = useContext(WrapperContext);
   const {handleGoAppList} = props;
   // const { data, error, loading } = useRequest(queryAssessList);
-  const columns = [
+  let columns = [
     {
       title: '依赖项',
       dataIndex: 'name',
@@ -62,25 +62,35 @@ const AclDependent = (props) => {
       }),
     },
   ];
-
   columns.push(assessColumns('评估结果','result',150))
   
-  const ABIcolumns = [
+  let ABIcolumns = [
     {
       title: 'ABI接口',
       dataIndex: 'name',
       ellipsis: true,
     },
-  ]
-  ABIcolumns.push(assessColumns('评估结果','result', 100))
+  ];
+  ABIcolumns.push(assessColumns('评估结果','result', 100));
 
-  // 初始值时时第一个id
-  // useEffect(()=>{
-  //   console.log(aclActiveRpmName , aclActiveName,'aclActiveRpmName && aclActiveName')
-  //   if(aclActiveRpmName && aclActiveName){
-  //     getAbiList({id: activeId,rpm_name: aclActiveRpmName,name: aclActiveName})
-  //   }
-  // },[])
+  let CLIcolumns = [
+    {
+      title: 'CLI options',
+      dataIndex: 'options',
+      ellipsis: true,
+    },
+    {
+      title: '源操作系统',
+      dataIndex: 'cmp_value_x',
+      ellipsis: true,
+    },
+    {
+      title: '目标操作系统',
+      dataIndex: 'cmp_value_y',
+      ellipsis: true,
+    },
+  ];
+  CLIcolumns.push(assessColumns('评估结果','result'));
 
   const handleAclItem = async (data) => {
     if(Number(aclActiveName) !== Number(data.name)){
@@ -89,6 +99,7 @@ const AclDependent = (props) => {
         payload: {
           aclActiveName: data.name,
           aclActiveRpmName: data.rpm_name,
+          aclActiveType: data.type,
         },
       });
       getAbiList(data);
@@ -159,7 +170,7 @@ const AclDependent = (props) => {
     return (
       <div className='acl-title'>
         <div className='aclTit'>{aclActiveName}</div>
-        <div className='aclTit'>ABI评估报告</div>
+        <div className='aclTit'>{(aclActiveType==='binary'?'CLI':'ABI')+'评估报告'}</div>
       </div>
     )
   }
@@ -186,7 +197,7 @@ const AclDependent = (props) => {
       >
         <ProTable
           size="small"
-          rowKey='id'
+          // rowKey='rpm_name'
           dataSource={aclList}
           columns={columns}
           toolBarRender={false}
@@ -209,20 +220,35 @@ const AclDependent = (props) => {
             title={showAbiTitle()}
             extra={showExtra(abiList)}
           >
+            {
+              aclActiveType === 'binary'?
+                <ProTable
+                  size="small"
+                  // rowKey='options'
+                  dataSource={abiList}
+                  columns={CLIcolumns}
+                  toolBarRender={false}
+                  search={false}
+                  options={false}
+                  // headerTitle="批量操作"
+                  pagination={{
+                    pageSize: 15,
+                    // showSizeChanger: false,
+                  }}
+                />
+              :
             <Row gutter={[16, 16]}>
               <Col span={8}>
                 <Row gutter={[16, 16]}>
                   <Col span={24}>
                     <ProTable
                       size="small"
-                      rowKey='id'
-                      // request={getAbiList}
+                      // rowKey='name'
                       dataSource={abiList}
                       columns={ABIcolumns}
                       toolBarRender={false}
                       search={false}
                       options={false}
-                      rowKey="key"
                       headerTitle="批量操作"
                       pagination={{
                         pageSize: 15,
@@ -252,6 +278,8 @@ const AclDependent = (props) => {
                 </div>
               </Col>
             </Row>
+            }
+
           </ProCard>
         </Skeleton>
       }
