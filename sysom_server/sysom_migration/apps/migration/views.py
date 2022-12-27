@@ -89,6 +89,7 @@ class MigAssView(CommonModelViewSet):
         if mig_ass and mig_ass.app_config:
             rpm_path = json.loads(mig_ass.app_config).get(rpm_name, '')
             if abi_name:
+                abi_name = os.path.basename(abi_name)
                 for i in os.listdir(rpm_path):
                     if f'dep_require({abi_name})' in i:
                         abi_file = os.path.join(rpm_path, i)
