@@ -293,7 +293,7 @@ const AssessTabs = (props) => {
         <ProCard.TabPane key='3' tab="迁移风险评估">
           <Risk />
         </ProCard.TabPane>
-        <ProCard.TabPane key='4' tab="系统配置">
+        <ProCard.TabPane key='4' tab="系统配置评估">
           <SystemConfig />
         </ProCard.TabPane>
       </ProCard>
