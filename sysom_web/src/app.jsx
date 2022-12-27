@@ -13,9 +13,9 @@ const errorHandler = function (error) {
       message.error(Object.values(error.data.message))
     }
     else {
-      if(error.data.message){
+      if (error.data.message) {
         message.error(error.data.message);
-      }else if(error.data.msg){
+      } else if (error.data.msg) {
         message.error(error.data.msg);
       }
     }
@@ -41,7 +41,7 @@ export async function getInitialState() {
   const fetchUserInfo = async (userId, token) => {
     try {
       const msg = await queryCurrentUser(userId, token);
-      if (msg.code === 400) {
+      if (msg.code !== 200) {
         history.push(loginPath);
         return undefined;
       }
@@ -64,7 +64,6 @@ export async function getInitialState() {
       settings: {},
     };
   }
-
   return {
     fetchUserInfo,
     settings: {},
@@ -188,14 +187,15 @@ export function render(oldRender) {
               })
           }
         })
-      oldRender();
+      return Promise.resolve()
     })
     .catch(err => {
       message.error("Grafana doesn't work!")
+      return Promise.resolve()
     })
-
-  //Add diagnose dashboard dynamically
-  requestURL('/resource/diagnose/v1/locales.json')
+    .then(() => {
+      return requestURL('/resource/diagnose/v1/locales.json')
+    })
     .then((res) => {
       addLocale('zh-CN', res.folder)
       addLocale('zh-CN', res.dashboard)
@@ -225,7 +225,6 @@ export function render(oldRender) {
       return requestURL("/api/v1/services/")
     })
     .then(res => {
-      console.log(res);
       if (res.code == 200) {
         for (let i = 0; i < res.data.length; i++) {
           enable_services.push(res.data[i].service_name);
