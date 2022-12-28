@@ -194,6 +194,11 @@ export default [
           }
         ]
       },
+      {
+        path: '/diagnose/detail/:task_id?',
+        layout: false,
+        component: "./diagnose/detail"
+      }
     ],
   },
   {
