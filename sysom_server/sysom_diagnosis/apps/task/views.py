@@ -10,10 +10,9 @@ from apps.task import seriaizer
 from apps.task.models import JobModel
 from apps.task.filter import TaskFilter
 from lib.base_view import CommonModelViewSet
-from lib.response import success, other_response, not_found, ErrorResponse
+from lib.response import success, not_found, ErrorResponse
 from lib.authentications import TokenAuthentication
 from .helper import DiagnosisHelper
-
 
 
 class TaskAPIView(CommonModelViewSet,
@@ -35,7 +34,7 @@ class TaskAPIView(CommonModelViewSet,
         super().__init__(**kwargs)
 
     def get_authenticators(self):
-        if self.request.path.endswith("svg/"):
+        if self.request.path.endswith("svg/") or self.request.method == "GET":
             return []
         else:
             return [auth() for auth in self.authentication_classes]
@@ -53,6 +52,7 @@ class TaskAPIView(CommonModelViewSet,
         result = res['result']
         if 'state' in result:
             res['result'] = result['result']
+        res['url'] = "/".join(["", "diagnose", "detail", instance.task_id])
         return success(result=res)
 
     def list(self, request, *args, **kwargs):
