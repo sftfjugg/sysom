@@ -7,6 +7,15 @@ import { currentUser as queryCurrentUser } from './pages/user/Login/service';
 import { message } from 'antd';
 const loginPath = '/user/login';
 
+const noNeedLoginRoutes = [
+  "/user/login",
+  "/diagnose/detail"
+]
+
+const isNeedLogin = function(path) {
+  return !noNeedLoginRoutes.find(item => path.startsWith(item))
+}
+
 const errorHandler = function (error) {
   if (error.response) {
     if (typeof (error.data.message) == "object") {
@@ -42,19 +51,19 @@ export async function getInitialState() {
     try {
       const msg = await queryCurrentUser(userId, token);
       if (msg.code !== 200) {
-        history.push(loginPath);
+        // history.push(loginPath);
         return undefined;
       }
       const userInfo = { avatar: 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png', ...msg.data };
       return userInfo;
     } catch (error) {
-      history.push(loginPath);
+      // history.push(loginPath);
     }
 
     return undefined;
   }; // 如果是登录页面，不执行
 
-  if (history.location.pathname !== loginPath) {
+  if (isNeedLogin(history.location.pathname)) {
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('token');
     if (!token || !userId) {
@@ -86,7 +95,7 @@ export const layout = ({ initialState }) => {
     onPageChange: () => {
       const { location } = history; // 如果没有登录，重定向到 login
 
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
+      if (!initialState?.currentUser && isNeedLogin(location.pathname)) {
         history.push(loginPath);
       }
     },
