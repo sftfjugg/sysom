@@ -8,6 +8,8 @@ Description:
 """
 from abc import ABCMeta, abstractmethod
 import time
+import anyio
+import functools
 
 
 class ChannelException(Exception):
@@ -32,10 +34,21 @@ class BaseChannel(metaclass=ABCMeta):
     def initial(**kwargs) -> ChannelResult:
         raise NotImplementedError
 
+    @staticmethod
+    async def initial_async(**kwargs) -> ChannelResult:
+        return await anyio.to_thread.run_sync(
+            functools.partial(BaseChannel.initial, **kwargs)
+        )
+
     @abstractmethod
     def run_command(self, **kwargs) -> ChannelResult:
         raise NotImplementedError
-    
+
+    async def run_command_async(self, **kwargs) -> ChannelResult:
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.run_command, **kwargs)
+        )
+
     def run_command_auto_retry(self, **kwargs) -> ChannelResult:
         timeout = kwargs.pop("timeout", 1000)
         if timeout is None:
@@ -53,3 +66,21 @@ class BaseChannel(metaclass=ABCMeta):
         else:
             kwargs["timeout"] = timeout
             return self.run_command(**kwargs)
+
+    async def run_command_auto_retry_async(self, **kwargs) -> ChannelResult:
+        timeout = kwargs.pop("timeout", 1000)
+        if timeout is None:
+            timeout = 1000
+        if kwargs.pop("auto_retry", False):
+            max_wait_time = time.time() + timeout / 1000
+            remain_time = int((max_wait_time - time.time()) * 1000)
+            kwargs["timeout"] = remain_time
+            res = await self.run_command_async(**kwargs)
+            while res.code == 2 and remain_time > 0:
+                remain_time = int((max_wait_time - time.time()) * 1000)
+                kwargs["timeout"] = remain_time
+                res = await self.run_command_async(**kwargs)
+            return res
+        else:
+            kwargs["timeout"] = timeout
+            return await self.run_command_async(**kwargs)
