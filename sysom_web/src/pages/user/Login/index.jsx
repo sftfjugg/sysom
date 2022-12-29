@@ -94,6 +94,16 @@ const Login = () => {
           initialValues={{
             agreement: true,
           }}
+          onKeyDown={async e =>{
+            if (e.key === "Enter") {
+              const params = formRef.current.getFieldsValue();
+              if (type === "account") {
+                await loginHandle(params);
+              } else {
+                await reSetPasswordHandler(params);
+              }
+            }
+          }}
           onFinish={async (values) => {
             await handleSubmit(values);
           }}
