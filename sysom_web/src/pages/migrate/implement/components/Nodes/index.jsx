@@ -286,6 +286,8 @@ export default withRouter(
         type: SET_DATA,
         payload: {
           machineDetailLoading: true,
+          tableIp: r.ip,
+          tableIpVersion: r.old_ver ? `${r.ip} (${r.old_ver})` : `${r.ip}`,
         },
       });
       const hide = message.loading('loading...', 0);
@@ -297,8 +299,6 @@ export default withRouter(
         dispatch({
           type: SET_DATA,
           payload: {
-            tableIp: r.ip,
-            tableIpVersion: r.old_ver ? `${r.ip} (${r.old_ver})` : `${r.ip}`,
             machineDetailLoading: false,
           },
         });
@@ -424,7 +424,9 @@ export default withRouter(
               rowKey="ip"
               tableLayout="fixed"
               size="small"
-              rowClassName={() => 'node-row'}
+              rowClassName={(i) => {
+                if(i.ip === tableIp){ return 'node-row-active' }else{ return 'node-row' }
+              }}
               search={false}
               pagination={false}
               tableAlertRender={false}

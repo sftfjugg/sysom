@@ -80,7 +80,7 @@ const SystemConfig = (props, ref) => {
 
   return (
     <div className="sys_container">
-      <ReportType title='系统配置'/>
+      <ReportType title='系统配置评估'/>
       <Skeleton loading={tabsLoading}>
         {
           sysType?.length > 0 ?
