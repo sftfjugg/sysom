@@ -16,8 +16,6 @@ source_virtualenv() {
 
 init_conf() {
     pushd ${TARGET_PATH}/${VMCORE_DIR}
-    rm -f apps/*/migrations/00*.py
-    python manage.py makemigrations vmcore
     python manage.py migrate
     popd
 

@@ -17,8 +17,6 @@ source_virtualenv() {
 
 init_conf() {
     pushd ${TARGET_PATH}/${MIGRATION_DIR}
-    rm -f apps/*/migrations/00*.py
-    python manage.py makemigrations migration
     python manage.py migrate
     popd
 
