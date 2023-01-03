@@ -57,36 +57,36 @@ const Welcome = () => {
             <SubMenu key="cpu" title={intl.formatMessage({
               id: "menu.diagnose.cpu",
             })}>
-              <Menu.Item key="schedmoni"><a href="/diagnose/cpu/schedmoni/"><FormattedMessage id="menu.diagnose.cpu.schedmoni" /></a></Menu.Item>
-              <Menu.Item key="loadtask"><a href="/diagnose/cpu/loadtask/"><FormattedMessage id="menu.diagnose.cpu.loadtask" /></a></Menu.Item>
+              <Menu.Item key="schedmoni"><a href="/diagnose/cpu/schedmoni"><FormattedMessage id="menu.diagnose.cpu.schedmoni" /></a></Menu.Item>
+              <Menu.Item key="loadtask"><a href="/diagnose/cpu/loadtask"><FormattedMessage id="menu.diagnose.cpu.loadtask" /></a></Menu.Item>
             </SubMenu>
             <SubMenu key="storage" title={intl.formatMessage({
               id: "menu.diagnose.storage",
             })}>
-              <Menu.Item key="iolatency"><a href="/diagnose/storage/iolatency/"><FormattedMessage id="menu.diagnose.storage.iolatency" /></a></Menu.Item>
-              <Menu.Item key="iofsstat"><a href="/diagnose/storage/iofsstat/"><FormattedMessage id="menu.diagnose.storage.iofsstat" /></a></Menu.Item>
-              <Menu.Item key="iohang"><a href="/diagnose/storage/iohang/"><FormattedMessage id="menu.diagnose.storage.iohang" /></a></Menu.Item>
+              <Menu.Item key="iolatency"><a href="/diagnose/storage/iolatency"><FormattedMessage id="menu.diagnose.storage.iolatency" /></a></Menu.Item>
+              <Menu.Item key="iofsstat"><a href="/diagnose/storage/iofsstat"><FormattedMessage id="menu.diagnose.storage.iofsstat" /></a></Menu.Item>
+              <Menu.Item key="iohang"><a href="/diagnose/storage/iohang"><FormattedMessage id="menu.diagnose.storage.iohang" /></a></Menu.Item>
             </SubMenu>
             <SubMenu key="net" title={intl.formatMessage({
               id: "menu.diagnose.net",
             })}>
-              <Menu.Item key="network"><a href="/diagnose/net/network/"><FormattedMessage id="menu.diagnose.net.network" /></a></Menu.Item>
-              <Menu.Item key="packetdrop"><a href="/diagnose/net/packetdrop/"><FormattedMessage id="menu.diagnose.net.packetdrop" /></a></Menu.Item>
-              <Menu.Item key="jitter"><a href="/diagnose/net/jitter/"><FormattedMessage id="menu.diagnose.net.jitter" /></a></Menu.Item>
-              <Menu.Item key="retran"><a href="/diagnose/net/retran/"><FormattedMessage id="menu.diagnose.net.retran" /></a></Menu.Item>
-              <Menu.Item key="pingtrace"><a href="/diagnose/net/pingtrace/"><FormattedMessage id="menu.diagnose.net.pingtrace" /></a></Menu.Item>
+              <Menu.Item key="network"><a href="/diagnose/net/network"><FormattedMessage id="menu.diagnose.net.network" /></a></Menu.Item>
+              <Menu.Item key="packetdrop"><a href="/diagnose/net/packetdrop"><FormattedMessage id="menu.diagnose.net.packetdrop" /></a></Menu.Item>
+              <Menu.Item key="jitter"><a href="/diagnose/net/jitter"><FormattedMessage id="menu.diagnose.net.jitter" /></a></Menu.Item>
+              <Menu.Item key="retran"><a href="/diagnose/net/retran"><FormattedMessage id="menu.diagnose.net.retran" /></a></Menu.Item>
+              <Menu.Item key="pingtrace"><a href="/diagnose/net/pingtrace"><FormattedMessage id="menu.diagnose.net.pingtrace" /></a></Menu.Item>
             </SubMenu>
             <SubMenu key="memory" title={intl.formatMessage({
               id: "menu.diagnose.memory",
             })}>
-              <Menu.Item key="memgraph"><a href="/diagnose/memory/memgraph/"><FormattedMessage id="menu.diagnose.memory.memgraph" /></a></Menu.Item>
-              <Menu.Item key="filecache"><a href="/diagnose/memory/filecache/"><FormattedMessage id="menu.diagnose.memory.filecache" /></a></Menu.Item>
-              <Menu.Item key="oomcheck"><a href="/diagnose/memory/oomcheck/"><FormattedMessage id="menu.diagnose.memory.oomcheck" /></a></Menu.Item>
+              <Menu.Item key="memgraph"><a href="/diagnose/memory/memgraph"><FormattedMessage id="menu.diagnose.memory.memgraph" /></a></Menu.Item>
+              <Menu.Item key="filecache"><a href="/diagnose/memory/filecache"><FormattedMessage id="menu.diagnose.memory.filecache" /></a></Menu.Item>
+              <Menu.Item key="oomcheck"><a href="/diagnose/memory/oomcheck"><FormattedMessage id="menu.diagnose.memory.oomcheck" /></a></Menu.Item>
             </SubMenu>
             <SubMenu key="custom" title={intl.formatMessage({
               id: "menu.diagnose.custom",
             })}>
-              <Menu.Item key="command"><a href="/diagnose/memory/command/"><FormattedMessage id="menu.diagnose.custom.command" /></a></Menu.Item>
+              <Menu.Item key="command"><a href="/diagnose/memory/command"><FormattedMessage id="menu.diagnose.custom.command" /></a></Menu.Item>
             </SubMenu>
           </SubMenu>
           <SubMenu key="journal" title={intl.formatMessage({
