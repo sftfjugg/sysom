@@ -151,6 +151,12 @@ class MigAssView(CommonModelViewSet):
 
         ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
         ance_path = os.path.join(ance_path, 'ance')
+        if not os.path.exists(ance_path):
+            mig_ass.status = 'fail'
+            mig_ass.detail = '缺少迁移评估工具，请放置工具后再尝试。'
+            mig_ass.save()
+            return
+
         tar_path = None
         rpm_path = None
         sql_path = None
