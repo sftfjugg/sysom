@@ -132,22 +132,22 @@ def parse_log(file):
     hardirq_summary = "NULL"
     softirq_summary = "NULL"
     io_summary = "NULL"
-    if reason["sys"] = "false":
+    if reason["sys"] == "false":
         sys_summary = "is normal;"
     else:
         sys_summary = "is abnormal;"
 
-    if reason["irq"] = "false":
+    if reason["irq"] == "false":
         hardirq_summary = "is normal;"
     else:
         hardirq_summary = "is abnormal;"
 
-    if reason["softirq"] = "false":
+    if reason["softirq"] == "false":
         softirq_summary = "is normal;"
     else:
         softirq_summary = "is abnormal;"
 
-    if reason["io"] = "false":
+    if reason["io"] == "false":
         io_summary = "is normal;"
     else:
         io_summary = "is abnormal;"
