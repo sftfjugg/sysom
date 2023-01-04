@@ -13,6 +13,7 @@ import time
 from typing import Callable, Optional
 from queue import Queue
 from importlib import import_module
+import asyncssh
 from cec_base.event import Event
 from cec_base.consumer import Consumer
 from cec_base.producer import Producer, dispatch_producer
@@ -20,7 +21,6 @@ from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask, StoppableThr
 from cec_base.log import LoggerHelper
 from conf.settings import *
 from lib.channels.base import ChannelResult
-import asyncssh
 
 logger = logging.getLogger(__name__)
 
@@ -77,24 +77,19 @@ class ChannelListener(MultiConsumer):
         self._producer.produce(topic, value)
         self._producer.flush()
 
-    async def _perform_opt(self, opt_func: Callable[[str, dict], dict],
+    async def _perform_opt(self, opt_func: Callable[[str, dict], ChannelResult],
                            default_channel: str, task: dict) -> ChannelResult:
         """
         Use the specified channel to perform operations on the remote 
         node and return the results.
         """
-        result, err = {}, None
-        try:
-            result = await opt_func(default_channel, task)
-        except Exception as exc:
-            logger.error(exc)
-            err = exc
+        async def _try_another_channel():
             channels_path = os.path.join(BASE_DIR, 'lib', 'channels')
             packages = [dir.replace('.py', '') for dir in os.listdir(
                 channels_path) if not dir.startswith('__')]
             packages.remove('base')
             packages.remove(default_channel)
-
+            result, err = {}, None
             for _, pkg in enumerate(packages):
                 try:
                     result = await opt_func(pkg, task)
@@ -103,6 +98,21 @@ class ChannelListener(MultiConsumer):
                 except Exception as exc:
                     logger.error(exc)
                     err = exc
+            return result, err
+
+        result, err = {}, None
+        try:
+            result = await opt_func(default_channel, task)
+            if result.code != 0:
+                result, inner_err = await _try_another_channel()
+                if inner_err is not None:
+                    err = inner_err
+        except Exception as exc:
+            logger.error(exc)
+            err = exc
+            result, inner_err = await _try_another_channel()
+            if inner_err is not None:
+                err = inner_err
         if err is not None:
             raise err
         return result
