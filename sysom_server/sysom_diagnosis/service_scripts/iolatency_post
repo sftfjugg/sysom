@@ -35,14 +35,14 @@ def iosdiagJoinData(raw):
                             key=lambda e: (float(e['percent'].strip('%'))),
                             reverse=True)[0]['percent']
                 for delay in s['delays']:
-                    text = 'Max: '+str(round(delay['max'], 1))+
-                        ' AVG: '+str(round(delay['avg'], 1))+
+                    text = 'Max: '+str(round(delay['max'], 1))+\
+                        ' AVG: '+str(round(delay['avg'], 1))+\
                         ' Min: '+str(round(delay['min'], 1))
                     node = {
                         "key": delay['component'], "title": delay['component'],
                         "value": delay['percent'], "text": text}
                     percent = float(delay['percent'].strip('%'))
-                    if delay['component'] != disk and percent > 10:
+                    if delay['component'] != 'disk' and percent > 10:
                         node['level'] = 'warning'
                     if delay['percent'] == maxPercent:
                         node['level'] = 'error'
