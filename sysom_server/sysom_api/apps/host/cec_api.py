@@ -28,7 +28,7 @@ class HostCecApi(MultiConsumer):
                 # Unexpected
                 logger.error("Receive unknown topic event, unexpected!!")
         except Exception as exc:
-            logger.exception(exc, exc_info=True)
+            logger.exception(exc)
         finally:
             task.ack(event)
 

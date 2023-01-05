@@ -36,7 +36,7 @@ class DiagnosisTaskExecutor(MultiConsumer):
                 # Unexpected
                 logger.error("Receive unknown topic event, unexpected!!")
         except Exception as exc:
-            logger.exception(exc, exc_info=True)
+            logger.exception(exc)
         finally:
             task.ack(event)
 
@@ -80,8 +80,8 @@ class DiagnosisTaskExecutor(MultiConsumer):
             # 2. Execute diagnosis task
             self._execute_diagnosis_task_by_model(instance)
         except Exception as exc:
-            logger.error(
-                f"Diagnosis process plugin event error: {str(exc)}", exc_info=True)
+            logger.exception(
+                f"Diagnosis process plugin event error: {str(exc)}")
 
     def _process_task_dispatch_event(self, event: Event):
         """Process diagnosis task dispatch event
@@ -92,8 +92,8 @@ class DiagnosisTaskExecutor(MultiConsumer):
         try:
             self._execute_diagnosis_task_by_id(event.value["task_id"])
         except Exception as exc:
-            logger.error(
-                f"Diagnosis process task dispatch event error: {str(exc)}", exc_info=True)
+            logger.exception(
+                f"Diagnosis process task dispatch event error: {str(exc)}")
 
     ################################################################################################
     # 诊断任务执行

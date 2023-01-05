@@ -103,5 +103,5 @@ class TaskAPIView(CommonModelViewSet,
                 "task_id": instance.task_id
             })
         except Exception as e:
-            logger.error(e, exc_info=True)
+            logger.exception(e)
             return ErrorResponse(msg=str(e))
