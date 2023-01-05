@@ -158,7 +158,7 @@ class HeartBeatProcess(Process):
         logger.opt(lazy=True).info(f'检查机器: IP {instance.ip} 心跳')
 
         cmd = r"""
-        uname -r && cat /etc/os-release | grep "PRETTY_NAME" | awk -F"\"" '{print $2}'
+        uname -r && cat /etc/system-release
         """
         params = dict()
         params['params'] = {
