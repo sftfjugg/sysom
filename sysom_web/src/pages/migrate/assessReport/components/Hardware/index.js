@@ -5,7 +5,7 @@ import ReportType from '../ReportType';
 import {Col, Row, Skeleton, Popover} from 'antd';
 import {WrapperContext} from '../../containers';
 import {HARDWARE_TYPE} from '../../../utils';
-
+import PieCharts from '../../../../../components/Charts/Pie';
 import './index.less';
 
 const Hardware = (props, ref) => {
@@ -13,6 +13,34 @@ const Hardware = (props, ref) => {
     dispatch,
     state: {tabsLoading, hwInfo, hwList},
   } = useContext(WrapperContext);
+  const [options, setOptions] = useState([]);
+
+  useEffect(()=>{
+    let support=0,noSupport=0,check=0;
+    hwList?.length >0 && hwList.forEach((i)=>{
+      switch(i.compatible){
+          case 'support':
+            support += 1;
+            return;
+          case 'not support':
+          case 'unclaimed':
+            noSupport += 1;
+            return;
+          case 'need check':
+          case 'class support':
+            check += 1;
+            return;
+          default: 
+            return;
+      }
+    });
+    let arr = [
+      {value: check, name: '需人工评估',color: '#D89614'},
+      {value: noSupport, name: '不支持板卡',color: '#A61D24'},
+      {value: support, name: '支持板卡',color: '#49AA19'},
+    ];
+    setOptions(arr);
+  },[hwList])
   
   const columns = [
     {
@@ -148,7 +176,20 @@ const Hardware = (props, ref) => {
 
   return (
     <div>
-      <ReportType title='硬件评估报告'/>
+      <Row>
+        <Col span={14}>
+          <ReportType title='硬件评估报告'/>
+        </Col>
+        <Col span={10} style={{background: '#000'}}>
+          <PieCharts
+            id='hardWare'
+            width='100%'
+            height='120px'
+            padding='15px 0 0 0'
+            options={options}
+          />
+        </Col>
+      </Row>
       <Skeleton loading={tabsLoading}>
         {
           hwInfo.length !== 0
@@ -163,7 +204,6 @@ const Hardware = (props, ref) => {
             </Row>
           </ProCard>
         }
-        <div className='assess_line' />
         <ProCard
           bodyStyle={{padding: '12px 0'}}
         >

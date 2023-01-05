@@ -1,22 +1,52 @@
-import React, {useContext,useState} from 'react';
+import React, {useContext, useState, useEffect} from 'react';
 import ProTable from '@ant-design/pro-table';
 import ProCard from '@ant-design/pro-card';
 import {RightCircleOutlined} from "@ant-design/icons";
 import ReportType from '../ReportType';
-import {Modal, Skeleton} from 'antd';
+import {Modal, Skeleton, Row, Col} from 'antd';
 import { WrapperContext } from '../../containers';
-
+import PieCharts from '../../../../../components/Charts/Pie';
 import './index.less';
 
 const Risk = (props, ref) => {
   const {
     dispatch,
-    state: { tabsLoading,riskList },
+    state: {tabsLoading, riskList},
   } = useContext(WrapperContext);
   const {id} = props;
   const [detailsTitle,setDetailsTitle] = useState('');
   const [detailsText,setDetailsText] = useState('');
   const [detailsModal,setDetailsModal] = useState(false);
+  const [options, setOptions] = useState([]);
+
+  useEffect(()=>{
+    let high=0,medium=0,low=0,info=0;
+    riskList?.length >0 && riskList.forEach((i)=>{
+      switch(i.severity){
+          case 'high':
+            high += 1;
+            return;
+          case 'medium':
+            medium += 1;
+            return;
+          case 'low':
+            low += 1;
+            return;
+          case 'info':
+            info += 1;
+            return;
+          default: 
+            return;
+      }
+    });
+    let arr = [
+      {value: high, name: '高风险',color: '#A61D24'},
+      {value: medium, name: '中风险',color: '#D89614'},
+      {value: low, name: '低风险',color: '#177DDC'},
+      {value: info, name: '无风险',color: '#49AA19'},
+    ];
+    setOptions(arr);
+  },[riskList])
 
   const columns = [
     {
@@ -40,8 +70,7 @@ const Risk = (props, ref) => {
             ) : null}
           </div>
         </div>
-        )}
-      
+      )}
     },
     {
       title: '风险',
@@ -159,7 +188,20 @@ const Risk = (props, ref) => {
 
   return (
     <div className="risk_container">
-      <ReportType title='迁移风险评估报告'/>
+      <Row>
+        <Col span={14}>
+          <ReportType title='迁移风险评估报告'/>
+        </Col>
+        <Col span={10} style={{background: '#000'}}>
+          <PieCharts
+            id='risk'
+            width='100%'
+            height='120px'
+            padding='15px 0 0 0'
+            options={options}
+          />
+        </Col>
+      </Row>
       <Skeleton loading={tabsLoading}>
         <ProCard
           bodyStyle={{padding: '12px 0'}}

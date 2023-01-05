@@ -167,17 +167,18 @@ const NodeList = (props) => {
   const getHWList = async (id) => {
     try {
       const { code,data } = await queryHardwareList({id});
-      let arr = [];
-      if(data && data.length !== 0){
-        data.map((item,index)=>{
-          arr.push({...item,id: index})
+      const {hard_result,hard_info} = data || {};
+      if(hard_result?.length > 0){
+        hard_result.forEach((item,index)=>{
+          hard_result[index].id = index;
         })
       }
       if (code === 200) {
         dispatch({
           type: SET_DATA,
           payload: {
-            hwList: arr,
+            hwInfo: hard_info?hard_info:[],
+            hwList: hard_result?hard_result:[],
           },
         });
         return true;
@@ -187,6 +188,7 @@ const NodeList = (props) => {
       dispatch({
         type: SET_DATA,
         payload: {
+          hwInfo: [],
           hwList: [],
         },
       });
