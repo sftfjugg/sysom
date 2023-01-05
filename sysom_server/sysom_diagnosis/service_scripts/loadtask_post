@@ -133,24 +133,24 @@ def parse_log(file):
     softirq_summary = "NULL"
     io_summary = "NULL"
     if reason["sys"] == "false":
-        sys_summary = "is normal;"
+        sys_summary = " is normal;"
     else:
-        sys_summary = "is abnormal;"
+        sys_summary = " is abnormal;"
 
     if reason["irq"] == "false":
-        hardirq_summary = "is normal;"
+        hardirq_summary = " is normal;"
     else:
-        hardirq_summary = "is abnormal;"
+        hardirq_summary = " is abnormal;"
 
     if reason["softirq"] == "false":
-        softirq_summary = "is normal;"
+        softirq_summary = " is normal;"
     else:
-        softirq_summary = "is abnormal;"
+        softirq_summary = " is abnormal;"
 
     if reason["io"] == "false":
-        io_summary = "is normal;"
+        io_summary = " is normal;"
     else:
-        io_summary = "is abnormal;"
+        io_summary = " is abnormal;"
 
     new_parse_data["summary"] = "Load Influences Result:"+"sys utils"+ sys_summary + "hardirq" + hardirq_summary + "softirq" + softirq_summary + "io" + io_summary
     new_parse_data["datataskcount"] = {"data": []}
