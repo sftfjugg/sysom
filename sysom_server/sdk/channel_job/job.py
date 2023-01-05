@@ -130,7 +130,7 @@ class ChannelJob:
             entry(JobEntry): Channel job entry
         """
         if self._chunk_callback is not None:
-            entry.return_as_stream = True 
+            entry.return_as_stream = True
         if self._producer is None or self._target_topic == "":
             raise ChannelJobException(
                 "ChannelJob not bind producer or target_topic")
@@ -304,7 +304,7 @@ class ChannelJobExecutor:
             "channel_job_auto_recover", True
         )
         if None in [self._target_topic, self._listen_topic, listen_consumer_group]:
-            raise(ChannelJobException("CecUrl missing parameters"))
+            raise (ChannelJobException("CecUrl missing parameters"))
 
         # 2. Create Consumer, Producer, Admin instance
         self._consumer: Consumer = dispatch_consumer(

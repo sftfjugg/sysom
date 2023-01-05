@@ -54,7 +54,7 @@ class Channel(BaseChannel):
             result.code = 0
             result.result = ""
         except Exception as e:
-            logger.exception(e, exc_info=True)
+            logger.exception(e)
             result.code = 1
             result.err_msg = str(e)
         return result
@@ -69,7 +69,7 @@ class Channel(BaseChannel):
             result.code = 0
             result.result = ""
         except Exception as e:
-            logger.exception(e, exc_info=True)
+            logger.exception(e)
             result.code = 1
             result.err_msg = str(e)
         return result

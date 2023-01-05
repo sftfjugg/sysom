@@ -72,8 +72,8 @@ class DiagnosisHelper:
                 try:
                     params = json.loads(params)
                 except Exception as exc:
-                    logger.error(
-                        f"Task params loads error: {str(exc)}", exc_info=True)
+                    logger.exception(
+                        f"Task params loads error: {str(exc)}")
 
             # 2. Invoke preprocessing script（preprocessing script）
             SCRIPTS_DIR = settings.SCRIPTS_DIR
@@ -115,8 +115,8 @@ class DiagnosisHelper:
             )
             success = True
         except Exception as exc:
-            logger.error(
-                f"Diagnosis preprocess error: {str(exc)}", exc_info=True)
+            logger.exception(
+                f"Diagnosis preprocess error: {str(exc)}")
             DiagnosisHelper._update_job(
                 instance, result=str(exc), status="Fail")
         return success
@@ -160,8 +160,8 @@ class DiagnosisHelper:
                         .execute_async_with_callback(result_callback)
             success = True
         except Exception as exc:
-            logger.error(
-                f"Diagnosis execute task error: {str(exc)}", exc_info=True)
+            logger.exception(
+                f"Diagnosis execute task error: {str(exc)}")
             DiagnosisHelper._update_job(
                 instance, result=str(exc), status="Fail")
         return success
@@ -230,7 +230,7 @@ class DiagnosisHelper:
                 )
             pass
         except Exception as exc:
-            logger.error(
-                f"Diagnosis postprocess error: {str(exc)}", exc_info=True)
+            logger.exception(
+                f"Diagnosis postprocess error: {str(exc)}")
             DiagnosisHelper._update_job(
                 instance, result=str(exc), status="Fail")
