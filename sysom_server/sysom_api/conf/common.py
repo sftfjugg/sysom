@@ -144,11 +144,14 @@ SYSOM_CEC_API_HOST_CONSUMER_GROUP = "SYSOM_CEC_API_HOST_CONSUMER_GROUP"
 # HOST用于接收其他模块发出的异步请求的主题
 SYSOM_CEC_API_HOST_TOPIC = "SYSOM_CEC_API_HOST_TOPIC"
 
-# 主机模块CEC配置
+##################################################################
+# Channel settings
+##################################################################
 SYSOM_HOST_LISTEN_TOPIC = "SYSOM_HOST_LISTEN_TOPIC"
 SYSOM_HOST_CONSUME_GROUP = "SYSOM_HOST_CONSUME_GROUP"
 SYSOM_HOST_CEC_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}&channel_job_listen_topic={SYSOM_HOST_LISTEN_TOPIC}&channel_job_consumer_group={SYSOM_HOST_CONSUME_GROUP}"
-
+# Host init timeout (seconds)
+HOST_INIT_TIMEOUT = 600
 
 # JWT Token Decode DIR
 JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
