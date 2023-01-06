@@ -83,13 +83,13 @@ class ChannelListener(MultiConsumer):
         Use the specified channel to perform operations on the remote 
         node and return the results.
         """
-        async def _try_another_channel():
+        async def _try_another_channel(result: ChannelResult):
             channels_path = os.path.join(BASE_DIR, 'lib', 'channels')
             packages = [dir.replace('.py', '') for dir in os.listdir(
                 channels_path) if not dir.startswith('__')]
             packages.remove('base')
             packages.remove(default_channel)
-            result, err = {}, None
+            err = None
             for _, pkg in enumerate(packages):
                 try:
                     result = await opt_func(pkg, task)
@@ -100,17 +100,17 @@ class ChannelListener(MultiConsumer):
                     err = exc
             return result, err
 
-        result, err = {}, None
+        result, err = ChannelResult(code=1), None
         try:
             result = await opt_func(default_channel, task)
             if result.code != 0:
-                result, inner_err = await _try_another_channel()
+                result, inner_err = await _try_another_channel(result)
                 if inner_err is not None:
                     err = inner_err
         except Exception as exc:
             logger.error(exc)
             err = exc
-            result, inner_err = await _try_another_channel()
+            result, inner_err = await _try_another_channel(result)
             if inner_err is not None:
                 err = inner_err
         if err is not None:
