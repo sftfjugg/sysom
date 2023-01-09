@@ -1,12 +1,13 @@
 import { PageContainer } from '@ant-design/pro-layout';
 import React, { useState, useRef, useEffect } from 'react';
 import { request } from 'umi';
-import { Modal } from 'antd';
+import { Modal, message } from 'antd';
 import ProCard from '@ant-design/pro-card';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import Dashboard from './components/Dashboard';
-import { getTask } from './service'
+import OfflineImportModal from './components/OfflineImportModal';
+import { getTask, offlineImport } from './service'
 import _ from "lodash";
 
 
@@ -16,10 +17,12 @@ const Diagnose = (props) => {
     const refTaskList = useRef();
     const [pannelConfig, setPannelConfig] = useState();
     const [data, setData] = useState();
+    const [offlineImportModalVisible, setOfflineImportModalVisible] = useState(false);
+    const [offlineImportLoading, setOfflineImportLoading] = useState(false);
 
     useEffect(() => {
         let urlslice = props.match.url.split("/")
-        urlslice.splice(2,0, "v1")
+        urlslice.splice(2, 0, "v1")
         request(`/resource${urlslice.join("/")}.json`).then((res) => {
             setPannelConfig(res)
         })
@@ -55,7 +58,11 @@ const Diagnose = (props) => {
                 <TaskForm
                     taskForm={pannelConfig.taskform}
                     serviceName={pannelConfig.servicename}
-                    onSuccess={onPostTask} />
+                    onSuccess={onPostTask}
+                    onOfflineLoad={() => {
+                        setOfflineImportModalVisible(true)
+                    }}
+                />
 
                 <Divider />
                 <TaskList serviceName={pannelConfig.servicename}
@@ -72,6 +79,28 @@ const Diagnose = (props) => {
                     datas={data} />
 
             }
+            <OfflineImportModal
+                title='离线日志导入'
+                visible={offlineImportModalVisible}
+                onVisibleChange={setOfflineImportModalVisible}
+                modalWidth="440px"
+                loading={offlineImportLoading}
+                onFinish={async (value) => {
+                    setOfflineImportLoading(true);
+                    let res = await offlineImport({
+                        ...value,
+                        "service_name": pannelConfig.servicename
+                    });
+                    console.log(res);
+                    if (res.code == 200) {
+                        message.success('导入成功');
+                    } else {
+                        message.error(`导入失败：${res.message}`);
+                    }
+                    setOfflineImportLoading(false);
+                    setOfflineImportModalVisible(false);
+                }}
+            />
         </PageContainer>
     );
 };
