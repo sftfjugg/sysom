@@ -27,12 +27,13 @@ class Authentication(BaseAuthentication):
                 return None
         if not token:
             raise AuthenticationFailed("没有令牌")
+
+        payload = decode_token(token)
+        user = self._check_user(payload=payload)
         # 判断用户是否已经手动注销登录
         if cache.get(token) is None:
             raise AuthenticationFailed('用户已退出登录!')
 
-        payload = decode_token(token)
-        user = self._check_user(payload=payload)
         logger.info(f"{user.username} 身份通过")
         return user, token
 
