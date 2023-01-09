@@ -72,7 +72,8 @@ def iosdiagJoinData(raw):
                         else:
                             dupRm.append(slowIOs[idx-1])
                 for d in dupRm:
-                    slowIOs.remove(d)
+                    if d in slowIOs:
+                        slowIOs.remove(d)
 
                 if not isSeqData:
                     slowIOs = \
