@@ -98,7 +98,6 @@ const Diagnose = (props) => {
                         ...value,
                         "service_name": pannelConfig.servicename
                     });
-                    console.log(res);
                     if (res.code == 200) {
                         message.success(
                             intl.formatMessage({
@@ -106,6 +105,7 @@ const Diagnose = (props) => {
                                 defaultMessage: 'Import success',
                             })
                         );
+                        refTaskList.current.refresh();
                     } else {
                         message.error(`${intl.formatMessage({
                             id: 'pages.diagnose.offline_import.failed',
