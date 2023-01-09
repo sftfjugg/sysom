@@ -163,7 +163,7 @@ class AccountAuthView(GenericViewSet):
     def logout(self, request: Request):
         """用户登出 清除缓存中的用户token信息"""
         cache.delete(request.META.get('HTTP_AUTHORIZATION'))
-        return success(message='logout ok!', result={})
+        return success(message='退出成功', result={})
 
     def get_authenticators(self):
         if self.request.method == "POST":
