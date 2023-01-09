@@ -11,6 +11,7 @@ django==3.2.16
 django-apscheduler==0.6.2
 django-cors-headers==3.10.1
 django-filter==21.1
+django-redis==5.2.0
 djangorestframework==3.14.0
 drf-yasg==1.21.4
 daphne==3.0.2

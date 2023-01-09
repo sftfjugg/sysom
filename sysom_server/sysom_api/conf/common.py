@@ -51,6 +51,18 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {"max_connections": 100},
+            "DECODE_RESPONSES": True
+        }
+    }
+}
+
 ROOT_URLCONF = 'sysom.urls'
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -101,6 +113,8 @@ REST_FRAMEWORK = {
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
 }
+
+JWT_TOKEN_EXPIRE = 60 * 60 * 24 * 2
 
 SERVICE_SVG_PATH = os.path.join(BASE_DIR, 'netinfo')
 

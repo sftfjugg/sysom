@@ -12,6 +12,7 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.request import Request
 from apps.accounts.models import User
 from lib.authentications import decode_token
+from django.core.cache import cache
 
 
 class Authentication(BaseAuthentication):
@@ -26,8 +27,13 @@ class Authentication(BaseAuthentication):
                 return None
         if not token:
             raise AuthenticationFailed("没有令牌")
+        
+        if cache.get(token) is None:
+            raise AuthenticationFailed('用户已退出登录!')
+
         payload = decode_token(token)
         user = self._check_user(payload=payload)
+        # 判断用户是否已经手动注销登录
         logger.info(f"{user.username} 身份通过")
         return user, token
 

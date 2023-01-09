@@ -1,6 +1,7 @@
 from datetime import datetime
 from loguru import logger
 from typing import Union
+from django.conf import settings
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins, status
@@ -15,7 +16,7 @@ from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
 from lib.response import success, other_response
-
+from django.core.cache import cache
 
 class UserModelViewSet(
     GenericViewSet,
@@ -132,6 +133,43 @@ class AuthAPIView(CreateAPIView):
         result = u_ser.data
         result.update({"token": t})
         return other_response(message="登录成功", code=200, result=result)
+
+
+class AccountAuthView(GenericViewSet):
+    queryset = models.User.objects.filter(deleted_at=None)
+    authentication_classes = [Authentication]
+
+    def login(self, request):
+        """用户登录，获取接口令牌
+        token存放在redis中, 如果用户已登录,
+        就返回token中的用户token, 若token过
+        期后这重新登录产生新token设置默认过期
+        值, 并重新存入redis. 
+        """
+        ser = UserAuthSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        u, t = ser.create_token()
+        u_ser = serializer.UserListSerializer(instance=u, many=False)
+        result = u_ser.data
+        cache_user_token = cache.get(t)
+
+        if cache_user_token is not None:
+            result.update({"token": cache_user_token})
+        else:
+            result.update({"token": t})
+            cache.set(t, u.pk, timeout=settings.JWT_TOKEN_EXPIRE)
+        return other_response(message="登录成功", code=200, result=result)
+
+    def logout(self, request: Request):
+        """用户登出 清除缓存中的用户token信息"""
+        cache.delete(request.META.get('HTTP_AUTHORIZATION'))
+        return success(message='logout ok!', result={})
+
+    def get_authenticators(self):
+        if self.request.method == "POST":
+            return []
+        else:
+            return super().get_authenticators()
 
 
 class RoleModelViewSet(GenericViewSet,
