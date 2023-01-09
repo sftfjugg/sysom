@@ -12,6 +12,7 @@ from apps.task.filter import TaskFilter
 from lib.base_view import CommonModelViewSet
 from lib.response import success, not_found, ErrorResponse
 from lib.authentications import TokenAuthentication
+from channel_job.job import JobResult
 from .helper import DiagnosisHelper
 
 
@@ -99,6 +100,31 @@ class TaskAPIView(CommonModelViewSet,
                     "task_id": instance.task_id
                 }
             )
+            return success({
+                "task_id": instance.task_id
+            })
+        except Exception as e:
+            logger.exception(e)
+            return ErrorResponse(msg=str(e))
+
+    def offline_import(self, request, *args, **kwargs):
+        """Offline import of diagnostic logs"""
+        try:
+            # 1. Check required params
+            res = self.require_param_validate(
+                request, ['instance', 'offline_log', 'service_name'])
+            if not res['success']:
+                return ErrorResponse(message=res.get('message', 'Missing parameters'))
+            data = request.data
+
+            # 2. Offline import
+            offline_log = data.pop("offline_log", "")
+            instance = DiagnosisHelper.offline_import(
+                data, getattr(request, 'user'))
+
+            # 3. postprocess
+            DiagnosisHelper.postprocess(
+                instance, job_result=JobResult(code=0, result=offline_log))
             return success({
                 "task_id": instance.task_id
             })
