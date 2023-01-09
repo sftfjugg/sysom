@@ -3,10 +3,12 @@ import { Button } from 'antd';
 import ProCard from '@ant-design/pro-card';
 import { useRequest } from 'umi';
 import { postTask } from '../service';
+import { useIntl } from 'umi';
 
 const TaskFrom = (props) => {
   const taskForm = props.taskForm
   const serviceName = props.serviceName
+  const intl = useIntl();
 
   const { loading, error, run } = useRequest(postTask, {
     manual: true,
@@ -67,7 +69,14 @@ const TaskFrom = (props) => {
           <Button type="primary" htmlType="submit" loading={loading}>开始诊断</Button>
           <Button type="primary" loading={loading} onClick={() => {
             props?.onOfflineLoad?.()
-          }}>离线导入</Button>
+          }}>
+            {
+              intl.formatMessage({
+                id: 'pages.diagnose.offline_import.btn',
+                defaultMessage: 'Offline import',
+              })
+            }
+          </Button>
         </ProForm.Group>
       </ProForm>
     </ProCard>

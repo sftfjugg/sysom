@@ -8,6 +8,7 @@ import TaskForm from './components/TaskForm';
 import Dashboard from './components/Dashboard';
 import OfflineImportModal from './components/OfflineImportModal';
 import { getTask, offlineImport } from './service'
+import { useIntl } from 'umi';
 import _ from "lodash";
 
 
@@ -19,6 +20,7 @@ const Diagnose = (props) => {
     const [data, setData] = useState();
     const [offlineImportModalVisible, setOfflineImportModalVisible] = useState(false);
     const [offlineImportLoading, setOfflineImportLoading] = useState(false);
+    const intl = useIntl();
 
     useEffect(() => {
         let urlslice = props.match.url.split("/")
@@ -80,7 +82,12 @@ const Diagnose = (props) => {
 
             }
             <OfflineImportModal
-                title='离线日志导入'
+                title={
+                    intl.formatMessage({
+                        id: 'pages.diagnose.offline_import.title',
+                        defaultMessage: 'Import offline log',
+                    })
+                }
                 visible={offlineImportModalVisible}
                 onVisibleChange={setOfflineImportModalVisible}
                 modalWidth="440px"
@@ -93,9 +100,17 @@ const Diagnose = (props) => {
                     });
                     console.log(res);
                     if (res.code == 200) {
-                        message.success('导入成功');
+                        message.success(
+                            intl.formatMessage({
+                                id: 'pages.diagnose.offline_import.success',
+                                defaultMessage: 'Import success',
+                            })
+                        );
                     } else {
-                        message.error(`导入失败：${res.message}`);
+                        message.error(`${intl.formatMessage({
+                            id: 'pages.diagnose.offline_import.failed',
+                            defaultMessage: 'Import failed',
+                        })}：${res.message}`);
                     }
                     setOfflineImportLoading(false);
                     setOfflineImportModalVisible(false);
