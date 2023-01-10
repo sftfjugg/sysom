@@ -6,7 +6,6 @@ Email               mfeng@linux.alibaba.com
 File                executor.py
 Description:
 """
-import logging
 import os
 import asyncio
 import time
@@ -20,9 +19,7 @@ from cec_base.producer import Producer, dispatch_producer
 from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask, StoppableThread
 from cec_base.log import LoggerHelper
 from conf.settings import *
-from lib.channels.base import ChannelResult
-
-logger = logging.getLogger(__name__)
+from lib.channels.base import ChannelResult, ChannelException, ChannelCode
 
 
 CHANNEL_PARAMS_TIMEOUT = "__channel_params_timeout"
@@ -96,7 +93,7 @@ class ChannelListener(MultiConsumer):
                     err = None
                     break
                 except Exception as exc:
-                    logger.error(exc)
+                    LoggerHelper.get_lazy_logger().error(str(exc))
                     err = exc
             return result, err
 
@@ -108,7 +105,7 @@ class ChannelListener(MultiConsumer):
                 if inner_err is not None:
                     err = inner_err
         except Exception as exc:
-            logger.error(exc)
+            LoggerHelper.get_lazy_logger().error(str(exc))
             err = exc
             result, inner_err = await _try_another_channel(result)
             if inner_err is not None:
@@ -130,7 +127,7 @@ class ChannelListener(MultiConsumer):
                     "result": data
                 })
                 self._producer.flush()
-        params = task.get("params", {})
+        params = task.get("params", {}).copy()
         timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
         auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
         return_as_stream = params.pop(CHANNEL_PARAMS_RETURN_AS_STREAM, False)
@@ -182,13 +179,17 @@ class ChannelListener(MultiConsumer):
                     result["err_msg"] = channel_result.err_msg
                     if channel_result.err_msg == "" and channel_result.result != "":
                         result["err_msg"] = channel_result.result
-                else:
-                    result["result"] = channel_result.result
+                result["result"] = channel_result.result
+        except ChannelException as ce:
+            LoggerHelper.get_lazy_logger().exception(ce)
+            result["code"] = ce.code
+            result["err_msg"] = ce.message
+            result["result"] = ce.summary
         except Exception as e:
-            LoggerHelper.get_lazy_logger().error(e)
             LoggerHelper.get_lazy_logger().exception(e)
-            result["code"] = 1
+            result["code"] = ChannelCode.SERVER_ERROR
             result["err_msg"] = str(e)
+            result["result"] = "Channel Server Error"
         finally:
             # 执行消息确认
             res = cecConsumeTask.ack(event)
@@ -227,7 +228,7 @@ class ChannelListener(MultiConsumer):
             )
             for task in finished:
                 if task.exception() is not None:
-                    logger.error(task.exception())
+                    LoggerHelper.get_lazy_logger().error(str(task.exception()))
                 else:
                     pass
             tasks = _get_task_from_queue()
