@@ -62,6 +62,22 @@ class DiagnosisHelper:
         return JobModel.objects.create(**task_params)
 
     @staticmethod
+    def offline_import(data: dict, user: dict) -> JobModel:
+        """Import offline diagnostic logs as a Job"""
+        user_id = user["id"]
+        task_id = uuid_8()
+        service_name = data.get("service_name", None)
+        task_params = {
+            "command": "",
+            "task_id": task_id,
+            "created_by": user_id,
+            "params": json.dumps(data),
+            "service_name": service_name,
+            "status": "Ready"
+        }
+        return JobModel.objects.create(**task_params)
+
+    @staticmethod
     def preprocess(instance: JobModel) -> bool:
         """"Perform diagnosis preprocessing"""
         success = False
@@ -193,7 +209,7 @@ class DiagnosisHelper:
                     raise Exception(
                         f"Task params loads error: {str(exc)}") from exc
 
-            service_name = params.get("service_name", "unknown")
+            service_name = instance.service_name
             # 执行后处理脚本，将结果整理成前端可识别的规范结构
             SCRIPTS_DIR = settings.SCRIPTS_DIR
             service_post_name = service_name + '_post'
