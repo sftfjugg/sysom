@@ -10,11 +10,33 @@ from abc import ABCMeta, abstractmethod
 import time
 import anyio
 import functools
+from enum import Enum, unique
+
+
+@unique
+class ChannelCode(Enum):
+    SUCCESS = 0
+    SERVER_ERROR = 1
+    REQUEST_PARAM_ERROR = 2
+    CHANNEL_CONNECT_FAILED = 3
+    CHANNEL_CONNECT_TIMEOUT = 4
+    CHANNEL_EXEC_FAILED = 5
 
 
 class ChannelException(Exception):
-    def __init__(self, message: str) -> None:
+    """Exception which raise while use specific channel to communicate with instance
+
+    Args:
+        message(str): Detailed error messages for developers to locate problems
+        code(str): Error type
+        summary(str): Error summary for presentation to the user
+    """
+
+    def __init__(self, message: str, code: int = ChannelCode.SERVER_ERROR.value,
+                 summary: str = None) -> None:
         self.message = message
+        self.code = code
+        self.summary = summary if summary is not None else message
 
     def __str__(self) -> str:
         return self.message
