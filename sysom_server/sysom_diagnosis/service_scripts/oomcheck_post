@@ -41,8 +41,10 @@ def analyze_root(oomres):
 
 def advise_root(res):
     root = res["root"]
-    tcp_mem = res["tcp_mem"]
-    tcp_task = res["tcp_task"][0]
+    tcp_mem = res.get("tcp_mem",0)
+    tcp_task = res.get("tcp_task",[])
+    if tcp_task:
+        tcp_task = tcp_task[0]
     advice = ""
     if root == "limit" or root == "plimit":
         advice = "Adjust the memory use of services."
