@@ -56,8 +56,8 @@ class UserModelViewSet(
         return success(result=response.data, message="创建成功")
 
     def list(self, request, *args, **kwargs):
-        data = super().list(request, *args, **kwargs)
-        return success(result=data.data)
+        # data = super().list(request, *args, **kwargs)
+        return super().list(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
