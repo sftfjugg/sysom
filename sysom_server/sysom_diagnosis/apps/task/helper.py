@@ -96,7 +96,7 @@ class DiagnosisHelper:
             service_path = os.path.join(SCRIPTS_DIR, service_name)
             if not os.path.exists(service_path):
                 raise Exception(
-                    "can not find script file, please check service name")
+                    "Can not find script file, please check service name")
             try:
                 command_list = [service_path, json.dumps(params)]
                 resp = subprocess.run(command_list, stdout=subprocess.PIPE,
@@ -134,7 +134,8 @@ class DiagnosisHelper:
             logger.exception(
                 f"Diagnosis preprocess error: {str(exc)}")
             DiagnosisHelper._update_job(
-                instance, result=str(exc), status="Fail")
+                instance, result="Diagnosis preprocess error", status="Fail",
+                code=1, err_msg=f"Diagnosis preprocess error: {str(exc)}")
         return success
 
     def execute(instance: JobModel, result_callback: Callable[[JobResult], None]) -> bool:
@@ -179,7 +180,8 @@ class DiagnosisHelper:
             logger.exception(
                 f"Diagnosis execute task error: {str(exc)}")
             DiagnosisHelper._update_job(
-                instance, result=str(exc), status="Fail")
+                instance, result="Diagnosis execute task error", status="Fail",
+                code=1, err_msg=f"Diagnosis execute task error: {str(exc)}")
         return success
 
     def postprocess(instance: JobModel, job_result: JobResult):
@@ -198,7 +200,8 @@ class DiagnosisHelper:
             err_msg = job_result.err_msg
             if code != 0:
                 DiagnosisHelper._update_job(
-                    instance, status="Fail", result=err_msg)
+                    instance, status="Fail", code=code,
+                    result=job_result.result, err_msg=err_msg)
                 return
             # 如果任务执行成功，则执行后处理脚本
             params = instance.params
@@ -249,4 +252,5 @@ class DiagnosisHelper:
             logger.exception(
                 f"Diagnosis postprocess error: {str(exc)}")
             DiagnosisHelper._update_job(
-                instance, result=str(exc), status="Fail")
+                instance, result="Diagnosis postprocess error", status="Fail",
+                code=1, err_msg=f"Diagnosis postprocess error: {str(exc)}")
