@@ -89,7 +89,7 @@ const TaskList = React.forwardRef((props, ref) => {
               } else if (b[i] === undefined) {
                 return 1;
               } else {
-                return a[i] - b[i]
+                return Number(a[i]) - Number(b[i])
               }
             }
           }
@@ -102,7 +102,7 @@ const TaskList = React.forwardRef((props, ref) => {
               } else if (b[i] === undefined) {
                 return 1;
               } else {
-                return a[i].localeCompare(b[i]);
+                return String(a[i]).localeCompare(String(b[i]));
               }
             }
           }
