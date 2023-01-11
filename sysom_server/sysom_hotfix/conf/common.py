@@ -119,17 +119,7 @@ DOWNLOAD_DIR = os.path.join(WEB_DIR, 'download')
 ##################################################################
 # Hotfix Platform settings
 ##################################################################
-HOTFIX_CONFIG_URL = "http://localhost:7003/api/v1/channel/config/get?name=migration_setting"
 HOTFIX_FILE_STORAGE_REPO = "/usr/local/sysom/server/hotfix/hotfix-nfs"
-
-##################################################################
-# SSH channel settings
-##################################################################
-SSH_CHANNEL_KEY_DIR = os.path.join(BASE_DIR.parent, 'conf', 'ssh')
-if not os.path.exists(SSH_CHANNEL_KEY_DIR):
-    os.makedirs(SSH_CHANNEL_KEY_DIR)
-SSH_CHANNEL_KEY_PRIVATE = os.path.join(SSH_CHANNEL_KEY_DIR, "sysom_id")
-SSH_CHANNEL_KEY_PUB = os.path.join(SSH_CHANNEL_KEY_DIR, "sysom_id.pub")
 
 ##################################################################
 # Cec settings
