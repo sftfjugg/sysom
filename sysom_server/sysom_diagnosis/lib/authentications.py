@@ -7,6 +7,7 @@ from django.utils.translation import ugettext as _
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.request import Request
 from rest_framework.authentication import BaseAuthentication
+from django.core.cache import cache
 
 
 def get_jwt_decode_classes() -> List[BaseAuthentication]:
@@ -43,6 +44,10 @@ class TokenAuthentication(BaseAuthentication):
     def authenticate(self, request: Request):
         token = request.META.get('HTTP_AUTHORIZATION')
         payload = decode_token(token)
+        # 判断用户是否已经手动注销登录
+        if cache.get(token) is None:
+            raise AuthenticationFailed('用户已退出登录!')
+
         payload['token'] = token
         if 'sub' in payload:
             payload['id'] = int(payload['sub'])
