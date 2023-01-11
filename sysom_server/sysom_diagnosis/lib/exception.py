@@ -56,4 +56,4 @@ def exception_handler(exc, context):
         logger.error(traceback.format_exc())
         msg = str(exc)  # 原样输出错误
 
-    return ErrorResponse(msg=msg, code=code, status=code)
+    return ErrorResponse(msg=msg, code=code)
