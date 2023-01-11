@@ -29,7 +29,7 @@ class BaseJobSerializer(serializers.ModelSerializer):
 class JobListSerializer(BaseJobSerializer):
     class Meta:
         model = JobModel
-        exclude = ('host_by', 'command', 'result')
+        exclude = ('host_by', 'command', 'result', 'code', 'err_msg')
 
 
 class JobRetrieveSerializer(BaseJobSerializer):
