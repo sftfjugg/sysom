@@ -14,12 +14,13 @@ from io import StringIO
 from asyncer import syncify
 import concurrent
 from conf.settings import *
-from lib.channels.base import ChannelException
+from lib.channels.base import ChannelException, ChannelCode, ChannelResult
 
 DEFAULT_CONNENT_TIMEOUT = 5000    # 默认ssh链接超时时间 5s
 DEFAULT_NODE_USER = 'root'     # 默认节点用户名 root
 
 logger = logging.getLogger(__name__)
+
 
 class EasySSHCallbackForwarder(asyncssh.SSHClientSession):
     def __init__(
@@ -57,18 +58,21 @@ class AsyncSSH:
     _private_key_getter: Callable[[], str] = None
     _public_key_getter: Callable[[], str] = None
 
-    def __init__(self, hosename: str, **kwargs) -> None:
+    def __init__(self, hostname: str, **kwargs) -> None:
         self.connect_args = {
             "known_hosts": None,
             "port": kwargs.get("port", 22),
             "username": kwargs.get("username", "root"),
             "password": kwargs.get("password", None),
         }
-        self._hostname = hosename
+        self._hostname = hostname
         password = kwargs.get("password", None)
         if password is None:
             if AsyncSSH._private_key_getter is None:
-                raise ChannelException("_private_key_getter not set")
+                raise ChannelException(
+                    f"SSH Chanel: Connect to {hostname} failed, _private_key_getter not set",
+                    code=ChannelCode.CHANNEL_CONNECT_FAILED.value,
+                )
             # Auto fill private key if password not specific
             self.connect_args["client_keys"] = [SSH_CHANNEL_KEY_PRIVATE]
 
@@ -85,10 +89,13 @@ class AsyncSSH:
         with open(SSH_CHANNEL_KEY_PUB, "w") as f:
             f.write(public_key_getter())
         cls._public_key_getter = public_key_getter
-        
+
     async def add_public_key_async(self, timeout: Optional[int] = None):
         if AsyncSSH._public_key_getter is None:
-            raise ChannelException("_public_key_getter not set")
+            raise ChannelException(
+                f"SSH Chanel: Init {self._hostname} failed, _private_key_getter not set",
+                code=ChannelCode.CHANNEL_CONNECT_FAILED.value,
+            )
         public_key = AsyncSSH._public_key_getter()
         command = f'mkdir -p -m 700 ~/.ssh && \
         echo {public_key!r} >> ~/.ssh/authorized_keys && \
@@ -107,7 +114,7 @@ class AsyncSSH:
         self, command: str,
         timeout: Optional[int] = DEFAULT_CONNENT_TIMEOUT,
         on_data_received: Optional[Callable[[str, asyncssh.DataType], None]] = None,
-    ):
+    ) -> ChannelResult:
         return syncify(self.run_command_async, raise_sync_error=False)(
             command=command,
             timeout=timeout,
@@ -118,13 +125,8 @@ class AsyncSSH:
         self, command: str,
         timeout: Optional[int] = DEFAULT_CONNENT_TIMEOUT,
         on_data_received: Optional[Callable[[str, asyncssh.DataType], None]] = None,
-    ):
-        result = {
-            "exit_status": None,
-            "exit_signal": None,
-            "total_out": "",
-            "err_msg": ""
-        }
+    ) -> ChannelResult:
+        channel_result = ChannelResult(code=1, result="SSH Channel: Run command error", err_msg="SSH Channel: Run command error")
         try:
             timeout /= 1000
             self.connect_args["connect_timeout"] = timeout
@@ -135,29 +137,37 @@ class AsyncSSH:
                 try:
                     await asyncio.wait_for(chan.wait_closed(), timeout=timeout)
                 except asyncio.TimeoutError:
-                    # execute timeout
-                    result["err_msg"] = "Commond execute timeout!"
-                    result["total_out"] = session.get_total_result()
+                    channel_result.code = ChannelCode.CHANNEL_EXEC_FAILED.value
+                    channel_result.result = f"SSH Channel: Command execute timeout"
+                    channel_result.err_msg = f"SSH Channel: Command execute timeout: {session.get_total_result()}"
                 else:
                     # execute finish
-                    exit_signal = chan.get_exit_signal()
                     exit_status = chan.get_exit_status()
-                    result['exit_signal'] = 1 if exit_signal is None else exit_signal
-                    result['exit_status'] = 1 if exit_status is None else exit_status
-                    result['total_out'] = session.get_total_result()
-                    result['err_msg'] = session.get_err_msg()
+                    if exit_status != 0:
+                        channel_result.code = ChannelCode.CHANNEL_EXEC_FAILED.value
+                        channel_result.result = session.get_total_result()
+                        channel_result.err_msg = f"SSH Channel: Command exit code != 0 => {session.get_err_msg()}"
+                    else:
+                        channel_result.code = ChannelCode.SUCCESS.value
+                        channel_result.err_msg = ""
+                        channel_result.result = session.get_total_result()
 
         except asyncssh.misc.PermissionDenied as exc:
             # Auth failed exception
-            result["err_msg"] = f"Auth failed: {str(exc)}"
+            channel_result.code = ChannelCode.CHANNEL_CONNECT_FAILED.value
+            channel_result.result = f"SSH Channel: Auth failed (host = {self._hostname})"
+            channel_result.err_msg = f"SSH Channel: Auth failed (host = {self._hostname}) => {str(exc)}"
             logger.exception(exc)
         except concurrent.futures._base.TimeoutError:
-            result["err_msg"] = f"Connect to {self._hostname} timeout."
+            channel_result.code = ChannelCode.CHANNEL_CONNECT_TIMEOUT.value
+            channel_result.result = f"SSH Channel: Connect to {self._hostname} timeout."
+            channel_result.err_msg = channel_result.result
         except Exception as exc:
+            channel_result.code = ChannelCode.SERVER_ERROR.value
+            channel_result.err_msg = f"SSH Channel: Unexpected error => {str(exc)}"
             # Unknown exception
             logger.exception(exc)
-            result['err_msg'] = str(exc)
-        return result
+        return channel_result
 
     async def _do_scp(self, mode: str, local_path: str, remote_path: str):
         err: Optional[Exception] = None

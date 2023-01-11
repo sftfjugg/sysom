@@ -75,17 +75,7 @@ class Channel(BaseChannel):
         return result
 
     def run_command(self, **kwargs):
-        res = self._ssh_client.run_command(self._command, **kwargs)
-        return ChannelResult(
-            code=res.get("exit_status", 0),
-            result=res.get("total_out", ""),
-            err_msg=res.get("err_msg", "")
-        )
+        return self._ssh_client.run_command(self._command, **kwargs)
 
     async def run_command_async(self, **kwargs) -> ChannelResult:
-        res = await self._ssh_client.run_command_async(self._command, **kwargs)
-        return ChannelResult(
-            code=res.get("exit_status", 0),
-            result=res.get("total_out", ""),
-            err_msg=res.get("err_msg", "")
-        )
+        return await self._ssh_client.run_command_async(self._command, **kwargs)
