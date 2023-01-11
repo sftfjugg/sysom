@@ -187,7 +187,7 @@ class ChannelListener(MultiConsumer):
             result["result"] = ce.summary
         except Exception as e:
             LoggerHelper.get_lazy_logger().exception(e)
-            result["code"] = ChannelCode.SERVER_ERROR
+            result["code"] = ChannelCode.SERVER_ERROR.value
             result["err_msg"] = str(e)
             result["result"] = "Channel Server Error"
         finally:
