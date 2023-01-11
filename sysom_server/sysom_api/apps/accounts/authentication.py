@@ -43,9 +43,13 @@ class Authentication(BaseAuthentication):
         id = payload.get('id', None) or payload.get('sub', None)
         if not username:
             raise AuthenticationFailed('令牌错误, 用户不存在!')
-        u, _ = User.objects.get_or_create(
-            username=username, is_agree=True, id=int(id))
-        return u
+        # u, _ = User.objects.get_or_create(
+        #     username=username, is_agree=True, id=int(id))
+        try:
+            u = User.objects.get(id=int(id))
+            return u
+        except User.DoesNotExist:
+            raise AuthenticationFailed('用户不存在')
 
     @staticmethod
     def _get_all_user_count():
