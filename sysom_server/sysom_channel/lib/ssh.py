@@ -101,9 +101,10 @@ class AsyncSSH:
         echo {public_key!r} >> ~/.ssh/authorized_keys && \
         chmod 600 ~/.ssh/authorized_keys'
         res = await self.run_command_async(command, timeout=timeout)
-        if res.get("exit_status", 1) != 0:
+        if res.code != 0:
             raise ChannelException(
-                f'Init {self._hostname} failed: {res.get("err_msg", "")}')
+                f'Init {self._hostname} failed: {res.get("err_msg", "")}',
+                code=ChannelCode.CHANNEL_CONNECT_FAILED.value)
 
     def add_public_key(self, timeout: Optional[int] = None):
         syncify(self.add_public_key_async, raise_sync_error=False)(
