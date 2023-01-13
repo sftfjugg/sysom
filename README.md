@@ -15,7 +15,7 @@
 * 智能问题诊断 
 * 发布部署
 
-# 安装部署
+# 安装部署方法一
 
 * 依赖
 
@@ -41,3 +41,28 @@
  	bash deploy.sh /usr/local/sysom 192.168.100.100 100.100.22.22
 	```
 
+# 安装部署方法二
+* 依赖
+
+  [nodejs](https://nodejs.org/en/) 要求版本 >=12.0.0
+
+* 打包：执行打包脚本 package_rpm_online.sh，生成发布包，用于部署。
+
+	```
+    # 前端打包需要本地已经具备yarn环境，如不具备，需要提前部署yarn环境，然后进到 sysom_web 目录执行 yarn 命令安装依赖包。
+    # mac 环境下 yarn 安装可以采用脚本：curl -o- -L https://yarnpkg.com/install.sh | bash
+    # 安装yarn完成后，执行下列命令打包项目
+    # 由于是制作rpm包，因此也需要打包具备制作rpm的条件，如rpmbuild，python3命令等。
+	bash package_rpm_online.sh
+	```
+* 部署：将发布包拷贝到目标机器上，使用yum或者rpm命令安装，进入到目录中执行部署脚本。
+
+	```
+ 	rpm -ivh sysom-2.0-1.an8.x86_64.rpm
+ 	或yum install -y sysom-2.0-1.an8.x86_64.rpm
+    # 默认安装路径为/usr/local/sysom下
+    # 默认配置使用的nginx对外端口为80，可以通过export SERVER_PORT=xxx来设置
+    # 默认配置的内网IP是通过ip -4 route命令查找的第一个IP，可以通过export SERVER_LOCAL_IP=xxx.xxx.xxx.xxx来设置
+    # 使用以下命令进行启动:
+ 	bash -x /usr/local/sysom/init_scripts/server/init.sh
+	```
