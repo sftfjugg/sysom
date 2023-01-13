@@ -1,3 +1,4 @@
+from loguru import logger
 import re
 import logging
 import os
@@ -35,7 +36,6 @@ from cec_base.event import Event
 from django.http import HttpResponse, FileResponse
 from apps.hotfix.function import FunctionClass
 
-logger = logging.getLogger(__name__)
 
 class SaveUploadFile(APIView):
     authentication_classes = []
