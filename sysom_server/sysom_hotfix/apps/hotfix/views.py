@@ -22,6 +22,7 @@ from apps.hotfix.models import HotfixModel
 from lib.response import *
 from lib.utils import human_datetime, datetime
 from lib.exception import APIException
+from lib.base_view import CommonModelViewSet
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from channel_job import default_channel_job_executor
 from channel_job import ChannelJobExecutor
@@ -65,7 +66,6 @@ class SaveUploadFile(APIView):
     def post(self, request):
         patch_file = request.data.get('file', None)
         catalogue = request.data.get('catalogue', None)
-        print(patch_file.name)
         if not patch_file:
             return APIException(message="Upload Failed: file required!")
 
@@ -101,9 +101,10 @@ class HotfixAPIView(GenericViewSet,
         super().__init__(**kwargs)
         self.event_id = None
         self.function = FunctionClass()
+        self.cec = CommonModelViewSet()
 
     def cec_delivery_report(self, err: Exception, event: Event):
-        print(f"Produce new message => {event.event_id}")
+        logger.info(f"Produce new message => {event.event_id}")
         self.event_id = event.event_id
 
     """
@@ -126,43 +127,39 @@ class HotfixAPIView(GenericViewSet,
             arch = arch
         )
 
-        producer = dispatch_producer(settings.SYSOM_CEC_URL)
-        producer.produce(settings.SYSOM_CEC_HOTFIX_TOPIC, {
+        self.cec.produce_event_to_cec(settings.SYSOM_CEC_HOTFIX_TOPIC, {
             "hotfix_id" : res.id,
             "kernel_version" : res.kernel_version,
             "patch_name" : res.patch_name,
             "patch_path" : res.patch_path,
             "arch": res.arch,
             "log_file" : res.log_file
-        }, self.cec_delivery_report)
-        producer.flush()
+        })
         return success(result={"msg":"success","id":res.id,"event_id":self.event_id}, message="create hotfix job success")
 
     def get_hotfixlist(self, request):
-        if request.method == "GET":
-            try:
-                queryset = HotfixModel.objects.all().filter(deleted_at=None)
-                response = serializer.HotfixSerializer(queryset, many=True)
-            except Exception as e:
-                print(str(e))
-                return other_response(message=str(e), result={"msg":"invoke get_hotfixlist failed"}, code=400)
-            return success(result=response.data, message="invoke get_hotfixlist")
+        try:
+            queryset = HotfixModel.objects.all().filter(deleted_at=None)
+            response = serializer.HotfixSerializer(queryset, many=True)
+        except Exception as e:
+            logger.exception(e)
+            return other_response(message=str(e), result={"msg":"invoke get_hotfixlist failed"}, code=400)
+        return success(result=response.data, message="invoke get_hotfixlist")
 
     """
     return the formal hotfix information list base on the given parameters
     """
     def get_formal_hotfixlist(self, request):
-        if request.method == "GET":
-            try:
-                created_time = request.GET.get('created_at')
-                kernel_version = request.GET.get('kernel_version')
-                patch_name = request.GET.get('patch_name')
-                queryset = self.function.query_formal_hotfix_by_parameters(created_time, kernel_version, patch_name)
-                response = serializer.HotfixSerializer(queryset, many=True)
-            except Exception as e:
-                print(str(e))
-                return other_response(message=str(e), result={"msg":"invoke get_formal_hotfixlist failed"}, code=400)
-            return success(result=response.data, message="invoke get_formal_hotfixlist")  
+        try:
+            created_time = request.GET.get('created_at')
+            kernel_version = request.GET.get('kernel_version')
+            patch_name = request.GET.get('patch_name')
+            queryset = self.function.query_formal_hotfix_by_parameters(created_time, kernel_version, patch_name)
+            response = serializer.HotfixSerializer(queryset, many=True)
+        except Exception as e:
+            logger.exception(e)
+            return other_response(message=str(e), result={"msg":"invoke get_formal_hotfixlist failed"}, code=400)
+        return success(result=response.data, message="invoke get_formal_hotfixlist")  
 
 
     def delete_hotfix(self, request):
@@ -172,124 +169,113 @@ class HotfixAPIView(GenericViewSet,
         else:
             hotfix.deleted_at=human_datetime()
             hotfix.save()
-            print("saved the object")
             return success(result={}, message="invoke delete_hotfix")
 
     def set_formal(self, request):
-        if request.method == 'POST':
-            hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
-            hotfix.formal = 1
-            hotfix.save()
-            return success(result={"msg":"scuuessfully update formal status"}, message="formal status updated")
+        hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
+        hotfix.formal = 1
+        hotfix.save()
+        return success(result={"msg":"scuuessfully update formal status"}, message="formal status updated")
 
     def update_building_status(self, request):
-        if request.method == 'POST':
-            hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
-            status = request.data["status"]
-            if hotfix is None:
-                return other_response(message="No such hotfix id", result={"mgs":"update building status failed"}, code=400)
-            if status == "waiting":
-                hotfix.building_status=0
-            elif status == "building":
-                hotfix.building_status=1
-            elif status == "failed":
-                hotfix.building_status=2
-            elif status == "success":
-                hotfix.building_status=3
-            else:
-                return other_response(message="unsupported status", result={"mgs":"update building status failed"}, code=401)
-            hotfix.save()
-            return success(result={"msg":"update building status successfully"}, message="update building status success")
+        hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
+        status = request.data["status"]
+        if hotfix is None:
+            return other_response(message="No such hotfix id", result={"mgs":"update building status failed"}, code=400)
+        if status == "waiting":
+            hotfix.building_status=0
+        elif status == "building":
+            hotfix.building_status=1
+        elif status == "failed":
+            hotfix.building_status=2
+        elif status == "success":
+            hotfix.building_status=3
+        else:
+            return other_response(message="unsupported status", result={"mgs":"update building status failed"}, code=401)
+        hotfix.save()
+        return success(result={"msg":"update building status successfully"}, message="update building status success")
 
     def get_build_log(self, request):
-        if request.method == 'GET':
-            hotfix_id = request.GET.get('id')
-            hotfix = HotfixModel.objects.filter(id=hotfix_id).first()
-            if hotfix:
-                if hotfix.building_status == 2 or hotfix.building_status == 3:
-                    # this hotfix task is finished
-                    if os.path.exists(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
-                        msg = ""
-                        for line in open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
-                            msg += line
-                        hotfix.log = msg
-                        hotfix.save()
-                        return success(result=msg, message="hotfix build log return")
-                    else:
-                        msg = hotfix.log
-
-                    if len(msg) > 0:
-                        return success(result=msg, message="hotfix build log return")
-                    else:
-                        return other_response(message="No build log found", result={"msg":"No build log found"}, code=400) 
-                else:
-                    # this job is not finished.. read from the log file
+        hotfix_id = request.GET.get('id')
+        hotfix = HotfixModel.objects.filter(id=hotfix_id).first()
+        if hotfix:
+            if hotfix.building_status == 2 or hotfix.building_status == 3:
+                # this hotfix task is finished
+                if os.path.exists(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
                     msg = ""
                     for line in open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
                         msg += line
+                    hotfix.log = msg
+                    hotfix.save()
                     return success(result=msg, message="hotfix build log return")
-            else:    
-                return other_response(message="No such record", result={"msg":"Hotfix not found"}, code=400)
-        else:
-            return other_response(message="Should be GET method", code=400)
+                else:
+                    msg = hotfix.log
+
+                if len(msg) > 0:
+                    return success(result=msg, message="hotfix build log return")
+                else:
+                    return other_response(message="No build log found", result={"msg":"No build log found"}, code=400) 
+            else:
+                # this job is not finished.. read from the log file
+                msg = ""
+                for line in open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
+                    msg += line
+                return success(result=msg, message="hotfix build log return")
+        else:    
+            return other_response(message="No such record", result={"msg":"Hotfix not found"}, code=400)
 
     def insert_building_log(self, request):
-        if request.method == 'POST':
-            hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
-            log = request.data["log"]
-            print(log)
-            if hotfix is None:
-                return other_response(message="No such hotfix id", result={"mgs":"insert build log failed"}, code=400)
-            if len(log) <= 0:
-                return other_response(message="log is blank", result={"mgs":"insert build log failed"}, code=400)
-            build_log = hotfix.log
-            build_log = build_log + log
-            hotfix.log = build_log
-            hotfix.save()
-            return success(result={"msg": "inserted hotfix log"}, message="insert build log success")
+        hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
+        log = request.data["log"]
+        if hotfix is None:
+            return other_response(message="No such hotfix id", result={"mgs":"insert build log failed"}, code=400)
+        if len(log) <= 0:
+            return other_response(message="log is blank", result={"mgs":"insert build log failed"}, code=400)
+        build_log = hotfix.log
+        build_log = build_log + log
+        hotfix.log = build_log
+        hotfix.save()
+        return success(result={"msg": "inserted hotfix log"}, message="insert build log success")
 
     # this function is invoked when job finished..
     def sync_build_log(self, request):
-        if request.method == 'POST':
-            success = False
-            hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
-            try:
-                log = ""
-                for line in open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
-                    log = log + str(line)
-                    if line == "Success":
-                        success = True
-                hotfix.log = log
-                hotfix.save()
-            except Exception as e:
-                return other_response(message=str(e), code=400)
-            if success:
-                return success(result={"msg": "SUCCESS"}, message="sync build log success")
-            else:
-                return other_response(message="FAILED", code=400)
+        success = False
+        hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
+        try:
+            log = ""
+            for line in open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
+                log = log + str(line)
+                if line == "Success":
+                    success = True
+            hotfix.log = log
+            hotfix.save()
+        except Exception as e:
+            return other_response(message=str(e), code=400)
+        if success:
+            return success(result={"msg": "SUCCESS"}, message="sync build log success")
+        else:
+            return other_response(message="FAILED", code=400)
 
     def update_hotfix_name(self, request):
-        if request.method == 'POST':
-            try:
-                hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
-                rpm_name = request.data["rpm"]
-                hotfix.rpm_name += rpm_name 
-                hotfix.save()
-            except Exception as e:
-                return other_response(message=str(e), code=400)
-            return success(result={"msg":"update hotfix name success"}, message="updated hotfix name")
+        try:
+            hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
+            rpm_name = request.data["rpm"]
+            hotfix.rpm_name += rpm_name 
+            hotfix.save()
+        except Exception as e:
+            return other_response(message=str(e), code=400)
+        return success(result={"msg":"update hotfix name success"}, message="updated hotfix name")
 
     def download_hotfix_file(self, request):
-        if request.method == 'GET':
-            try:
-                hotfix_id = request.GET.get('id')
-                hotfix = HotfixModel.objects.filter(id=hotfix_id).first()
-                rpm_name = hotfix.rpm_name
-                response = FileResponse(open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "rpm", rpm_name), "rb"), as_attachment=True)
-                response['content_type'] = "application/octet-stream"
-                response['Content-Disposition'] = 'attachment;filename=' + rpm_name
-                return response
-            except Exception as e:
-                print(str(e))
-                return other_response(message=str(e), code=400)
+        try:
+            hotfix_id = request.GET.get('id')
+            hotfix = HotfixModel.objects.filter(id=hotfix_id).first()
+            rpm_name = hotfix.rpm_name
+            response = FileResponse(open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "rpm", rpm_name), "rb"), as_attachment=True)
+            response['content_type'] = "application/octet-stream"
+            response['Content-Disposition'] = 'attachment;filename=' + rpm_name
+            return response
+        except Exception as e:
+            logger.exception(e)
+            return other_response(message=str(e), code=400)
             
