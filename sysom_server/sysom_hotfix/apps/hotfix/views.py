@@ -103,10 +103,6 @@ class HotfixAPIView(GenericViewSet,
         self.function = FunctionClass()
         self.cec = CommonModelViewSet()
 
-    def cec_delivery_report(self, err: Exception, event: Event):
-        logger.info(f"Produce new message => {event.event_id}")
-        self.event_id = event.event_id
-
     """
     Log_file : patch_name-time.log , this is used to output the log
     """
