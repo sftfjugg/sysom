@@ -34,7 +34,6 @@ const changeFormal = (record) => {
 const submitHotfix = (params) => {
   const token = localStorage.getItem('token');
   createHotfix(token, params)
-  console.log(params)
 }
 
 const downloadHotfix = async (record) => {
@@ -49,9 +48,7 @@ const downloadHotfix = async (record) => {
     link.click();
     URL.revokeObjectURL(link.href); // 释放 URL对象
     document.body.removeChild(link);
-    console.log(res.response.headers.get('content-disposition').split("attachment;filename=")[1])
   }
-  console.log("downloadHotfixFile: ", record.id)
 }
 
 const HotfixList = () => {

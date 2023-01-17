@@ -28,7 +28,6 @@ const handleDelHotfix = async (record) => {
 
 const downloadHotfix = async (record) => {
   const res = await downloadHotfixFile(record.id);
-  console.log(res)
   if (res) {
     const url = window.URL.createObjectURL(res.data);
     const link = document.getElementById('downloadDiv'); //创建a标签
@@ -39,7 +38,6 @@ const downloadHotfix = async (record) => {
     link.click();
     URL.revokeObjectURL(link.href); // 释放 URL对象
     document.body.removeChild(link);
-    console.log(res.response.headers.get('content-disposition').split("attachment;filename=")[1])
   }
 }
 

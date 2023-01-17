@@ -16,7 +16,6 @@ export async function getHotfixList(params, options) {
 
 export async function queryFormalHotfixList(params, options) {
   const token = localStorage.getItem('token');
-  console.log(params)
   return request('/api/v1/hotfix/get_formal_hotfix_list/', {
     method: 'GET',
     headers: {
@@ -57,7 +56,6 @@ export async function setFormal(id, token, options) {
 }
 
 export const normFile = (e) => {
-  console.log('Upload event:', e);
   if (Array.isArray(e)) {
     return e;
   }
