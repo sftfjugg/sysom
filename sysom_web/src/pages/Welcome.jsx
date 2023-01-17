@@ -101,6 +101,10 @@ const Welcome = () => {
           })}>
             <Menu.Item key="List"><a href="/security/List"><FormattedMessage id="menu.security.list" /></a></Menu.Item>
           </SubMenu>
+          <SubMenu key="hotfix" title="热补丁中心">
+            <Menu.Item key="FormalList"><a href='/hotfix/formal_hotfix'>热补丁列表</a></Menu.Item>
+            <Menu.Item key="List"><a href="/hotfix/make">热补丁制作</a></Menu.Item>
+          </SubMenu>
         </Menu>
         <div className={styles.avatarRight}>
           <AvatarDrop/>
