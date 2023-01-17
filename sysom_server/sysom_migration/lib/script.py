@@ -1,4 +1,5 @@
 ass_imp_script = '''
+sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config
 tar -zxvf /tmp/ance/database/anolis_migration_pkgs.tar.gz -C /tmp/ance/database
 cd /tmp/ance/database/pkgs
 yum install -y python-pip
