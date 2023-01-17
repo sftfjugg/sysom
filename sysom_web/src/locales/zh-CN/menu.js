@@ -97,4 +97,8 @@ export default {
   'menu.diagnose.storage.io': 'IO延时诊断',
   'menu.diagnose.memory.market': '内存大盘',
   'menu.vmcore.analyse': '在线分析',
+  'menu.hotfix': '热补丁中心',
+  'menu.hotfix.make': '热补丁制作',
+  'menu.hotfix.formal': '热补丁列表',
+  'menu.hotfix.versionconf': '内核版本配置',
 };
