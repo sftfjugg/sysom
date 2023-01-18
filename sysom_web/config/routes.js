@@ -262,6 +262,30 @@ export default [
     ],
   },
   {
+    path: '/hotfix',
+    name: 'hotfix',
+    routes: [
+      {
+        path: '/hotfix/formal_hotfix',
+        name: 'formal',
+        component: './hotfix/FormalHotfixList'
+      },
+      {
+        path: '/hotfix',
+        redirect: '/hotfix/make',
+      },
+      {
+        path: '/hotfix/make',
+        name: 'make',
+        component: './hotfix/Make',
+      },
+      {
+        path: '/hotfix/hotfix_log/:id?',
+        component: './hotfix/HotfixLog'
+      }
+    ]
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },
