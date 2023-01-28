@@ -119,7 +119,7 @@ DOWNLOAD_DIR = os.path.join(WEB_DIR, 'download')
 ##################################################################
 # Hotfix Platform settings
 ##################################################################
-HOTFIX_FILE_STORAGE_REPO = "/usr/local/sysom/server/hotfix/hotfix-nfs"
+HOTFIX_FILE_STORAGE_REPO = "/usr/local/sysom/server/hotfix_builder/hotfix-nfs"
 
 ##################################################################
 # Cec settings
