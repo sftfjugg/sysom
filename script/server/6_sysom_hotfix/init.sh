@@ -33,7 +33,7 @@ start_nfs()
     fi
 
     nfs_mask=`ip -4 route | grep "link src" | grep $SERVER_LOCAL_IP | awk '{print $1}' | head -n 1`
-    file_path=${SERVER_HOME}/hotfix/hotfix-nfs
+    file_path=${SERVER_HOME}/hotfix_builder/hotfix-nfs
     mkdir -p ${file_path}
     echo "${file_path} ${nfs_mask}(rw,async)" >> /etc/exports
     exportfs -rv

@@ -1,6 +1,4 @@
 #!/bin/bash
-
-
 SERVICE_NAME=sysom-hotfix
 
 start_app() {
