@@ -17,9 +17,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import ValidationError
 from django.conf import settings
 from rest_framework.viewsets import GenericViewSet
+import re
 
 from apps.hotfix import serializer
-from apps.hotfix.models import HotfixModel
+from apps.hotfix.models import HotfixModel, OSTypeModel, KernelVersionModel
 from lib.response import *
 from lib.utils import human_datetime, datetime
 from lib.exception import APIException
@@ -27,7 +28,6 @@ from lib.base_view import CommonModelViewSet
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from channel_job import default_channel_job_executor
 from channel_job import ChannelJobExecutor
-from django.conf import settings
 from django import forms
 from django.views.decorators.csrf import csrf_exempt
 from cec_base.admin import dispatch_admin
@@ -111,26 +111,49 @@ class HotfixAPIView(GenericViewSet,
         log_file = "{}-{}.log".format(request.data["patch_name"], time.strftime("%Y%m%d%H%M%S"))
         patch_name = request.data["patch_name"]
         patch_name.replace(" ","-")
-        res = HotfixModel.objects.create(
-            kernel_version = request.data['kernel_version'],
-            patch_name = patch_name,
-            patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1]),
-            building_status = 0,
-            hotfix_necessary = 0,
-            hotfix_risk = 2,
-            formal = 0,
-            log_file = log_file,
-            arch = arch
-        )
+        kernel_version = request.data['kernel_version']
 
-        self.cec.produce_event_to_cec(settings.SYSOM_CEC_HOTFIX_TOPIC, {
-            "hotfix_id" : res.id,
-            "kernel_version" : res.kernel_version,
-            "patch_name" : res.patch_name,
-            "patch_path" : res.patch_path,
-            "arch": res.arch,
-            "log_file" : res.log_file
-        })
+        # check if this kernel_version is customize
+        try:
+            customize_version_object = KernelVersionModel.objects.all().filter(kernel_version=kernel_version).first()
+        except Exception as e:
+            return other_response(message="Error when operating db", code=400)
+
+        if customize_version_object is None:
+            # This is not a customize kernel version
+            release = kernel_version.split('.')[-2] # 4.19.91-26.5.an8.x86_64 -> an8
+            if re.search('an', release):
+                # this is a anolis kernel
+                os_type = "anolis"
+                patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1])
+                hotfix_necessary = 0
+                hotfix_risk = 2
+                res = self.function.create_hotfix_object_to_database(os_type, kernel_version, patch_name, patch_path, 
+                hotfix_necessary, hotfix_risk, log_file, arch)
+
+                status = self.function.create_message_to_cec(customize=False, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=os_type, 
+                hotfix_id=res.id, kernel_version=res.kernel_version, patch_name=res.patch_name, patch_path=res.patch_path, 
+                arch=res.arch, log_file=res.log_file)
+        else:
+            # This is a customize kernel version
+            os_type = self.function.get_info_from_version(kernel_version)
+            git_repo = self.function.get_gitrepo_of_os(os_type)
+            image = self.function.get_image_of_os(os_type)
+            git_branch = self.function.get_info_from_version(kernel_version, "branch")
+            devel_link = self.function.get_info_from_version(kernel_version, "devel_link")
+            debuginfo_link = self.function.get_info_from_version(kernel_version, "debuginfo_link")
+            patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1])
+            hotfix_necessary = 0
+            hotfix_risk = 2
+            res = self.function.create_hotfix_object_to_database(os_type, kernel_version, patch_name, patch_path,
+            hotfix_necessary, hotfix_risk, log_file, arch)
+
+            # if this is customize kernel, it should provide the git repo and the branch of this version
+            # with devel-package and debuginfo-package
+            status = self.function.create_message_to_cec(customize=True, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=res.os_type,
+            hotfix_id=res.id, kernel_version=res.kernel_version, patch_name=res.patch_name, patch_path=res.patch_path, arch=res.arch,
+            log_file=res.log_file, git_repo=git_repo, git_branch=git_branch, devel_link=devel_link,debuginfo_link=debuginfo_link,image=image)
+            
         return success(result={"msg":"success","id":res.id,"event_id":self.event_id}, message="create hotfix job success")
 
     def get_hotfixlist(self, request):
@@ -241,16 +264,11 @@ class HotfixAPIView(GenericViewSet,
             log = ""
             for line in open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "log", hotfix.log_file)):
                 log = log + str(line)
-                if line == "Success":
-                    success = True
             hotfix.log = log
             hotfix.save()
         except Exception as e:
             return other_response(message=str(e), code=400)
-        if success:
-            return success(result={"msg": "SUCCESS"}, message="sync build log success")
-        else:
-            return other_response(message="FAILED", code=400)
+        return success(result={"msg": "SUCCESS"}, message="sync build log success")
 
     def update_hotfix_name(self, request):
         try:
@@ -274,4 +292,128 @@ class HotfixAPIView(GenericViewSet,
         except Exception as e:
             logger.exception(e)
             return other_response(message=str(e), code=400)
-            
+
+    def insert_os_type_relation(self, request):
+        os_type = request.data["os_type"]
+        git_repo = request.data["git_repo"]
+        try:
+            image = request.data['image']
+        except Exception as e:
+            image = ""
+        if len(os_type) > 0 and len(git_repo) > 0:
+            try:
+                os_object = OSTypeModel.objects.all().filter(os_type=os_type).first()
+                if os_object is None:
+                    os_type_object = OSTypeModel.objects.create(
+                        os_type = os_type,
+                        git_repo = git_repo,
+                        image = image
+                    )
+                else:
+                    return other_response(message="same key found in record..", code=400)
+            except Exception as e:
+                return other_response(message=str(e), code=400)
+        else:
+            return other_response(message="one or more of the key parameter is null", code=400)
+        return success(result={"msg":"create os_type relation successfully"}, message="invoke insert_os_type_relation success")
+
+    def insert_kernel_version_relation(self, request):
+        kernel_version = request.data['kernel_version']
+        git_branch = request.data['git_branch']
+        devel_link = request.data['devel_link']
+        debuginfo_link = request.data['debuginfo_link']
+        os_type = request.data['os_type']
+        if len(kernel_version)>0 and len(git_branch)>0 and len(devel_link)>0 and len(debuginfo_link)>0:
+            try:
+                kernel_object = KernelVersionModel.objects.all().filter(kernel_version=kernel_version).first()
+                if kernel_object is None:
+                    kernel_object = KernelVersionModel.objects.create(
+                        kernel_version = kernel_version,
+                        os_type=os_type,
+                        git_branch = git_branch,
+                        devel_link = devel_link,
+                        debuginfo_link = debuginfo_link
+                    )
+                else:
+                    return other_response(message="same kernel version found in record...")
+            except Exception as e:
+                return other_response(message=str(e), code=400)
+        else:
+            return other_response(message="one or more of the key parameters is null", code=400)
+        return success(result={"msg":"create kernel version relation successfully"}, message="invoke insert_kernel_version_relation success")
+
+    def get_os_type_relation(self, request):
+        try:
+            queryset = OSTypeModel.objects.all().filter(deleted_at=None)
+            response = serializer.OSTypeSerializer(queryset, many=True)
+        except Exception as e:
+            print(str(e))
+            return other_response(message=str(e), result={"msg":"get_os_type_relation failed"}, code=400)
+        return success(result=response.data, message="get_os_type_relation")
+    
+    def get_kernel_relation(self, request):
+        try:
+            queryset = KernelVersionModel.objects.all().filter(deleted_at=None)
+            response = serializer.KernelSerializer(queryset, many=True)
+        except Exception as e:
+            print(str(e))
+            return other_response(message=str(e), result={"msg":"get_kernel_relation failed"}, code=400)
+        return success(result=response.data, message="get_kernel_relation")
+
+    def delete_os_type(self, request):
+        object_id = request.data['id']
+        try:
+            os_type_object = OSTypeModel.objects.all().filter(id=object_id).first()
+            if os_type_object is not None:
+                os_type = os_type_object.os_type
+                kernel_sets = KernelVersionModel.objects.all().filter(os_type=os_type)
+                # delete all the kernel belongs to the delete os_type
+                for each_kernel in kernel_sets:
+                    each_kernel.delete()
+                os_type_object.delete()
+            else:
+                other_response(message="can not find the record with the given id", code=400)
+        except Exception as e:
+            return other_response(message=str(e), code=400)
+        return success(result={"msg":"successfully deleted object"}, message="invoked delete os type")
+
+    def delete_kernel_version(self, request):
+        object_id = request.data['id']
+        try:
+            os_type_object = KernelVersionModel.objects.all().filter(id=object_id).first()
+            if os_type_object is not None:
+                os_type_object.delete()
+            else:
+                other_response(message="can not find the record with the given id", code=400)
+        except Exception as e:
+            return other_response(message=str(e), code=400)
+        return success(result={"msg":"successfully deleted object"}, message="invoked delete kernel_version")
+
+    def update_kernel_version(self, request):
+        print(request.data)
+        try:
+            kernel_object = KernelVersionModel.objects.all().filter(id=request.data['id']).first()
+            if kernel_object is None:
+                return other_response(msg="can not find the kernelversion record", code=400)
+            kernel_object.kernel_version = request.data['kernel_version']
+            kernel_object.os_type = request.data['os_type']
+            kernel_object.git_branch = request.data['git_branch']
+            kernel_object.devel_link = request.data['devel_link']
+            kernel_object.debuginfo_link = request.data['debuginfo_link']
+            kernel_object.save()
+        except Exception as e:
+            return other_response(msg=str(e), code=400)
+        return success(result={"msg":"successfully update kernelversion object"},message="invoke update_kernelversion")
+
+    def update_ostype(self, request):
+        try:
+            os_type_object = OSTypeModel.objects.all().filter(id=request.data['id']).first()
+            if os_type_object is None:
+                return other_response(msg="can not find the OS type record", code=400)
+            os_type_object.os_type = request.data['os_type']
+            os_type_object.git_repo = request.data['git_repo']
+            os_type_object.image = request.data['image']
+            os_type_object.save()
+        except Exception as e:
+            return other_response(msg=str(e), code=400)
+        return success(result={"msg":"successfully update os_type object"},message="invoke update_ostype")
