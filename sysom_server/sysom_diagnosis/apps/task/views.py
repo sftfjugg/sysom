@@ -38,7 +38,7 @@ class TaskAPIView(CommonModelViewSet,
     def get_authenticators(self):
         # 判断请求是否是单查task
         task_id = self.kwargs.get(self.lookup_field, None)
-        if self.request.path.endswith("svg/") or task_id is not None:
+        if self.request.path.endswith("svg/") or (task_id is not None and self.request.method == 'GET'):
             return []
         else:
             return [auth() for auth in self.authentication_classes]
@@ -93,7 +93,7 @@ class TaskAPIView(CommonModelViewSet,
             res = self.require_param_validate(
                 request, ['service_name'])
             if not res['success']:
-                return ErrorResponse(message=res.get('message', 'Missing parameters'))
+                return ErrorResponse(msg=res.get('message', 'Missing parameters'))
             data = request.data
 
             # 3. Create Task
