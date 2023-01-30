@@ -38,6 +38,7 @@ main()
     then
         exit 1
     fi
+    bash -x raptor_profiling_deploy.sh
     exit 0
 }
 
