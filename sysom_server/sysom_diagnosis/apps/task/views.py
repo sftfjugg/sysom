@@ -4,13 +4,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import mixins
-
+from django.http.response import Http404
 from django.conf import settings
 from apps.task import seriaizer
 from apps.task.models import JobModel
 from apps.task.filter import TaskFilter
 from lib.base_view import CommonModelViewSet
-from lib.response import success, not_found, ErrorResponse
+from lib.response import success, not_found, ErrorResponse, other_response
 from lib.authentications import TokenAuthentication
 from channel_job.job import JobResult
 from .helper import DiagnosisHelper
@@ -30,12 +30,15 @@ class TaskAPIView(CommonModelViewSet,
     filterset_class = TaskFilter  # 精确查询
     authentication_classes = [TokenAuthentication]
     create_requird_fields = ['service_name']
+    lookup_field = 'task_id'
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def get_authenticators(self):
-        if self.request.path.endswith("svg/") or self.request.method == "GET":
+        # 判断请求是否是单查task
+        task_id = self.kwargs.get(self.lookup_field, None)
+        if self.request.path.endswith("svg/") or (task_id is not None and self.request.method == 'GET'):
             return []
         else:
             return [auth() for auth in self.authentication_classes]
@@ -44,10 +47,11 @@ class TaskAPIView(CommonModelViewSet,
         return self.create_task_v2(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
-        kwargs["task_id"] = kwargs.pop("pk")
-        instance = self.get_queryset().filter(**kwargs).first()
-        if not instance:
-            return success([])
+        try:
+            instance = self.get_object()
+        except Http404:
+            return other_response(result={}, message='task不存在', success=False, code=400)
+
         response = seriaizer.JobRetrieveSerializer(instance)
         res = response.data
         result = res['result']
@@ -89,7 +93,7 @@ class TaskAPIView(CommonModelViewSet,
             res = self.require_param_validate(
                 request, ['service_name'])
             if not res['success']:
-                return ErrorResponse(message=res.get('message', 'Missing parameters'))
+                return ErrorResponse(msg=res.get('message', 'Missing parameters'))
             data = request.data
 
             # 3. Create Task
