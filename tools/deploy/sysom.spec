@@ -35,8 +35,9 @@ REDIS_DL_URL=https://download.redis.io/releases
 REDIS_PKG=redis-5.0.14.tar.gz
 SYSAK_DOWNLOAD_URL=https://mirrors.openanolis.cn/sysak/packages
 SYSAK_PKG=sysak-1.3.0-2.x86_64.rpm
-ANCE_PKG=ance-0.1.0-1.x86_64.rpm
+ANCE_PKG=ance-0.1.1-1.x86_64.rpm
 ANOLIS_SQLITE=AnolisOS-8.6-x86_64-dvd.iso.sqlite
+ANOLIS_MIGRATION_PKGS=anolis_migration_pkgs.tar.gz
 
 do_download_sysak() {
     echo "now download ${SYSAK_PKG}..."
@@ -88,22 +89,20 @@ do_download_monitor() {
 }
 
 do_download_ance() {
-   echo "now download ${ANOLIS_SQLITE}, ${ANCE_PKG}..."
-   mkdir -p sysom_server/sysom_migration/ance
-   if [ -e /root/${ANOLIS_SQLITE} ]
-   then
-       cp /root/${ANOLIS_SQLITE} sysom_server/sysom_migration/ance
-   else
-       echo "/root/${ANOLIS_SQLITE} not found"
-       exit 1 
-   fi
-   if [ -e /root/${ANCE_PKG} ]
-   then
-       cp /root/${ANCE_PKG} sysom_server/sysom_migration/ance
-   else
-       echo "/root/${ANCE_PKG} not found"
-       exit 1
-   fi
+    echo "now download ${ANOLIS_SQLITE}, ${ANCE_PKG}, ${ANOLIS_MIGRATION_PKGS}..."
+    
+    mkdir -p sysom_server/sysom_migration/ance
+    pushd sysom_server/sysom_migration/ance
+    if [ ! -f "${ANCE_PKG}" ]; then
+        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/release/x86_64/${ANCE_PKG}"
+    fi
+    if [ ! -f "${ANOLIS_SQLITE}" ]; then
+        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/databases/${ANOLIS_SQLITE}"
+    fi
+    if [ ! -f "${ANOLIS_MIGRATION_PKGS}" ]; then
+        wget "https://gitee.com/src-anolis-sig/leapp/releases/download/v1.0.0-all-in-one/${ANOLIS_MIGRATION_PKGS}"
+    fi
+    popd
 }
 
 do_virtualenv() {
