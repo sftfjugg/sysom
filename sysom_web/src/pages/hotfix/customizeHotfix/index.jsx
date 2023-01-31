@@ -2,10 +2,9 @@ import {  useRef } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
-import { Popconfirm, message, Switch, Upload, Button, Select, Form, Collapse} from 'antd';
-import { getHotfixList, delHotfix, setFormal, uploadProps, normFile, createHotfix, downloadHotfixFile } from '../service';
-import { UploadOutlined } from '@ant-design/icons';
-import { DownloadOutlined } from '@ant-design/icons';
+import { Popconfirm, message, Upload, Button, Select, Form} from 'antd';
+import { getHotfixList, delHotfix, downloadHotfixFile, normFile, uploadProps } from '../service';
+import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 
 const handleDelHotfix = async (record) => {
   const hide = message.loading('正在删除');
@@ -26,42 +25,29 @@ const handleDelHotfix = async (record) => {
   }
 }
 
-const changeFormal = (record) => {
-  const token = localStorage.getItem('token');
-  setFormal(record.id, token)
-};
-
-const submitHotfix = (params) => {
-  const token = localStorage.getItem('token');
-  createHotfix(token, params)
-}
 
 const downloadHotfix = async (record) => {
   const res = await downloadHotfixFile(record.id);
+  console.log(res)
   if (res) {
     const url = window.URL.createObjectURL(res.data);
-    const link = document.createElement('a'); //创建a标签
+    const link = document.getElementById('downloadDiv'); //创建a标签
     link.style.display = 'none';
     link.href = url; // 设置a标签路径
-    link.download = res.response.headers.get('content-disposition').split("attachment;filename=")[1]; //设置文件名， 也可以这种写法 （link.setAttribute('download', '名单列表.xls');
+    link.download = res.response.headers.get('content-disposition').split("attachment;filename=")[1]; //设置文件名
     document.body.appendChild(link);
     link.click();
     URL.revokeObjectURL(link.href); // 释放 URL对象
     document.body.removeChild(link);
+    console.log(res.response.headers.get('content-disposition').split("attachment;filename=")[1])
   }
 }
 
-const HotfixList = () => {
+const customizeHotfixList = () => {
   const actionRef = useRef();
   const intl = useIntl();
 
   const columns = [
-    {
-      title: <FormattedMessage id="pages.hotfix.created_at" defaultMessage="created_at" />,
-      dataIndex: 'created_at',
-      valueType: 'message',
-      hideInSearch: true,
-    },
     {
       title: <FormattedMessage id="pages.hotfix.os_type" defaultMessage="os_type"/>,
       dataIndex: 'os_type',
@@ -69,12 +55,17 @@ const HotfixList = () => {
       dataIndex: 'os_type',
       hideInTable: true,
       hideInSearch: true,
+      render: (_, record) => [ 
+      ],
+      renderFormItem: (item, _a, form) => {
+        return  <Select defaultValue={"Anolis"}/>
+      },
     },
     {
       title: <FormattedMessage id="pages.hotfix.kernel_version" defaultMessage="kernel_version" />,
       dataIndex: 'kernel_version',
-      key: 'kernel_version',
-      tooltip: '请输入全量内核版本名称，如：4.19.91-26.an8.x86_64',
+      valueType: 'input',
+      tooltip: "请输入您自定义的内核版本号，请全量输入"
     },
     {
       title: <FormattedMessage id="pages.hotfix.creator" defaultMessage="create_user" />,
@@ -88,15 +79,32 @@ const HotfixList = () => {
       valueType: 'input',
     },
     {
-      title: <FormattedMessage id="pages.hotfix.building_status" defaultMessage="building_status" />,
-      dataIndex: 'building_status',
-      hideInSearch: true,
-      valueEnum: {
-        0: { text: '等待构建' },
-        1: { text: '正在构建' },
-        2: { text: '构建失败' },
-        3: { text: '构建成功' },
-      },
+      title: <FormattedMessage id="pages.hotfix.kernel_repo_location" defaultMessage="repo_location" />,
+      dataIndex: 'repo_location',
+      valueType: 'input',
+      hideInTable: true,
+      tooltip: '请输入构建平台能够访问到的git仓库地址'
+    },
+    {
+      title: <FormattedMessage id="pages.hotfix.kernel_repo_branch" defaultMessage="branch" />,
+      dataIndex: 'branch',
+      valueType: 'input',
+      hideInTable: true,
+      tooltip: '请输入该版本内核源码所在git分支'
+    },
+    {
+      title: <FormattedMessage id="pages.hotfix.kernel_devel_location" defaultMessage="devel_location" />,
+      dataIndex: 'devel_location',
+      valueType: 'input',
+      hideInTable: true,
+      tooltip: '请输入该内核的devel包的下载链接'
+    },
+    {
+      title: <FormattedMessage id="pages.hotfix.kernel_debuginfo_location" defaultMessage="debuginfo_location" />,
+      dataIndex: 'debuginfo_location',
+      valueType: 'input',
+      hideInTable: true,
+      tooltip: '请输入该内核的debuginfo包的下载链接'
     },
     {
       title: <FormattedMessage id="pages.hotfix.upload" defaultMessage="Upload" />,
@@ -112,6 +120,17 @@ const HotfixList = () => {
                     <Button icon={<UploadOutlined />}>Upload</Button>
                   </Upload>
                 </Form.Item>
+      },
+    },
+    {
+      title: <FormattedMessage id="pages.hotfix.building_status" defaultMessage="building_status" />,
+      dataIndex: 'building_status',
+      hideInSearch: true,
+      valueEnum: {
+        0: { text: '等待构建' },
+        1: { text: '正在构建' },
+        2: { text: '构建失败' },
+        3: { text: '构建成功' },
       },
     },
     {
@@ -146,53 +165,17 @@ const HotfixList = () => {
       ],
     },
     {
-      title: <FormattedMessage id="pages.hotfix.formal" defaultMessage="Formal" />,
-      key: 'formal',
-      dataIndex: 'formal',
-      valueType: 'option',
-      hideInSearch: true,
-      tooltip: '转正式包后会在《热补丁列表》中展示，并且正式包不会被系统定期清理',
-      render: (_, record) => [ 
-        <Popconfirm title="转正式包后无法撤销，是否转正式包?" onConfirm={ async () => {
-          if (record.id == undefined) {
-          message.error(intl.formatMessage({
-              id: 'pages.hotfix.delete_hotfix_not_exist',
-              defaultMessage: "Not allow to delete this hotfix"
-          }))
-          console.log(intl.formatMessage({
-            id: 'pages.hotfix.delete_hotfix_not_exist',
-            defaultMessage: "Not allow to delete this hotfix"
-          }))
-        
-          } else {
-            if (record.building_status == 3){
-              changeFormal(record);
-              record.formal=1;
-              actionRef.current?.reload();
-            }else{
-              message.error(intl.formatMessage({
-                id: 'pages.hotfix.failed.formal',
-                defaultMessage: "失败状态的热补丁不能转正式包"
-            }))
-          }
-          }}} 
-          onCancel={async () => { 
-            if (record.formal == 0){
-              record.formal=0;
-            }
-            }} >
-          <Switch checkedChildren="是" unCheckedChildren="否" defaultChecked={record.formal} disabled={record.formal} checked={record.formal} />
-        </Popconfirm>
-      ]
-    },
-    {
       title: <FormattedMessage id="pages.hotfix.download" defaultMessage="Download" />,
       key: 'download',
       dataIndex: 'download',
       valueType: 'option',
       hideInSearch: true,
       render: (_, record) => [ 
-        <Button type="primary" disabled={record.building_status == 3 ? false : true} onClick={() => downloadHotfix(record)} shape="circle" icon={<DownloadOutlined />} />
+        <Button 
+        type="primary" disabled={record.building_status == 3 ? false : true}
+        onClick={() => downloadHotfix(record)} 
+        shape="circle" 
+        icon={<DownloadOutlined />} />
       ]
     }
   ];
@@ -216,6 +199,7 @@ const HotfixList = () => {
               onClick={() => {
                 const values = searchConfig?.form?.getFieldsValue();
                 submitHotfix(values);
+                actionRef.current?.reload();
               }}
             >
               创建
@@ -231,4 +215,4 @@ const HotfixList = () => {
   );
 };
 
-export default HotfixList;
+export default customizeHotfixList;

@@ -100,5 +100,6 @@ export default {
   'menu.hotfix': '热补丁中心',
   'menu.hotfix.make': '热补丁制作',
   'menu.hotfix.formal': '热补丁列表',
-  'menu.hotfix.versionconf': '内核版本配置',
+  'menu.hotfix.versionconf': '自定义内核版本配置',
+  'menu.hotfix.selfdefine': '自定义热补丁制作',
 };
