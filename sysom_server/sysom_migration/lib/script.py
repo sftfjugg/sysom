@@ -11,7 +11,7 @@ leapp preupgrade --no-rhsm
 
 init_ance_script = '''
 yum install epel-release -y
-yum install ANCE_RPM_PATH -y
+yum install ANCE_RPM_PATH -y --enablerepo=epel
 ance --help
 '''
 
