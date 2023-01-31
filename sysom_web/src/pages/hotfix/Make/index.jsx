@@ -216,6 +216,7 @@ const HotfixList = () => {
               onClick={() => {
                 const values = searchConfig?.form?.getFieldsValue();
                 submitHotfix(values);
+				actionRef.current?.reload();
               }}
             >
               创建
