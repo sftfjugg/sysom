@@ -13,6 +13,7 @@ const imgBanner = [
   {key:4,banner:"#1a2933",title:"监控中心",urls:'/monitor',des:""},
   {key:3,banner:"#1a2933",title:"诊断中心",urls:'/diagnose',des:""},
   {key:5,banner:"#1a2933",title:"安全中心",urls:'/security',des:""},
+  {key:5,banner:"#1a2933",title:"热补丁中心",urls:'/hotfix',des:""},
 ]
 
 const Welcome = () => {
@@ -104,6 +105,7 @@ const Welcome = () => {
           <SubMenu key="hotfix" title="热补丁中心">
             <Menu.Item key="FormalList"><a href='/hotfix/formal_hotfix'>热补丁列表</a></Menu.Item>
             <Menu.Item key="List"><a href="/hotfix/make">热补丁制作</a></Menu.Item>
+            <Menu.Item key="List"><a href="/hotfix/verion_config">自定义内核版本配置</a></Menu.Item>
           </SubMenu>
         </Menu>
         <div className={styles.avatarRight}>

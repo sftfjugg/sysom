@@ -282,6 +282,11 @@ export default [
       {
         path: '/hotfix/hotfix_log/:id?',
         component: './hotfix/HotfixLog'
+      },
+      {
+        path: '/hotfix/verion_config',
+        name: 'versionconf',
+        component: './hotfix/VersionConf'
       }
     ]
   },
