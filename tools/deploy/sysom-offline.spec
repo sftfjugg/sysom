@@ -121,7 +121,6 @@ do_yarn_build() {
     yarn
     yarn build
     popd || exit
-    sed -i "s/env\ python/python3/g" sysom_server/*/manage.py
 }
 
 echo "build sysom ..........."
