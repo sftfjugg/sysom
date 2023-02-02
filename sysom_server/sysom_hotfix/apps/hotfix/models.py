@@ -11,8 +11,9 @@ class HotfixModel(BaseModel):
     os_type = models.CharField(max_length=50, default="Anolis", verbose_name="操作系统类型")
     kernel_version = models.CharField(max_length=60, verbose_name="内核版本")
     patch_path = models.CharField(max_length=255, verbose_name="补丁路径")
-    patch_name = models.CharField(max_length=255, default="patch", verbose_name="补丁名称")
+    patch_file = models.CharField(max_length=255, default="patch", verbose_name="patch名称")
     hotfix_path = models.CharField(max_length=255, verbose_name="rpm存储路径")
+    hotfix_name = models.CharField(max_length=255, default="hotfix", verbose_name="补丁名称", unique=True)
     building_status = models.IntegerField(default=0, verbose_name="构建状态")
     hotfix_necessary = models.IntegerField(default=0, verbose_name="补丁重要性")
     hotfix_risk = models.IntegerField(default=0, verbose_name="补丁风险")
@@ -21,7 +22,7 @@ class HotfixModel(BaseModel):
     log_file = models.CharField(max_length=255, verbose_name="日志存储路径")
     creator = models.CharField(max_length=20, default="admin", verbose_name="创建者")
     formal = models.BooleanField(default=0, verbose_name="正式包")
-    rpm_name = models.CharField(max_length=255, verbose_name="rpm包名")
+    rpm_package = models.CharField(max_length=255, verbose_name="rpm包名")
 
     class Meta:
         db_table = 'sys_hotfix'
