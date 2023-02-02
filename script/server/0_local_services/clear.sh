@@ -26,8 +26,6 @@ stop_app() {
 
 clear_db() {
     systemctl start mariadb.service
-    mysql -uroot -e "drop database if exists sysom;"
-    mysql -uroot -e "drop database if exists grafana;"
     systemctl stop mariadb.service
 }
 
