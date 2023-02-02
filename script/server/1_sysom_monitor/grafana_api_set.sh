@@ -1,6 +1,7 @@
 #!/bin/bash -x
 GRAFANA_CONFIG=/etc/grafana/grafana.ini
 SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
+GRAFANA_SERVER=grafana-server
 
 ###grafana configure mysql###
 SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
@@ -15,7 +16,21 @@ sed -i 's/;name = grafana/name = grafana/g' $GRAFANA_CONFIG
 sed -i "s/;user = root/user = $SYSOM_DATABASE_USER/g" $GRAFANA_CONFIG
 sed -i "s/;host = 127.0.0.1:3306/host = $SYSOM_DATABASE_HOST:$SYSOM_DATABASE_PORT/g" $GRAFANA_CONFIG
 sed 's/disable_login_form = true/;disable_login_form = false/g' -i $GRAFANA_CONFIG
-systemctl restart grafana-server
+
+systemctl restart $GRAFANA_SERVER
+sleep 3
+systemctl status $GRAFANA_SERVER
+if [ $? -ne 0 ]
+then
+    echo "grafana server is not active, check status after 10 seconds"
+    sleep 10
+    systemctl status $GRAFANA_SERVER
+    if [ $? -ne 0 ]
+    then
+        echo "$GRAFANA_SERVER is not running, exit and revert the grafana.ini"
+        exit 1
+    fi
+fi
 
 ##login grafana, and get cookie
 curl --location --request POST 'http://127.0.0.1:3000/login' --header 'Content-Type: application/json' \
@@ -108,4 +123,4 @@ sed 's/;disable_login_form = false/disable_login_form = true/g' -i $GRAFANA_CONF
 sed '/enable anonymous access/{n;s/;enabled = false/enabled = true/;}' -i $GRAFANA_CONFIG
 sed 's/;root_url = %(protocol)s:\/\/%(domain)s:%(http_port)s\//root_url = %(protocol)s:\/\/%(domain)s\/grafana\//g' -i $GRAFANA_CONFIG
 
-systemctl restart grafana-server
+systemctl restart $GRAFANA_SERVER

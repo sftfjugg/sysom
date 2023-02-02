@@ -169,6 +169,12 @@ set_node_init_cmd()
 configure_grafana()
 {
     bash -x grafana_api_set.sh
+    if [ $? -ne 0 ]
+    then
+        echo "grafana configure fail, recover the grafana config file now"
+        bash -x grafana_recover.sh
+        exit 1
+    fi
 }
 
 configure_cron()
