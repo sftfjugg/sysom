@@ -59,6 +59,7 @@ const machineGroup = (props) => {
       type: SET_DATA,
       payload: {
         machineTableLoading: true,
+        activeMachineGroupId: myid,
       },
     });
     const {code, data} = await getNodesList({id:myid});
