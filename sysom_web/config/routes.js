@@ -202,31 +202,6 @@ export default [
     ],
   },
   {
-    path: '/journal',
-    name: 'journal',
-    routes: [
-      {
-        path: '/journal',
-        redirect: '/journal/audit',
-      },
-      {
-        path: '/journal/audit',
-        name: 'audit',
-        component: './journal/Audit',
-      },
-      {
-        path: '/journal/task',
-        name: 'task',
-        component: './journal/Task',
-      },
-      {
-        path: '/journal/alarm',
-        name: 'alarm',
-        component: './journal/Alarm',
-      },
-    ],
-  },
-  {
     path: '/security',
     name: 'security',
     routes: [
@@ -289,6 +264,31 @@ export default [
         component: './hotfix/VersionConf'
       }
     ]
+  },
+  {
+    path: '/journal',
+    name: 'journal',
+    routes: [
+      {
+        path: '/journal',
+        redirect: '/journal/audit',
+      },
+      {
+        path: '/journal/audit',
+        name: 'audit',
+        component: './journal/Audit',
+      },
+      {
+        path: '/journal/task',
+        name: 'task',
+        component: './journal/Task',
+      },
+      {
+        path: '/journal/alarm',
+        name: 'alarm',
+        component: './journal/Alarm',
+      },
+    ],
   },
   {
     path: '/',

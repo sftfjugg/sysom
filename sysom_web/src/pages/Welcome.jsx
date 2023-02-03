@@ -90,13 +90,6 @@ const Welcome = () => {
               <Menu.Item key="command"><a href="/diagnose/memory/command"><FormattedMessage id="menu.diagnose.custom.command" /></a></Menu.Item>
             </SubMenu>
           </SubMenu>
-          <SubMenu key="journal" title={intl.formatMessage({
-            id: "menu.journal",
-          })}>
-            <Menu.Item key="audit"><a href="/journal/audit"><FormattedMessage id="menu.journal.audit" /></a></Menu.Item>
-            <Menu.Item key="task"><a href="/journal/task"><FormattedMessage id="menu.journal.task" /></a></Menu.Item>
-            <Menu.Item key="alarm"><a href="/journal/alarm"><FormattedMessage id="menu.journal.alarm" /></a></Menu.Item>
-          </SubMenu>
           <SubMenu key="security" title={intl.formatMessage({
             id: "menu.security",
           })}>
@@ -106,6 +99,13 @@ const Welcome = () => {
             <Menu.Item key="FormalList"><a href='/hotfix/formal_hotfix'>热补丁列表</a></Menu.Item>
             <Menu.Item key="List"><a href="/hotfix/make">热补丁制作</a></Menu.Item>
             <Menu.Item key="List"><a href="/hotfix/verion_config">自定义内核版本配置</a></Menu.Item>
+          </SubMenu>
+          <SubMenu key="journal" title={intl.formatMessage({
+            id: "menu.journal",
+          })}>
+            <Menu.Item key="audit"><a href="/journal/audit"><FormattedMessage id="menu.journal.audit" /></a></Menu.Item>
+            <Menu.Item key="task"><a href="/journal/task"><FormattedMessage id="menu.journal.task" /></a></Menu.Item>
+            <Menu.Item key="alarm"><a href="/journal/alarm"><FormattedMessage id="menu.journal.alarm" /></a></Menu.Item>
           </SubMenu>
         </Menu>
         <div className={styles.avatarRight}>
