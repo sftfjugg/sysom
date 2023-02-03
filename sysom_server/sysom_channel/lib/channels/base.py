@@ -9,8 +9,12 @@ Description:
 from abc import ABCMeta, abstractmethod
 import time
 import anyio
+import asyncio
 import functools
+import json
+from typing import Optional
 from enum import Enum, unique
+from loguru import logger
 
 
 @unique
@@ -33,7 +37,7 @@ class ChannelException(Exception):
     """
 
     def __init__(self, message: str, code: int = ChannelCode.SERVER_ERROR.value,
-                 summary: str = None) -> None:
+                 summary: Optional[str] = None) -> None:
         self.message = message
         self.code = code
         self.summary = summary if summary is not None else message
@@ -66,6 +70,9 @@ class BaseChannel(metaclass=ABCMeta):
     def run_command(self, **kwargs) -> ChannelResult:
         raise NotImplementedError
 
+    def get_params(self, **kwargs) -> dict:
+        return {}
+
     async def run_command_async(self, **kwargs) -> ChannelResult:
         return await anyio.to_thread.run_sync(
             functools.partial(self.run_command, **kwargs)
@@ -80,8 +87,13 @@ class BaseChannel(metaclass=ABCMeta):
             remain_time = int((max_wait_time - time.time()) * 1000)
             kwargs["timeout"] = remain_time
             res = self.run_command(**kwargs)
-            while res.code == 2 and remain_time > 0:
+            while res.code != 0:
+                logger.warning(
+                    f"Channel retry due to: {res.err_msg}, params: {json.dumps(self.get_params())}")
+                time.sleep(1)
                 remain_time = int((max_wait_time - time.time()) * 1000)
+                if remain_time <= 0:
+                    break
                 kwargs["timeout"] = remain_time
                 res = self.run_command(**kwargs)
             return res
@@ -98,8 +110,13 @@ class BaseChannel(metaclass=ABCMeta):
             remain_time = int((max_wait_time - time.time()) * 1000)
             kwargs["timeout"] = remain_time
             res = await self.run_command_async(**kwargs)
-            while res.code == 2 and remain_time > 0:
+            while res.code != 0:
+                logger.warning(
+                    f"Channel retry due to: {res.err_msg}, params: {json.dumps(self.get_params())}")
+                await asyncio.sleep(1)
                 remain_time = int((max_wait_time - time.time()) * 1000)
+                if remain_time <= 0:
+                    break
                 kwargs["timeout"] = remain_time
                 res = await self.run_command_async(**kwargs)
             return res

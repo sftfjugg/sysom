@@ -13,14 +13,11 @@ Description:
 #   "cmd": "xxxx"             必填
 
 
-import logging
+from loguru import logger
 from typing import Optional
 from lib.ssh import AsyncSSH
 
 from .base import BaseChannel, ChannelResult
-
-
-logger = logging.getLogger(__name__)
 
 
 class Channel(BaseChannel):
@@ -43,6 +40,9 @@ class Channel(BaseChannel):
         if self._ssh_client is None:
             self._ssh_client = AsyncSSH(self._kwargs['instance'])
             self._command = self._kwargs["command"]
+
+    def get_params(self, **kwargs) -> dict:
+        return self._kwargs
 
     @staticmethod
     def initial(**kwargs) -> bool:
