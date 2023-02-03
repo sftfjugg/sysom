@@ -132,6 +132,10 @@ IS_MICRO_SERVICES = False  # 是否微服务
 WEB_DIR = os.path.join(BASE_DIR.parent, 'sysom_web')
 DOWNLOAD_DIR = os.path.join(WEB_DIR, 'download')
 
+##################################################################
+# Heartbeat
+##################################################################
+HEARTBEAT_INTERVAL = 20  # seconds
 
 ##################################################################
 # SSH channel settings
