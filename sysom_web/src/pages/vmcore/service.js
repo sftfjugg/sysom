@@ -39,14 +39,14 @@ export async function getSimilarPanic(params, options) {
 }
 
 export async function getVmcoreDetail(params, options) {
-  return request("/api/v1/vmcore_detail/", {
+  return request("/api/v1/vmcore/vmcore_detail/", {
     method: "GET",
     params: { ...params },
     ...(options || {}),
   });
 }
 export async function getSolution(params, options) {
-  const msg = await request("/api/v1/issue/", {
+  const msg = await request("/api/v1/vmcore/issue/", {
     method: "GET",
     params: { ...params },
     ...(options || {}),
@@ -63,7 +63,7 @@ export async function getSolution(params, options) {
 }
 
 export async function addIssue(data, options) {
-  return request("/api/v1/issue/", {
+  return request("/api/v1/vmcore/issue/", {
     data,
     method: "POST",
     ...(options || {}),
