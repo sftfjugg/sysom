@@ -492,17 +492,17 @@ class MigImpView(CommonModelViewSet):
         result, _ = sync_job(mig_imp.ip, run_script(init_info_script))
         if result.code == 0:
             info = dict()
-            for i in result.result.splitlines():
-                key, value = i.split(':')
+            for key, value in json.loads(result.result).items():
                 tmp = []
-                for j in value.split(','):
-                    t = j.split('=')
-                    tmp.append(dict(name=t[0], value=t[1]))
-                    if t[0] == '内存':
+
+                for k, v in value.items():
+                    tmp.append(dict(name=k, value=v))
+                    if k == u'内存':
                         res, _ = sync_job(mig_imp.ip, 'df -h')
                         tmp.append(dict(name='磁盘空间', value=res.result))
-                    if t[0] == '操作系统版本':
-                        mig_imp.old_ver = t[1]
+                    if k == u'操作系统版本':
+                        mig_imp.old_ver = v
+
                 info[key] = tmp
 
             mig_imp.new_info = json.dumps(info)
