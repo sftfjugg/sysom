@@ -173,7 +173,7 @@ export default {
   'pages.hotfix.building_status': '构建状态',
   'pages.hotfix.formal': '转正式包',
   'pages.hotfix.os_type': '操作系统名',
-  'pages.hotfix.patch_name': '补丁名称',
+  'pages.hotfix.patch_name': 'patch文件名称',
   'pages.hotfix.upload': '文件上传',
   'pages.hotfix.download': '下载',
   'pages.hotfix.kernel_repo_location': '源码git仓库地址',
@@ -183,4 +183,5 @@ export default {
   'pages.hotfix.title.os_type': '操作系统配置',
   'pages.hotfix.title.versionconf': '自定义内核版本配置',
   'pages.hotfix.image': '构建镜像',
+  'pages.hotfix.hotfix_name': "热补丁名称",
 };
