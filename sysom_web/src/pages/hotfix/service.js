@@ -93,7 +93,7 @@ export async function createHotfix(token, params, options) {
     },
     data: {
       'kernel_version': params.kernel_version,
-      'patch_name': params.patch_name,
+      'hotfix_name': params.hotfix_name,
       'os_type': params.os_type,
       'upload': params.upload
     },
