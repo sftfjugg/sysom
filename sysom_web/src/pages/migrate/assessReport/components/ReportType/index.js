@@ -13,7 +13,7 @@ export default (props)=>{
   const {title} = props;
 
   return (
-    <ProCard 
+    <ProCard
       bodyStyle={{paddingTop:'40px',background:'#000'}}
     >
       <div className="ass_report_content_title">

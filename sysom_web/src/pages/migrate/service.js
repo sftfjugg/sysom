@@ -56,7 +56,7 @@ export async function startMigration(params) {
   });
 }
 
-// 迁移操作 (系统备份step=1，环境准备step=2，迁移评估step=3，迁移实施setp=4，重启机器step=5，系统还原step=101，重置状态step=102）
+// 迁移操作 (系统备份step=1，环境准备step=2，风险评估step=3，迁移实施setp=4，重启机器step=5，系统还原step=101，重置状态step=102）
 export async function operateMachine(params) {
   return request('/api/v1/implementation/migrate/', {
     method: 'post',
@@ -71,6 +71,12 @@ export async function queryAssessHost(params) {
     method: 'GET',
   });
 }
+// 选择数据文件
+// export async function querySqlFile(params) {
+//   return request('/api/v1/assessment/sqlfile/', {
+//     method: 'GET',
+//   });
+// }
 
 // 开始评估
 export async function queryStartAssess(params) {
@@ -98,6 +104,14 @@ export async function queryStopAssess(params) {
 // 评估重试
 export async function queryRetryAssess(params) {
   return request('/api/v1/assessment/retry/', {
+    method: 'post',
+    data: params,
+  });
+}
+
+// 评估删除
+export async function queryDeleteAssess(params) {
+  return request('/api/v1/assessment/delete/', {
     method: 'post',
     data: params,
   });

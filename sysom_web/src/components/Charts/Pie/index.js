@@ -17,7 +17,7 @@ echarts.use(
   [TooltipComponent, GridComponent, PieChart, CanvasRenderer,LegendComponent,ToolboxComponent]
 );
 
-function PieCharts({id, width, height, padding, radius, options}) {
+function PieCharts({id, width, height, padding, radius, formatter, options}) {
   let myChart;
   useEffect(() => {
     if (!myChart) {
@@ -62,7 +62,7 @@ function PieCharts({id, width, height, padding, radius, options}) {
             show: false,
             position: 'center',
             color: '#fff',
-            formatter: '{b}\n{d}%',
+            formatter: formatter || '{b}\n{d}%',
           },
           color: options.map((i)=>i.color),
           grid: {

@@ -19,6 +19,35 @@
       vertical-align: text-top;
     }
   }
+  .risk_col_right{
+    background: #000;
+    display: flex;
+    justify-content: flex-end;
+    .risk_passStatus{
+      height: 50px;
+      position: relative;
+      top: 50%;
+      left: 80px;
+      transform: translate(0,-23px);
+      text-align: center;
+      .risk_passStatus_title{
+        font-size: 14px;
+        color: rgba(255,255,255,0.45);
+        line-height: 22px;
+      }
+      .risk_passStatus_result{
+        font-weight: 500;
+        font-size: 20px;
+      }
+      .pass{
+        color: #49AA19;
+      }
+      .review{
+        color: #D89614;
+      }
+    }
+  }
+  
   .riskTable{
     margin-top: 10px;
   }

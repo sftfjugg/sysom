@@ -1,23 +1,29 @@
 import react, {useState,useEffect} from 'react';
-import ProForm, {ProFormSelect, ProFormRadio, ProFormText } from '@ant-design/pro-form';
+import ProForm, {ProFormSelect, ProFormRadio, ProFormText, ProFormCheckbox} from '@ant-design/pro-form';
 import {Button,message} from 'antd';
 import {useRequest} from 'umi';
 import ProCard from '@ant-design/pro-card';
 import {queryAssessHost,queryStartAssess} from '../../../service'
+// querySqlFile
 import './StAssessmentForm.less';
 
 export default (props) => {
   const [hostList,setHostList] = useState([]);
+  const [sqlFileList,setSqlFileList] = useState([]);
   // Repo配置选择项
   const [repoType, setRepoType] = useState(false);
+  // 评估应用是否展示
+  const [appType, setAppType] = useState(false);
   
   const initialValues = {
     repo_type: 'public',
     version: 'Anolis OS 8',
+    ass_type: ['mig_imp']
   };
 
   useEffect(()=>{
     getAssessHost();
+    // getSqlFile();
   },[]);
 
   const getAssessHost = async () => {
@@ -31,12 +37,27 @@ export default (props) => {
     setHostList(arr);
   }
 
+  // const getSqlFile = async () => {
+  //   const {data} = await querySqlFile();
+  //   setSqlFileList(data?data:[]);
+  // }
+
   const handleRepo = (e) => {
     if(e.target.value === "public"){
       setRepoType(false);
     }else if(e.target.value === "private"){
       setRepoType(true);
     }
+  }
+
+  const handleType = (e) => {
+    let isShow = false;
+    e?.length > 0 && e.forEach((i)=>{
+      if(i === 'mig_app'){
+        isShow = true;
+      }
+    });
+    setAppType(isShow);
   }
 
   // 开始评估的接口
@@ -78,7 +99,7 @@ export default (props) => {
             <ProFormSelect
               name="ip"
               label="选择机器"
-              width="md"
+              width="sm"
               options={hostList}
               fieldProps={{
                 mode: "multiple",
@@ -91,7 +112,7 @@ export default (props) => {
             <ProFormSelect
               name="version"
               label="迁移版本"
-              width="md"
+              width="sm"
               options={[
                 {
                   label: "Anolis OS 8",
@@ -101,18 +122,17 @@ export default (props) => {
               placeholder="请选择迁移版本"
               rules={[{ required: true, message: "迁移版本不能为空" }]}
             />
-            <ProFormText
-              name="ass_app"
-              width='md'
-              label="评估应用"
-              placeholder="请输入评估应用"
-            />
-          </ProForm.Group>
-          <ProForm.Group>
+            {/* <ProFormSelect
+              name="sqlfile"
+              label="数据文件"
+              width="sm"
+              options={sqlFileList}
+              placeholder="请选择数据文件"
+              rules={[{ required: true, message: "数据文件不能为空" }]}
+            /> */}
             <ProFormRadio.Group
               name="repo_type"
               label="Repo配置"
-              // width='400px'
               options={[
                 {
                   label: "公网地址",
@@ -129,17 +149,32 @@ export default (props) => {
               <ProFormText
                 colProps={{ span: 24 }}
                 name="repo_url"
-                width='md'
-                label=""
-                placeholder="请选择内网地址"
+                width='sm'
+                label=''
+                placeholder="请输内网地址"
               />
-              // <Input
-              //   colProps={{ span: 24 }}
-              //   name="repo_url"
-              //   label=""
-              //   width="md"
-              //   placeholder="请选择内网地址"
-              // />
+            )}
+          </ProForm.Group>
+          <ProForm.Group>
+            <ProFormCheckbox.Group
+              name="ass_type"
+              label="选择评估"
+              rules={[{ required: true, message: "评估不能为空" }]}
+              onChange={handleType}
+              options={[
+                { label: '风险评估', value: 'mig_imp', disabled: true },
+                { label: '系统评估', value: 'mig_sys' },
+                { label: '硬件评估', value: 'mig_hard' },
+                { label: '应用评估', value: 'mig_app' },
+              ]}
+            />
+            {appType && (
+              <ProFormText
+                name="ass_app"
+                width='sm'
+                label=""
+                placeholder="请输入评估应用"
+              />
             )}
             <Button
               className="st_form_start"
