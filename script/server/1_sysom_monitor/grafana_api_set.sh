@@ -19,7 +19,7 @@ sed 's/disable_login_form = true/;disable_login_form = false/g' -i $GRAFANA_CONF
 
 systemctl restart $GRAFANA_SERVER
 sleep 3
-systemctl status $GRAFANA_SERVER
+systemctl status $GRAFANA_SERVER 2>/dev/null
 if [ $? -ne 0 ]
 then
     echo "grafana server is not active, check status after 10 seconds"
