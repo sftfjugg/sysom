@@ -16,7 +16,6 @@ const assess = (props) => {
   const getAssessList = async() => {
     const {data} = await queryAssessList();
     setList(data?data:[]);
-    console.log(data,'data')
   }
 
   return (

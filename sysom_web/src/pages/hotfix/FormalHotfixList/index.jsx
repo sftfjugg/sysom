@@ -80,8 +80,13 @@ const FormalHotfixList = () => {
       hideInSearch: true,
     },
     {
+      title: <FormattedMessage id="pages.hotfix.hotfix_name" defaultMessage="name" />,
+      dataIndex: 'hotfix_name',
+      valueType: 'input',
+    },
+    {
       title: <FormattedMessage id="pages.hotfix.patch_name" defaultMessage="name" />,
-      dataIndex: 'patch_name',
+      dataIndex: 'patch_file',
       valueType: 'input',
     },
     {

@@ -14,23 +14,28 @@ import "./index.less";
 const AssessTabs = (props) => {
   const {
     dispatch,
-    state: {activeId},
+    state: {activeId, activeAssType, activeKey},
   } = useContext(WrapperContext);
-  const [activeKey, setActiveKey] = useState('1');
 
   const changeActive = (key) => {
-    setActiveKey(key);
+    dispatch({
+      type: SET_DATA,
+      payload: {
+        activeKey: key,
+      },
+    });
+    
     switch (key){
-        case '1':
+        case 'app':
           getAppList();
           break;
-        case '2':
+        case 'hardware':
           getHWList();
           break;
-        case '3':
+        case 'risk':
           getRiskList();
           break;
-        case '4':
+        case 'sys':
           getSysType();
           break;
         default: break;
@@ -121,7 +126,6 @@ const AssessTabs = (props) => {
       });
       return false;
     } finally {
-      console.log('执行o')
       hide();
       dispatch({
         type: SET_DATA,
@@ -141,17 +145,24 @@ const AssessTabs = (props) => {
     });
     const hide = message.loading('loading...', 0);
     try {
-      const { code,data } = await queryRiskList({id:activeId});
+      const {code, data} = await queryRiskList({id: activeId});
+      let num = 0;
       if(data?.length > 0){
         data.map((item,index)=>{
           data[index].id = index;
+          if(data[index].flags !== null){
+            num += 1;
+          }
         })
+      }else{
+        num = -1;
       }
       if (code === 200) {
         dispatch({
           type: SET_DATA,
           payload: {
             riskList: data,
+            isPassStatus: num > 0 ? 'review' : (num === 0 ? 'pass' : ''),
           },
         });
         return true;
@@ -283,19 +294,27 @@ const AssessTabs = (props) => {
           className:"assess-tabs-card",
         }}
       >
-        {/* forceRender={true} */}
-        <ProCard.TabPane key='1' tab="应用评估">
-          <Application />
-        </ProCard.TabPane>
-        <ProCard.TabPane key='2' tab="硬件评估">
-          <Hardware />
-        </ProCard.TabPane>
-        <ProCard.TabPane key='3' tab="迁移风险评估">
+        <ProCard.TabPane key='risk' tab="迁移风险评估">
           <Risk />
         </ProCard.TabPane>
-        <ProCard.TabPane key='4' tab="系统配置评估">
-          <SystemConfig />
-        </ProCard.TabPane>
+        {
+          activeAssType.indexOf('mig_sys') !== -1 &&
+          <ProCard.TabPane key='sys' tab="系统配置评估">
+            <SystemConfig />
+          </ProCard.TabPane>
+        }
+        {
+          activeAssType.indexOf('mig_hard') !== -1 &&
+          <ProCard.TabPane key='hardware' tab="硬件评估">
+            <Hardware />
+          </ProCard.TabPane>
+        }
+        {
+          activeAssType.indexOf('mig_app') !== -1 &&
+          <ProCard.TabPane key='app' tab="应用评估">
+            <Application />
+          </ProCard.TabPane>
+        }
       </ProCard>
     </Fragment>
   );

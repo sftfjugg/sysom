@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {Card, message, Statistic, Skeleton} from "antd";
 import {useRequest} from 'umi';
 import ProCard from '@ant-design/pro-card';
@@ -16,15 +16,14 @@ import { SET_DATA } from '../../containers/constants';
 import './index.less';
 import {getUrlParams,SYS_CONFIG_TYPE} from '../../../utils';
 
-
 const NodeList = (props) => {
   const {
     dispatch,
     state: {activeId},
   } = useContext(WrapperContext);
 
-  // 节点列表
-  const { data, error, loading } = useRequest(queryAssessList);
+  const [nodeList, setNodeList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const columns = [
     {
@@ -80,9 +79,31 @@ const NodeList = (props) => {
     const ip = getUrlParams('ip');
     const old_ver = getUrlParams('old_ver');
     const new_ver = getUrlParams('new_ver');
-    changeActive(id,ip,old_ver,new_ver)
-    handleNodeItem({id,ip,old_ver,new_ver})
+    new Promise(async(resolve) => {
+      await getNodeList(id);
+      resolve();
+    }).then(()=>{
+      handleNodeItem({id,ip,old_ver,new_ver});
+    });
   },[])
+
+  const getNodeList = async (id) => {
+    setLoading(true);
+    try {
+      const {code, data, msg} = await queryAssessList();
+      if (code === 200) {
+        setNodeList(data?data:[]);
+        return true;
+      }
+      message.error(msg);
+      return false;
+    } catch (error) {
+      console.log(error,'error')
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
   
   const changeActive = (id,ip,old_ver,new_ver) => {
     dispatch({
@@ -96,23 +117,54 @@ const NodeList = (props) => {
     })
   }
 
+  const judgeActiveItem = (id) => {
+    let activeItem = nodeList.filter((i)=> i.id == id);
+    let acitveArr = ['mig_imp'];
+    if(activeItem?.length>0 && activeItem[0]?.config){
+      let config = JSON.parse(activeItem[0].config);
+      if(config?.ass_type){
+        acitveArr = config.ass_type;
+      }
+    }
+    dispatch({
+      type: SET_DATA,
+      payload: {
+        activeAssType: acitveArr,
+      },
+    })
+    return acitveArr;
+  }
+
   // 点击行切换
   const handleNodeItem = async (r) => {
     if(Number(r.id) !== Number(activeId)){
-      changeActive(r.id,r.ip,r.old_ver,r.new_ver)
+      changeActive(r.id,r.ip,r.old_ver,r.new_ver);
       dispatch({
         type: SET_DATA,
         payload: {
           tabsLoading: true,
+          activeKey: 'risk',
         },
       });
+      let activeArr = await judgeActiveItem(r.id);
       const hide = message.loading('loading...', 0);
-      Promise.all([
-        getAppList(r.id),
-        getHWList(r.id),
-        getRiskList(r.id),
-        getSysType(r.id),
-      ]).then((res) => {
+      let askArr = [getRiskList(r.id)];
+      activeArr.map((i)=>{
+        switch (i){
+            case 'mig_sys':
+              askArr.push(getSysType(r.id));
+              return true;
+            case 'mig_hard':
+              askArr.push(getHWList(r.id));
+              return true;
+            case 'mig_app':
+              askArr.push(getAppList(r.id));
+              return true;
+            default: 
+              return true;
+        }
+      })
+      Promise.all(askArr).then((res) => {
         dispatch({
           type: SET_DATA,
           payload: {
@@ -199,17 +251,23 @@ const NodeList = (props) => {
   const getRiskList = async (id) => {
     try {
       const { code,data } = await queryRiskList({id});
-      let arr = [];
-      if(data && data.length !== 0){
+      let num = 0;
+      if(data?.length > 0){
         data.map((item,index)=>{
-          arr.push({...item,id: index})
+          data[index].id = index;
+          if(data[index].flags !== null){
+            num += 1;
+          }
         })
+      }else{
+        num = -1;
       }
       if (code === 200) {
         dispatch({
           type: SET_DATA,
           payload: {
-            riskList: arr,
+            riskList: data,
+            isPassStatus: num > 0 ? 'review' : (num === 0 ? 'pass' : ''),
           },
         });
         return true;
@@ -304,14 +362,14 @@ const NodeList = (props) => {
         <ProCard>
           <Statistic
             title='已评估完成数'
-            value={data?.filter(item => item.status === 'success').length}
+            value={nodeList?.filter(item => item.status === 'success').length}
             valueStyle={{fontSize: 30}}
           />
         </ProCard>
         <ProCard>
           <Statistic
             title='未评估完成数'
-            value={data?.filter(item => item.status !== 'success').length}
+            value={nodeList?.filter(item => item.status !== 'success').length}
             valueStyle={{fontSize: 30}}
           />
         </ProCard>
@@ -335,7 +393,7 @@ const NodeList = (props) => {
             toolBarRender={false}
             options={false}
             columns={columns}
-            dataSource={data}
+            dataSource={nodeList}
             onRow={(record, index) => {
               return {
                 onClick: (e) => {

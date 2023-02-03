@@ -181,13 +181,16 @@ const Hardware = (props, ref) => {
           <ReportType title='硬件评估报告'/>
         </Col>
         <Col span={10} style={{background: '#000'}}>
-          <PieCharts
-            id='hardWare'
-            width='100%'
-            height='120px'
-            padding='15px 0 0 0'
-            options={options}
-          />
+          {
+            !tabsLoading &&
+            <PieCharts
+              id='hardWare'
+              width='100%'
+              height='120px'
+              padding='15px 0 0 0'
+              options={options}
+            />
+          }
         </Col>
       </Row>
       <Skeleton loading={tabsLoading}>

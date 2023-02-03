@@ -1,4 +1,4 @@
-import React, {useContext, useState, useEffect} from 'react';
+import React, {useContext, useState, useEffect, Fragment} from 'react';
 import ProTable from '@ant-design/pro-table';
 import ProCard from '@ant-design/pro-card';
 import {RightCircleOutlined} from "@ant-design/icons";
@@ -11,7 +11,7 @@ import './index.less';
 const Risk = (props, ref) => {
   const {
     dispatch,
-    state: {tabsLoading, riskList},
+    state: {tabsLoading, riskList, isPassStatus},
   } = useContext(WrapperContext);
   const {id} = props;
   const [detailsTitle,setDetailsTitle] = useState('');
@@ -185,21 +185,32 @@ const Risk = (props, ref) => {
     setDetailsText('');
     setDetailsTitle('');
   }
-
   return (
     <div className="risk_container">
       <Row>
         <Col span={14}>
           <ReportType title='迁移风险评估报告'/>
         </Col>
-        <Col span={10} style={{background: '#000'}}>
-          <PieCharts
-            id='risk'
-            width='100%'
-            height='120px'
-            padding='15px 0 0 0'
-            options={options}
-          />
+        <Col span={10} className='risk_col_right'>
+          {
+            !tabsLoading && 
+            <Fragment>
+              {
+                isPassStatus &&
+                <div className='risk_passStatus'>
+                  <div className='risk_passStatus_title'>评估结果</div>
+                  <div className={`risk_passStatus_result ${isPassStatus === 'pass'?'pass':'review'}`}>{isPassStatus === 'pass'?'通过':'需人工审核'}</div>
+                </div>
+              }
+              <PieCharts
+                id='risk'
+                width='330px'
+                height='120px'
+                padding='15px 25px 0 0'
+                options={options}
+              />
+            </Fragment>
+          }
         </Col>
       </Row>
       <Skeleton loading={tabsLoading}>

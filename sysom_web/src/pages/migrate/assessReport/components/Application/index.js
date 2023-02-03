@@ -216,14 +216,18 @@ const Application = (props, ref) => {
           <ReportType title='应用评估报告' />
         </Col>
         <Col span={10}>
-          <PieCharts
-            id='application'
-            width='100%'
-            height='150px'
-            padding='5px 0 0 0'
-            radius={['40%', '55%']}
-            options={options}
-          />
+          {
+            !tabsLoading &&
+            <PieCharts
+              id='application'
+              width='100%'
+              height='150px'
+              padding='5px 0 0 0'
+              radius={['40%', '55%']}
+              options={options}
+              // formatter={'软件包 \n'+(appList?.length>0?appList.length:'0')}
+            />
+          }
         </Col>
       </Row>
       <Skeleton loading={tabsLoading}>

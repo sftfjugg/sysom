@@ -129,7 +129,7 @@ export default withRouter(
             },
             {
               key: 'ass',
-              name: '迁移评估',
+              name: '风险评估',
               disabled: Number(r.step) === 3 ? false : true,
             },
             {
@@ -172,7 +172,7 @@ export default withRouter(
                         showItemModal(r.ip,1,'系统备份')
                         break;
                       case 'ass':
-                        showItemModal(r.ip,3,'迁移评估')
+                        showItemModal(r.ip,3,'风险评估')
                         break;
                       case 'imp':
                         showItemModal(r.ip,4,'迁移实施')

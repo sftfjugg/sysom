@@ -24,20 +24,24 @@ class FunctionClass():
         else:
             return None    
 
-    def query_formal_hotfix_by_parameters(self, created_time, kernel_version, patch_name):
+    def query_formal_hotfix_by_parameters(self, created_time, kernel_version, patch_file, hotfix_name):
         if created_time is not None and len(created_time) <= 0:
             created_time=None
         if kernel_version is not None and len(kernel_version) == 0:
             kernel_version = None
-        if patch_name is not None and len(patch_name) == 0:
-            patch_name=None
+        if patch_file is not None and len(patch_file) == 0:
+            patch_file=None
+        if hotfix_name is not None and len(hotfix_name) == 0:
+            hotfix_name=None
         objects = HotfixModel.objects.all().filter(formal=1)
         if created_time is not None:
             objects = objects.filter(created_at__lt=created_time)
         if kernel_version is not None:
             objects = objects.filter(kernel_version=kernel_version)
-        if patch_name is not None:
-            objects = objects.filter(patch_name=patch_name)
+        if patch_file is not None:
+            objects = objects.filter(patch_file=patch_file)
+        if hotfix_name is not None:
+            objects = objects.filter(hotfix_name=hotfix_name)
         return objects
 
     def get_info_from_version(self, kernel_version, info="os_type"):
@@ -79,12 +83,13 @@ class FunctionClass():
             return None
     
     # building status and formal is set to be 0 when creating a hotfix
-    def create_hotfix_object_to_database(self, os_type, kernel_version, patch_name, patch_path, hotfix_necessary, hotfix_risk, 
+    def create_hotfix_object_to_database(self, os_type, kernel_version, hotfix_name, patch_file, patch_path, hotfix_necessary, hotfix_risk, 
     log_file, arch):
         res = HotfixModel.objects.create(
             kernel_version = kernel_version,
             os_type=os_type,
-            patch_name = patch_name,
+            patch_file = patch_file,
+            hotfix_name = hotfix_name,
             patch_path = patch_path,
             building_status = 0,
             hotfix_necessary = 0,
@@ -101,7 +106,8 @@ class FunctionClass():
         os_type = kwargs['os_type']
         hotfix_id = kwargs['hotfix_id']
         kernel_version= kwargs['kernel_version']
-        patch_name = kwargs['patch_name']
+        patch_file = kwargs['patch_file']
+        hotfix_name = kwargs['hotfix_name']
         patch_path = kwargs['patch_path']
         arch = kwargs['arch']
         log_file = kwargs['log_file']
@@ -111,7 +117,8 @@ class FunctionClass():
                     self.cec.produce_event_to_cec(cec_topic, {
                             "hotfix_id" : hotfix_id,
                             "kernel_version" : kernel_version,
-                            "patch_name" : patch_name,
+                            "patch_name" : patch_file,
+                            "hotfix_name" : hotfix_name,
                             "patch_path" : patch_path,
                             "arch": arch,
                             "log_file" : log_file,
@@ -129,7 +136,8 @@ class FunctionClass():
                 self.cec.produce_event_to_cec(cec_topic, {
                     "hotfix_id" : hotfix_id,
                     "kernel_version" : kernel_version,
-                    "patch_name" : patch_name,
+                    "hotfix_name" : hotfix_name,
+                    "patch_name" : patch_file,
                     "patch_path" : patch_path,
                     "arch": arch,
                     "log_file" : log_file,
