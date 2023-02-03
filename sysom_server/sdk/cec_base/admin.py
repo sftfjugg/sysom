@@ -8,8 +8,10 @@ Description:
 """
 import importlib
 import json
+import functools
 from typing import List
 from abc import ABCMeta, abstractmethod
+import anyio
 from .base import Connectable
 from .exceptions import CecProtoAlreadyExistsException, \
     CecProtoNotExistsException
@@ -66,6 +68,8 @@ class ConsumeStatusItem:
         return json.dumps(self.__dict__)
 
 
+# pylint: disable=too-many-public-methods
+# 25 is reasonable in this case.
 class Admin(Connectable, metaclass=ABCMeta):
     """Common Event Center Management interface definition
 
@@ -143,6 +147,16 @@ class Admin(Connectable, metaclass=ABCMeta):
             True
         """
 
+    async def create_topic_async(self, topic_name: str = "",
+                                 num_partitions: int = 1,
+                                 replication_factor: int = 1,
+                                 **kwargs) -> bool:
+        """Create one topic by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.create_topic, **kwargs),
+            topic_name, num_partitions, replication_factor
+        )
+
     @abstractmethod
     def del_topic(self, topic_name: str, **kwargs) -> bool:
         """Delete one topic
@@ -167,9 +181,16 @@ class Admin(Connectable, metaclass=ABCMeta):
             True
         """
 
+    async def del_topic_async(self, topic_name: str, **kwargs) -> bool:
+        """Delete one topic by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.del_topic, **kwargs),
+            topic_name
+        )
+
     @abstractmethod
     def is_topic_exist(self, topic_name: str, **kwargs) -> bool:
-        """Determine whther one specific topic exists
+        """Determine whether one specific topic exists
 
         Determines whether the target topic exists in the currently used event
         center.
@@ -185,6 +206,13 @@ class Admin(Connectable, metaclass=ABCMeta):
             >>> admin.is_topic_exist("test_topic")
             True
         """
+
+    async def is_topic_exist_async(self, topic_name: str, **kwargs) -> bool:
+        """Determine whether one specific topic exists by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.is_topic_exist, **kwargs),
+            topic_name
+        )
 
     @abstractmethod
     def get_topic_list(self, **kwargs) -> List[TopicMeta]:
@@ -202,6 +230,12 @@ class Admin(Connectable, metaclass=ABCMeta):
             >>> admin.get_topic_list()
             [TopicMeta(faeec676-60db-4418-a775-c5f1121d5331, 1)]
         """
+
+    async def get_topic_list_async(self, **kwargs) -> List[TopicMeta]:
+        """Get topic list by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.get_topic_list, **kwargs)
+        )
 
     @abstractmethod
     def create_consumer_group(self, consumer_group_id: str, **kwargs) -> bool:
@@ -228,6 +262,14 @@ class Admin(Connectable, metaclass=ABCMeta):
             True
         """
 
+    async def create_consumer_group_async(self, consumer_group_id: str,
+                                          **kwargs) -> bool:
+        """Create one consumer group by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.create_consumer_group, **kwargs),
+            consumer_group_id
+        )
+
     @abstractmethod
     def del_consumer_group(self, consumer_group_id: str, **kwargs) -> bool:
         """Delete one consumer group
@@ -252,10 +294,18 @@ class Admin(Connectable, metaclass=ABCMeta):
             True
         """
 
+    async def del_consumer_group_async(self, consumer_group_id: str,
+                                       **kwargs) -> bool:
+        """Delete one consumer group by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.del_consumer_group, **kwargs),
+            consumer_group_id
+        )
+
     @abstractmethod
     def is_consumer_group_exist(self, consumer_group_id: str,
                                 **kwargs) -> bool:
-        """Determine whther one specific consumer group exists
+        """Determine whether one specific consumer group exists
 
         Determines whether the target consumer group exists in the currently
         used event center.
@@ -274,9 +324,17 @@ class Admin(Connectable, metaclass=ABCMeta):
             True
         """
 
+    async def is_consumer_group_exist_async(self, consumer_group_id: str,
+                                            **kwargs) -> bool:
+        """Determine whether one specific consumer group exists by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.is_consumer_group_exist, **kwargs),
+            consumer_group_id
+        )
+
     @abstractmethod
-    def get_consumer_group_list(self, **kwargs) -> List[
-        ConsumerGroupMemberMeta]:
+    def get_consumer_group_list(self, **kwargs) -> \
+            List[ConsumerGroupMemberMeta]:
         """Get consumer group list
 
         Get a list of consumer groups contained in the event center currently
@@ -289,6 +347,13 @@ class Admin(Connectable, metaclass=ABCMeta):
             >>> admin = dispatch_admin("redis://localhost:6379")
             >>> admin.get_consumer_group_list()
         """
+
+    async def get_consumer_group_list_async(self, **kwargs) -> \
+            List[ConsumerGroupMemberMeta]:
+        """Get consumer group list by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.get_consumer_group_list, **kwargs)
+        )
 
     @abstractmethod
     def get_consume_status(
@@ -350,6 +415,16 @@ class Admin(Connectable, metaclass=ABCMeta):
 
         """
 
+    async def get_consume_status_async(
+            self, topic: str, consumer_group_id: str = "",
+            partition: int = 0, **kwargs
+    ) -> List[ConsumeStatusItem]:
+        """Get consumption info by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.get_consume_status, **kwargs),
+            topic, consumer_group_id, partition
+        )
+
     @abstractmethod
     def get_event_list(self, topic: str, partition: int, offset: str,
                        count: int, **kwargs) -> List[Event]:
@@ -368,6 +443,15 @@ class Admin(Connectable, metaclass=ABCMeta):
 
         """
 
+    async def get_event_list_async(self, topic: str, partition: int,
+                                   offset: str,
+                                   count: int, **kwargs) -> List[Event]:
+        """Get event list for specific <topic, partition> by async"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.get_event_list, **kwargs),
+            topic, partition, offset, count
+        )
+
     @abstractmethod
     def is_support_partitions(self, **kwargs) -> bool:
         """Is current execution module support partitions
@@ -384,6 +468,12 @@ class Admin(Connectable, metaclass=ABCMeta):
             False
         """
 
+    async def is_support_partitions_async(self, **kwargs) -> bool:
+        """Is current execution module support partitions"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.is_support_partitions, **kwargs)
+        )
+
     @abstractmethod
     def is_support_replication(self, **kwargs) -> bool:
         """Is current execution module support replication
@@ -399,6 +489,12 @@ class Admin(Connectable, metaclass=ABCMeta):
             >>> admin.is_support_replication()
             False
         """
+
+    async def is_support_replication_async(self, **kwargs) -> bool:
+        """Is current execution module support replication"""
+        return await anyio.to_thread.run_sync(
+            functools.partial(self.is_support_replication, **kwargs)
+        )
 
     @staticmethod
     def register(proto, sub_class):

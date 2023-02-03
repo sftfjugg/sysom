@@ -11,7 +11,12 @@ def iosdiagJoinData(raw):
 
     disks = []
     stat = {}
-    stat["disks"] = {"data": []}
+    stat["disks"] = {"data": [{'key': 0, 'value':'overview'}]}
+    stat["iohangOverview_overview"] = {
+        "data": [{'key': 'Check Result', "value": "normal"},
+        {'key': "Number of OS HANG", "value": 0},
+        {'key': "Number of Disk HANG", "value": 0}]}
+    stat["summary"] = "diagnose results: Normal, No IO Hang"
     for s in raw.split('\n'):
         try:
             obj = json.loads(s)
@@ -34,8 +39,27 @@ def iosdiagJoinData(raw):
                             sorted(s["hung ios"],\
                                 key=lambda e:float(e['abnormal'].split()[-2]),\
                                 reverse=True)[:10]
-                    stat[dataSource+d]["data"] = s["hung ios"]
+                        stat[dataSource+d]["data"] = s["hung ios"]
+                    else:
+                        count = sum([io["count"] for io in s["hung ios"]])
+                        status = "abnormal" if count else "normal"
+                        dataOverview = [{'key': 'Check for '+d, "value": status}]
+                        maxCount = 0
+                        maxDelayComp = ''
+                        for io in s["hung ios"]:
+                            dataOverview.append({
+                                'key': "Number of "+io["component"]+" HANG",
+                                "value": int(io["count"])})
+                            if maxCount < int(io["count"]):
+                                maxCount = int(io["count"])
+                                maxDelayComp = io["component"]
+                        stat[dataSource+d]["data"] = dataOverview
 
+                        if 'Abnormal' not in stat["summary"]:
+                            stat["summary"] = "diagnose results: Abnormal, "
+                        stat["summary"] += \
+                            ("The IO of disk %s is hang, caused by %s hang;" % (
+                                d, maxDelayComp))
     s = json.dumps(stat, indent=4)
     print(s)
 

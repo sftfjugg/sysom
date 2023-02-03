@@ -22,19 +22,19 @@
         {
             "key": "oomAnalysis",
             "type": "stat",
-            "title": "OOM原因分析",
+            "title": "OOM Analysis",
             "datasource": "oomAnalysis"
         },
         {
             "key": "oomEvent",
             "type": "stat",
-            "title": "OOM诊断总览",
+            "title": "OOM Diagnose Result",
             "datasource": "oomResult"
         },
         {
             "key": "oomDetail",
             "type": "table",
-            "title": "OOM诊断详情",
+            "title": "OOM Diagnose Detail",
             "datasource": "oomDetail",
             "fieldConfig": {
                 "unit": "KB"
@@ -43,7 +43,7 @@
         {
             "key": "oomTask",
             "type": "table",
-            "title": "OOM进程使用情况",
+            "title": "OOM Tasks Detail",
             "datasource": "oomTask",
             "fieldConfig": {
                 "unit": "KB"

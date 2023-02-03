@@ -12,7 +12,11 @@ def iosdiagJoinData(raw):
 
     disks = []
     stat = {}
-    stat["disks"] = {"data": []}
+    stat["disks"] = {"data": [{'key': 0, 'value':'overview'}]}
+    stat["iolatencyOverview_overview"] = {
+        "data": [{'key': 'Check Result', "value": "normal"},
+        {'key': "IOs of over threshold", "value": 0}]}
+    stat["summary"] = "diagnose results: Normal, No slow IO over threshold"
     for s in raw.split('\n'):
         try:
             obj = json.loads(s)
@@ -24,16 +28,25 @@ def iosdiagJoinData(raw):
             stat["disks"]["data"] = \
                 [{'key':disks.index(d), 'value':d} for d in disks]
             for s in obj['summary']:
-                diskIdx = 'iolatencyOverview_'+s['diskname']
+                diskIdx = 'iolatencyDistribution_'+s['diskname']
                 if diskIdx not in stat.keys():
                     stat[diskIdx] = {"data": []}
+                maxPercent = sorted(s['delays'],
+                            key=lambda e: (float(e['percent'].strip('%'))),
+                            reverse=True)[0]['percent']
                 for delay in s['delays']:
-                    stat[diskIdx]["data"].append(
-                        {"key": delay['component'], "title": delay['component'],
-                        "value": delay['percent'], "text": 
-                        'Max_us: '+str(round(delay['max'], 1))+
-                        '\nAVG_us: '+str(round(delay['avg'], 1))+
-                        '\nMin_us: '+str(round(delay['min'], 1))})
+                    text = 'Max: '+str(round(delay['max'], 1))+\
+                        ' AVG: '+str(round(delay['avg'], 1))+\
+                        ' Min: '+str(round(delay['min'], 1))
+                    node = {
+                        "key": delay['component'], "title": delay['component'],
+                        "value": delay['percent'], "text": text}
+                    percent = float(delay['percent'].strip('%'))
+                    if delay['component'] != 'disk' and percent > 10:
+                        node['level'] = 'warning'
+                    if delay['percent'] == maxPercent:
+                        node['level'] = 'error'
+                    stat[diskIdx]["data"].append(node)
         elif 'totaldelay' in str(obj) or 'abnormal' in str(obj):
             for s in obj['summary']:
                 isSeqData = False
@@ -59,7 +72,8 @@ def iosdiagJoinData(raw):
                         else:
                             dupRm.append(slowIOs[idx-1])
                 for d in dupRm:
-                    slowIOs.remove(d)
+                    if d in slowIOs:
+                        slowIOs.remove(d)
 
                 if not isSeqData:
                     slowIOs = \
@@ -67,6 +81,7 @@ def iosdiagJoinData(raw):
                             key=lambda e:float(re.split(':| ', e['abnormal'])[-2]),\
                             reverse=True)[:10]
                     stat[diskIdx]["data"] = slowIOs
+
                 else:
                     for delay in slowIOs:
                         entry = {
@@ -74,10 +89,24 @@ def iosdiagJoinData(raw):
                         for d in delay['delays']:
                             entry[d['component']] = d['delay']
                         stat[diskIdx]["data"].append(entry)
+    for d in disks:
+        if 'singleIOMetrics_'+d in stat.keys():
+            count = len(stat['singleIOMetrics_'+d]["data"])
+            stat["iolatencyOverview_"+d] = {
+                "data": [{'key': 'Check Result', "value": "abnormal"},
+                {'key': "IOs of over threshold", "value": count}]}
+        if 'iolatencyDistribution_'+d in stat.keys():
+            if 'Abnormal' not in stat["summary"]:
+                stat["summary"] = "diagnose results: Abnormal, "
+            delays = sorted(stat['iolatencyDistribution_'+d]["data"],
+                            key=lambda e: (float(e['value'].strip('%'))),
+                            reverse=True)
+            maxDelayComp = delays[0]['key']
+            stat["summary"] += \
+                ("The IO of disk %s is slow, caused by high %s latency;" % (
+                    d, maxDelayComp))
 
     s = json.dumps(stat, indent=4)
-    with open('/root/lgs_debug/iolatency.log', 'w+') as f:
-        f.write(s)
     print(s)
 
 def extract_params():

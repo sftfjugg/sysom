@@ -19,7 +19,7 @@
         {
             "type": "text",
             "name": "threshold",
-            "initialValue": "5000",
+            "initialValue": "1000",
             "label": "时间阈值",
             "tooltips": "保留IO延迟大于设定时间阈值的IO（时间单位：ms）"
         },
@@ -41,67 +41,79 @@
     "pannels": [
         {
             "key": "iolatencyOverview",
+            "type": "stat",
+            "title": "Iolatency overview",
+            "datasource": "iolatencyOverview_${disks}",
+            "fieldConfig": {
+                "mappings": [{
+                "type": "value", 
+                "options": {
+                    "normal": { "color": "green" },
+                    "abnormal": { "color": "red" }
+                }
+                }],
+                "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                    { "color": "red", "value": 1 },
+                    { "color": "green", "value": 0 }
+                ]
+                }
+            }
+        },
+        {
+            "key": "iolatencyDistribution",
             "type": "flow",
-            "title": "整体IO时延分布",
+            "title": "Overall delay distribution",
             "flowconfigs": {
+                "layout":{
+                    "type": "linear"
+                },
                 "nodes": [
                     {
                         "id": "os(block)",
-                        "x": 40,
-                        "y": 40
+                        "tips": "The time delay of the general block layer in OS kernel(unit: us)" 
                     },
                     {
                         "id": "os(driver)",
-                        "x": 300,
-                        "y": 40
+                        "tips":"The time delay of OS kernel driver(unit: us)"
                     },
                     {
                         "id": "disk",
-                        "x": 560,
-                        "y": 40
+                        "tips": "The time delay of disk(unit: us)"
                     },
                     {
                         "id": "os(complete)",
-                        "x": 820,
-                        "y": 40
+                        "tips": "The time delay of io complete in OS kernel(unit: us)"
                     }
                 ],
                 "edges": [
                     {
                         "source": "os(block)",
-                        "target": {
-                            "cell": "os(driver)",
-                            "port": "left"
-                        }
+                        "target": "os(driver)"
                     },
                     {
                         "source": "os(driver)",
-                        "target": {
-                            "cell": "disk",
-                            "port": "left"
-                        }
+                        "target": "disk"
                     },
                     {
                         "source": "disk",
-                        "target": {
-                            "cell": "os(complete)",
-                            "port": "left"
-                        }
+                        "target": "os(complete)"
                     }
                 ]
             },
-            "datasource": "iolatencyOverview_${disks}"
+            "datasource": "iolatencyDistribution_${disks}"
         },
         {
             "key": "singleIOMetrics",
             "type": "timeseries",
-            "title": "单IO时延metrics展示",
+            "title": "Single IO delay metrics display",
             "datasource": "singleIOMetrics_${disks}"
         },
         {
             "key": "singleIO",
             "type": "table",
-            "title": "TOP10 IO详情",
+            "title": "More details of TOP 10 IO",
             "datasource": "singleIO_${disks}"
         }
     ]

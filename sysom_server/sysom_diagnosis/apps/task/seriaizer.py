@@ -5,23 +5,40 @@
 @Author  : DM
 @Software: PyCharm
 """
+import json
 from rest_framework import serializers
 from apps.task.models import JobModel
 
 
-class JobListSerializer(serializers.ModelSerializer):
+class BaseJobSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['params'] = json.loads(data['params'])
+        if isinstance(data.get('result', None), str):
+            try:
+                data['result'] = json.loads(data['result'])
+            except:
+                pass
+        return data
+
+
+class JobListSerializer(BaseJobSerializer):
     class Meta:
         model = JobModel
-        exclude = ('host_by', 'command', 'result')
+        exclude = ('host_by', 'command', 'result', 'code', 'err_msg')
 
 
-class JobRetrieveSerializer(serializers.ModelSerializer):
+class JobRetrieveSerializer(BaseJobSerializer):
     class Meta:
         model = JobModel
         exclude = ('host_by', 'command')
 
 
-class JobDetailSerializer(serializers.ModelSerializer):
+class JobDetailSerializer(BaseJobSerializer):
     class Meta:
         model = JobModel
         fields = '__all__'

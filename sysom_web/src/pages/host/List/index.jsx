@@ -39,9 +39,13 @@ const handleAddHost = async (fields) => {
   const token = localStorage.getItem('token');
 
   try {
-    await addHost({ ...fields }, token);
+    let res = await addHost({ ...fields }, token);
     hide();
-    message.success('添加成功');
+    if (res.code == 200) {
+      message.success('添加成功');
+    } else {
+      message.error(res.message);
+    }
     return true;
   } catch (error) {
     hide();
@@ -59,7 +63,7 @@ const handleUpdateHost = async (fields) => {
     if (res.code == 200) {
       message.success('更新成功');
     } else {
-      message.error(`更新失败：${res.message}`)
+      message.error(`更新失败：${res.message}`);
     }
     return true;
   } catch (error) {
@@ -73,9 +77,13 @@ const handleDeleteHost = async (record) => {
   const token = localStorage.getItem('token');
   if (!record) return true;
   try {
-    await deleteHost(record.id, token);
+    let res = await deleteHost(record.id, token);
     hide();
-    message.success('删除成功');
+    if (res.code == 200) {
+      message.success('删除成功');
+    } else {
+      message.error(res.message);
+    }
     return true;
   } catch (error) {
     hide();
@@ -247,7 +255,25 @@ const HostList = () => {
           ),
           status: 'Default',
         },
+        3: {
+          text: (
+            <FormattedMessage id="pages.hostTable.status.migrating" defaultMessage="Migrating" />
+          ),
+          status: 'Warning',
+        }
       },
+    },
+    {
+      title: (<FormattedMessage id="pages.hostTable.hostRelease" defaultMessage="hostRelease"></FormattedMessage>),
+      hideInSearch: true,
+      sorter: (a, b) => a.host_info.release - b.host_info.release,
+      renderText: (_, record) => record.host_info.release
+    },
+    {
+      title: (<FormattedMessage id="pages.hostTable.hostKernelVersion" defaultMessage="hostKernelVersion"></FormattedMessage>),
+      hideInSearch: true,
+      sorter: (a, b) => a.host_info.kernel_version - b.host_info.kernel_version,
+      renderText: (_, record) => record.host_info.kernel_version
     },
     {
       title: (

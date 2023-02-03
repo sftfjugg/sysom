@@ -1,5 +1,5 @@
 import re
-import logging
+from loguru import logger
 import os
 import threading
 from typing import Any
@@ -24,9 +24,6 @@ from lib.excel import Excel
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
 from channel_job import default_channel_job_executor
-
-
-logger = logging.getLogger(__name__)
 
 
 class HostModelViewSet(CommonModelViewSet,
@@ -140,6 +137,9 @@ class HostModelViewSet(CommonModelViewSet,
         return instance if instance else None
 
     def client_deploy_cmd_init(self, instance, params: dict):
+        wait_timeout = settings.HOST_INIT_TIMEOUT
+        if wait_timeout is None:
+            wait_timeout = 600
         job_result = default_channel_job_executor.dispatch_job(
             channel_type="ssh", channel_opt="init",
             params={
@@ -148,7 +148,7 @@ class HostModelViewSet(CommonModelViewSet,
                 "port": instance.port,
                 **params
             },
-            timeout=1000,
+            timeout=wait_timeout * 1000,
             auto_retry=True
         ).execute()
         if job_result.code != 0:

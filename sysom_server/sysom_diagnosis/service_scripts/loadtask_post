@@ -35,7 +35,7 @@ def cpuflamegraph(file):
     if len(graph) >= 3:
         return graph[2]
     else:
-        return "无法生成火焰图"
+        return "FlameGraph failed!"
     fd.close()
 
 def parse_log(file):
@@ -121,13 +121,38 @@ def parse_log(file):
 
     new_parse_data["dataresult"] = {"data": {}}
     new_parse_data["dataresult"]["data"] = [
-        {"key": "系统平均负载", "value": reason["loadavg"]},
-        {"key": "Sys影响检测", "value": reason["sys"]},
-        {"key": "硬件中断影响检测", "value": reason["irq"]},
-        {"key": "软中断影响检测", "value": reason["softirq"]},
-        {"key": "IO影响检测", "value": reason["io"]}
+        {"key": "System LoadAvg", "value": reason["loadavg"]},
+        {"key": "Sys Influences", "value": reason["sys"]},
+        {"key": "Hardirq Influences", "value": reason["irq"]},
+        {"key": "Softirq Influences", "value": reason["softirq"]},
+        {"key": "IO Influences", "value": reason["io"]}
     ]
 
+    sys_summary = "NULL"
+    hardirq_summary = "NULL"
+    softirq_summary = "NULL"
+    io_summary = "NULL"
+    if reason["sys"] == "false":
+        sys_summary = " is normal;"
+    else:
+        sys_summary = " is abnormal;"
+
+    if reason["irq"] == "false":
+        hardirq_summary = " is normal;"
+    else:
+        hardirq_summary = " is abnormal;"
+
+    if reason["softirq"] == "false":
+        softirq_summary = " is normal;"
+    else:
+        softirq_summary = " is abnormal;"
+
+    if reason["io"] == "false":
+        io_summary = " is normal;"
+    else:
+        io_summary = " is abnormal;"
+
+    new_parse_data["summary"] = "Load Influences Result:"+"sys utils"+ sys_summary + "hardirq" + hardirq_summary + "softirq" + softirq_summary + "io" + io_summary
     new_parse_data["datataskcount"] = {"data": []}
     new_parse_data["datataskcount"]["data"] = [
         {"key": "uninterrupt_tasks", "value": int(count["uninterrupt tasks"])},

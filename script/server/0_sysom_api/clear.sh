@@ -1,12 +1,8 @@
 #!/bin/bash
-clear_db() {
-    systemctl start mariadb.service
-    mysql -uroot -e "drop database if exists sysom;"
-    mysql -uroot -e "drop database if exists grafana;"
-}
-
+SERVICE_NAME=sysom-api
 clear_app() {
-    clear_db
+    rm -rf /etc/supervisord.d/${SERVICE_NAME}.ini 
+    ###use supervisorctl update to stop and clear services###
+    supervisorctl update
 }
-
 clear_app

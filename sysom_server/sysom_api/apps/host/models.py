@@ -1,21 +1,24 @@
 from django.db import models
 from lib.base_model import BaseModel
+from django.core import validators
 
 
 class HostModel(BaseModel):
     HOST_STATUS_CHOICES = (
         (0, 'running'),
         (1, 'error'),
-        (2, 'offline')
+        (2, 'offline'),
+        (3, 'migrating')
     )
 
     hostname = models.CharField(max_length=100, unique=True)
-    ip = models.CharField(max_length=100, unique=True)
-    port = models.IntegerField()
+    ip = models.CharField(max_length=100, unique=True, validators=[validators.validate_ipv46_address])
+    port = models.IntegerField(validators=[validators.MaxValueValidator(65535), validators.MinValueValidator(0)])
     username = models.CharField(max_length=100)
     private_key = models.TextField(null=True)
     description = models.CharField(max_length=255, null=True)
     status = models.IntegerField(choices=HOST_STATUS_CHOICES, default=2, verbose_name="主机状态")
+    host_info = models.TextField(verbose_name='主机信息', default="")
     client_deploy_cmd = models.TextField(verbose_name="client部署命令", default="")
     cluster = models.ForeignKey('Cluster', on_delete=models.CASCADE, related_name='hosts', default="")
     # created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="c_hosts")

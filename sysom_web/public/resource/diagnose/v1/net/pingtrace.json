@@ -1,0 +1,138 @@
+{
+    "servicename": "pingtrace",
+    "version": 1.0,
+    "taskform": [
+        {
+            "type": "text",
+            "name": "origin_instance",
+            "initialValue": "",
+            "label": "源实例ip",
+            "tooltips": "请输入你要诊断的源实例IP， 我们将在会这台机器内部发起SysAK诊断"
+        },
+        {
+            "type": "text",
+            "name": "target_instance",
+            "initialValue": "",
+            "label": "目标实例ip",
+            "tooltips": "请输入你要诊断的目标实例IP， 我们将在会这台机器内部发起SysAK诊断"
+        },
+        {
+            "type": "text",
+            "name": "pkg_num",
+            "initialValue": "100",
+            "label": "追踪包数",
+            "tooltips": "请输入你要追踪的包数"
+        },
+        {
+            "type": "text",
+            "name": "time_gap",
+            "initialValue": "1000",
+            "label": "间隔毫秒数",
+            "tooltips": "请输入发包间隔"
+        },
+        {
+            "type": "select",
+            "name": "type",
+            "initialValue": "icmp",
+            "label": "报文协议",
+            "tooltips": "请输入报文协议(icmp,tcp,udp)",
+            "options":[{"value":"icmp", "label":"icmp"}, {"value":"tcp", "label":"tcp"},{"value":"udp", "label":"udp"}]
+        }
+    ],
+    "variables": [],
+    "pannels": [
+        {
+            "key": "pingtraceLatency",
+            "type": "flow",
+            "title": "Overall delay distribution",
+            "flowconfigs": {
+                "layout":{
+                    "type": "grid",
+                    "rows": "2",
+                    "cols": "4"
+                },
+                "nodes": [
+                    {
+                        "id": "l_tx_kern",
+                        "tips": "The time delay of the general block layer in OS kernel(unit: us)" ,
+                        "col": 0,
+                        "row": 0
+                    },
+                    {
+                        "id": "l_tx_qdisc",
+                        "tips":"The time delay of OS kernel driver(unit: us)",
+                        "col": 1,
+                        "row": 0
+                    },
+                    {
+                        "id": "l_tx_outlink",
+                        "tips": "The time delay of disk(unit: us)",
+                        "col": 2,
+                        "row": 0
+                    },
+                    {
+                        "id": "r_tx_kern",
+                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "col": 3,
+                        "row": 0
+                    },
+                    {
+                        "id": "l_rx_inlink",
+                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "col": 3,
+                        "row": 1
+                    },
+                    {
+                        "id": "l_rx_kern",
+                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "col": 2,
+                        "row": 1
+                    },
+                    {
+                        "id": "l_rx_task_waking",
+                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "col": 1,
+                        "row": 1
+                    },
+                    {
+                        "id": "l_rx_task_queue",
+                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "col": 0,
+                        "row": 1
+                    }
+                ],
+                "edges": [
+                    {
+                        "source": "l_tx_kern",
+                        "target": "l_tx_qdisc"
+                    },
+                    {
+                        "source": "l_tx_qdisc",
+                        "target": "l_tx_outlink"
+                    },
+                    {
+                        "source": "l_tx_outlink",
+                        "target": "r_tx_kern"
+                    },
+                    {
+                        "source": "r_tx_kern",
+                        "target": "l_rx_inlink"
+                    },
+                    {
+                        "source": "l_rx_inlink",
+                        "target": "l_rx_kern"
+                    },
+                    {
+                        "source": "l_rx_kern",
+                        "target": "l_rx_task_waking"
+                    },
+                    {
+                        "source": "l_rx_task_waking",
+                        "target": "l_rx_task_queue"
+                    }
+                ]
+            },
+            "datasource": "pingtraceFlow"
+        }
+    ]
+}

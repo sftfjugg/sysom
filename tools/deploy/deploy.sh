@@ -6,14 +6,8 @@
 # Modify Date: 2021-11-16 00:02
 # Function: deploy sysom
 #***************************************************************#
-
-ALIYUN_MIRROR="https://mirrors.aliyun.com/pypi/simple/"
 APP_NAME="sysom"
 SERVER_DIR="sysom_server"
-API_DIR=$SERVER_DIR/sysom_api
-DIAGNOSIS_DIR=$SERVER_DIR/sysom_diagnosis
-CHANNEL_DIR=$SERVER_DIR/sysom_channel
-SDK_DIR=$SERVER_DIR/sdk
 WEB_DIR="sysom_web"
 SCRIPT_DIR="script"
 APP_HOME=/usr/local/sysom
@@ -48,7 +42,6 @@ export SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
 export SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
 export SERVER_PORT=${SERVER_PORT}
 
-VIRTUALENV_HOME="${SERVER_HOME}/virtualenv"
 TARGET_PATH="${SERVER_HOME}/target"
 
 if [ "$UID" -ne 0 ]; then
@@ -58,28 +51,6 @@ fi
 
 mkdir -p ${SERVER_HOME}
 
-touch_env_rpms() {
-    if [ -f /etc/alios-release ]; then
-        if [ ! -f /etc/yum.repos.d/epel.repo ]; then
-            wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
-        fi
-    elif [ -f /etc/anolis-release ]; then
-        sed -i '/epel\/8\/Everything/{n;s/enabled=0/enabled=1/;}' /etc/yum.repos.d/AnolisOS-DDE.repo
-    fi
-    rpm -q --quiet python3 || yum install -y python3
-    rpm -q --quiet python3-virtualenv || yum install -y python3-virtualenv
-    rpm -q --quiet mariadb-server || yum install -y mariadb-server
-    rpm -q --quiet supervisor || yum install -y supervisor
-    rpm -q --quiet nginx || yum install -y nginx
-    rpm -q --quiet gcc || yum install -y gcc
-    rpm -q --quiet make || yum install -y make
-    rpm -q --quiet redis || yum install -y redis
-    rpm -q --quiet wget || yum install -y wget
-    rpm -q --quiet rpcbind || yum install -y rpcbind
-    rpm -q --quiet nfs-utils || yum install -y nfs-utils
-    rpm -q --quiet python3-pip || yum install -y python3-pip
-}
-
 update_target() {
     if [ -d "${TARGET_PATH}" ]; then
         rm -rf ${TARGET_PATH}
@@ -88,22 +59,11 @@ update_target() {
     echo "INFO: copy project file..."
     cp -r ${SERVER_DIR} ${WEB_DIR} ${TARGET_PATH}
     cp -r ${SCRIPT_DIR} ${APP_HOME}/init_scripts
-}
-
-init_conf() {
-    mkdir -p /run/daphne
-    mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
-    cp tools/deploy/nginx.conf /etc/nginx/
-    cp tools/deploy/sysom.conf /etc/nginx/conf.d/
-    ###change the install dir base on param $1###
-    sed -i "s;SERVER_PORT;${SERVER_PORT};g" /etc/nginx/conf.d/sysom.conf
-    sed -i "s;/usr/local/sysom;${APP_HOME};g" /etc/nginx/conf.d/sysom.conf
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
 }
 
 start_script_server() {
-   systemctl daemon-reload
-   systemctl start sysom-server.service
+    bash -x ${APP_HOME}/init_scripts/server/init.sh
 }
 
 generate_service_env() {
@@ -119,9 +79,7 @@ EOF
 }
 
 deploy() {
-    touch_env_rpms
     update_target
-    init_conf
     generate_service_env
     start_script_server
 }

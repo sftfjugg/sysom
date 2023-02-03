@@ -7,6 +7,7 @@ File                common.py
 Description:
 """
 import os
+import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,3 +63,12 @@ SYSOM_MIGRATION_CEC_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_
 SYSOM_HOST_LISTEN_TOPIC = "SYSOM_HOST_LISTEN_TOPIC"
 SYSOM_HOST_CONSUME_GROUP = "SYSOM_HOST_CONSUME_GROUP"
 SYSOM_HOST_CEC_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}&channel_job_listen_topic={SYSOM_HOST_LISTEN_TOPIC}&channel_job_consumer_group={SYSOM_HOST_CONSUME_GROUP}"
+
+
+##################################################################
+# Logging config
+##################################################################
+from cec_base.log import LoggerHelper, LoggerLevel
+log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)

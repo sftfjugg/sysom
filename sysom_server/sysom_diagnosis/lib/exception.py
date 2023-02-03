@@ -1,15 +1,11 @@
-import logging
 import traceback
-
+from loguru import logger
 from django.db.models import ProtectedError
 from rest_framework.views import set_rollback
 from rest_framework import exceptions
 from rest_framework.exceptions import APIException as DRFAPIException, AuthenticationFailed, NotAuthenticated
 
 from .response import ErrorResponse
-
-
-logger = logging.getLogger(__name__)
 
 
 class APIException(Exception):
@@ -60,4 +56,4 @@ def exception_handler(exc, context):
         logger.error(traceback.format_exc())
         msg = str(exc)  # 原样输出错误
 
-    return ErrorResponse(msg=msg, code=code, status=code)
+    return ErrorResponse(msg=msg, code=code)

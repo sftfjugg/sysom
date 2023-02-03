@@ -1,20 +1,19 @@
-import logging
+from loguru import logger
 from django.http.response import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework import mixins
-
+from django.http.response import Http404
 from django.conf import settings
 from apps.task import seriaizer
 from apps.task.models import JobModel
 from apps.task.filter import TaskFilter
 from lib.base_view import CommonModelViewSet
-from lib.response import success, other_response, not_found, ErrorResponse
-from lib.authentications import TaskAuthentication
-from .executors import TaskDispatcher
-
-logger = logging.getLogger(__name__)
+from lib.response import success, not_found, ErrorResponse, other_response
+from lib.authentications import TokenAuthentication
+from channel_job.job import JobResult
+from .helper import DiagnosisHelper
 
 
 class TaskAPIView(CommonModelViewSet,
@@ -29,18 +28,17 @@ class TaskAPIView(CommonModelViewSet,
     search_fields = ('id', 'task_id', 'created_by__id',
                      'status', 'params')  # 模糊查询
     filterset_class = TaskFilter  # 精确查询
-    authentication_classes = [TaskAuthentication]
+    authentication_classes = [TokenAuthentication]
     create_requird_fields = ['service_name']
-    
+    lookup_field = 'task_id'
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        # 构造任务执行器，并使用它来进行任务下发和结果处理（结果处理在 apps.py）
-        # 【v2 基于事件中心接口相关功能】
-        self._task_executor: TaskDispatcher = TaskDispatcher(
-            settings.SYSOM_CEC_URL)
 
     def get_authenticators(self):
-        if self.request.path.endswith("svg/"):
+        # 判断请求是否是单查task
+        task_id = self.kwargs.get(self.lookup_field, None)
+        if self.request.path.endswith("svg/") or (task_id is not None and self.request.method == 'GET'):
             return []
         else:
             return [auth() for auth in self.authentication_classes]
@@ -49,15 +47,17 @@ class TaskAPIView(CommonModelViewSet,
         return self.create_task_v2(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
-        kwargs["task_id"] = kwargs.pop("pk")
-        instance = self.get_queryset().filter(**kwargs).first()
-        if not instance:
-            return success([])
+        try:
+            instance = self.get_object()
+        except Http404:
+            return other_response(result={}, message='task不存在', success=False, code=400)
+
         response = seriaizer.JobRetrieveSerializer(instance)
         res = response.data
         result = res['result']
         if 'state' in result:
             res['result'] = result['result']
+        res['url'] = "/".join(["", "diagnose", "detail", instance.task_id])
         return success(result=res)
 
     def list(self, request, *args, **kwargs):
@@ -89,25 +89,49 @@ class TaskAPIView(CommonModelViewSet,
 
     def create_task_v2(self, request, *args, **kwargs):
         try:
-            # 检查参数是否缺失
+            # 1. Check required params
             res = self.require_param_validate(
                 request, ['service_name'])
             if not res['success']:
-                return other_response(message=res.get('message', 'Missing parameters'), code=400)
+                return ErrorResponse(msg=res.get('message', 'Missing parameters'))
             data = request.data
-            data['user'] = getattr(request, 'user')
-            return self._delivery_task(data)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return other_response(message=str(e), code=400, success=False)
 
-    def _delivery_task(self, data: dict):
-        """
-        将任务发布到事件中心
-        【v2 基于事件中心接口相关功能】
-        """
-        res = self._task_executor.delivery_task(data)
-        if res['success']:
-            return success(result=res["result"])
-        else:
-            return ErrorResponse(msg=res["message"])
+            # 3. Create Task
+            instance = DiagnosisHelper.init(data, getattr(request, 'user'))
+            self.produce_event_to_cec(
+                settings.SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC,
+                {
+                    "task_id": instance.task_id
+                }
+            )
+            return success({
+                "task_id": instance.task_id
+            })
+        except Exception as e:
+            logger.exception(e)
+            return ErrorResponse(msg=str(e))
+
+    def offline_import(self, request, *args, **kwargs):
+        """Offline import of diagnostic logs"""
+        try:
+            # 1. Check required params
+            res = self.require_param_validate(
+                request, ['instance', 'offline_log', 'service_name'])
+            if not res['success']:
+                return ErrorResponse(message=res.get('message', 'Missing parameters'))
+            data = request.data
+
+            # 2. Offline import
+            offline_log = data.pop("offline_log", "")
+            instance = DiagnosisHelper.offline_import(
+                data, getattr(request, 'user'))
+
+            # 3. postprocess
+            DiagnosisHelper.postprocess(
+                instance, job_result=JobResult(code=0, result=offline_log))
+            return success({
+                "task_id": instance.task_id
+            })
+        except Exception as e:
+            logger.exception(e)
+            return ErrorResponse(msg=str(e))

@@ -32,9 +32,9 @@ def jitter_result(raw):
 
     newjitter["senderflow"] = {}
     newjitter["senderflow"]["data"] = [
-        {"key": "send", "title": "内核发送", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(send_max, send_avg, send_min)},
-        {"key": "out", "title": "外部链路", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(out_max, out_avg, out_min)},
-        {"key": "recv", "title": "内核接收", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(recv_max, recv_avg, recv_min)},
+        {"key": "send", "title": "kernelSnd", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(send_max, send_avg, send_min)},
+        {"key": "out", "title": "externalLink", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(out_max, out_avg, out_min)},
+        {"key": "recv", "title": "kernelRcv", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(recv_max, recv_avg, recv_min)},
     ]
 
     send_max = int(int(rawdata["receiver_max"]["send"])/1000000)
@@ -46,9 +46,23 @@ def jitter_result(raw):
 
     newjitter["receiverflow"] = {}
     newjitter["receiverflow"]["data"] = [
-        {"key": "recv", "title": "内核接收", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(recv_max, recv_avg, recv_min)},
-        {"key": "send", "title": "内核发送", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(send_max, send_avg, send_min)},
+        {"key": "recv", "title": "kernelRcv", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(recv_max, recv_avg, recv_min)},
+        {"key": "send", "title": "kernelSnd", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(send_max, send_avg, send_min)},
     ]
+
+
+    summary = ""
+
+    if int(rawdata["send_event_count"]) != 0:
+        summary = "Sender: kernelSnd-({}, {}, {}), externalLink-({}, {}, {}), kernelRcv-({}, {}, {})".format(send_max, send_avg, send_min, out_max, out_avg, out_min, recv_max, recv_avg, recv_min)
+
+    if int(rawdata["recv_envet_count"]) != 0:
+        summary = "Receiver: kernelRcv-({}, {}, {}), kernelSnd-({}, {}, {})".format(recv_max, recv_avg, recv_min, send_max, send_avg, send_min)
+
+    if len(summary) == 0:
+        summary = "No captured infomation"
+
+    newjitter["summary"] = summary
 
     print(json.dumps(newjitter, ensure_ascii=False))
 

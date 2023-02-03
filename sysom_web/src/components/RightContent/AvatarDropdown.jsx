@@ -1,10 +1,24 @@
 import React, { useCallback } from 'react';
 import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
-import { Avatar, Menu, Spin } from 'antd';
-import { history, useModel } from 'umi';
+import { Avatar, Menu, Spin, Button, message } from 'antd';
+import { history, useModel, FormattedMessage, setLocale, getLocale, request } from 'umi';
 import { stringify } from 'querystring';
 import HeaderDropdown from '../HeaderDropdown';
 import styles from './index.less';
+
+/* 
+用户注销接口
+*/
+export async function logout(){
+    const token = localStorage.getItem('token');
+    return await request('/api/v1/logout/', {
+        method: 'GET',
+        headers: {
+            'Authorization': token,
+        },
+    });
+};
+
 
 /**
  * 退出登录，并且将当前的 url 保存
@@ -28,16 +42,19 @@ const AvatarDropdown = ({ menu }) => {
   const onMenuClick = useCallback(
     (event) => {
       const { key } = event;
-
       if (key === 'logout') {
-        setInitialState((s) => ({ ...s, currentUser: undefined }));
-        localStorage.removeItem('userId');
-        localStorage.removeItem('token');
-        loginOut();
+        logout().then(( res ) => {
+          if (res.code === 200) {
+            setInitialState((s) => ({ ...s, currentUser: undefined }));
+            message.success(res.message)
+            localStorage.removeItem('userId');
+            localStorage.removeItem('token');
+            loginOut();
+          }
+        })
         return;
       }
-
-      history.push(`/account/${key}`);
+      // history.push(`/account/${key}`);
     },
     [setInitialState],
   );
@@ -85,13 +102,38 @@ const AvatarDropdown = ({ menu }) => {
       </Menu.Item>
     </Menu>
   );
+  const changLang = () => {
+    const locale = getLocale();
+    console.log(locale);
+    if (!locale || locale === 'zh-CN') {
+      setLocale('en-US');
+    } else {
+      setLocale('zh-CN');
+    }
+  };
   return (
-    <HeaderDropdown overlay={menuHeaderDropdown}>
-      <span className={`${styles.action} ${styles.account}`}>
-        <Avatar size="small" className={styles.avatar} src={currentUser.avatar} alt="avatar" />
-        <span className={`${styles.name} anticon`}>{currentUser.username}</span>
-      </span>
-    </HeaderDropdown>
+    <>
+      <div style={{ float: 'left', }}>
+        <Button
+        size="small"
+        // ghost={theme === 'dark'}
+        style={{
+          margin: '0 8px',
+        }}
+        onClick={() => {
+          changLang();
+        }}
+      >
+        <FormattedMessage id="pages.language" defaultMessage="中文" />
+      </Button>
+      </div>
+      <HeaderDropdown overlay={menuHeaderDropdown}>
+        <span className={`${styles.action} ${styles.account}`}>
+          <Avatar size="small" className={styles.avatar} src={currentUser.avatar} alt="avatar" />
+          <span className={`${styles.name} anticon`}>{currentUser.username}</span>
+        </span>
+      </HeaderDropdown>
+    </>
   );
 };
 

@@ -462,10 +462,10 @@ class RedisAdmin(Admin, ClientBase):
                     lag = length - counts_map[_group.get('name')]
 
                 res.append(ConsumeStatusItem(
-                    topic, consumer_group_id, 0,
+                    topic, _group.get('name'), 0,
                     min_id=min_id,
                     max_id=max_id,
-                    length=length,
+                    total_event_count=length,
                     last_ack_id=last_ack_id,
                     lag=lag
                 ))
@@ -476,8 +476,10 @@ class RedisAdmin(Admin, ClientBase):
         # Use 'xinfo stream' to get topic information
         try:
             stream_info = self._redis_client.xinfo_stream(inner_topic_name)
-            min_id = stream_info.get("first-entry", [None])[0]
-            max_id = stream_info.get("last-entry", [None])[0]
+            first_entry = stream_info.get("first-entry", None)
+            last_entry = stream_info.get("last-entry", None)
+            min_id = first_entry[0] if first_entry is not None else None
+            max_id = last_entry[0] if last_entry is not None else None
             length = stream_info.get("length", 0)
             groups = self._redis_client.xinfo_groups(inner_topic_name)
             if consumer_group_id != '' and consumer_group_id is not None:

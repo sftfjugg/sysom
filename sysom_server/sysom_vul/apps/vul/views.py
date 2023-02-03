@@ -11,7 +11,7 @@ from django_apscheduler.jobstores import register_job
 from tzlocal import get_localzone
 from django.utils.timezone import localdate, localtime
 from django_filters.rest_framework import DjangoFilterBackend
-from loguru import logger as log
+from loguru import logger
 from lib.response import *
 # from apps.accounts.authentication import Authentication
 from apps.vul.models import *
@@ -19,7 +19,6 @@ from apps.vul.vul import update_sa as upsa, update_vul as upvul
 from apps.vul.vul import fix_cve, get_unfix_cve
 from apps.vul.serializer import VulAddrListSerializer, VulAddrModifySerializer
 
-logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler(timezone=f'{get_localzone()}')
 
@@ -76,7 +75,7 @@ class VulListView(APIView):
         failed = False
         data = []
         for cve in request.data.get("cve_id_list"):
-            hosts = cve["hostname"]
+            hosts = HostModel.objects.filter(hostname__in=cve["hostname"])
             cve_id = cve["cve_id"]
             results = fix_cve(hosts, cve_id, user=request.user)
             logger.debug(results)
@@ -163,7 +162,7 @@ class VulDetailsView(APIView):
         return {
             "hostname": hostname,
             "ip": host.ip,
-            "created_by": host.created_by.username,
+            "created_by": host.created_by,
             "created_at": host.created_at,
             "status": host.get_status_display(),
         }
@@ -227,7 +226,7 @@ class SaFixHistListView(APIView):
         data = [{"id": fix_obj.id,
                  "cve_id": fix_obj.cve_id,
                  "fixed_time": fix_obj.fixed_at,
-                 "fix_user": fix_obj.created_by.username,
+                 "fix_user": fix_obj.created_by,
                  "status": fix_obj.status,
                  "vul_level": fix_obj.vul_level} for fix_obj in sa_fix_hist]
         return success(result=data)
@@ -242,7 +241,7 @@ class SaFixHistDetailsView(APIView):
         return {
             "hostname": hostname,
             "ip": host.ip,
-            "created_by": host.created_by.username,
+            "created_by": host.created_by,
             "created_at": host.created_at,
             "host_status": host.get_status_display(),
             "status": sa_fix_host_obj.status,

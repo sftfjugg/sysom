@@ -14,12 +14,12 @@ from collections import deque
 import redis
 from redis import Redis
 from redis.client import PubSub
-from atomic import AtomicLong
 from schedule import Scheduler
 from cec_base.exceptions import CecException
 from cec_base.log import LoggerHelper
 from .common import StaticConst
 from .admin_static import static_del_consumer
+from .utils import AtomicLong
 
 
 class Heartbeat:
@@ -98,7 +98,7 @@ class Heartbeat:
         Returns:
 
         """
-        self._heartbeat_timeline += 1
+        self._heartbeat_timeline.inc(1)
         self._redis_client.publish(self._channel_name, self._consumer_id)
 
     def _deal_recv_heartbeat(self, message: dict):

@@ -1,7 +1,6 @@
 // @ts-ignore
 
 /* eslint-disable */
-import { ConsoleSqlOutlined } from '@ant-design/icons';
 import { request } from 'umi';
 import _ from "lodash";
 
@@ -10,7 +9,7 @@ import _ from "lodash";
 //源IP:"xxx"}
 export async function postTask(params, options) {
   const token = localStorage.getItem('token');
-  return request('/api/v2/tasks/', {
+  return request('/api/v1/tasks/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -50,7 +49,7 @@ export async function getTaskList(params, options) {
   }
 }
 
-//GET /api/vi/tasks/xxxxx/
+//GET /api/v1/tasks/xxxxx/
 export async function getTask(id, params = {}, options) {
   const token = localStorage.getItem('token');
   const msg = await request('/api/v1/tasks/' + id + '/', {
@@ -63,8 +62,22 @@ export async function getTask(id, params = {}, options) {
     ...(options || {}),
   });
   return msg.data;
-
 };
+
+// POST /api/v1/tasks/offline_import/
+export async function offlineImport(params = {}, options) {
+  const token = localStorage.getItem('token');
+  const msg = await request('/api/v1/tasks/offline_import/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
+    data: params,
+    ...(options || {}),
+  });
+  return msg;
+}
 
 
 

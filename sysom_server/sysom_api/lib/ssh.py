@@ -1,4 +1,3 @@
-import logging
 from typing import Callable
 import paramiko
 from io import StringIO
@@ -7,8 +6,6 @@ from paramiko.rsakey import RSAKey
 
 DEFAULT_CONNENT_TIMEOUT = 5    # 默认ssh链接超时时间 5s
 DEFAULT_NODE_USER = 'root'     # 默认节点用户名 root
-
-logger = logging.getLogger(__name__)
 
 
 class SSH:

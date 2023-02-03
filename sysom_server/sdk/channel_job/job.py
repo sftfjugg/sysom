@@ -11,12 +11,14 @@ import threading
 import anyio
 import requests
 import json
+import time
 # from schedule import Scheduler
 from cec_base.consumer import Consumer, dispatch_consumer
 from cec_base.producer import Producer, dispatch_producer
 from cec_base.admin import Admin, dispatch_admin
 from cec_base.event import Event
 from cec_base.url import CecUrl
+from cec_base.utils import StoppableThread
 from cec_base.exceptions import TopicAlreadyExistsException
 from .model import JobEntry, JobResult
 from .exception import ChannelJobException
@@ -127,6 +129,8 @@ class ChannelJob:
         Args:
             entry(JobEntry): Channel job entry
         """
+        if self._chunk_callback is not None:
+            entry.return_as_stream = True
         if self._producer is None or self._target_topic == "":
             raise ChannelJobException(
                 "ChannelJob not bind producer or target_topic")
@@ -251,9 +255,12 @@ class ChannelJobExecutor:
         self._target_topic = ""
         self._listen_topic = ""
         self._channel_base_url = ""
+        self._auto_recover = True
         self._job_mapper: Dict[str, ChannelJob] = {
 
         }
+        # _stop_event used to
+        self._job_executor_thread: Optional[StoppableThread] = None
 
     def initial_from_remote_server(self, channel_server_url: str):
         """Auto initial ChannelJobExecutor
@@ -285,13 +292,19 @@ class ChannelJobExecutor:
 
         # 1. Check require params
         self._target_topic = cec_url.params.pop(
-            "channel_job_target_topic", None)
+            "channel_job_target_topic", None
+        )
         self._listen_topic = cec_url.params.pop(
-            "channel_job_listen_topic", None)
+            "channel_job_listen_topic", None
+        )
         listen_consumer_group = cec_url.params.pop(
-            "channel_job_consumer_group", None)
+            "channel_job_consumer_group", None
+        )
+        self._auto_recover = cec_url.params.pop(
+            "channel_job_auto_recover", True
+        )
         if None in [self._target_topic, self._listen_topic, listen_consumer_group]:
-            raise(ChannelJobException("CecUrl missing parameters"))
+            raise (ChannelJobException("CecUrl missing parameters"))
 
         # 2. Create Consumer, Producer, Admin instance
         self._consumer: Consumer = dispatch_consumer(
@@ -364,17 +377,29 @@ class ChannelJobExecutor:
             self._job_mapper[job_result.job_id]._update_chunk(job_result)
 
     def _run(self):
-        for event in self._consumer:
-            # deal each event
-            self._deal_received_event(event)
+        while self._job_executor_thread is not None and \
+                not self._job_executor_thread.stopped():
+            for event in self._consumer:
+                # deal each event
+                self._deal_received_event(event)
+            if self._job_executor_thread is not None and \
+                    not self._job_executor_thread.stopped():
+                time.sleep(5)
 
     def start(self):
-        threading.Thread(target=self._run, daemon=True).start()
+        if self._job_executor_thread is None or \
+                self._job_executor_thread.stopped():
+            self._job_executor_thread = StoppableThread(
+                target=self._run, daemon=True
+            )
+            self._job_executor_thread.start()
 
     def stop(self):
+        self._job_executor_thread.stop()
         self._consumer.disconnect()
         self._producer.disconnect()
         self._admin.disconnect()
+        self._job_executor_thread.join()
 
 
 default_channel_job_executor = ChannelJobExecutor()

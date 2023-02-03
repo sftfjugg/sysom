@@ -41,14 +41,30 @@
     "pannels": [
         {
             "key": "iohangOverview",
-            "type": "table",
-            "title": "IO HANG总览",
-            "datasource": "iohangOverview_${disks}"
+            "type": "stat",
+            "title": "IO HANG overview",
+            "datasource": "iohangOverview_${disks}",
+            "fieldConfig": {
+                "mappings": [{
+                  "type": "value", 
+                  "options": {
+                    "normal": { "color": "green" },
+                    "abnormal": { "color": "red" }
+                  }
+                }],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": 1 },
+                    { "color": "green", "value": 0 }
+                  ]
+                }
+              }
         },
         {
             "key": "singleIO",
             "type": "table",
-            "title": "TOP10个IO详情",
+            "title": "More details of TOP 10 IO",
             "datasource": "singleIO_${disks}"
         }
     ]

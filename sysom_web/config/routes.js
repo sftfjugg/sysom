@@ -94,6 +94,16 @@ export default [
         component: './Monitor/SystemDashboard',
       },
       {
+        path: 'migration',
+        name: 'migration',
+        hideInBreadcrumb: true,
+        component: './Monitor/MigrationDashboard',
+      },
+      {
+        path: 'migration/:host?',
+        component: './Monitor/MigrationDashboard',
+      },
+      {
         component: './404',
       },
     ],
@@ -170,13 +180,8 @@ export default [
         routes: [
           {
             path: '/diagnose/net',
-            redirect: '/diagnose/net/network',
+            redirect: '/diagnose/net/pingtrace',
           },
-          {
-            path: '/diagnose/net/network',
-            name: 'network',
-            component: './diagnose/Net/Network',
-          }
         ]
       },
       {
@@ -189,6 +194,11 @@ export default [
           }
         ]
       },
+      {
+        path: '/diagnose/detail/:task_id?',
+        layout: false,
+        component: "./diagnose/detail"
+      }
     ],
   },
   {
@@ -250,6 +260,35 @@ export default [
         component: './security/Setting',
       },
     ],
+  },
+  {
+    path: '/hotfix',
+    name: 'hotfix',
+    routes: [
+      {
+        path: '/hotfix/formal_hotfix',
+        name: 'formal',
+        component: './hotfix/FormalHotfixList'
+      },
+      {
+        path: '/hotfix',
+        redirect: '/hotfix/make',
+      },
+      {
+        path: '/hotfix/make',
+        name: 'make',
+        component: './hotfix/Make',
+      },
+      {
+        path: '/hotfix/hotfix_log/:id?',
+        component: './hotfix/HotfixLog'
+      },
+      {
+        path: '/hotfix/verion_config',
+        name: 'versionconf',
+        component: './hotfix/VersionConf'
+      }
+    ]
   },
   {
     path: '/',

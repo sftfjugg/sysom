@@ -16,7 +16,7 @@ from app.crud import create_setting, get_setting_by_name, update_or_create_chann
 from app.schemas import ChannelSetting
 from lib.ssh import AsyncSSH
 from conf.settings import *
-from app.routers import file, config
+from app.routers import file, config, cec_status
 
 
 app = FastAPI()
@@ -24,6 +24,7 @@ app = FastAPI()
 app.mount("/public", StaticFiles(directory=STATIC_RESOURCE_PATH), name="public")
 app.include_router(file.router, prefix="/api/v1/channel/file")
 app.include_router(config.router, prefix="/api/v1/channel/config")
+app.include_router(cec_status.router, prefix="/api/v1/channel/cec_status")
 
 logger = logging.getLogger(__name__)
 
@@ -106,9 +107,7 @@ def init_channel():
     AsyncSSH.set_public_key_getter(lambda: ssh_keys["public_key"])
 
     # 6. Start Channel executor
-    from cec_base.log import LoggerHelper, LoggerLevel
     from app.executor import ChannelListener
-    LoggerHelper.update_sys_stdout_sink(LoggerLevel.LOGGER_LEVEL_INFO)
     try:
         ChannelListener().start()
     except Exception as e:

@@ -5,13 +5,19 @@
 0_sysom_channel
 
 [monitor]
-1_monitor
+1_sysom_monitor
 
 [vmcore]
-2_vmcore
+2_sysom_vmcore
 
 [diagnosis]
 3_sysom_diagnosis
 
 [vul]
 4_sysom_vul
+
+[migration]
+5_sysom_migration
+
+[hotfix]
+6_sysom_hotfix

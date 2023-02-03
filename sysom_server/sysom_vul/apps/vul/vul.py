@@ -6,7 +6,6 @@
 @Email   : weidong@uniontech.com
 @Software: PyCharm
 """
-import logging
 import requests
 import datetime
 import json
@@ -17,9 +16,10 @@ from django.db.models import Q
 from rest_framework import status
 from apps.vul.models import *
 from apps.host.models import HostModel
-from apps.vul.ssh_pool import SshProcessQueueManager
+from apps.vul.ssh_pool import SshProcessQueueManager, VulTaskManager
 
 from lib.utils import human_datetime
+from .async_fetch import FetchVulData
 
 
 def update_vul():
@@ -40,43 +40,77 @@ def update_vul_db():
     """
     更新漏洞数据库数据
     """
-    logging.debug("Begin to get vul db address")
+    logger.info("Begin to get vul db address")
     vul_addrs = VulAddrModel.objects.all()
     for vul_addr in vul_addrs:
-        logging.info("Try to get vul db info")
+        logger.info("Try to get vul db info")
         vul_addr_obj = VulDataParse(vul_addr)
         try:
-            body = vul_addr_obj.get_vul_data()
+            body = vul_addr_obj._get_vul_data()
             if body:
                 vul_addr_obj.parse_and_store_vul_data(body)
         except Exception as e:
-            logging.warning(e)
-            logging.warning(f"failed in {vul_addr.url}")
+            logger.warning(e)
+            logger.warning(f"failed in {vul_addr.url}")
 
 
 class VulDataParse(object):
     def __init__(self, vul_addr_obj: VulAddrModel):
         self.vul_addr_obj = vul_addr_obj
-        self.cve_data_path = list(filter(None, self.vul_addr_obj.parser["cve_item_path"].split('/')))
+        # self.cve_data_path = list(filter(None, self.vul_addr_obj.parser["cve_item_path"].split('/')))
+        self.cve_data_path = list(filter(None, self._parser_cve_item_path))
+
+    @property
+    def _parser_cve_item_path(self) -> list:
+        json_attr: dict = json.loads(self.vul_addr_obj.parser)
+        cve_item_path = json_attr.get('cve_item_path', None)
+        if not cve_item_path:
+            return [] 
+        return cve_item_path.split('/')
+    
+    def _generate_url(self, instance: VulAddrModel, url) -> dict:
+        """
+        构造请求
+        """
+        authorization_body = json.loads(instance.authorization_body)
+        # authorization_body = instance.authorization_body
+        if instance.authorization_type.lower() == "basic":
+            auth = (
+                authorization_body.get('username'),
+                authorization_body.get('password')
+            )
+        else:
+            auth = ()
+        return {
+            'method': instance.get_method_display(),
+            'url': url,
+            'headers': json.loads(instance.headers),
+            'data': json.loads(instance.body),
+            'params': json.loads(instance.params),
+            'auth': auth
+        }
 
     def get_vul_data(self):
         vul_data = []
         try:
-            if self.vul_addr_obj.authorization_type.lower() == "basic" and self.vul_addr_obj.authorization_body:
-                auth = (
-                    self.vul_addr_obj.authorization_body["username"], self.vul_addr_obj.authorization_body["password"])
-            else:
-                auth = ()
+            # if self.vul_addr_obj.authorization_type.lower() == "basic" and self.vul_addr_obj.authorization_body:
+            #     auth = (
+            #         self.vul_addr_obj.authorization_body["username"], self.vul_addr_obj.authorization_body["password"])
+            # else:
+            #     auth = ()
 
             flag = True
             url = self.vul_addr_obj.url
             while flag:
-                logging.info(url)
-                resp = requests.request(self.vul_addr_obj.get_method_display(), url,
-                                        headers=self.vul_addr_obj.headers,
-                                        data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
-                                        auth=auth)
+                logger.info(url)
+                # resp = requests.request(self.vul_addr_obj.get_method_display(), url,
+                #                         headers=self.vul_addr_obj.headers,
+                #                         data=self.vul_addr_obj.body, params=self.vul_addr_obj.params,
+                #                         auth=auth)
+                resp = requests.request(**self._generate_url(self.vul_addr_obj, url))
+                # resp.headers
                 body = json.loads(resp.text)
+
                 cve_path = self.cve_data_path
                 cve_data = body
                 next_url_data = body
@@ -104,22 +138,32 @@ class VulDataParse(object):
             return vul_data
         except Exception as e:
             self.set_vul_data_status_down()
-            logging.warning(e)
+            logger.warning(e)
             return vul_data
+
+    def _get_vul_data(self):
+        """
+        异步获取vul
+        """
+        return FetchVulData.run(
+            instance=self.vul_addr_obj,
+            cve_data_path=self.cve_data_path
+        )
 
     def parse_and_store_vul_data(self, body):
         cve_data = body
-        logging.info("Update sys_vul vul data")
+        logger.info("Update sys_vul vul data")
+        parser = json.loads(self.vul_addr_obj.parser)
         for cve in cve_data:
-            cve_id = cve[self.vul_addr_obj.parser["cve_id_flag"]]
+            cve_id = cve[parser["cve_id_flag"]]
             cve_obj_search = VulModel.objects.filter(cve_id=cve_id)
-            pub_time = cve.get(self.vul_addr_obj.parser["pub_time_flag"], None)
-            if "level_flag" in self.vul_addr_obj.parser:
-                vul_level = cve.get(self.vul_addr_obj.parser["level_flag"], None)
+            pub_time = cve.get(parser["pub_time_flag"], None)
+            if "level_flag" in parser:
+                vul_level = cve.get(parser["level_flag"], None)
             else:
                 vul_level = None
             if vul_level is None:
-                vul_score = cve.get(self.vul_addr_obj.parser["score_flag"], None)
+                vul_score = cve.get(parser["score_flag"], None)
                 if vul_score is None:
                     vul_level = ""
                 else:
@@ -132,7 +176,7 @@ class VulDataParse(object):
                     else:
                         vul_level = "critical"
 
-            logging.debug(f"Update sys_vul {cve_id} data")
+            logger.debug(f"Update sys_vul {cve_id} data")
             try:
                 if len(cve_obj_search) == 0:
                     # print(f"0 {cve_id}")
@@ -148,8 +192,8 @@ class VulDataParse(object):
                             vul_level=vul_level,
                             update_time=timezone.now())
             except Exception as e:
-                logging.warning(e)
-                logging.warning(f"Create or update {cve_id} failed")
+                logger.warning(e)
+                logger.warning(f"Create or update {cve_id} failed")
 
     def set_vul_data_status(self, status):
         self.vul_addr_obj.status = status
@@ -217,8 +261,12 @@ for i in "${cve_array[@]}"; do
   echo $cve_id $rpm_source_name $rpm_version $dist
 done
 '''
-    spqm = SshProcessQueueManager(list(HostModel.objects.all()))
-    results = spqm.run(spqm.ssh_command, cmd)
+    # spqm = SshProcessQueueManager(list(HostModel.objects.all()))
+    # results = spqm.run(spqm.ssh_command, cmd)
+
+    hosts = [item['ip'] for item in HostModel.objects.all().values('ip')]
+    vtm = VulTaskManager(hosts, cmd)
+    results = vtm.run(VulTaskManager.run_command)
     #
     # cve2host_info={"cve1":[(host,software,version,os)]}
     # [{'host': 'GqYLM32pIZaNH0rOjd7JViwxPs', 'ret': {'status': 1, 'result': timeout('timed out')}}]
@@ -275,7 +323,7 @@ def update_sa_db(cveinfo):
         hosts = [cve_detail[0] for cve_detail in new_cveinfo[cve_id] if
                  cve_detail[1] == software_name and cve_detail[2] == fixed_version and cve_detail[3] == os]
         # 新增漏洞关联主机
-        sacve.host.add(*HostModel.objects.filter(hostname__in=hosts))
+        sacve.host.add(*HostModel.objects.filter(ip__in=hosts))
 
     # [("cve_id", "software_name", "fixed_version", "os")]
     update_cves = new_cves & current_cves
@@ -288,7 +336,7 @@ def update_sa_db(cveinfo):
                                                          fixed_version=fixed_version,
                                                          os=os).first()
         sacve_obj.host.clear()
-        sacve_obj.host.add(*HostModel.objects.filter(hostname__in=hosts))
+        sacve_obj.host.add(*HostModel.objects.filter(ip__in=hosts))
 
     # 更新漏洞数据库数据至sa
     for sacve_obj in set(
@@ -318,8 +366,12 @@ def parse_sa_result(result):
 
 def fix_cve(hosts, cve_id, user):
     cmd = 'dnf update --cve {} -y'.format(cve_id)
-    spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
-    results = spqm.run(spqm.ssh_command, cmd)
+    # spqm = SshProcessQueueManager(list(HostModel.objects.filter(hostname__in=hosts)))
+    # results = spqm.run(spqm.ssh_command, cmd)
+    hosts = [host.ip for host in hosts]
+    vtm = VulTaskManager(hosts, cmd)
+    results = vtm.run(VulTaskManager.run_command)
+    logger.info(results)
     fixed_time = human_datetime()
     user_obj = user.get('id', 1)
     vul_level = SecurityAdvisoryModel.objects.filter(cve_id=cve_id).first().vul_level
@@ -327,11 +379,11 @@ def fix_cve(hosts, cve_id, user):
     init = True
     for ret in results:
         hostname = ret["host"]
-        host_obj = HostModel.objects.filter(hostname=hostname).first()
+        host_obj = HostModel.objects.filter(ip=hostname).first()
         if ret["ret"]["status"] == 0:
             status = "success"
             details = ret["ret"]["result"]
-            sa_obj = SecurityAdvisoryModel.objects.filter(host__hostname=hostname, cve_id=cve_id).first()
+            sa_obj = SecurityAdvisoryModel.objects.filter(host__ip=hostname, cve_id=cve_id).first()
             sa_obj.host.remove(host_obj)
         else:
             status = "fail"

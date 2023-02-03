@@ -1,14 +1,14 @@
 #!/bin/bash
+NODE_INIT_DIR=${SERVER_HOME}/target/sysom_web/download/sysom_node_init
 SERVER_DIR="sysom_server"
 TARGET_PATH=${SERVER_HOME}/target
 DIAGNOSIS_DIR=${SERVER_DIR}/sysom_diagnosis
 VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
 SERVICE_NAME=sysom-diagnosis
+SYSAK_DOWNLOAD_URL=https://mirrors.openanolis.cn/sysak/packages/
+SYSAK_PKG=sysak-1.3.0-2.x86_64.rpm
 
-if [ "$UID" -ne 0 ]; then
-    echo "Please run as root"
-    exit 1
-fi
+BASE_DIR=`dirname $0`
 
 source_virtualenv() {
     echo "INFO: activate virtualenv..."
@@ -17,8 +17,6 @@ source_virtualenv() {
 
 init_conf() {
     pushd ${TARGET_PATH}/${DIAGNOSIS_DIR}
-    rm -f apps/*/migrations/00*.py
-    python manage.py makemigrations task
     python manage.py migrate
     popd
 
@@ -42,7 +40,22 @@ start_app() {
     exit 1
 }
 
+prepare_node_init_tar()
+{
+    mkdir -p ${NODE_INIT_DIR}
+    cp -r ${BASE_DIR}/../../node/diagnosis ${NODE_INIT_DIR}
+    pushd ${NODE_INIT_DIR}/diagnosis
+    ls | grep ${SYSAK_PKG} 1>/dev/null 2>/dev/null
+    if [ $? -ne 0 ]
+    then
+        wget ${SYSAK_DOWNLOAD_URL}/${SYSAK_PKG}
+        ls
+    fi
+    popd
+}
+
 deploy() {
+    prepare_node_init_tar
     source_virtualenv
     init_conf
     start_app

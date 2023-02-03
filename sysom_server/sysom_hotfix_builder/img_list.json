@@ -1,0 +1,8 @@
+{
+    "x86_64": {
+        "anolis":"registry.cn-hangzhou.aliyuncs.com/sysom/hotfix_building:openAnolis_8.6_v1.1"
+    },
+    "aarch64":{
+        "anolis":""
+    }
+}

@@ -41,7 +41,7 @@ else:
     sys.stderr.write("没有检查到诊断类型")
     exit(1)
 
-cmd0['cmd'] = "mkdir -p /var/log/sysak && %s -j /var/log/sysak/podmem.json && cat /var/log/sysak/podmem.json"%(cache_cmd)
+cmd0['cmd'] = "mkdir -p /var/log/sysak && %s -j /var/log/sysak/podmem.json > /dev/null 2>&1 && cat /var/log/sysak/podmem.json"%(cache_cmd)
 
 result['commands'].append(cmd0)
 

@@ -4,6 +4,118 @@ import sys
 import json
 import random
 
+def bwToValue(bw):
+    units = ["B", "KB", "MB", "GB", "TB", "PB"]
+    if str(bw) == '0':
+        return 0
+    for i in range(5, -1, -1):
+        if units[i] in bw:
+            return float(bw.split(units[i])[0]) * pow(1024, i)
+
+def humConvert(value):
+    units = ["B", "KB", "MB", "GB", "TB", "PB"]
+    size = 1024.0
+
+    if value == 0:
+        return value
+    for i in range(len(units)):
+        if (value / size) < 1:
+            return "%.1f%s/s" % (value, units[i])
+        value = value / size
+
+def ioutilDataPaser(data, resultInfo):
+    tUnit = None
+    totalBw = totalIops = 0
+    for ds in data['mstats']:
+        iops = ds['iops_rd'] + ds['iops_wr']
+        bps = bwToValue(ds['bps_wr']) + bwToValue(ds['bps_rd'])
+        totalBw += bps
+        totalIops += iops
+        key = ds['comm']+':'+ds['pid']+':'+ds['device']
+        if not tUnit:
+            if ds['bps_wr'] != '0':
+                tUnit = ds['bps_wr'].split('/')[1]
+            else:
+                tUnit = ds['bps_rd'].split('/')[1]
+        if key not in resultInfo.keys():
+            resultInfo.setdefault(key,
+                {'disk':ds['device'], 'maxIops':0, 'maxBps':0, 'file':ds['file']})
+        resultInfo[key]['maxBps'] = max(bps, resultInfo[key]['maxBps'])
+        resultInfo[key]['maxIops'] = max(iops, resultInfo[key]['maxIops'])
+        if resultInfo[key]['maxBps'] != bps or resultInfo[key]['maxIops'] != iops:
+            resultInfo[key]['file'] = ds['file']
+            if 'bufferio' in resultInfo.keys():
+                del resultInfo[key]['bufferio']
+        if 'bufferio' in ds.keys() and 'bufferio' not in resultInfo[key].keys():
+            resultInfo[key].setdefault('bufferio', ds['bufferio'])
+    return totalIops,totalBw,tUnit
+
+
+def ioutilReport(resultInfo, tUnit, diagret):
+    top = 1
+    suggestPS = reason = ''
+    resultInfo = \
+        sorted(resultInfo.items(), key=lambda e: e[1]['maxBps'], reverse=True)
+    for key, val in resultInfo:
+        file = ', target file:'+str(val['file']) if val['file'] != '-' else ''
+        if 'kworker' in str(key):
+            kTasklist = []
+            if 'bufferio' in val.keys():
+                for i in val["bufferio"]:
+                    if 'KB' in i["Wrbw"]:
+                        continue
+                    kTasklist.append(i['task'])
+                    file += ('%s Wrbw %s disk %s file %s;' %
+                        (i['task'], i["Wrbw"], i["device"], i["file"]))
+            if len(kTasklist):
+                file = '(Write bio from: '+file+')'
+            if top == 1:
+                suggestPS = '(Found \'kworker\' flush dirty pages, Try to reduce'\
+                    ' the buffer-IO write?%s or check the config /proc/sys/vm/'\
+                    '{dirty_ratio,dirty_background_ratio} too small?)' %(
+                        '('+';'.join(kTasklist)+')' if len(kTasklist) else '')
+        maxBps = humConvert(val['maxBps']).replace('s', tUnit)
+        reason += ('%d. task[%s], access disk %s with iops:%s, bps:%s%s; \n' %(
+            top, str(key.rsplit(':',1)[0]), str(val['disk']),
+            str(val['maxIops']), maxBps, file))
+        if top == 1 and suggestPS == '':
+            suggestPS = '(Found task \'%s\')' %(str(key.rsplit(':',1)[0]))
+        top += 1
+    suggest = \
+        'Optimize the tasks that contributes the most IO flow%s' % suggestPS
+    return [{'result':diagret, 'reason':reason, 'solution':suggest}]
+
+
+def dataToSummary(raw):
+    resultInfo= {}
+    totalBw = 0
+    maxIops = maxBw = 0
+    minIops = minBw = sys.maxsize
+    tUnit = None
+
+    for data in raw.split('\n'):
+        if "mstats" not in str(data):
+            continue
+        try:
+            stat = json.loads(data)
+        except Exception:
+            return
+        iops,bw,tUnit = ioutilDataPaser(stat, resultInfo)
+        maxIops = max(maxIops, iops)
+        minIops = min(minIops, iops)
+        maxBw = max(maxBw, bw)
+        minBw = min(minBw, bw)
+        totalBw += bw
+
+    if resultInfo:
+        content = 'Iops:'+str(minIops)+'~'+str(maxIops)+\
+            ', Bps:'+humConvert(minBw).replace('s', tUnit)+\
+            '~'+humConvert(maxBw).replace('s', tUnit)
+        diagret = 'detect ('+content+')'
+        rep = ioutilReport(resultInfo, tUnit, diagret)
+        return rep
+
+
 def getDisksFromDiskstats(diskstats):
     disks = []
     for o in diskstats:
@@ -34,6 +146,16 @@ def iofsstatJoinData(raw):
 
     stat = {}
     stat["disks"] = {"data": []}
+    stat["overview"] = {"data": []}
+    stat["overview"]["data"] = dataToSummary(raw)
+    stat["summary"] = "diagnose results: No IO traffic detected"
+    if stat["overview"]["data"]:
+        stat["summary"] = \
+            "diagnose results: %s, caused by \n%ssolution:%s" % (
+            stat["overview"]["data"][0]['result'],
+            stat["overview"]["data"][0]['reason'],
+            stat["overview"]["data"][0]['solution'],
+        )
     for s in raw.split('\n'):
         try:
             obj = json.loads(s)

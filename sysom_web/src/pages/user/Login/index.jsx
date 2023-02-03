@@ -84,13 +84,25 @@ const Login = () => {
     <div className={styles.container}>
       <div className={styles.content}>
         <LoginForm
-          title="系统运维平台"
+          title={intl.formatMessage({
+            id: "pages.layouts.userLayout.title",
+          })}
           subTitle={intl.formatMessage({
             id: "pages.layouts.userLayout.title",
           })}
           formRef={formRef}
           initialValues={{
             agreement: true,
+          }}
+          onKeyDown={async e =>{
+            if (e.key === "Enter") {
+              const params = formRef.current.getFieldsValue();
+              if (type === "account") {
+                await loginHandle(params);
+              } else {
+                await reSetPasswordHandler(params);
+              }
+            }
           }}
           onFinish={async (values) => {
             await handleSubmit(values);
@@ -106,7 +118,7 @@ const Login = () => {
                     block={true}
                     type="primary"
                   >
-                    登录
+                    <FormattedMessage id="pages.login" />
                   </Button>
                 ) : (
                   <Button
@@ -116,7 +128,7 @@ const Login = () => {
                     block={true}
                     type="primary"
                   >
-                    修改密码
+                    <FormattedMessage id="pages.changepassword" />
                   </Button>
                 );
               return [mod];

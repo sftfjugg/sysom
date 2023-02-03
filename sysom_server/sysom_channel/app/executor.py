@@ -6,28 +6,28 @@ Email               mfeng@linux.alibaba.com
 File                executor.py
 Description:
 """
-import logging
-from concurrent.futures import ThreadPoolExecutor
-from importlib import import_module
 import os
-from typing import Callable
+import asyncio
+import time
+from typing import Callable, Optional
+from queue import Queue
+from importlib import import_module
+import asyncssh
 from cec_base.event import Event
 from cec_base.consumer import Consumer
-from cec_base.producer import Producer
-from cec_base.cec_client import CecClient
+from cec_base.producer import Producer, dispatch_producer
+from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask, StoppableThread
 from cec_base.log import LoggerHelper
 from conf.settings import *
-from lib.channels.base import ChannelResult
-import asyncssh
-
-logger = logging.getLogger(__name__)
+from lib.channels.base import ChannelResult, ChannelException, ChannelCode
 
 
 CHANNEL_PARAMS_TIMEOUT = "__channel_params_timeout"
 CHANNEL_PARAMS_AUTO_RETRY = "__channel_params_auto_retry"
+CHANNEL_PARAMS_RETURN_AS_STREAM = "__channel_params_return_as_stream"
 
 
-class ChannelListener(CecClient):
+class ChannelListener(MultiConsumer):
     """ A cec-based channel listener
 
     A cec-based channel lilster, ssed to listen to requests for channels from 
@@ -40,8 +40,8 @@ class ChannelListener(CecClient):
 
     """
 
-    def __init__(self, task_process_thread_num: int = 5) -> None:
-        CecClient.__init__(self, SYSOM_CEC_URL)
+    def __init__(self) -> None:
+        super().__init__(SYSOM_CEC_URL, custom_callback=self.on_receive_event)
         self.append_group_consume_task(
             SYSOM_CEC_CHANNEL_TOPIC,
             SYSOM_CEC_CHANNEL_CONSUMER_GROUP,
@@ -49,6 +49,7 @@ class ChannelListener(CecClient):
             ensure_topic_exist=True
         )
         self._target_topic = SYSOM_CEC_CHANNEL_RESULT_TOPIC
+        self._producer: Producer = dispatch_producer(SYSOM_CEC_URL)
 
         # Define opt table
         self._opt_table = {
@@ -57,8 +58,8 @@ class ChannelListener(CecClient):
         }
 
         # 执行任务的线程池数量
-        self._task_process_thread_poll = ThreadPoolExecutor(
-            max_workers=task_process_thread_num)
+        self._task_process_thread: Optional[StoppableThread] = None
+        self._task_queue: Queue = Queue(maxsize=1000)
 
     def _get_channel(self, channel_type):
         """
@@ -69,68 +70,85 @@ class ChannelListener(CecClient):
         except Exception as e:
             raise Exception(f'No channels available => {str(e)}')
 
-    def _perform_opt(self, opt_func: Callable[[str, dict], dict],
-                     default_channel: str, task: dict) -> ChannelResult:
+    def _delivery(self, topic: str, value: dict):
+        self._producer.produce(topic, value)
+        self._producer.flush()
+
+    async def _perform_opt(self, opt_func: Callable[[str, dict], ChannelResult],
+                           default_channel: str, task: dict) -> ChannelResult:
         """
         Use the specified channel to perform operations on the remote 
         node and return the results.
         """
-        result, err = {}, None
-        try:
-            result = opt_func(default_channel, task)
-        except Exception as exc:
-            logger.error(exc)
-            err = exc
+        async def _try_another_channel(result: ChannelResult):
             channels_path = os.path.join(BASE_DIR, 'lib', 'channels')
             packages = [dir.replace('.py', '') for dir in os.listdir(
                 channels_path) if not dir.startswith('__')]
             packages.remove('base')
             packages.remove(default_channel)
-
+            err = None
             for _, pkg in enumerate(packages):
                 try:
-                    result = opt_func(pkg, task)
+                    result = await opt_func(pkg, task)
                     err = None
                     break
                 except Exception as exc:
-                    logger.error(exc)
+                    LoggerHelper.get_lazy_logger().error(str(exc))
                     err = exc
+            return result, err
+
+        result, err = ChannelResult(code=1), None
+        try:
+            result = await opt_func(default_channel, task)
+            if result.code != 0:
+                result, inner_err = await _try_another_channel(result)
+                if inner_err is not None:
+                    err = inner_err
+        except Exception as exc:
+            LoggerHelper.get_lazy_logger().error(str(exc))
+            err = exc
+            result, inner_err = await _try_another_channel(result)
+            if inner_err is not None:
+                err = inner_err
         if err is not None:
             raise err
         return result
 
-    def _do_run_command(self, channel_type: str, task: dict) -> ChannelResult:
+    async def _do_run_command(self, channel_type: str, task: dict) -> ChannelResult:
         """cmd opt"""
         def on_data_received(data: str, data_type: asyncssh.DataType):
             echo = task.get("echo", {})
             bind_result_topic = task.get("bind_result_topic", None)
             if bind_result_topic is not None:
-                self.delivery(bind_result_topic, {
+                self._delivery(bind_result_topic, {
                     "code": 100,
                     "err_msg": "",
                     "echo": echo,
                     "result": data
                 })
-        params = task.get("params", {})
+                self._producer.flush()
+        params = task.get("params", {}).copy()
         timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
         auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
-        res = self._get_channel(channel_type)(**params).run_command_auto_retry(
+        return_as_stream = params.pop(CHANNEL_PARAMS_RETURN_AS_STREAM, False)
+        res = await self._get_channel(channel_type)(**params).run_command_auto_retry_async(
             timeout=timeout,
             auto_retry=auto_retry,
-            on_data_received=on_data_received
+            on_data_received=on_data_received if return_as_stream else None
         )
         return res
 
-    def _do_init_channel(self, channel_type: str, task: dict) -> ChannelResult:
+    async def _do_init_channel(self, channel_type: str, task: dict) -> ChannelResult:
         """init opt"""
         params = task.get("params", {})
         timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
         auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
-        return self._get_channel(channel_type).initial(
+        res = await self._get_channel(channel_type).initial_async(
             **params, timeout=timeout, auto_retry=auto_retry
         )
+        return res
 
-    def _process_each_task(self, consumer: Consumer, event: Event):
+    async def _process_each_task(self, event: Event, cecConsumeTask: CecAsyncConsumeTask):
         """
         处理每个单独的任务
         """
@@ -151,7 +169,7 @@ class ChannelListener(CecClient):
                 result["code"] = 1
                 result["err_msg"] = f"Not support opt: {opt_type}"
             else:
-                channel_result = self._perform_opt(
+                channel_result = await self._perform_opt(
                     self._opt_table[opt_type],
                     channel_type,
                     task=task
@@ -161,22 +179,68 @@ class ChannelListener(CecClient):
                     result["err_msg"] = channel_result.err_msg
                     if channel_result.err_msg == "" and channel_result.result != "":
                         result["err_msg"] = channel_result.result
-                else:
-                    result["result"] = channel_result.result
+                result["result"] = channel_result.result
+        except ChannelException as ce:
+            LoggerHelper.get_lazy_logger().exception(ce)
+            result["code"] = ce.code
+            result["err_msg"] = ce.message
+            result["result"] = ce.summary
         except Exception as e:
-            LoggerHelper.get_lazy_logger().error(e)
             LoggerHelper.get_lazy_logger().exception(e)
-            result["code"] = 1
+            result["code"] = ChannelCode.SERVER_ERROR.value
             result["err_msg"] = str(e)
+            result["result"] = "Channel Server Error"
         finally:
             # 执行消息确认
-            res = consumer.ack(event)
+            res = cecConsumeTask.ack(event)
             # 将任务执行的结果写入到事件中心，供 Task 模块获取
-            self.delivery(self._target_topic, result)
+            self._delivery(self._target_topic, result)
             # 如果显示指定了反馈topic，则往该topic也发送一份
             if (bind_result_topic):
-                self.delivery(bind_result_topic, result)
+                self._delivery(bind_result_topic, result)
 
-    def on_receive_event(self, consumer: Consumer, producer: Producer, event: Event, task: dict):
-        self._task_process_thread_poll.submit(
-            self._process_each_task, consumer, event)
+    def on_receive_event(self, event: Event, task: CecAsyncConsumeTask):
+        self._task_queue.put(
+            self._process_each_task(event, task)
+        )
+
+    def _process_task(self):
+        def _get_task_from_queue():
+            _tasks = []
+            while not self._task_queue.empty():
+                _task = self._task_queue.get_nowait()
+                if _task:
+                    _tasks.append(_task)
+                else:
+                    break
+            return _tasks
+
+        tasks = _get_task_from_queue()
+        loop = asyncio.new_event_loop()
+        while not self._task_process_thread.stopped():
+            if len(tasks) == 0:
+                time.sleep(0.1)
+                tasks = _get_task_from_queue()
+                continue
+            finished, unfinished = loop.run_until_complete(
+                asyncio.wait(
+                    tasks, return_when=asyncio.FIRST_COMPLETED, timeout=0.5)
+            )
+            for task in finished:
+                if task.exception() is not None:
+                    LoggerHelper.get_lazy_logger().error(str(task.exception()))
+                else:
+                    pass
+            tasks = _get_task_from_queue()
+            if unfinished is not None:
+                tasks += list(unfinished)
+
+    def start(self):
+        super().start()
+        if self._task_process_thread is not None \
+                and not self._task_process_thread.stopped() \
+                and self._task_process_thread.is_alive():
+            return
+        self._task_process_thread = StoppableThread(target=self._process_task)
+        self._task_process_thread.setDaemon(True)
+        self._task_process_thread.start()

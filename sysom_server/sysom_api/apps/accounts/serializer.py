@@ -1,10 +1,9 @@
-import logging
 from rest_framework import serializers
 
 from . import models
 from lib.utils import JWT
+from django.conf import settings
 
-logger = logging.getLogger(__name__)
 
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
@@ -94,7 +93,7 @@ class UserAuthSerializer(serializers.ModelSerializer):
 
     def create_token(self):
         user = models.User.objects.get(username=self.data.get('username'))
-        token = JWT._encode({'id': user.id, 'username': user.username}, exp=60 * 60 * 24 * 2)
+        token = JWT._encode({'id': user.id, 'username': user.username}, exp=settings.JWT_TOKEN_EXPIRE)
         return user, token
 
 

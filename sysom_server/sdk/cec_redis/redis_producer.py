@@ -14,7 +14,7 @@ from loguru import logger
 from cec_base.producer import Producer
 from cec_base.event import Event
 from cec_base.url import CecUrl
-from cec_base.exceptions import TopicNotExistsException
+from cec_base.exceptions import TopicNotExistsException, CecException
 from cec_base.log import LoggerHelper
 from .utils import do_connect_by_cec_url
 from .redis_admin import RedisAdmin
@@ -53,41 +53,10 @@ class RedisProducer(Producer, ClientBase):
 
         }
 
-    @logger.catch(reraise=True)
-    def produce(self, topic_name: str, message_value: Union[bytes, dict],
-                callback: Callable[[Exception, Event], None] = None,
-                **kwargs):
-        """Generate one new event, then put it to event center
-
-        发布一个事件到事件中心 => 对应到 Redis 就是生产一个消息注入到 Stream 当中
-
-        Args:
-            topic_name(str): Topic name
-            message_value(bytes | dict): Event value
-            callback(Callable[[Exception, Event], None]): Event delivery
-                                                          results callback
-
-        Keyword Args
-            partition(int): Partition ID
-                1. If a valid partition number is specified, the event is
-                   deliverd to the specified partition (not recommended);
-                2. A positive partition ID is passed, but no such partition is
-                   available, an exception will be thrown.
-                3. A negative partition number is passed (e.g. -1), then the
-                   event will be cast to all partitions in a balanced manner
-                   using the built-in policy (recommended).
-
-        Examples:
-            >>> producer = dispatch_producer(
-            ..."redis://localhost:6379?password=123456")
-            >>> producer.produce("test_topic", {"value": "hhh"})
-        """
-        LoggerHelper.get_lazy_logger().debug(
-            f"{self} try to produce one message {message_value} to "
-            f"{topic_name}.")
-
-        topic_exist = False
+    def _ensure_topic_meta_info(self, topic_name: str) -> bool:
+        """Auto fetch topic's meta info"""
         inner_topic_name = StaticConst.get_inner_topic_name(topic_name)
+        topic_exist = False
         # Determine whether there is metadata information for the target
         # topic
         if inner_topic_name not in self._topic_metas or \
@@ -111,6 +80,43 @@ class RedisProducer(Producer, ClientBase):
                 topic_exist = True
         else:
             topic_exist = True
+        return topic_exist
+
+    @logger.catch(reraise=True)
+    def produce(self, topic_name: str, message_value: Union[bytes, str, dict],
+                callback: Callable[[Exception, Event], None] = None,
+                **kwargs):
+        """Generate one new event, then put it to event center
+
+        发布一个事件到事件中心 => 对应到 Redis 就是生产一个消息注入到 Stream 当中
+
+        Args:
+            topic_name(str): Topic name
+            message_value(bytes | str | dict): Event value
+            callback(Callable[[Exception, Event], None]): Event delivery
+                                                          results callback
+
+        Keyword Args
+            partition(int): Partition ID
+                1. If a valid partition number is specified, the event is
+                   deliverd to the specified partition (not recommended);
+                2. A positive partition ID is passed, but no such partition is
+                   available, an exception will be thrown.
+                3. A negative partition number is passed (e.g. -1), then the
+                   event will be cast to all partitions in a balanced manner
+                   using the built-in policy (recommended).
+
+        Examples:
+            >>> producer = dispatch_producer(
+            ..."redis://localhost:6379?password=123456")
+            >>> producer.produce("test_topic", {"value": "hhh"})
+        """
+        LoggerHelper.get_lazy_logger().debug(
+            f"{self} try to produce one message {message_value} to "
+            f"{topic_name}.")
+
+        inner_topic_name = StaticConst.get_inner_topic_name(topic_name)
+        topic_exist = self._ensure_topic_meta_info(topic_name)
 
         err, event_id = None, None
         if not topic_exist:
@@ -121,14 +127,25 @@ class RedisProducer(Producer, ClientBase):
                 f"Topic ({topic_name}) not exists.")
         else:
             # Deliver the message in the corresponding topic
-            if 'maxlen' not in kwargs:
-                kwargs['maxlen'] = self.default_max_len
+            kwargs.setdefault("maxlen", self.default_max_len)
+            value = ""
+            value_type = StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_DICT
+            if isinstance(message_value, dict):
+                value = json.dumps(message_value)
+                value_type = StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_DICT
+            elif isinstance(message_value, str):
+                value = message_value
+                value_type = StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_STRING
+            elif isinstance(message_value, bytes):
+                value = message_value.decode(encoding="utf-8")
+                value_type = StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_BYTES
+            else:
+                raise CecException(
+                    f"Not support value type: {type(message_value)}")
             event_id = self._redis_client.xadd(inner_topic_name, {
-                StaticConst.REDIS_CEC_EVENT_VALUE_KEY: json.dumps(
-                    message_value) if isinstance(message_value,
-                                                 dict) else message_value
+                StaticConst.REDIS_CEC_EVENT_VALUE_KEY: value,
+                StaticConst.REDIS_CEC_EVENT_VALUE_TYPE_KEY: value_type
             }, **kwargs)
-
             # Additional processing if topice does not exist
             if event_id is None:
                 err = TopicNotExistsException(

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from typing import Dict
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import mixins
@@ -13,11 +13,9 @@ from lib.response import success, other_response
 from django.conf import settings
 import datetime
 import re
+import requests
 
 import os
-
-logger = logging.getLogger(__name__)
-
 
 
 # Create your views here.
@@ -172,7 +170,13 @@ class VmcoreViewSet(GenericViewSet,
             end_time=datetime.date.today() + datetime.timedelta(days=1)
             start_time=end_time + datetime.timedelta(days=-30)
 
-            host_sum = models.Panic.objects.values('hostname').distinct().count()
+            host_url = "http://127.0.0.1:7001/api/v1/host/?current=1&pageSize=1"
+            res = requests.get(host_url)
+            if res.status_code != 200 or res.text == '[]':
+                print("查询主机个数失败")
+                return success(result=data['data'], total=data['total'], success=True, vmcore_30days='NA', vmcore_7days='NA', rate_30days='NA', rate_7days='NA')
+            host_sum = res.json()['total']
+
             total = 0
             if isinstance(data, Dict):
                 result = data

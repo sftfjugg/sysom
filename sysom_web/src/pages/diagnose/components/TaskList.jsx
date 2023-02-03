@@ -73,12 +73,10 @@ const TaskList = React.forwardRef((props, ref) => {
 
   const FixField = ["created_at", "created_by", "id", "params", "service_name", "status", "task_id"]
   if (listData[0]) {
-    console.log(listData[0])
     let optionField = Object.keys(listData[0]).filter(i => !FixField.includes(i))
       .map(i => {
-        console.log(i, typeof(i))
-        let isNumber = typeof(listData[0][i]) === 'number'
-        let isString = typeof(listData[0][i]) == 'string'
+        let isNumber = typeof (listData[0][i]) === 'number'
+        let isString = typeof (listData[0][i]) == 'string'
         let column = {
           title: i, dataIndex: i, valueType: "textarea"
         }
@@ -86,14 +84,26 @@ const TaskList = React.forwardRef((props, ref) => {
           return {
             ...column,
             sorter: (a, b) => {
-              return a[i] - b[i]
+              if (a[i] === undefined) {
+                return -1
+              } else if (b[i] === undefined) {
+                return 1;
+              } else {
+                return Number(a[i]) - Number(b[i])
+              }
             }
           }
         } else if (isString) {
           return {
             ...column,
             sorter: (a, b) => {
-              return a[i].localeCompare(b[i])
+              if (a[i] === undefined) {
+                return -1
+              } else if (b[i] === undefined) {
+                return 1;
+              } else {
+                return String(a[i]).localeCompare(String(b[i]));
+              }
             }
           }
         } else {

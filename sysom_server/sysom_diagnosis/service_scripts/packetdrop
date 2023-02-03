@@ -26,7 +26,7 @@ cmd0 = {}
 cmd0['instance'] = args["instance"]
 
 time = args["time"]
-rtrace_cmd = "sysak rtrace delta --json --period {}".format(time)
+rtrace_cmd = "sysak -g rtrace delta --json --period {}".format(time)
 
 cmd0['cmd'] = "mkdir -p /var/log/sysak && " + rtrace_cmd + " > /var/log/sysak/packetdrop.json &&  cat /var/log/sysak/packetdrop.json"
 
