@@ -104,13 +104,13 @@ class HotfixAPIView(GenericViewSet,
         self.cec = CommonModelViewSet()
 
     """
-    Log_file : patch_name-time.log , this is used to output the log
+    Log_file : patch_file-time.log , this is used to output the log
     """
     def create_hotfix(self, request, **kwargs):
         arch = request.data['kernel_version'].split(".")[-1]
-        log_file = "{}-{}.log".format(request.data["patch_name"], time.strftime("%Y%m%d%H%M%S"))
-        patch_name = request.data["patch_name"]
-        patch_name.replace(" ","-")
+        log_file = "{}-{}.log".format(request.data["hotfix_name"], time.strftime("%Y%m%d%H%M%S"))
+        hotfix_name = request.data["hotfix_name"]
+        hotfix_name.replace(" ","-")
         kernel_version = request.data['kernel_version']
 
         # check if this kernel_version is customize
@@ -126,14 +126,18 @@ class HotfixAPIView(GenericViewSet,
                 # this is a anolis kernel
                 os_type = "anolis"
                 patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1])
+                patch_file = request.data['upload'].split("\\")[-1]
                 hotfix_necessary = 0
                 hotfix_risk = 2
-                res = self.function.create_hotfix_object_to_database(os_type, kernel_version, patch_name, patch_path, 
-                hotfix_necessary, hotfix_risk, log_file, arch)
+                try:
+                    res = self.function.create_hotfix_object_to_database(os_type, kernel_version, hotfix_name, patch_file, patch_path, 
+                    hotfix_necessary, hotfix_risk, log_file, arch)
 
-                status = self.function.create_message_to_cec(customize=False, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=os_type, 
-                hotfix_id=res.id, kernel_version=res.kernel_version, patch_name=res.patch_name, patch_path=res.patch_path, 
-                arch=res.arch, log_file=res.log_file)
+                    status = self.function.create_message_to_cec(customize=False, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=os_type, 
+                    hotfix_id=res.id, kernel_version=res.kernel_version, hotfix_name=res.hotfix_name, patch_file=res.patch_file, patch_path=res.patch_path, 
+                    arch=res.arch, log_file=res.log_file)
+                except Exception as e:
+                    return other_response(msg=str(e), code=400)
         else:
             # This is a customize kernel version
             os_type = self.function.get_info_from_version(kernel_version)
@@ -143,17 +147,20 @@ class HotfixAPIView(GenericViewSet,
             devel_link = self.function.get_info_from_version(kernel_version, "devel_link")
             debuginfo_link = self.function.get_info_from_version(kernel_version, "debuginfo_link")
             patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1])
+            patch_file = request.data['upload'].split("\\")[-1]
             hotfix_necessary = 0
             hotfix_risk = 2
-            res = self.function.create_hotfix_object_to_database(os_type, kernel_version, patch_name, patch_path,
-            hotfix_necessary, hotfix_risk, log_file, arch)
+            try:
+                res = self.function.create_hotfix_object_to_database(os_type, kernel_version, hotfix_name, patch_file, patch_path,
+                hotfix_necessary, hotfix_risk, log_file, arch)
 
-            # if this is customize kernel, it should provide the git repo and the branch of this version
-            # with devel-package and debuginfo-package
-            status = self.function.create_message_to_cec(customize=True, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=res.os_type,
-            hotfix_id=res.id, kernel_version=res.kernel_version, patch_name=res.patch_name, patch_path=res.patch_path, arch=res.arch,
-            log_file=res.log_file, git_repo=git_repo, git_branch=git_branch, devel_link=devel_link,debuginfo_link=debuginfo_link,image=image)
-            
+                # if this is customize kernel, it should provide the git repo and the branch of this version
+                # with devel-package and debuginfo-package
+                status = self.function.create_message_to_cec(customize=True, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=res.os_type,
+                hotfix_id=res.id, kernel_version=res.kernel_version, hotfix_name=res.hotfix_name, patch_file=res.patch_file, patch_path=res.patch_path, arch=res.arch,
+                log_file=res.log_file, git_repo=git_repo, git_branch=git_branch, devel_link=devel_link,debuginfo_link=debuginfo_link,image=image)
+            except Exception as e:
+                other_response(msg=str(e), code=400)
         return success(result={"msg":"success","id":res.id,"event_id":self.event_id}, message="create hotfix job success")
 
     def get_hotfixlist(self, request):
@@ -172,8 +179,9 @@ class HotfixAPIView(GenericViewSet,
         try:
             created_time = request.GET.get('created_at')
             kernel_version = request.GET.get('kernel_version')
-            patch_name = request.GET.get('patch_name')
-            queryset = self.function.query_formal_hotfix_by_parameters(created_time, kernel_version, patch_name)
+            patch_file = request.GET.get('patch_file')
+            hotfix_name = request.GET.get('hotfix_name')
+            queryset = self.function.query_formal_hotfix_by_parameters(created_time, kernel_version, patch_file, hotfix_name)
             response = serializer.HotfixSerializer(queryset, many=True)
         except Exception as e:
             logger.exception(e)
@@ -187,7 +195,7 @@ class HotfixAPIView(GenericViewSet,
             return other_response(message="can not delete this hotfix", result={"msg":"Hotfix not found"}, code=400)
         else:
             hotfix.deleted_at=human_datetime()
-            hotfix.save()
+            hotfix.delete()
             return success(result={}, message="invoke delete_hotfix")
 
     def set_formal(self, request):
@@ -273,8 +281,8 @@ class HotfixAPIView(GenericViewSet,
     def update_hotfix_name(self, request):
         try:
             hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
-            rpm_name = request.data["rpm"]
-            hotfix.rpm_name += rpm_name 
+            rpm_package = request.data["rpm"]
+            hotfix.rpm_package += rpm_package 
             hotfix.save()
         except Exception as e:
             return other_response(message=str(e), code=400)
@@ -284,10 +292,10 @@ class HotfixAPIView(GenericViewSet,
         try:
             hotfix_id = request.GET.get('id')
             hotfix = HotfixModel.objects.filter(id=hotfix_id).first()
-            rpm_name = hotfix.rpm_name
-            response = FileResponse(open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "rpm", rpm_name), "rb"), as_attachment=True)
+            rpm_package = hotfix.rpm_package
+            response = FileResponse(open(os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "rpm", rpm_package), "rb"), as_attachment=True)
             response['content_type'] = "application/octet-stream"
-            response['Content-Disposition'] = 'attachment;filename=' + rpm_name
+            response['Content-Disposition'] = 'attachment;filename=' + rpm_package
             return response
         except Exception as e:
             logger.exception(e)
