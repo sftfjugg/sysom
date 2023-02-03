@@ -3,7 +3,6 @@ import json
 import functools
 import subprocess
 from typing import Optional
-from threading import Thread
 from schedule import Scheduler
 from loguru import logger
 from .models import HostModel

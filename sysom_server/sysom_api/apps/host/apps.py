@@ -19,7 +19,9 @@ class HostConfig(AppConfig):
             try:
                 from .heartbeat import HeartBeatProcess
                 # HeartBeat.start()
-                HeartBeatProcess(pid=os.getpid()).start()
+                HeartBeatProcess(
+                    heartbeat_interval=settings.HEARTBEAT_INTERVAL,
+                    pid=os.getpid()).start()
             except Exception as e:
                 logger.warning(f'主机心跳未启动: {e}')
 
