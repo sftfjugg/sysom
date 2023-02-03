@@ -515,6 +515,8 @@ def mount_nfs():
         return False
     server_host = res.json()['data']['server_host']
     mount_point = res.json()['data']['mount_point']
+    if not server_host :
+        return False
 
     cmd = 'mount -t nfs %s:%s %s' % (server_host,mount_point,nfs_root)
     ret = os.system(cmd)
