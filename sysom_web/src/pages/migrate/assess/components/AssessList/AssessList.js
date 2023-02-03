@@ -1,19 +1,14 @@
 import React, {useState,useEffect} from 'react';
 import ProTable from '@ant-design/pro-table';
 import {PauseOutlined, RedoOutlined,FileTextOutlined} from "@ant-design/icons";
-import {queryAssessList, queryStopAssess, queryRetryAssess} from '../../../service';
+import {queryStopAssess, queryRetryAssess,queryDeleteAssess} from '../../../service';
 import {Progress, Button, Modal, message, Tooltip} from 'antd';
 import './AssessList.less';
 
 
-const getAssessList = async () => {
-  return await queryAssessList();
-}
-
 const AssessList = React.forwardRef((props, ref) => {
   const {assessList,getList} = props;
   const [loading,setLoading] = useState(true);
-  console.log(assessList,'assessList')
 
   useEffect(()=>{
     new Promise(async(resolve) => {
@@ -104,6 +99,10 @@ const AssessList = React.forwardRef((props, ref) => {
         }
       },
     },
+    {
+      title: '评估时间',
+      dataIndex: 'created_at',
+    },
     // 评估中：可以停止，其他不能；不能重试，其他能。
     {
       title: '操作',
@@ -119,6 +118,10 @@ const AssessList = React.forwardRef((props, ref) => {
           <Button type='text' className='optionBtn' disabled={record.status==='running'?true:false} onClick={() => onRetry(record.id)}>
             <RedoOutlined />
             <span>重试</span>
+          </Button>
+          <Button type='text' className='optionBtn' disabled={record.status==='running'?true:false} onClick={() => onDelete(record.id)}>
+            <FileTextOutlined />
+            <span style={{marginLeft: '8px'}}>删除</span>
           </Button>
           <Button type='text' className='optionBtn'>
             <a key={record.id} href={'/migrate/report/'+record.id+'?ip='+record.ip+'&old_ver='+record.old_ver+'&new_ver='+record.new_ver}>
@@ -192,12 +195,42 @@ const AssessList = React.forwardRef((props, ref) => {
       },
     });
   }
+
+  const onDelete = (id) => {
+    Modal.confirm({
+      title: (
+        <span style={{ fontWeight: 'normal', fontSize: 14 }}>
+          确定要删除吗？
+        </span>
+      ),
+      okText: '确定',
+      cancelText: '取消',
+      onOk: async () => {
+        const destroyHide = message.loading('正在删除...', 0);
+        try {
+          const { code, msg } = await queryDeleteAssess({id});
+          if (code === 200) {
+            getList();
+            message.success('删除成功');
+            return true;
+          }
+          message.error(msg);
+          return false;
+        } catch (error) {
+          console.log(error,'error')
+          return false;
+        } finally {
+          destroyHide();
+        }
+      },
+    });
+  }
+
   return (
     <ProTable
       tableClassName='assessList'
       headerTitle={props.headerTitle}
       actionRef={ref}
-      // request={getAssessList}
       params={props.params}
       rowKey='id'
       dataSource={assessList}
@@ -210,96 +243,3 @@ const AssessList = React.forwardRef((props, ref) => {
 });
 
 export default AssessList;
-
-// import React, {useRef} from 'react';
-// import ProTable from '@ant-design/pro-table';
-// import {queryAssessList} from '../../service';
-// import {connect} from 'dva';
-
-
-// const DiagnoTableList = (props) => {
-//   const {dispatch,params} = props;
-//   console.log(props,"props")
-//   const columns = [
-//     {
-//       title: "机器名称",
-//       dataIndex: "instance",
-//       valueType: "textarea"
-//     },
-//     {
-//       title: "IP",
-//       sortOrder: "descend",
-//       dataIndex: "created_at",
-//       valueType: "dateTime",
-//     },
-//     {
-//       title: "源操作系统",
-//       dataIndex: "task_id",
-//       valueType: "textarea",
-//     },
-//     {
-//       title: "目标操作系统",
-//       dataIndex: "task_id2",
-//       valueType: "textarea",
-//     },
-//     {
-//       title: "进度",
-//       dataIndex: "task_id3",
-//       valueType: "textarea",
-//     },
-//     {
-//       title: '评估状态',
-//       dataIndex: 'status',
-//       valueEnum: {
-//         Running: { text: '运行中', status: 'Processing' },
-//         Success: { text: '诊断完毕', status: 'Success' },
-//         Fail: { text: '异常', status: 'Error' },
-//       },
-//     },
-//     {
-//       title: "操作",
-//       dataIndex: "option",
-//       valueType: "option",
-//       render: (_, record) => {
-//         <div>
-//           {/* <a key="stop" onClick={() => {
-//             props?.onStop?.(record)
-//           }}>停止</a>
-//           <a key="retry" onClick={() => {
-//             props?.onRetry?.(record)
-//           }}>重试</a>
-//           <a key="report" onClick={() => {
-//             props?.onReport?.(record)
-//           }}>查看报告</a> */}
-//         </div>
-//       },
-//     }
-//   ];
-
-//   const getAssessList = async (params,sort,filter) => {
-//     console.log(params,sort,filter,'lllll')
-//     dispatch({
-//       type: 'migrate/queryAssessList',
-//       payload: {
-        
-//       },
-//     });
-//   }
-
-// //     pagination={{ pageSize: 5 }}
-//   return (
-//     <ProTable
-//       headerTitle={props.headerTitle}
-//       actionRef={props.ref}
-//       params={params}
-//       rowKey="id"
-//       request={getAssessList}
-//       columns={columns}
-//       pagination={props.pagination}
-//       search={false}
-//     />
-//   );
-// };
-
-// export default connect((state) => ({migrate: state.migrate}))(DiagnoTableList)
-

@@ -3,15 +3,11 @@ import ProCard from '@ant-design/pro-card';
 import {Skeleton, Empty} from 'antd';
 import ReportType from '../ReportType';
 import SystemTable from '../SystemTable/SystemTable.js';
-import {querySysConfigList,querySysList} from '../../../service';
+import {querySysList} from '../../../service';
 import { WrapperContext } from '../../containers';
 import { SET_DATA } from '../../containers/constants';
 import {SYS_CONFIG_TYPE} from '../../../utils';
 import './index.less';
-
-// const getSysConfigList = async () => {
-//   return await querySysConfigList();
-// }
 
 const SystemConfig = (props, ref) => {
   const {

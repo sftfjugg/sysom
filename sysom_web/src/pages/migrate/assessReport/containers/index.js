@@ -8,6 +8,9 @@ const initState = {
   activeIp: '',
   activeOld: '',
   activeNew: '',
+  // 根据选择评估展示对应切换
+  activeAssType: ['mig_imp'],
+  activeKey: 'risk',
   // 切换loading
   tabsLoading: true,
   // 应用列表
@@ -36,6 +39,8 @@ const initState = {
   hwList: [],
   // 风险列表
   riskList: [],
+  // 根据全部风险项判断评估结果
+  isPassStatus: '',
   // 系统配置类型
   sysType: [],
   activeSysType: '',
