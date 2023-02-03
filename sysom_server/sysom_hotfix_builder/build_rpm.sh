@@ -116,7 +116,7 @@ function prepare_spec(){
 %define _ks_prefix /usr/local
 
 Summary: Hotfix for Kernel
-Name: kernel-hotfix-${hotfix_base}-%{_kernel_release}
+Name: kernel-hotfix-${hotfix_base}
 version: 1.0
 Release: ${RELEASE:-1}.${distro}
 License: GPL

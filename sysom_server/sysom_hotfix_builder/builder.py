@@ -257,7 +257,7 @@ class HotfixBuilder():
         # get the hotfix building parametes 
         hotfix_id = parameters['hotfix_id']
         kernel_version = parameters['kernel_version']
-        patch_name = parameters['patch_name']
+        hotfix_name = parameters['hotfix_name']
         # find the patch_path in builder local
         patch_path = parameters['patch_path'].split("/")[-1]
         patch_path = os.path.join(self.nfs_dir_home, "patch", patch_path)
@@ -288,14 +288,14 @@ class HotfixBuilder():
         f.write("Created Hotfix Building Task ... \n")
         f.write("Kernel Version: %s\n" % kernel_version)
         f.write("Patch file: %s\n" % patch_path)
-        f.write("Hotfix name : %s\n" % patch_name)
+        f.write("Hotfix name : %s\n" % hotfix_name)
         f.write("Using Building Image : %s \n" % image)
 
         description = "hello world"
         # run the build hotfix script
         cmd = "sudo docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {}".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
-            self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, patch_name, log_file_path, source_code_repo
+            self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, source_code_repo
         )
         f.write(cmd+"\n")
         f.close()
@@ -332,7 +332,7 @@ class HotfixBuilder():
         # get the hotfix building parameters
         hotfix_id = parameters['hotfix_id']
         kernel_version = parameters['kernel_version']
-        patch_name = parameters['patch_name']
+        hotfix_name = parameters['hotfix_name']
         devel_link = parameters['devel_link']
         debuginfo_link = parameters['debuginfo_link']
         git_repo = parameters['git_repo']
@@ -374,7 +374,7 @@ class HotfixBuilder():
         f.write("Created Hotfix Building Task ... \n")
         f.write("Kernel Version: %s\n" % kernel_version)
         f.write("Patch file: %s\n" % patch_path)
-        f.write("Hotfix name : %s\n" % patch_name)
+        f.write("Hotfix name : %s\n" % hotfix_name)
         f.write("Using Building Image : %s \n" % image)
 
         description = "hello world"
@@ -382,7 +382,7 @@ class HotfixBuilder():
         # run the build hotfix script
         cmd = "sudo docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {}".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
-            self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, patch_name, log_file_path, kernel_config, vmlinux, source_code_repo, git_branch
+            self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, kernel_config, vmlinux, source_code_repo, git_branch
         )
         f.write(cmd + "\n")
         f.close()

@@ -139,7 +139,7 @@ function parse_args(){
 
 	kpatch_id=`date "+%Y%m%d%H%M%S"`
 	if [[ -n "$hotfix_name" ]]; then
-		echo "find patch_name : ${hotfix_name}"
+		echo "find hotfix_name : ${hotfix_name}"
 		kpatch_id=${hotfix_name}-${tag}-${kpatch_id}
 	else
 		kpatch_id=${patch_name}-${tag}-${kpatch_id}
