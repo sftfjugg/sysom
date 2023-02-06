@@ -14,8 +14,10 @@ import json
 import platform
 import shutil
 import re
+import sys
 import subprocess
 from cec_base.consumer import Consumer, dispatch_consumer
+from cec_base.admin import dispatch_admin
 
 class ServerConnector():
 
@@ -105,6 +107,14 @@ class HotfixBuilder():
         self.token = self.connector.get_token()
         self.prepare_env()
 
+        ##################################################################
+        # Logging config
+        ##################################################################
+        from cec_base.log import LoggerHelper, LoggerLevel
+        log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+        LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
+        LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)
+
     def run(self):
         self.thread_runner.start()
 
@@ -115,7 +125,7 @@ class HotfixBuilder():
             output = process.read()
 
         # get the img_list image information and pull them based on machine's kernel arch
-        image_config_file = open("./img_list.json")
+        image_config_file = open(os.path.join(os.getcwd(), "img_list.json"))
         config_data = json.load(image_config_file)
         machine_kernel = platform.uname().release
         arch = machine_kernel.split(".")[-1]
@@ -283,7 +293,7 @@ class HotfixBuilder():
         except Exception as e:
             f.write(str(e))
             logger.error(str(e))
-            self.connector.change_building_status(hotfix_id, "failed")
+            # self.connector.change_building_status(hotfix_id, "failed")
 
         f.write("Created Hotfix Building Task ... \n")
         f.write("Kernel Version: %s\n" % kernel_version)
@@ -293,7 +303,7 @@ class HotfixBuilder():
 
         description = "hello world"
         # run the build hotfix script
-        cmd = "sudo docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {}".format(
+        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {}".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
             self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, source_code_repo
         )
@@ -380,7 +390,7 @@ class HotfixBuilder():
         description = "hello world"
         
         # run the build hotfix script
-        cmd = "sudo docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {}".format(
+        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {}".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
             self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, kernel_config, vmlinux, source_code_repo, git_branch
         )
@@ -419,29 +429,34 @@ class HotfixBuilder():
     event.value is a dictionary.
     '''
     def build(self):
+        with dispatch_admin(self.cec_url) as admin:
+            if not admin.is_topic_exist(self.cec_hotfix_topic):
+                admin.create_topic(self.cec_hotfix_topic)
         consumer_id = Consumer.generate_consumer_id()
         consumer = dispatch_consumer(self.cec_url, self.cec_hotfix_topic,
                                  consumer_id=consumer_id,
                                  group_id="hotfix_job_group")
-        while True:
-            for event in consumer:
-                # get one event from cec, if match the arch, ack this event
-                parameters = event.value
-                if parameters['arch'] != self.local_arch:
-                    break
-                consumer.ack(event)
+        for event in consumer:
+            # get one event from cec, if match the arch, ack this event
+            parameters = event.value
+            if parameters['arch'] != self.local_arch:
+                break
 
-                # for each run, update the repo
-                cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s" % (self.hotfix_base, self.nfs_dir_home)
-                with os.popen(cmd) as process:
-                    output = process.read()
+            # for each run, update the repo
+            cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s" % (self.hotfix_base, self.nfs_dir_home)
+            with os.popen(cmd) as process:
+                output = process.read()
 
-                customize = parameters['customize']
+            customize = parameters['customize']
 
-                if not customize:
-                    self.build_supported_kernel(parameters)
-                else:
-                    self.build_customize_kernel(parameters)
+            if not customize:
+                self.build_supported_kernel(parameters)
+            else:
+                self.build_customize_kernel(parameters)
+
+            consumer.ack(event)
+            
+
 
 
 if __name__ == "__main__":
