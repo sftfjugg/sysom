@@ -168,15 +168,10 @@ function download_config() {
     done
  
     rpm2cpio /tmp/kernel-devel-${kernel_version}.rpm | cpio -dim 
-	echo "showing /tmp"
-	ls /tmp
 	cp /tmp/usr/src/kernels/${kernel_version}/.config ${HOTFIX_PACKAGE_REPO}/kernel_config/config-${kernel_version}
-	echo "Showing kernel_config"
-	ls ${HOTFIX_PACKAGE_REPO}/kernel_config
 	cp /tmp/kernel-devel-${kernel_version}.rpm ${HOTFIX_PACKAGE_REPO}/devel_pack/
     rm -fr /tmp/kernel-devel-${kernel_version}.rpm
     rm -fr /tmp/usr
-	ls ${HOTFIX_PACKAGE_REPO}/kernel_config
 	CONFIGFILE=${HOTFIX_PACKAGE_REPO}/kernel_config/config-${kernel_version}
 }
 
@@ -201,13 +196,9 @@ function download_vmlinux() {
     done
  
     rpm2cpio /tmp/kernel-debuginfo-${kernel_version}.rpm | cpio -dim 
-	ls /tmp
 	cp /tmp/usr/lib/debug/lib/modules/${kernel_version}/vmlinux ${HOTFIX_PACKAGE_REPO}/vmlinux/vmlinux-${kernel_version}
-    echo "showing vmlinux"
-	ls ${HOTFIX_PACKAGE_REPO}/vmlinux/
 	cp /tmp/kernel-debuginfo-${kernel_version}.rpm ${HOTFIX_PACKAGE_REPO}/debuginfo_pack/
     rm -fr /tmp/kernel-debuginfo-${kernel_version}.rpm && rm -fr /tmp/usr
-	ls ${HOTFIX_PACKAGE_REPO}/debuginfo_pack
 	VMLINUX=${HOTFIX_PACKAGE_REPO}/vmlinux/vmlinux-${kernel_version}
 }
 
