@@ -47,7 +47,6 @@ last_strhost = ''
 ignore_funcs = ["schedule","schedule_timeout","ret_from_fork","kthread",
         "do_syscall_64","entry_SYSCALL_64_after_swapgs","system_call_fastpath","fastpath",
         "entry_SYSCALL_64_after_hwframe",
-        "page_fault","do_page_fault","_do_page_fault","worker_thread",
         "start_secondary","cpu_startup_entry","arch_cpu_idle","default_idle",
         "do_IRQ","common_interrupt","irq_exit","do_softirq",
         "__schedule","io_schedule_timeout","io_schedule","dump_stack",
@@ -446,6 +445,7 @@ def check_panic(column):
         return False
 
     idx = 0
+    column['calltrace_list'].insert(0,column['func_name'])
     for line in column['calltrace_list']:
         calltrace_info = {'name':column['name'], 'line':line, 'idx':idx}
         calltrace_url = root_url+"/api/v1/vmcore/"
