@@ -66,21 +66,8 @@ start_script_server() {
     bash -x ${APP_HOME}/init_scripts/server/init.sh
 }
 
-generate_service_env() {
-    rm -f /usr/local/sysom/env
-    cat << EOF > /usr/local/sysom/env
-APP_HOME=${APP_HOME}
-SERVER_HOME=${APP_HOME}/server
-NODE_HOME=${APP_HOME}/node
-SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
-SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
-SERVER_PORT=${SERVER_PORT}
-EOF
-}
-
 deploy() {
     update_target
-    generate_service_env
     start_script_server
 }
 
