@@ -30,7 +30,7 @@ class MigAssView(CommonModelViewSet):
 
 
     def get_ass_list(self, request):
-        mig_ass = MigAssModel.objects.values('id', 'hostname', 'ip', 'old_ver', 'new_ver', 'rate', 'status', 'detail')
+        mig_ass = MigAssModel.objects.values('id', 'created_at', 'hostname', 'ip', 'old_ver', 'new_ver', 'rate', 'status', 'detail', 'config')
         return success(result=mig_ass)
 
 
@@ -108,7 +108,7 @@ class MigAssView(CommonModelViewSet):
 
 
     def post_ass_start(self, request):
-        res = self.require_param_validate(request, ['ip', 'version', 'repo_type'])
+        res = self.require_param_validate(request, ['ip', 'version', 'repo_type', 'ass_type'])
         if not res['success']:
             return ErrorResponse(msg=res['msg'])
         
@@ -183,7 +183,13 @@ class MigAssView(CommonModelViewSet):
         mig_ass.config = json.dumps(config)
         mig_ass.save()
 
-        for func in [self.mig_imp, self.init_ance, self.mig_sys, self.mig_hard, self.mig_app]:
+        ass_func = []
+        for i in config.get('ass_type', []):
+            ass_func.append(getattr(self, i))
+        if len(ass_func) > 1:
+            ass_func.insert(1, self.init_ance)
+
+        for func in ass_func:
             mig_ass = MigAssModel.objects.filter(id=mig_ass.id).first()
             if mig_ass.status != 'running':
                 break
@@ -426,6 +432,20 @@ class MigAssView(CommonModelViewSet):
             return success(code=400, msg='状态异常')
 
 
+    def post_ass_delete(self, request):
+        res = self.require_param_validate(request, ['id'])
+        if not res['success']:
+            return ErrorResponse(msg=res['msg'])
+
+        ass_id = request.data.get('id')
+        mig_ass = MigAssModel.objects.filter(id=ass_id).first()
+        if mig_ass and mig_ass.status != 'running':
+            mig_ass.delete()
+            return success()
+        else:
+            return success(code=400, msg='状态异常')
+
+
     def post_ass_retry(self, request):
         res = self.require_param_validate(request, ['id'])
         if not res['success']:
@@ -620,7 +640,7 @@ class MigImpView(CommonModelViewSet):
             '实施配置',
             '系统备份',
             '环境准备',
-            '迁移评估',
+            '风险评估',
             '迁移实施',
             '重启机器',
         ]
@@ -634,7 +654,7 @@ class MigImpView(CommonModelViewSet):
                 else:
                     res.append(dict(name=v, value='失败'))
             if k > step:
-                res.append(dict(name=v, value='未完成'))
+                res.append(dict(name=v, value='等待中'))
         return dict(migration_step=res)
 
 
@@ -647,10 +667,10 @@ class MigImpView(CommonModelViewSet):
         info.append(dict(name='迁移版本', value=data.get('version')))
         info.append(dict(name='迁移内核', value=data.get('kernel')))
         if data.get('repo_type') == 'public':
-            info.append(dict(name='repo类型', value='公网地址'))
+            info.append(dict(name='REPO类型', value='公网地址'))
         else:
-            info.append(dict(name='repo类型', value='内网地址'))
-            info.append(dict(name='repo地址', value=data.get('repo_url')))
+            info.append(dict(name='REPO类型', value='内网地址'))
+            info.append(dict(name='REPO地址', value=data.get('repo_url')))
         if data.get('backup_type') == 'nfs':
             info.append(dict(name='备份类型', value='NFS备份'))
             info.append(dict(name='NFSIP', value=data.get('backup_ip')))
