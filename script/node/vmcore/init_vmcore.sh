@@ -1,5 +1,6 @@
 #! /bin/sh
-yum install nfs-utils rpcbind -y
+rpm -q --quiet nfs-utils || yum install -y nfs-utils
+rpm -q --quiet rpcbind || yum install -y rpcbind
 systemctl start rpcbind && systemctl enable rpcbind
 systemctl start nfs && systemctl enable nfs
 
