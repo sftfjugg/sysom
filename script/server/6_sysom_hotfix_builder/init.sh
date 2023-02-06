@@ -3,7 +3,7 @@ SERVER_DIR="sysom_server"
 HOTFIX_BUILDER_DIR=${SERVER_DIR}/sysom_hotfix_builder
 VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
 SERVICE_NAME=sysom-hotfix-builder
-NFS_SERVER_IP=127.0.0.1
+NFS_SERVER_IP=${SERVER_LOCAL_IP}
 
 source_virtualenv() {
     echo "INFO: activate virtualenv..."
