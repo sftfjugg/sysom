@@ -223,9 +223,22 @@ class VmcoreViewSet(GenericViewSet,
             return []
         result=[]
         list2=[]
-        line_pattern1 = re.compile(r'.+[0-9]+\].+\[.*\][? ]* (\S+)\+0x')
-        line_pattern2 = re.compile(r'.+[0-9]+\][? ]*(\S+)\+0x')
+        line_pattern1 = re.compile(r'.+[0-9]+\].+\[.*\] *(\S+)\+0x')
+        line_pattern2 = re.compile(r'.+[0-9]+\] *(\S+)\+0x')
         line_pattern3 = re.compile(r'.*#[0-9]+ \[[0-9a-f]+\] (\S+) at')
+        ignore_funcs = ["schedule","schedule_timeout","ret_from_fork","kthread",
+                "do_syscall_64","entry_SYSCALL_64_after_swapgs","system_call_fastpath","fastpath",
+                "entry_SYSCALL_64_after_hwframe",
+                "start_secondary","cpu_startup_entry","arch_cpu_idle","default_idle",
+                "do_IRQ","common_interrupt","irq_exit","do_softirq",
+                "__schedule","io_schedule_timeout","io_schedule","dump_stack",
+                "exit_to_usermode_loop","stub_clone","schedule_preempt_disabled","oom_kill_process",
+                "unwind_backtrace","dump_header","show_stack","dump_backtrace","panic","watchdog_timer_fn",
+                "nmi_panic","watchdog_overflow_callback","__perf_event_overflow","perf_event_overflow","intel_pmu_handle_irq",
+                "perf_event_nmi_handler","nmi_handle","do_nmi","end_repeat_nmi","watchdog",
+                "__hrtimer_run_queues","hrtimer_interrupt","local_apic_timer_interrupt","smp_apic_timer_interrupt","apic_timer_interrupt",
+        		"__pv_queued_spin_lock_slowpath","queued_spin_lock_slowpath"
+        ]
         lines = dmesg.split('\n')
         if len(lines) == 1:
             lines = dmesg.splitlines()
@@ -235,18 +248,24 @@ class VmcoreViewSet(GenericViewSet,
 
             m = line_pattern1.match(r)
             if m:
-                list2.append(m.group(1))
-                continue
+                tmp = m.group(1).split('.')[0]
+                if tmp not in ignore_funcs:
+                    list2.append(tmp)
+                    continue
 
             m = line_pattern2.match(r)
             if m:
-                list2.append(m.group(1))
-                continue
+                tmp = m.group(1).split('.')[0]
+                if tmp not in ignore_funcs:
+                    list2.append(tmp)
+                    continue
 
             m = line_pattern3.match(r)
             if m:
-                list2.append(m.group(1))
-                continue
+                tmp = m.group(1).split('.')[0]
+                if tmp not in ignore_funcs:
+                    list2.append(tmp)
+                    continue
 
         s2=len(list2)
         while s2 > 0:
@@ -261,7 +280,7 @@ class VmcoreViewSet(GenericViewSet,
                 if last_name == None or last_name.name!=calltrace_set.name:
                     if fcnt > 1:
                         data = serializer.PanicListSerializer(last_name.vmcore).data
-                        data['rate'] = (fcnt*100/s2)
+                        data['rate'] = round(fcnt*100/s2,2)
                         result.append(data)
                         #result[last_name]=(fcnt*100/s2)+fpow
                     last_idx=0
@@ -281,7 +300,7 @@ class VmcoreViewSet(GenericViewSet,
                 last_idx=calltrace_set.idx
             if fcnt > 1:
                 data = serializer.PanicListSerializer(calltrace_set.vmcore).data
-                data['rate'] = (fcnt*100/s2)
+                data['rate'] = round(fcnt*100/s2,2)
                 result.append(data)
             if len(result) > 0:
                 break
