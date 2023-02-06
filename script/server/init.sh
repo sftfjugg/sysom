@@ -70,10 +70,23 @@ setup_web_menu_enable()
     fi
 }
 
+generate_service_env() {
+    rm -f ${APP_HOME}/env
+    cat << EOF > ${APP_HOME}/env
+APP_HOME=${APP_HOME}
+SERVER_HOME=${APP_HOME}/server
+NODE_HOME=${APP_HOME}/node
+SERVER_LOCAL_IP=${SERVER_LOCAL_IP}
+SERVER_PUBLIC_IP=${SERVER_PUBLIC_IP}
+SERVER_PORT=${SERVER_PORT}
+EOF
+}
+
 pushd $basedir
 
 if [ $FIRST_INIT_DONE == 0 ]
 then
+    generate_service_env
     init_sysom_node_init
     for dir in `cat $config`
     do
