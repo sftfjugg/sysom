@@ -16,6 +16,7 @@ urlpatterns = [
     re_path('^api/v1/assessment/app/$', views.MigAssView.as_view({'get': 'get_ass_app'})),
     path('api/v1/assessment/start/', views.MigAssView.as_view({'post': 'post_ass_start'})),
     path('api/v1/assessment/stop/', views.MigAssView.as_view({'post': 'post_ass_stop'})),
+    path('api/v1/assessment/delete/', views.MigAssView.as_view({'post': 'post_ass_delete'})),
     path('api/v1/assessment/retry/', views.MigAssView.as_view({'post': 'post_ass_retry'})),
 
     path('api/v1/migration/group/', views.MigImpView.as_view({'get': 'get_group'})),

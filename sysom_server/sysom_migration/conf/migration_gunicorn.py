@@ -1,9 +1,9 @@
 '''
 Migration Service Gunicorn Settings
 '''
-workers = 2  # 指定工作进程数
+workers = 4  # 指定工作进程数
 
-threads = 3
+threads = 8
 
 bind = '127.0.0.1:7006'
 
