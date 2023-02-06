@@ -22,5 +22,8 @@
 [hotfix]
 6_sysom_hotfix
 
+[hotfix-builder]
+6_sysom_hotfix_builder
+
 # [demo]
 # 7_sysom_demo
