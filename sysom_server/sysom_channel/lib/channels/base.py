@@ -87,7 +87,7 @@ class BaseChannel(metaclass=ABCMeta):
             remain_time = int((max_wait_time - time.time()) * 1000)
             kwargs["timeout"] = remain_time
             res = self.run_command(**kwargs)
-            while res.code != 0:
+            while res.code in [ChannelCode.CHANNEL_CONNECT_FAILED, ChannelCode.CHANNEL_CONNECT_TIMEOUT]:
                 logger.warning(
                     f"Channel retry due to: {res.err_msg}, params: {json.dumps(self.get_params())}")
                 time.sleep(1)
@@ -110,7 +110,7 @@ class BaseChannel(metaclass=ABCMeta):
             remain_time = int((max_wait_time - time.time()) * 1000)
             kwargs["timeout"] = remain_time
             res = await self.run_command_async(**kwargs)
-            while res.code != 0:
+            while res.code in [ChannelCode.CHANNEL_CONNECT_FAILED, ChannelCode.CHANNEL_CONNECT_TIMEOUT]:
                 logger.warning(
                     f"Channel retry due to: {res.err_msg}, params: {json.dumps(self.get_params())}")
                 await asyncio.sleep(1)
