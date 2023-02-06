@@ -446,6 +446,7 @@ def check_panic(column):
         return False
 
     idx = 0
+    column['calltrace_list'].insert(0,column['func_name'])
     for line in column['calltrace_list']:
         calltrace_info = {'name':column['name'], 'line':line, 'idx':idx}
         calltrace_url = root_url+"/api/v1/vmcore/"
