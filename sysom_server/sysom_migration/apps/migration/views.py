@@ -2,6 +2,7 @@ import os
 import csv
 import json
 import time
+import random
 import tarfile
 import logging
 import requests
@@ -585,8 +586,11 @@ class MigImpView(CommonModelViewSet):
 
         while True:
             mig_imp = MigImpModel.objects.filter(ip=ip).first()
-            if mig_imp.status == 'fail' or mig_imp.step > 5:
+            if mig_imp.status in ['fail', 'unsupported'] or mig_imp.step > 5:
                 break
+            if mig_imp.status == 'running':
+                time.sleep(random.randint(3,5))
+                continue
             self.post_host_migrate_base(ip, mig_imp.step, steps, data)
 
 
@@ -881,7 +885,10 @@ class MigImpView(CommonModelViewSet):
             if mig_rate.code == 0:
                 with open(rate_file, 'r', encoding='utf-8') as f:
                     p = f.read()
-                rate = json.loads(p).get('Progress', 0)
+                try:
+                    rate = json.loads(p).get('Progress', 0)
+                except:
+                    rate = 0
                 rate = 100 if rate >= 100 else rate
                 mig_imp = MigImpModel.objects.filter(id=mig_imp.id).first()
                 mig_imp.rate = rate
