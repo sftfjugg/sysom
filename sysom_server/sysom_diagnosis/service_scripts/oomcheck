@@ -25,7 +25,7 @@ result['commands'] = []
 
 cmd0 = {}
 cmd0['instance'] = args["instance"]
-if args['time'] != "":
+if args.get("time","") != "":
     cmd0['cmd'] = "sysak oomcheck -j -t %s 2>/dev/null > /tmp/oomcheck.log && cat /tmp/oomcheck.log" % args['time']
 else:
     cmd0['cmd'] = "sysak oomcheck -j 2>/dev/null > /tmp/oomcheck.log && cat /tmp/oomcheck.log" 
