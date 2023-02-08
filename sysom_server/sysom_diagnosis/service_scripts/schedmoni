@@ -31,10 +31,10 @@ result['commands'] = []
 
 cmd0 = {}
 cmd0['instance'] = args["instance"]
-arg_time = args["timeout"]
+arg_time = args.get("timeout", "20")
 if arg_time:
 	arg_time = '-s ' + str(arg_time)
-arg_thresh = args["threshold"]
+arg_thresh = args.get("threshold", "20")
 
 dump_log_cmd = "cat /var/log/sysak/schedmoni/schedmoni.json;"
 schedmoni_cmd = "sysak -g schedmoni -j "+str(arg_time)+" "+str(arg_thresh)+" > /dev/null"
