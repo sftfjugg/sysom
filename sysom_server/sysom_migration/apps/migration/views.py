@@ -807,22 +807,24 @@ class MigImpView(CommonModelViewSet):
         def finish(result):
             job_id = result.echo.get('mig_job_id')
             mig_ip = result.echo.get('mig_ip')
-            mig_imp = MigImpModel.objects.filter(ip=mig_ip).first()
             mig_job = MigJobModel.objects.filter(id=job_id).first()
             mig_job.job_result = json.dumps(result.__dict__)
+            mig_job.job_status = 'success' if result.code == 0 else 'fail'
+            mig_job.save()
+
+            if mig_job.job_name in ['mig_ass', 'mig_imp']:
+                return
+            mig_imp = MigImpModel.objects.filter(ip=mig_ip).first()
             if result.code == 0:
                 mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
                 mig_imp.status = 'pending'
                 mig_imp.detail = '请执行下一步'
                 mig_imp.step += 1
-                mig_job.job_status = 'success'
             else:
                 mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, False))
                 mig_imp.status = 'fail'
                 mig_imp.detail = result.err_msg
-                mig_job.job_status = 'fail'
             mig_imp.save()
-            mig_job.save()
 
         mig_imp.status = 'running'
         mig_imp.detail = ''
@@ -896,16 +898,28 @@ class MigImpView(CommonModelViewSet):
             else:
                 rate = 0
 
-            mig_job = MigJobModel.objects.filter(ip=mig_imp.ip, mig_id=mig_imp.id, job_name=job_name).first()
-            if rate >= 100:
-                mig_job.job_status = 'success'
-                mig_job.save()
-                break
             main_job = MigJobModel.objects.filter(id=main_job_id).first()
-            if main_job.job_status != 'running':
-                mig_job.job_status = main_job.job_status
-                mig_job.save()
-                break
+            if main_job.job_status == 'running':
+                continue
+            mig_job = MigJobModel.objects.filter(ip=mig_imp.ip, mig_id=mig_imp.id, job_name=job_name).first()
+            mig_job.job_status = 'success'
+            mig_job.save()
+
+            mig_imp = MigImpModel.objects.filter(id=mig_imp.id).first()
+            if main_job.job_status == 'success':
+                mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
+                mig_imp.status = 'pending'
+                mig_imp.detail = '请执行下一步'
+                mig_imp.step += 1
+            else:
+                mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, False))
+                mig_imp.status = 'fail'
+                if main_job.job_result:
+                    mig_imp.detail = json.loads(main_job.job_result).get('err_msg', '')
+                else:
+                    mig_imp.detail = ''
+            mig_imp.save()
+            break
 
 
     def run_reboot_job(self, mig_imp):
