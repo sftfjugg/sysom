@@ -1,4 +1,5 @@
 #!/bin/bash
+version=2.1
 
 check_cmd() {
     local cmd="$1"
@@ -43,11 +44,11 @@ mkdir -p /root/rpmbuild/SRPMS
 
 cp tools/deploy/sysom.spec /root/rpmbuild/SPECS
 pushd ..
-rm -rf sysom-2.0
-rm -f sysom-2.0.tar.gz
-cp -a sysom sysom-2.0
-tar -zcf sysom-2.0.tar.gz sysom-2.0
-cp sysom-2.0.tar.gz /root/rpmbuild/SOURCES/
+rm -rf sysom-${version}
+rm -f sysom-${version}.tar.gz
+cp -a sysom sysom-${version}
+tar -zcf sysom-${version}.tar.gz sysom-${version}
+cp sysom-${version}.tar.gz /root/rpmbuild/SOURCES/
 pushd /root/rpmbuild/SPECS
 rpmbuild -ba sysom.spec
 

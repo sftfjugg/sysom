@@ -2,11 +2,11 @@
 %define debug_package %{nil}
 
 Name:		sysom
-Version:	2.0
+Version:	2.1
 Release:	%{anolis_release}%{?dist}
 Summary:	SysOM Server
 License:	MIT
-Source0:	https://gitee.com/anolis/sysom/repository/archive/v2.0/sysom-2.0.tar.gz
+Source0:	https://gitee.com/anolis/sysom/repository/archive/v2.1/sysom-2.1.tar.gz
 URL:		https://gitee.com/anolis/sysom
 
 %description
@@ -90,7 +90,7 @@ do_download_monitor() {
 
 do_download_ance() {
     echo "now download ${ANOLIS_SQLITE}, ${ANCE_PKG}, ${ANOLIS_MIGRATION_PKGS}..."
-    
+
     mkdir -p sysom_server/sysom_migration/ance
     pushd sysom_server/sysom_migration/ance
     if [ ! -f "${ANCE_PKG}" ]; then
@@ -161,5 +161,7 @@ bash -x /usr/local/sysom/init_scripts/server/clear.sh
 rm -rf /usr/local/sysom
 
 %changelog
+* Fri Feb 6 2023 huangtuquan <tuquanhuang@linux.alibaba.com> - 2.1
+- sysom server release 2.1
 * Fri Dec 12 2022 huangtuquan <tuquanhuang@linux.alibaba.com> - 2.0
 - sysom server release 2.0
