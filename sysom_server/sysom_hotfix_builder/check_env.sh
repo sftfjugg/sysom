@@ -49,6 +49,7 @@ usage() {
     
     cd ${BASE}/kpatch_space
     if [[ ! -d "kpatch-build" ]]; then
+        echo "Cloning kpatch-build ... " >> $LOGFILE
         git clone https://gitee.com/anolis/kpatch-build.git
 
         if [[ $? -ne 0 ]]; then
@@ -75,6 +76,7 @@ usage() {
 
     cd ${BASE}/kernel_repos
     if [[ ! -d "cloud-kernel" ]]; then
+        echo "Cloning cloud-kernel ... " >> $LOGFILE
         git clone https://gitee.com/anolis/cloud-kernel.git
         if [[ $? -ne 0 ]]; then
             cp -a ${NFSDIR}/cloud-kernel .
@@ -89,7 +91,7 @@ usage() {
  }
 
 # Check Hotfix build enviroment
-options="$(getopt -o hk:b:s:n: -l "help,kernelversion:,hotfix_base:,ksrcs:,nfs:" -- "$@")" || die "getopt failed"
+options="$(getopt -o hk:b:s:n:l: -l "help,kernelversion:,hotfix_base:,ksrcs:,nfs:,log:" -- "$@")" || die "getopt failed"
 
 eval set -- "$options"
 
@@ -115,11 +117,16 @@ while [[ $# -gt 0 ]]; do
         NFSDIR="$2"
         shift
         ;;
+    -l|--log)
+        LOGFILE="$2"
+        shift
+        ;;
 	esac
 	shift
 done
 
-echo "The hotfix_base is : ${BASE} "
-
+echo "Checking kpatch build directory" >> $LOGFILE
 check_kpatch_build $KERNELVERSION
+echo "Checking Kernel Source of Anolis" >> $LOGFILE
 check_kernel_src $KERNELVERSION
+echo "Env Check Finished ..." >> $LOGFILE

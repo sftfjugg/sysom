@@ -436,25 +436,31 @@ class HotfixBuilder():
         consumer = dispatch_consumer(self.cec_url, self.cec_hotfix_topic,
                                  consumer_id=consumer_id,
                                  group_id="hotfix_job_group")
-        for event in consumer:
-            # get one event from cec, if match the arch, ack this event
-            parameters = event.value
-            if parameters['arch'] != self.local_arch:
-                break
+        try:
+            for event in consumer:
+                # get one event from cec, if match the arch, ack this event
+                parameters = event.value
+                log_file = parameters['log_file']
+                log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
 
-            # for each run, update the repo
-            cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s" % (self.hotfix_base, self.nfs_dir_home)
-            with os.popen(cmd) as process:
-                output = process.read()
+                if parameters['arch'] != self.local_arch:
+                    break
 
-            customize = parameters['customize']
+                # for each run, update the repo
+                cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s -l %s " % (self.hotfix_base, self.nfs_dir_home, log_file_path)
+                with os.popen(cmd) as process:
+                    output = process.read()
 
-            if not customize:
-                self.build_supported_kernel(parameters)
-            else:
-                self.build_customize_kernel(parameters)
+                customize = parameters['customize']
+                if not customize:
+                    self.build_supported_kernel(parameters)
+                else:
+                    self.build_customize_kernel(parameters)
 
-            consumer.ack(event)
+                consumer.ack(event)
+        except Exception as e:
+            logger.error(str(e))
+            exit(1)
             
 
 
