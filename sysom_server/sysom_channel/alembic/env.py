@@ -28,7 +28,7 @@ target_metadata = Base.metadata
 
 
 def include_object(object, name, type_, reflected, compare_to):
-    if type_ == "table" and name != "sys_channel_setting":
+    if type_ == "table" and name not in ["sys_channel_setting", "sys_channel_params"]:
         return False
     return True
 

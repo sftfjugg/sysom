@@ -17,3 +17,11 @@ class ChannelSetting(Base):
     name = Column(String(254), unique=True)
     value = Column(String(5000))
     description = Column(String(5000), default="")
+
+
+class ChannelParams(Base):
+    __tablename__ = "sys_channel_params"
+
+    id = Column(Integer, primary_key=True)
+    instance = Column(String(254), unique=True)
+    params = Column(String(5000))
