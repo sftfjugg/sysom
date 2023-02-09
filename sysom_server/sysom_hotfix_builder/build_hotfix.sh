@@ -343,8 +343,9 @@ function do_kpatch_build(){
 	fi
 
 	if [ $? -ne 0 ]; then
-		set +x
 		echo "Build kpatch failed, please check the log"
+		echo ">>>>>>>>>>> The log is following >>>>>>>>>>"
+		cat /root/.kpatch/build.log | tail -50 >> ${LOGFILE}
 		die "FAILED";
 	fi
 
