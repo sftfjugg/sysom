@@ -9,6 +9,7 @@ Description:
 import os
 import asyncio
 import time
+import json
 from typing import Callable, Optional
 from queue import Queue
 from importlib import import_module
@@ -19,6 +20,9 @@ from cec_base.producer import Producer, dispatch_producer
 from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask, StoppableThread
 from cec_base.log import LoggerHelper
 from conf.settings import *
+from app.crud import update_or_create_channel_params, get_channel_params_by_instance
+from app.database import SessionLocal
+from app import schemas
 from lib.channels.base import ChannelResult, ChannelException, ChannelCode
 
 
@@ -128,9 +132,19 @@ class ChannelListener(MultiConsumer):
                 })
                 self._producer.flush()
         params = task.get("params", {}).copy()
+        instance = params.get("instance", "")
         timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
         auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
         return_as_stream = params.pop(CHANNEL_PARAMS_RETURN_AS_STREAM, False)
+
+        # Get params from sys_channel_params table if instance exists
+        with SessionLocal() as db:
+            channel_params_item = get_channel_params_by_instance(
+                db, instance=instance)
+            if channel_params_item is not None:
+                params = {
+                    **params, **json.loads(channel_params_item.params)
+                }
         res = await self._get_channel(channel_type)(**params).run_command_auto_retry_async(
             timeout=timeout,
             auto_retry=auto_retry,
@@ -140,12 +154,21 @@ class ChannelListener(MultiConsumer):
 
     async def _do_init_channel(self, channel_type: str, task: dict) -> ChannelResult:
         """init opt"""
-        params = task.get("params", {})
+        params = task.get("params", {}).copy()
+        instance = params.get("instance", "")
         timeout = params.pop(CHANNEL_PARAMS_TIMEOUT, None)
         auto_retry = params.pop(CHANNEL_PARAMS_AUTO_RETRY, False)
         res = await self._get_channel(channel_type).initial_async(
             **params, timeout=timeout, auto_retry=auto_retry
         )
+
+        # Save params after init channel success
+        if res.code == 0:
+            with SessionLocal() as db:
+                update_or_create_channel_params(db, schemas.ChannelParams(
+                    instance=instance,
+                    params=json.dumps(params)
+                ))
         return res
 
     async def _process_each_task(self, event: Event, cecConsumeTask: CecAsyncConsumeTask):

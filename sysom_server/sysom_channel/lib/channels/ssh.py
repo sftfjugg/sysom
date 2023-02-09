@@ -38,7 +38,7 @@ class Channel(BaseChannel):
             raise Exception("parameter: command not found")
 
         if self._ssh_client is None:
-            self._ssh_client = AsyncSSH(self._kwargs['instance'])
+            self._ssh_client = AsyncSSH(self._kwargs['instance'], **self._kwargs)
             self._command = self._kwargs["command"]
 
     def get_params(self, **kwargs) -> dict:

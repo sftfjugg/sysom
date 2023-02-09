@@ -18,6 +18,14 @@ class ChannelSetting(BaseModel):
         orm_mode = True
 
 
+class ChannelParams(BaseModel):
+    instance: str
+    params: str
+
+    class Config:
+        orm_mode = True
+
+
 ###########################################################################
 # Request params
 ###########################################################################
