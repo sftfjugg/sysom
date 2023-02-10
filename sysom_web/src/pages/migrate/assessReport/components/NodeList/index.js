@@ -79,20 +79,16 @@ const NodeList = (props) => {
     const ip = getUrlParams('ip');
     const old_ver = getUrlParams('old_ver');
     const new_ver = getUrlParams('new_ver');
-    new Promise(async(resolve) => {
-      await getNodeList(id);
-      resolve();
-    }).then(()=>{
-      handleNodeItem({id,ip,old_ver,new_ver});
-    });
+    getNodeList(id,ip,old_ver,new_ver);
   },[])
 
-  const getNodeList = async (id) => {
+  const getNodeList = async (id, ip, old_ver, new_ver) => {
     setLoading(true);
     try {
       const {code, data, msg} = await queryAssessList();
       if (code === 200) {
         setNodeList(data?data:[]);
+        handleNodeItem({id, ip, old_ver, new_ver}, data);
         return true;
       }
       message.error(msg);
@@ -117,8 +113,8 @@ const NodeList = (props) => {
     })
   }
 
-  const judgeActiveItem = (id) => {
-    let activeItem = nodeList.filter((i)=> i.id == id);
+  const judgeActiveItem = (id, data) => {
+    let activeItem = data.filter((i)=> i.id == id);
     let acitveArr = ['mig_imp'];
     if(activeItem?.length>0 && activeItem[0]?.config){
       let config = JSON.parse(activeItem[0].config);
@@ -136,7 +132,7 @@ const NodeList = (props) => {
   }
 
   // 点击行切换
-  const handleNodeItem = async (r) => {
+  const handleNodeItem = async (r, data) => {
     if(Number(r.id) !== Number(activeId)){
       changeActive(r.id,r.ip,r.old_ver,r.new_ver);
       dispatch({
@@ -146,7 +142,7 @@ const NodeList = (props) => {
           activeKey: 'risk',
         },
       });
-      let activeArr = await judgeActiveItem(r.id);
+      let activeArr = await judgeActiveItem(r.id, data||nodeList);
       const hide = message.loading('loading...', 0);
       let askArr = [getRiskList(r.id)];
       activeArr.map((i)=>{
