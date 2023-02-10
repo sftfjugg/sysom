@@ -1,0 +1,43 @@
+#!/usr/bin/python3
+# coding=utf-8
+
+import json
+import sys
+import os
+import time
+###################################################################
+## 如前端输入
+## {
+##	"instance":"192.168.1.101",
+##	"timeout":"5",
+## }
+## '{"instance":"192.168.1.101", "timeout":5}'
+## 解析参数方法:
+## sysak raptor oncpu --server local --exit-time 5
+##  -exit-time 5 诊断时间5分钟
+##
+######################################################################
+class Param(dict):
+    def __missing__(self,key):
+        sys.stderr.write("The input parameter check failed, there have no parameter '%s'"%key)
+        exit(1)
+
+args = Param(json.loads(sys.argv[1]))
+
+result = {}
+result['commands'] = []
+
+cmd0 = {}
+cmd0['instance'] = args["instance"]
+arg_time = args["timeout"]
+if arg_time:
+	arg_time = '--exit-time ' + str(arg_time)
+
+dump_log_cmd = "cat /tmp/profile.json;"
+profile_cmd = "sysak raptor oncpu --server local --app-name aa "+str(arg_time)+" > /tmp/profile.json"
+cmd0['cmd'] = profile_cmd+" && "+dump_log_cmd
+
+result['commands'].append(cmd0)
+
+data = json.dumps(result)
+print(data)

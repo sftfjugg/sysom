@@ -1,0 +1,30 @@
+#!/usr/bin/python3
+# coding=utf-8
+import sys
+import os
+import json
+import random
+import collections
+
+class taskprofile(object):
+	def __init__(self, f):
+		super(taskprofile, self).__init__()
+		self._file = f
+
+	def proc_data(self):
+		tmp = self._file.readlines()
+		print(tmp);
+
+def extract_params():
+    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    with open(path, 'r') as tmp:
+        res = tmp.read()
+    return res, task_id
+
+if __name__ == "__main__":
+	str1, _ = extract_params()
+	str2 = str1.replace('\n', "")
+	str3 = str2.replace('\t', "")
+	data3=json.loads(str3)
+	data=json.dumps(data3["datasources"],ensure_ascii=False)
+	print(data)
