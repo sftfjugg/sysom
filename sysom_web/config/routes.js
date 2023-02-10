@@ -22,7 +22,13 @@ export default [
     path: '/welcome',
     name: 'welcome',
     layout: false,
+    hideInMenu:true,
     component: './Welcome',
+  },
+  {
+    path: '/home',
+    name: 'home',
+    component: './home',
   },
   {
     path: '/host',
