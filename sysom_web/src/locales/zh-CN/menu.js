@@ -1,5 +1,5 @@
 export default {
-  'menu.welcome': '首页',
+  'menu.welcome': '欢迎页',
   'menu.host': '主机管理',
   'menu.host.list': '主机列表',
   'menu.host.cluster': '集群列表',
@@ -69,6 +69,7 @@ export default {
   'menu.editor.koni': '拓扑编辑器',
   'menu.diagnose': '诊断中心',
   'menu.diagnose.oscheck': '系统健康检查',
+  'menu.home': '首页',
   'menu.diagnose.cpu': '调度诊断中心',
   'menu.diagnose.cpu.loadtask': '系统负载诊断',
   'menu.diagnose.cpu.schedmoni': '调度抖动诊断',

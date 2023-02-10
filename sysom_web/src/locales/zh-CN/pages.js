@@ -157,7 +157,7 @@ export default {
   'pages.diagnose.offline_import.success': "导入成功",
   'pages.diagnose.offline_import.failed': "导入失败",
   'pages.diagnose.offline_import.btn': "离线导入",
-  'pages.click.enter': '点击进入',
+  'pages.click.enter': '点击进入首页',
   'pages.login': '登录',
   'pages.changepassword': '修改密码',
   'pages.hotfix.title': '热补丁列表',

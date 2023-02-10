@@ -13,6 +13,12 @@ body,
 .ant-layout {
   min-height: 100vh;
 }
+
+.ant-layout-content {
+  flex-direction: column;
+  display: flex;
+}
+
 .ant-pro-sider.ant-layout-sider.ant-pro-sider-fixed {
   left: unset;
 }
@@ -21,7 +27,7 @@ body,
   margin: 0 0 12px 0;
 }
 
-.ant-pro-global-footer-links{
+.ant-pro-global-footer-links {
   margin: 0;
 }
 
@@ -44,12 +50,15 @@ ol {
   .ant-table {
     width: 100%;
     overflow-x: auto;
-    &-thead > tr,
-    &-tbody > tr {
-      > th,
-      > td {
+
+    &-thead>tr,
+    &-tbody>tr {
+
+      >th,
+      >td {
         white-space: pre;
-        > span {
+
+        >span {
           display: block;
         }
       }
@@ -58,11 +67,17 @@ ol {
 }
 
 // Compatible with IE11
-@media screen and(-ms-high-contrast: active), (-ms-high-contrast: none) {
-  body .ant-design-pro > .ant-layout {
+@media screen and(-ms-high-contrast: active),
+(-ms-high-contrast: none) {
+  body .ant-design-pro>.ant-layout {
     min-height: 100vh;
   }
 }
 
-.ant-carousel .slick-dots li button{background: #fff !important;}
-.ant-carousel .slick-dots li.slick-active button{background: #fff !important;}
+.ant-carousel .slick-dots li button {
+  background: #fff !important;
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+  background: #fff !important;
+}
