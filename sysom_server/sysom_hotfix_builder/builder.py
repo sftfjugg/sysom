@@ -352,7 +352,7 @@ class HotfixBuilder():
         patch_path = os.path.join(self.nfs_dir_home, "patch", patch_path)
         log_file = parameters['log_file']
         image = parameters['image']
-        source_code_repo = git_repo.split("/")[-1].split(".")[0] # findout the kernel repo name
+        source_code_repo = git_repo.split("/")[-1].rstrip(".git") # findout the kernel repo name
         log = ""
         output = ""
         log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
