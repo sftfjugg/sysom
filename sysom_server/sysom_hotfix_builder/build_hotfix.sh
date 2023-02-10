@@ -226,7 +226,7 @@ function checkout_branch() {
 	cd ${KSRCS}/${SRCREPO}
     repo_tag=`git tag | grep -w $tag -m 1`
 	if [[ -z $repo_tag ]]; then
-		repo_tag=`git branch | grep -w $tag -m 1`
+		repo_tag=`git branch -a | grep -w $tag -m 1`
 	fi
 	if [[ -z $repo_tag ]]; then
 		die "the input tag cannot be found either in tag or branch"
