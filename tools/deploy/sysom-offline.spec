@@ -100,7 +100,7 @@ do_download_ance() {
         wget "https://ance.oss-cn-hangzhou.aliyuncs.com/databases/${ANOLIS_SQLITE}"
     fi
     if [ ! -f "${ANOLIS_MIGRATION_PKGS}" ]; then
-        wget "https://gitee.com/src-anolis-sig/leapp/releases/download/v1.0.0-all-in-one/${ANOLIS_MIGRATION_PKGS}"
+        wget "https://gitee.com/src-anolis-sig/leapp/releases/download/v1.0.1-all-in-one/${ANOLIS_MIGRATION_PKGS}"
     fi
     popd
 }
