@@ -11,6 +11,7 @@ def drop_result(raw):
     raw = fd.read().strip()
     fd.close()
     '''
+    raw = raw.strip()
     outdata = {}
     if raw.find("tcp_state") == -1 and len(raw) != 0:
         outdata = {"status": "fail"}
