@@ -370,9 +370,9 @@ class MigAssView(CommonModelViewSet):
         mig_ass = MigAssModel.objects.filter(id=id).first()
         if hard_info:
             mig_ass.hard_info = json.dumps(hard_info)
-        elif hard_result:
+        if hard_result:
             mig_ass.hard_result = json.dumps(hard_result)
-        else:
+        if result.code != 0:
             mig_ass.status = 'fail'
             mig_ass.detail = result.result
         mig_ass.save()
