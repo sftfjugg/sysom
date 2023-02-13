@@ -5,8 +5,9 @@ import json
 import random
 
 def iosdiagJoinData(raw):
+    raw = raw.strip()
     if raw.startswith('fail'):
-        print({"status": "fail"})
+        print('{"status": "fail"}')
         return
 
     disks = []

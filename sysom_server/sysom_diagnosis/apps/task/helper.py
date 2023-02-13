@@ -242,7 +242,7 @@ class DiagnosisHelper:
                         f"Execute postprocess script error: {str(resp.stderr.decode('utf-8'))}"
                     ))
                 stdout = resp.stdout
-                result = json.loads(stdout.decode('utf-8'))
+                result = json.loads(stdout.decode('utf-8').strip())
                 # 后处理脚本执行结束，更新任务状态
                 DiagnosisHelper._update_job(
                     instance, result=result, status="Success"
