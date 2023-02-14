@@ -112,60 +112,58 @@ class MigAssView(CommonModelViewSet):
         res = self.require_param_validate(request, ['ip', 'version', 'repo_type', 'ass_type'])
         if not res['success']:
             return ErrorResponse(msg=res['msg'])
-        
+
+        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        ance_path = os.path.join(ance_path, 'ance')
+        if not os.path.exists(ance_path):
+            return success(code=400, msg='缺少迁移评估工具，请放置工具后再尝试。')
+
         ip = request.data.pop('ip')
         version = request.data.get('version')
         err = []
         for i in ip:
             mig_ass = MigAssModel.objects.filter(ip=i, status='running').first()
-            if mig_ass:
-                err.append(f'主机{ip}正在评估中。')
+            mig_imp = MigImpModel.objects.filter(ip=i, status='running').first()
+            if mig_ass or mig_imp:
+                msg = f'主机{ip}正在迁移评估中。' if mig_ass else f'主机{ip}正在迁移实施中。'
+                err.append(msg)
             else:
                 mig_ass = MigAssModel.objects.create(**dict(ip=i, new_ver=version, config=json.dumps(request.data)))
-                threading.Thread(target=self.run_mig_ass, args=(mig_ass, )).start()
+                threading.Thread(target=self.run_mig_ass, args=(mig_ass, ance_path)).start()
         if err:
             return success(code=400, msg='\n'.join(err))
         return success()
 
 
-    def run_mig_ass(self, mig_ass):
+    def run_mig_ass(self, mig_ass, ance_path):
         host_url = f'{settings.SYSOM_API_URL}/api/v1/host/?ip={mig_ass.ip}'
         res = requests.get(host_url)
-        if res.status_code != 200:
+        try:
+            host_info = res.json().get('data', [])
+            mig_ass.hostname = host_info[0].get('hostname')
+        except:
             mig_ass.status = 'fail'
             mig_ass.detail = '获取机器信息异常'
             mig_ass.save()
-        host_info = res.json().get('data', [])
-        if not host_info:
-            mig_ass.status = 'fail'
-            mig_ass.detail = '机器不存在'
-            mig_ass.save()
-        mig_ass.hostname = host_info[0].get('hostname')
+            return
+
         result, _ = sync_job(mig_ass.ip, "cat /etc/os-release | grep '^PRETTY_NAME=' | awk -F '\"' '{print $2}'")
         if result.code != 0:
             mig_ass.status = 'fail'
-            mig_ass.detail = result.err_msg
+            mig_ass.detail = result.result
             mig_ass.save()
             return
         mig_ass.old_ver = result.result
         mig_ass.save()
 
-        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
-        ance_path = os.path.join(ance_path, 'ance')
-        if not os.path.exists(ance_path):
-            mig_ass.status = 'fail'
-            mig_ass.detail = '缺少迁移评估工具，请放置工具后再尝试。'
-            mig_ass.save()
-            return
-
         tar_path = None
         rpm_path = None
         sql_path = None
         for i in os.listdir(ance_path):
-            if '.tar.gz' in i:
+            if 'pkgs.tar.gz' in i:
                 tar_path = os.path.join(settings.MIG_ASS_ANCE, i)
                 result = send_file([mig_ass.ip,], os.path.join(ance_path, i), tar_path)
-            if '.rpm' in i:
+            if 'x86_64.rpm' in i:
                 rpm_path = os.path.join(settings.MIG_ASS_ANCE, i)
                 result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
             if '.sqlite' in i:
@@ -191,10 +189,12 @@ class MigAssView(CommonModelViewSet):
             ass_func.insert(1, self.init_ance)
 
         for func in ass_func:
+            func(mig_ass.id, mig_ass.ip, mig_ass.config)
             mig_ass = MigAssModel.objects.filter(id=mig_ass.id).first()
             if mig_ass.status != 'running':
                 break
-            func(mig_ass.id, mig_ass.ip, mig_ass.config)
+            mig_ass.rate += int(100/len(ass_func))
+            mig_ass.save()
         else:
             mig_ass = MigAssModel.objects.filter(id=mig_ass.id).first()
             mig_ass.rate = 100
@@ -214,6 +214,7 @@ class MigAssView(CommonModelViewSet):
         try:
             with tarfile.open(f'{lpath}/result.tar.gz', 'r') as t:
                 t.extractall(f'{lpath}')
+            logger.info(f'get a result from {ip} to {lpath}')
             return True
         except:
             return False
@@ -227,15 +228,12 @@ class MigAssView(CommonModelViewSet):
         result, _ = sync_job(ip, run_script_ignore(init_ance_script.replace('ANCE_RPM_PATH', rpm_path)), timeout=300000)
         if result.code != 0:
             mig_ass.status = 'fail'
-            mig_ass.detail = result.err_msg
+            mig_ass.detail = result.result
             mig_ass.save()
             return
 
 
     def mig_imp(self, id, ip, config):
-        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
-        result = send_file([ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
-
         config = json.loads(config)
         repo_url = config.get('repo_url')
         if repo_url:
@@ -289,8 +287,11 @@ class MigAssView(CommonModelViewSet):
         mig_ass = MigAssModel.objects.filter(id=id).first()
         if imp_result:
             mig_ass.imp_report = json.dumps(imp_result)
-        mig_ass.rate += 25
-        mig_ass.save()
+            mig_ass.save()
+        else:
+            mig_ass.status = 'fail'
+            mig_ass.detail = result.result
+            mig_ass.save()
 
 
     def mig_sys(self, id, ip, config):
@@ -330,8 +331,11 @@ class MigAssView(CommonModelViewSet):
         mig_ass = MigAssModel.objects.filter(id=id).first()
         if sys_result:
             mig_ass.sys_config = json.dumps(sys_result)
-        mig_ass.rate += 25
-        mig_ass.save()
+            mig_ass.save()
+        else:
+            mig_ass.status = 'fail'
+            mig_ass.detail = result.result
+            mig_ass.save()
 
 
     def mig_hard(self, id, ip, config):
@@ -368,7 +372,9 @@ class MigAssView(CommonModelViewSet):
             mig_ass.hard_info = json.dumps(hard_info)
         if hard_result:
             mig_ass.hard_result = json.dumps(hard_result)
-        mig_ass.rate += 25
+        if result.code != 0:
+            mig_ass.status = 'fail'
+            mig_ass.detail = result.result
         mig_ass.save()
 
 
@@ -414,8 +420,11 @@ class MigAssView(CommonModelViewSet):
         mig_ass = MigAssModel.objects.filter(id=id).first()
         if app_result:
             mig_ass.app_config = json.dumps(app_result)
-        mig_ass.rate += 25
-        mig_ass.save()
+            mig_ass.save()
+        else:
+            mig_ass.status = 'fail'
+            mig_ass.detail = result.result
+            mig_ass.save()
 
 
     def post_ass_stop(self, request):
@@ -452,15 +461,22 @@ class MigAssView(CommonModelViewSet):
         if not res['success']:
             return ErrorResponse(msg=res['msg'])
 
+        ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+        ance_path = os.path.join(ance_path, 'ance')
+        if not os.path.exists(ance_path):
+            return success(code=400, msg='缺少迁移评估工具，请放置工具后再尝试。')
+
         ass_id = request.data.get('id')
         mig_ass = MigAssModel.objects.filter(id=ass_id).first()
         if mig_ass and mig_ass.status != 'running':
             mig = MigAssModel.objects.filter(ip=mig_ass.ip, status='running').first()
-            if mig:
-                return success(code=400, msg='有其它相同的评估任务运行中')
+            imp = MigImpModel.objects.filter(ip=mig_ass.ip, status='running').first()
+            if mig or imp:
+                msg = '有其它相同的评估任务运行中' if mig else '当前主机正在运行迁移实施'
+                return success(code=400, msg=msg)
             else:
                 mig = MigAssModel.objects.create(**dict(hostname=mig_ass.hostname, ip=mig_ass.ip, new_ver=mig_ass.new_ver, config=mig_ass.config))
-                threading.Thread(target=self.run_mig_ass, args=(mig, )).start()
+                threading.Thread(target=self.run_mig_ass, args=(mig, ance_path)).start()
                 return success()
         else:
             return success(code=400, msg='状态异常')
@@ -532,7 +548,7 @@ class MigImpView(CommonModelViewSet):
             mig_imp.save()
             return 200, 'success', info
         else:
-            return 400, result.err_msg, None
+            return 400, result.result, None
 
 
     def get_host_mig(self, request):
@@ -571,27 +587,8 @@ class MigImpView(CommonModelViewSet):
         if step < 101 and mig_imp.status in ['running', 'success', 'unsupported']:
             return f'主机{ip}当前状态无法进行此操作。'
         if step < 101 and mig_imp.step != step:
-            return f'主机{ip}无法执行此步骤，请按序执行。'
+            return f'主机{ip}无法执行此步骤，请按操作步骤顺序执行。'
         return steps[str(step)](mig_imp, data)
-
-
-    def post_host_migrate_all(self, ip, steps, data):
-        mig_imp = MigImpModel.objects.filter(ip=ip).first()
-        if not mig_imp:
-            return
-        if mig_imp.status in ['running', 'success']:
-            return
-        mig_imp.status = 'pending'
-        mig_imp.save()
-
-        while True:
-            mig_imp = MigImpModel.objects.filter(ip=ip).first()
-            if mig_imp.status in ['fail', 'unsupported'] or mig_imp.step > 5:
-                break
-            if mig_imp.status == 'running':
-                time.sleep(random.randint(3,5))
-                continue
-            self.post_host_migrate_base(ip, mig_imp.step, steps, data)
 
 
     def post_host_migrate(self, request):
@@ -605,12 +602,34 @@ class MigImpView(CommonModelViewSet):
 
         err = []
         for i in ip:
+            mig_ass = MigAssModel.objects.filter(ip=i, status='running').first()
+            if mig_ass:
+                err.append(f'主机{i}正在进行评估中。')
+                continue
             res = self.post_host_migrate_base(i, step, steps, request.data)
             if res:
                 err.append(res)
         if err:
             return success(code=400, msg='\n'.join(err))
         return success()
+
+
+    def post_host_migrate_all(self, ip, steps, data):
+        mig_ass = MigAssModel.objects.filter(ip=ip, status='running').first()
+        mig_imp = MigImpModel.objects.filter(ip=ip).first()
+        if mig_ass or not mig_imp or mig_imp.status in ['running', 'success']:
+            return
+        mig_imp.status = 'pending'
+        mig_imp.save()
+
+        while True:
+            mig_imp = MigImpModel.objects.filter(ip=ip).first()
+            if mig_imp.status in ['fail', 'unsupported'] or mig_imp.step > 5:
+                break
+            if mig_imp.status == 'running':
+                time.sleep(random.randint(3,5))
+                continue
+            self.post_host_migrate_base(ip, mig_imp.step, steps, data)
 
 
     def post_all_migrate(self, request):
@@ -663,9 +682,11 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_config(self, mig_imp, data):
+        mig_imp.status = 'running'
+        mig_imp.save()
+
         if not mig_imp.old_ver:
             self.init_info(mig_imp)
-
         info = []
         info.append(dict(name='系统版本', value=mig_imp.old_ver))
         info.append(dict(name='迁移版本', value=data.get('version')))
@@ -685,9 +706,6 @@ class MigImpView(CommonModelViewSet):
         mig_imp.mig_info = json.dumps(dict(migration_info=info))
         mig_imp.new_ver = data.get('version')
         mig_imp.config = json.dumps(data)
-        mig_imp.status = 'running'
-        mig_imp.detail = ''
-        mig_imp.save()
 
         if 'CentOS Linux 7' not in mig_imp.old_ver:
             mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, False))
@@ -704,9 +722,52 @@ class MigImpView(CommonModelViewSet):
             return
 
 
+    def mig_backup(self, mig_imp, data):
+        mig_imp.status = 'running'
+        mig_imp.save()
+
+        config = json.loads(mig_imp.config)
+        backup_type = config.get('backup_type')
+
+        if backup_type == 'nfs':
+            ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
+            result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+            if result.code != 200:
+                mig_imp.status = 'fail'
+                mig_imp.detail = '下发备份工具失败'
+                mig_imp.save()
+                return mig_imp.detail
+
+            backup_ip = config.get('backup_ip')
+            backup_path = config.get('backup_path')
+            backup_exclude = config.get('backup_exclude')
+            if backup_exclude:
+                script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path} --exclude '{backup_exclude}'"
+            else:
+                script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path}"
+            cmd = run_script_ignore(backup_script.replace('BACKUP_SCRIPT', script))
+            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=18000000)
+            return
+
+        mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
+        mig_imp.status = 'pending'
+        mig_imp.detail = '请执行下一步'
+        mig_imp.step += 1
+        mig_imp.save()
+        return
+
+
     def mig_deploy(self, mig_imp, data):
+        mig_imp.status = 'running'
+        mig_imp.save()
+
         ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
         result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
+        if result.code != 200:
+            mig_imp.status = 'fail'
+            mig_imp.detail = '下发环境工具失败'
+            mig_imp.save()
+            return mig_imp.detail
 
         config = json.loads(mig_imp.config)
         repo_url = config.get('repo_url')
@@ -720,34 +781,9 @@ class MigImpView(CommonModelViewSet):
         return
 
 
-    def mig_backup(self, mig_imp, data):
-        config = json.loads(mig_imp.config)
-        backup_type = config.get('backup_type')
-
-        if backup_type == 'nfs':
-            ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
-            result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
-
-            backup_ip = config.get('backup_ip')
-            backup_path = config.get('backup_path')
-            backup_exclude = config.get('backup_exclude')
-            if backup_exclude:
-                script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path} --exclude '{backup_exclude}'"
-            else:
-                script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path}"
-            cmd = run_script_ignore(backup_script.replace('BACKUP_SCRIPT', script))
-            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=3600000)
-            return
-
-        mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
-        mig_imp.status = 'pending'
-        mig_imp.detail = '请执行下一步'
-        mig_imp.step += 1
-        mig_imp.save()
-        return
-
-
     def mig_ass(self, mig_imp, data):
+        mig_imp.status = 'running'
+        mig_imp.save()
         ass_path = os.path.join(settings.MIG_IMP_DIR, mig_imp.ip)
         ass_file = os.path.join(ass_path, 'mig_ass_log.log')
 
@@ -758,6 +794,8 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_imp(self, mig_imp, data):
+        mig_imp.status = 'running'
+        mig_imp.save()
         imp_path = os.path.join(settings.MIG_IMP_DIR, mig_imp.ip)
         imp_file = os.path.join(imp_path, 'mig_imp_log.log')
 
@@ -768,10 +806,10 @@ class MigImpView(CommonModelViewSet):
 
 
     def mig_reboot(self, mig_imp, data):
-        sync_job(mig_imp.ip, 'reboot')
         mig_imp.status = 'running'
         mig_imp.detail = '重启中'
         mig_imp.save()
+        sync_job(mig_imp.ip, 'reboot')
         threading.Thread(target=self.run_reboot_job, args=(mig_imp, )).start()
         return
 
@@ -805,6 +843,7 @@ class MigImpView(CommonModelViewSet):
     def run_async_job(self, mig_imp, job_name, cmd, timeout=600000):
         mig_job = MigJobModel.objects.create(**dict(ip=mig_imp.ip, mig_id=mig_imp.id, mig_type='imp', job_name=job_name))
         def finish(result):
+            logger.info(result.__dict__)
             job_id = result.echo.get('mig_job_id')
             mig_ip = result.echo.get('mig_ip')
             mig_job = MigJobModel.objects.filter(id=job_id).first()
@@ -823,7 +862,7 @@ class MigImpView(CommonModelViewSet):
             else:
                 mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, False))
                 mig_imp.status = 'fail'
-                mig_imp.detail = result.err_msg
+                mig_imp.detail = result.result
             mig_imp.save()
 
         mig_imp.status = 'running'
@@ -915,7 +954,7 @@ class MigImpView(CommonModelViewSet):
                 mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, False))
                 mig_imp.status = 'fail'
                 if main_job.job_result:
-                    mig_imp.detail = json.loads(main_job.job_result).get('err_msg', '')
+                    mig_imp.detail = json.loads(main_job.job_result).get('result', '')
                 else:
                     mig_imp.detail = ''
             mig_imp.save()
@@ -952,7 +991,7 @@ class MigImpView(CommonModelViewSet):
         result, _ = sync_job(mig_imp.ip, run_script(restore_script))
         if result.code != 0:
             mig_imp.status = 'fail'
-            mig_imp.detail = result.err_msg
+            mig_imp.detail = result.result
             mig_imp.save()
             return
 
