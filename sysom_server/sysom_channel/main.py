@@ -7,7 +7,7 @@ File                ssh.py
 Description:
 """
 import json
-import logging
+from loguru import logger
 from typing import Optional
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -25,8 +25,6 @@ app.mount("/public", StaticFiles(directory=STATIC_RESOURCE_PATH), name="public")
 app.include_router(file.router, prefix="/api/v1/channel/file")
 app.include_router(config.router, prefix="/api/v1/channel/config")
 app.include_router(cec_status.router, prefix="/api/v1/channel/cec_status")
-
-logger = logging.getLogger(__name__)
 
 
 def init_channel():
@@ -51,14 +49,14 @@ def init_channel():
                     name=name, value=default_value, description=description
                 )))
             except Exception as e:
-                logger.warn(e)
+                logger.warning(e)
 
         # 3. Prevent concurrent creation resulting in unsuccessful creation,
         # try to fetch again, this logic should barely be executed
         if setting is None:
             setting = get_setting(db, name)
         return setting
-    
+
     def update_or_create(
         db, name: str, default_value: str, description: str = ""
     ):
@@ -69,9 +67,8 @@ def init_channel():
                 name=name, value=default_value, description=description
             ))
         except Exception as e:
-            logger.warn(e)
+            logger.warning(e)
         return setting
-            
 
     from lib.utils import generate_key
 
