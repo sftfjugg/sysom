@@ -7,6 +7,9 @@
 [monitor]
 1_sysom_monitor
 
+[monitor-server]
+1_sysom_monitor_server
+
 [vmcore]
 2_sysom_vmcore
 
