@@ -7,7 +7,7 @@ import _ from "lodash";
 //GET /api/v1/tasks/xxxxx/
 export async function getHomeData(params = {}, options) {
   const token = localStorage.getItem('token');
-  const msg = await request('/api/v1/home/', {
+  const msg = await request('/api/v1/monitor/home/demo_data', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
