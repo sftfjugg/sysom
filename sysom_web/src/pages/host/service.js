@@ -12,6 +12,10 @@ const HOST_URL = '/api/v1/host/';
 export async function getCluster(options) {
   const msg = await request(CLUSTER_URL, {
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token'),
+    },
     ...(options || {}),
   });
   const array = msg.data
@@ -32,6 +36,10 @@ export async function getCluster(options) {
 export async function getClusterList(options) {
   return request(CLUSTER_URL, {
     method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token'),
+    },
     ...(options || {}),
   });
 }
@@ -105,6 +113,9 @@ export async function batchDelCluster(body, token, options) {
 export async function getHost(params, options) {
   return request(HOST_URL, {
     method: 'GET',
+    headers: {
+      'Authorization': localStorage.getItem('token')
+    },
     params: params,
     ...(options || {}),
   });
@@ -113,6 +124,9 @@ export async function getHost(params, options) {
 export async function getHostName(options) {
   const msg = await request(HOST_URL, {
     method: 'GET',
+    headers: {
+      'Authorization': localStorage.getItem('token')
+    },
     ...(options || {}),
   });
   const array = msg.data
@@ -127,6 +141,9 @@ export async function getHostName(options) {
 export async function getHostIP(options) {
   const msg = await request(HOST_URL, {
     method: 'GET',
+    headers: {
+      'Authorization': localStorage.getItem('token')
+    },
     ...(options || {}),
   });
   const array = msg.data

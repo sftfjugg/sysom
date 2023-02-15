@@ -297,6 +297,21 @@ export default [
     ],
   },
   {
+    path: '/account',
+    name: 'account',
+    access: 'canAdmin',
+    routes: [
+      {
+        path: '/account',
+        redirect: '/account/list',
+      },{
+        path: '/account/list',
+        name: 'list',
+        component: './account/List',
+      },
+    ]
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },
