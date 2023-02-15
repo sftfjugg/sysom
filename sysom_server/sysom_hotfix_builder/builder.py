@@ -422,8 +422,6 @@ class HotfixBuilder():
             os.system("echo \"BUILD FAILED\" >> %s" % log_file_path)
             self.connector.change_building_status(hotfix_id, "failed")
 
-
-
     '''
     Each event is an object, the parameter is inside event.value
     event.value is a dictionary.

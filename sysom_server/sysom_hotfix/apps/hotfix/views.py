@@ -72,7 +72,8 @@ class SaveUploadFile(APIView):
         patch_file_repo = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, "patch")
         if not os.path.exists(patch_file_repo):
             os.makedirs(patch_file_repo)
-        file_path = os.path.join(patch_file_repo, patch_file.name)
+        patch_file_name = patch_file.name.rstrip(".patch") + "-" + str(time.time()).split(".")[0] + ".patch"
+        file_path = os.path.join(patch_file_repo, patch_file_name)
 
         try:
             with open(file_path, 'wb') as f:
@@ -81,7 +82,7 @@ class SaveUploadFile(APIView):
         except Exception as e:
             logger.error(e)
             raise APIException(message=f"Upload Failed: {e}")
-        return success(result={}, message="Upload success")
+        return success(result={"patch_name":patch_file_name}, message="Upload success")
 
 
 class HotfixAPIView(GenericViewSet,
@@ -102,6 +103,10 @@ class HotfixAPIView(GenericViewSet,
         self.event_id = None
         self.function = FunctionClass()
         self.cec = CommonModelViewSet()
+        # initial build state
+        self.build_success = 3
+        self.build_failed = 2
+        self.build_wait = 0
 
     """
     Log_file : patch_file-time.log , this is used to output the log
@@ -162,6 +167,51 @@ class HotfixAPIView(GenericViewSet,
             except Exception as e:
                 other_response(msg=str(e), code=400)
         return success(result={"msg":"success","id":res.id,"event_id":self.event_id}, message="create hotfix job success")
+
+    def rebuild_hotfix(self, request):
+        hotfix_id = request.data['hotfix_id']
+        hotfix_object = self.function.get_hotfix_object_by_id(hotfix_id)
+        if hotfix_object is None:
+            return other_response(message="Hotfix job not found", code=400)
+
+        kernel_version = hotfix_object.kernel_version
+        os_type = hotfix_object.os_type
+
+        if hotfix_object.building_status != self.build_failed:
+            return other_response(message="This Hotfix Job is Not Failed", code=401)
+
+        try:
+            customize_version_object = KernelVersionModel.objects.all().filter(kernel_version=kernel_version).first()
+        except Exception as e:
+            return other_response(message="Error when querying customize kernel", code=400)
+
+        try:
+            if customize_version_object is None:
+                status = self.function.create_message_to_cec(customize=False, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=hotfix_object.os_type, 
+                        hotfix_id=hotfix_object.id, kernel_version=hotfix_object.kernel_version, hotfix_name=hotfix_object.hotfix_name, 
+                        patch_file=hotfix_object.patch_file, patch_path=hotfix_object.patch_path, arch=hotfix_object.arch, log_file=hotfix_object.log_file
+                        )
+            else:
+                git_repo = self.function.get_gitrepo_of_os(os_type)
+                git_branch = self.function.get_info_from_version(kernel_version, "branch")
+                devel_link = self.function.get_info_from_version(kernel_version, "devel_link")
+                debuginfo_link = self.function.get_info_from_version(kernel_version, "debuginfo_link")
+                image = self.function.get_image_of_os(os_type)
+                status = self.function.create_message_to_cec(customize=True, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=hotfix_object.os_type,
+                    hotfix_id=hotfix_object.id, kernel_version=hotfix_object.kernel_version, hotfix_name=hotfix_object.hotfix_name, patch_file=hotfix_object.patch_file,
+                    patch_path=hotfix_object.patch_path, arch=hotfix_object.arch, log_file=hotfix_object.log_file, git_repo=git_repo, git_branch=git_branch, 
+                    devel_link=devel_link,debuginfo_link=debuginfo_link,image=image
+                    )
+            if status:
+                hotfix_object.building_status = self.build_wait
+                hotfix_object.save()
+                return success(result="success", message="rebuild success")
+            else:
+                return other_response(message="Error raised when sending msg to cec...",result={"msg":"Error raised when operating msg to cec..."} , code=400)
+        except Exception as e:
+            logger.error(str(e))
+            logger.error("Rebuild Hotfix Failed")
+            return other_response(message=str(e), result={"msg":"Error raised when operating msg to cec..."}, code=400)
 
     def get_hotfixlist(self, request):
         try:

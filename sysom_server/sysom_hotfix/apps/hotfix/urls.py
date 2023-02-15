@@ -29,5 +29,6 @@ urlpatterns = [
     path('api/v1/hotfix/delete_kernel_relation/', views.HotfixAPIView.as_view({'delete': 'delete_kernel_version'})),
     path('api/v1/hotfix/update_kernel_relation/', views.HotfixAPIView.as_view({'post': 'update_kernel_version'})),
     path('api/v1/hotfix/update_ostype/', views.HotfixAPIView.as_view({'post': 'update_ostype'})),
+    path('api/v1/hotfix/rebuild_hotfix/',views.HotfixAPIView.as_view({'post': 'rebuild_hotfix'})),
     path('api/v1/', include(router.urls)),
 ]

@@ -19,7 +19,7 @@ class FunctionClass():
             try:
                 os.remove(document)
             except Exception as e:
-                print(str(e))
+                logger.error(str(e))
                 return None
         else:
             return None    
@@ -126,6 +126,7 @@ class FunctionClass():
                             "git_repo": "git@gitee.com:anolis/cloud-kernel.git",
                             "customize": 0
                         })
+                return True
             else:
                 # this is customize kernel
                 git_repo = kwargs['git_repo']
@@ -149,9 +150,15 @@ class FunctionClass():
                     "debuginfo_link": debuginfo_link,
                     "image": image
                 })
+            return True
         except Exception as e:
             logger.exception(e)
-            print(str(e))
-            return -1
+            return False
 
-    
+    def get_hotfix_object_by_id(self, hotfix_id):
+        try:
+            hotfix_object = HotfixModel.objects.all().filter(id=hotfix_id).first()
+            return hotfix_object
+        except Exception as e:
+            logger.error(str(e))
+            return None
