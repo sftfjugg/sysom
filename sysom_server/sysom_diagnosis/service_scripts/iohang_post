@@ -4,20 +4,29 @@ import sys
 import json
 import random
 
+
 def iosdiagJoinData(raw):
     raw = raw.strip()
-    if raw.startswith('fail'):
-        print('{"status": "fail"}')
-        return
 
     disks = []
     stat = {}
-    stat["disks"] = {"data": [{'key': 0, 'value':'overview'}]}
+    stat["disks"] = {"data": [{'key': 0, 'value': 'overview'}]}
+
+    if raw.startswith('fail'):
+        stat["summary"] = "diagnose results: failed"
+        stat["iohangOverview_overview"] = {
+            "data": [{'key': 'Check Result', "value": "failed"},
+                     {'key': "Number of OS HANG", "value": 0},
+                     {'key': "Number of Disk HANG", "value": 0}]}
+        print(json.dumps(stat, indent=4))
+        return
+
     stat["iohangOverview_overview"] = {
         "data": [{'key': 'Check Result', "value": "normal"},
-        {'key': "Number of OS HANG", "value": 0},
-        {'key': "Number of Disk HANG", "value": 0}]}
+                 {'key': "Number of OS HANG", "value": 0},
+                 {'key': "Number of Disk HANG", "value": 0}]}
     stat["summary"] = "diagnose results: Normal, No IO Hang"
+
     for s in raw.split('\n'):
         try:
             obj = json.loads(s)
@@ -25,10 +34,10 @@ def iosdiagJoinData(raw):
             continue
         dataSource = "singleIO_"
         if "percent" in str(obj):
-            disks = [s['diskname'] for s in obj['summary'] \
-                if s['diskname'] not in disks]
+            disks = [s['diskname'] for s in obj['summary']
+                     if s['diskname'] not in disks]
             stat["disks"]["data"] = \
-                [{'key':disks.index(d), 'value':d} for d in disks]
+                [{'key': disks.index(d), 'value': d} for d in disks]
             dataSource = "iohangOverview_"
         for d in disks:
             if (dataSource+d) not in stat.keys():
@@ -37,14 +46,16 @@ def iosdiagJoinData(raw):
                 if d in s['diskname']:
                     if "percent" not in str(obj):
                         s["hung ios"] = \
-                            sorted(s["hung ios"],\
-                                key=lambda e:float(e['abnormal'].split()[-2]),\
-                                reverse=True)[:10]
+                            sorted(s["hung ios"],
+                                   key=lambda e: float(
+                                       e['abnormal'].split()[-2]),
+                                   reverse=True)[:10]
                         stat[dataSource+d]["data"] = s["hung ios"]
                     else:
                         count = sum([io["count"] for io in s["hung ios"]])
                         status = "abnormal" if count else "normal"
-                        dataOverview = [{'key': 'Check for '+d, "value": status}]
+                        dataOverview = [
+                            {'key': 'Check for '+d, "value": status}]
                         maxCount = 0
                         maxDelayComp = ''
                         for io in s["hung ios"]:
@@ -64,11 +75,13 @@ def iosdiagJoinData(raw):
     s = json.dumps(stat, indent=4)
     print(s)
 
+
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()
