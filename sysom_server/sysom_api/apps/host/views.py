@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework import mixins
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotAuthenticated
 from django.conf import settings
 
 from apps.host import serializer
@@ -43,11 +43,19 @@ class HostModelViewSet(CommonModelViewSet,
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
-    def get_authenticators(self):
-        if self.request.method == "GET":
-            return []
-        else:
-            return [auth() for auth in self.authentication_classes]
+    def get_queryset(self):
+        """
+        通过Authentication后, 根据用户身份返回
+        改用户可以操作的机器
+        """
+        user = getattr(self.request, 'user', None)
+        if user is None:
+            raise NotAuthenticated(detail='No Authenticated!')
+        
+        queryset = super().get_queryset()
+        if not user.is_admin:
+            queryset = queryset.filter(created_by=user.pk)
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
