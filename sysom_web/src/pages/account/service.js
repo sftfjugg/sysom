@@ -2,10 +2,10 @@ import { request } from 'umi'
 
 const ACCOUNT_URL = '/api/v1/user/';
 const ROLE_URL = '/api/v1/role/';
-const token = localStorage.getItem('token');
 
 
 export async function getAccountList(params, options) {
+    const token = localStorage.getItem('token');
     return request(ACCOUNT_URL, {
         method: 'GET',
         headers: {
@@ -17,6 +17,7 @@ export async function getAccountList(params, options) {
 }
 
 export async function delAccount(id, options) {
+    const token = localStorage.getItem('token');
     return request(`${ACCOUNT_URL}${id}/`, {
         method: 'DELETE',
         headers: {
@@ -28,6 +29,7 @@ export async function delAccount(id, options) {
 }
 
 export async function addAccount(body, options) {
+    const token = localStorage.getItem('token');
     return request(ACCOUNT_URL, {
         method: 'POST',
         headers: {
@@ -40,6 +42,7 @@ export async function addAccount(body, options) {
 }
 
 export const updateAccount = async (userId, body, options) => {
+    const token = localStorage.getItem('token');
     return request(`${ACCOUNT_URL}${userId}/`, {
         method: 'PUT',
         headers: {
@@ -52,6 +55,7 @@ export const updateAccount = async (userId, body, options) => {
 }
 
 export const getRoles = async (params, options) => {
+    const token = localStorage.getItem('token');
     return request(ROLE_URL, {
         method: 'GET',
         headers: {
