@@ -18,7 +18,7 @@ install_package() {
 
     rpm -q --quiet make gcc patch bison flex openssl-devel elfutils elfutils-devel dwarves || yum install -y make gcc patch bison flex openssl-devel elfutils elfutils-devel dwarves || exit 1
 
-    rpm -q --quiet docker git || yum install -y docker git || exit 1
+    rpm -q --quiet docker git || yum install -y docker git || echo "Warngin : Docker is not installed in this machine!"
 }
 
 mount_nfs()

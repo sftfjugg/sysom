@@ -329,7 +329,7 @@ function do_kpatch_build(){
 
 	desc="hello world"
 	
-    cmd="${kpatch_build_path} --skip-compiler-check -a ${kernel_version} -n "${kpatch_id}" -s "${tmpdir}"/"${kernel_version}"/"${kernel_version}" -c "${CONFIGFILE}"  -o "${tmpdir}" "${tmpdir}"/"${kpatch_id}".patch " 2>&1 >> ${LOGFILE}
+    cmd="${kpatch_build_path} --skip-compiler-check -a ${kernel_version} -n "${kpatch_id}" -s "${tmpdir}"/"${kernel_version}"/"${kernel_version}" -c "${CONFIGFILE}"  -o "${tmpdir}" -v "${VMLINUX}" "${tmpdir}"/"${kpatch_id}".patch " 2>&1 >> ${LOGFILE}
 	echo $cmd
 	if [[ -z "$USERMODBUILDDIR" ]]; then
 		if [ -z ${target} ]; then
