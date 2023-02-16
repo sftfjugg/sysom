@@ -5,6 +5,14 @@ from lib.utils import JWT
 from django.conf import settings
 
 
+class UpdateUserSerializer(serializers.ModelSerializer):
+    is_admin = serializers.BooleanField(required=True, write_only=True)
+    role = serializers.ListField(read_only=True)
+    class Meta:
+        model = models.User
+        exclude = ['password']
+
+
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
 
