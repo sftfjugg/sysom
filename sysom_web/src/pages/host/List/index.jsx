@@ -293,6 +293,11 @@ const HostList = () => {
       hideInSearch: true,
     },
     {
+      title: <FormattedMessage id="pages.hostTable.created" defaultMessage="Created" />,
+      dataIndex: 'created',
+      hideInSearch: true,
+    },
+    {
       title: <FormattedMessage id="pages.hostTable.hostOption" defaultMessage="Operating" />,
       key: 'option',
       dataIndex: 'option',

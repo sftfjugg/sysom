@@ -60,6 +60,7 @@ export default {
   'pages.hostTable.port_required': '端口是必填项！',
   'pages.hostTable.script_required': '客户端部署脚本是必填项',
   'pages.hostTable.description': '描述',
+  'pages.hostTable.created': '创建者',
   'pages.hostTable.hostOption': '操作',
   'pages.hostTable.hostUpdatedAt': '更新时间',
   'pages.hostTable.edit': '编辑',
