@@ -35,8 +35,11 @@ class UserModelViewSet(
     }
 
     def get_serializer_class(self):
-        if self.request.method == "GET":
+        method = self.request.method
+        if method == 'GET':
             return serializer.UserListSerializer
+        elif method == 'PUT':
+            return serializer.UpdateUserSerializer
         else:
             return serializer.AddUserSerializer
 
