@@ -117,6 +117,7 @@ class HotfixAPIView(GenericViewSet,
         hotfix_name = request.data["hotfix_name"]
         hotfix_name.replace(" ","-")
         kernel_version = request.data['kernel_version']
+        patch_file_name = request.data['patch_file_name']
 
         # check if this kernel_version is customize
         try:
@@ -130,8 +131,8 @@ class HotfixAPIView(GenericViewSet,
             if re.search('an', release):
                 # this is a anolis kernel
                 os_type = "anolis"
-                patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1])
-                patch_file = request.data['upload'].split("\\")[-1]
+                patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, patch_file_name)
+                patch_file = patch_file_name
                 hotfix_necessary = 0
                 hotfix_risk = 2
                 try:
@@ -151,8 +152,8 @@ class HotfixAPIView(GenericViewSet,
             git_branch = self.function.get_info_from_version(kernel_version, "branch")
             devel_link = self.function.get_info_from_version(kernel_version, "devel_link")
             debuginfo_link = self.function.get_info_from_version(kernel_version, "debuginfo_link")
-            patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, request.data['upload'].split("\\")[-1])
-            patch_file = request.data['upload'].split("\\")[-1]
+            patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, patch_file_name)
+            patch_file = patch_file_name
             hotfix_necessary = 0
             hotfix_risk = 2
             try:
@@ -204,6 +205,7 @@ class HotfixAPIView(GenericViewSet,
                     )
             if status:
                 hotfix_object.building_status = self.build_wait
+                hotfix_object.created_at = human_datetime()
                 hotfix_object.save()
                 return success(result="success", message="rebuild success")
             else:
