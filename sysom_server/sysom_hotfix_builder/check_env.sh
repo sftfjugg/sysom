@@ -125,8 +125,10 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-echo "Checking kpatch build directory" >> $LOGFILE
+
+
+if [[ -n $LOGFILE ]] && echo "Checking kpatch build directory" >> $LOGFILE
 check_kpatch_build $KERNELVERSION
-echo "Checking Kernel Source of Anolis" >> $LOGFILE
+if [[ -n $LOGFILE ]] && echo "Checking Kernel Source of Anolis" >> $LOGFILE
 check_kernel_src $KERNELVERSION
-echo "Env Check Finished ..." >> $LOGFILE
+if [[ -n $LOGFILE ]] && echo "Env Check Finished ..." >> $LOGFILE

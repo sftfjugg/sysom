@@ -16,6 +16,7 @@ import shutil
 import re
 import sys
 import subprocess
+import configparser
 from cec_base.consumer import Consumer, dispatch_consumer
 from cec_base.admin import dispatch_admin
 
@@ -455,25 +456,38 @@ class HotfixBuilder():
                 else:
                     self.build_customize_kernel(parameters)
 
-                consumer.ack(event)
         except Exception as e:
             logger.error(str(e))
+            self.connector.change_building_status(hotfix_id, "failed")
             exit(1)
-            
+        finally:
+            consumer.ack(event)
 
-
+        
 
 if __name__ == "__main__":
-    cec_url="redis://127.0.0.1:6379"                  # Here configure the redis url to cec which port is 6379
-    hotfix_base="/hotfix_build/hotfix"                     # Here configure the hotfix working directory
-    nfs_dir_home="/usr/local/sysom/server/builder/hotfix"  # Here configure the nfs file storage directory home
+    config_file = "builder.ini"
     
-    # the sysom server account login info
-    server_ip = "http://127.0.0.1"
-    server_login_account = "account"
-    server_login_password = "password"
-    builder_hotfix_package_repo = "/hotfix/packages"
+    con = configparser.ConfigParser()
+    con.read(config_file, encoding='utf-8')
+
+    # cec
+    cec = dict(con.items('cec'))
+    cec_url = cec['cec_url']
     
+    # server config
+    sysom_server = dict(con.items('sysom_server'))
+    server_ip = sysom_server['server_ip']
+    server_login_account = sysom_server['account']
+    server_login_password = sysom_server['password']
+
+    # builder config
+    builder = dict(con.items('builder'))
+    hotfix_base = builder['hotfix_base']
+    nfs_dir_home = builder['nfs_dir_home']
+    builder_hotfix_package_repo = builder['package_repo']
+
+        
     # if this builder run in local, we should use the local repo directory instead of the nfs directory
     if re.search("127.0.0.1", server_ip):
         nfs_dir_home="/usr/local/sysom/server/builder/hotfix"
