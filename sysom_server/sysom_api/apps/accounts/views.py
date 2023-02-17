@@ -152,6 +152,11 @@ class AccountAuthView(GenericViewSet):
         ser = UserAuthSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         u, t = ser.create_token()
+
+        # 检查用户是否允许登录
+        if not u.allow_login:
+            return other_response(message='请联系管理员, 开启登录!', code=400)
+
         u_ser = serializer.UserListSerializer(instance=u, many=False)
         result = u_ser.data
         cache_user_token = cache.get(t)
