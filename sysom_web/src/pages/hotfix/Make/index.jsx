@@ -1,11 +1,13 @@
-import {  useRef } from 'react';
+import {  useRef, useState } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
-import { Popconfirm, message, Switch, Upload, Button, Select, Form, Collapse} from 'antd';
-import { getHotfixList, delHotfix, setFormal, uploadProps, normFile, createHotfix, downloadHotfixFile } from '../service';
-import { UploadOutlined } from '@ant-design/icons';
-import { DownloadOutlined } from '@ant-design/icons';
+import ProCard from '@ant-design/pro-card';
+import { Popconfirm, message, Switch, Upload, Button, Select, Input, Space, Form, Collapse} from 'antd';
+import { getHotfixList, delHotfix, setFormal, uploadProps, normFile, createHotfix, downloadHotfixFile, postRebuild } from '../service';
+import { UploadOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+
+const { Divider } = ProCard;
 
 const handleDelHotfix = async (record) => {
   const hide = message.loading('正在删除');
@@ -30,23 +32,29 @@ const changeFormal = (record) => {
   const token = localStorage.getItem('token');
   setFormal(record.id, token)
 };
-
+//创建
 const submitHotfix = (params) => {
+  const datapar = {
+    hotfix_name: params.hotfix_name,
+    kernel_version: params.kernel_version,
+    upload: params.patch[0].response.data.patch_name,
+    patch: params.patch,
+  }
   const token = localStorage.getItem('token');
-  createHotfix(token, params)
+  createHotfix(token, datapar)
 }
-
+// 下载
 const downloadHotfix = async (record) => {
   const res = await downloadHotfixFile(record.id);
   if (res) {
     const url = window.URL.createObjectURL(res.data);
-    const link = document.createElement('a'); //创建a标签
+    const link = document.createElement('a');
     link.style.display = 'none';
-    link.href = url; // 设置a标签路径
-    link.download = res.response.headers.get('content-disposition').split("attachment;filename=")[1]; //设置文件名， 也可以这种写法 （link.setAttribute('download', '名单列表.xls');
+    link.href = url;
+    link.download = res.response.headers.get('content-disposition').split("attachment;filename=")[1];
     document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(link.href); // 释放 URL对象
+    URL.revokeObjectURL(link.href);
     document.body.removeChild(link);
   }
 }
@@ -54,6 +62,15 @@ const downloadHotfix = async (record) => {
 const HotfixList = () => {
   const actionRef = useRef();
   const intl = useIntl();
+  // 重新构建
+  const hotfixMakeRebuild = async (data) => {
+    return await postRebuild(data.id).then(res => {
+      if(res.code === 200){
+        message.success('重新构建请求提交成功!');
+        actionRef.current?.reload();
+      }
+    });
+  }
 
   const columns = [
     {
@@ -121,7 +138,6 @@ const HotfixList = () => {
       },
     },
     {
-      // This is Operation column
       title: <FormattedMessage id="pages.hotfix.operation" defaultMessage="Operating" />,
       key: 'option',
       dataIndex: 'option',
@@ -148,6 +164,9 @@ const HotfixList = () => {
           </span>,
           <span key='log'>
             <a href={"/hotfix/hotfix_log/" + record.id} target="_blank">查看日志</a>
+          </span>,
+          <span key='rebuild'>
+            <a disabled={record.building_status == 2 ? false : true} onClick={() => hotfixMakeRebuild(record)}>重新构建</a>
           </span>
       ],
     },
@@ -222,8 +241,8 @@ const HotfixList = () => {
               onClick={() => {
                 const values = searchConfig?.form?.getFieldsValue();
                 submitHotfix(values);
-				actionRef.current?.reload();
-				searchConfig?.form?.resetFields();
+                actionRef.current?.reload();
+                searchConfig?.form?.resetFields();
               }}
             >
               创建

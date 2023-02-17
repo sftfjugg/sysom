@@ -1,4 +1,5 @@
 import { async } from "@antv/x6/lib/registry/marker/async";
+import { data } from "browserslist";
 import { request } from "umi";
 
 export async function getHotfixList(params, options) {
@@ -56,7 +57,6 @@ export async function setFormal(id, token, options) {
 }
 
 export const normFile = (e) => {
-  console.log('Upload event:', e);
   if (Array.isArray(e)) {
     return e;
   }
@@ -73,12 +73,12 @@ export const uploadProps = {
   method:"post",
   onChange({ file, fileList }) {
     if (file.status !== 'uploading') {
-      console.log(fileList[0]);
+      return fileList[0];
     }
-    if (file.status == 'done'){
-      console.log(`${file.name} file uploaded successfully`);
+    if (file.status === 'done'){
+      return file.response.data.patch_name;
     } else if (file.status === 'error') {
-      console.log(`${file.name} file upload failed.`);
+      return file.response.data.patch_name;
     }
   },
   maxCount:1,
@@ -95,7 +95,7 @@ export async function createHotfix(token, params, options) {
       'kernel_version': params.kernel_version,
       'hotfix_name': params.hotfix_name,
       'os_type': params.os_type,
-      'upload': params.upload
+      'patch_file_name': params.upload
     },
     ...(options || {}),
   })
@@ -152,6 +152,22 @@ export async function postChangeOsType(params, options){
   })
 }
 
+//rebuild
+export async function postRebuild(params, options){
+  const token = localStorage.getItem('token');
+  return request('/api/v1/hotfix/rebuild_hotfix/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
+    data: {
+      "hotfix_id": params
+    },
+    ...(options || {}),
+  })
+}
+
 export async function postChangeKernelVersion(params, options){
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/update_kernel_relation/', {
@@ -201,7 +217,6 @@ export async function getKernelVersionList(params, options) {
 
 export async function submitOSType(params, options) {
   const token = localStorage.getItem('token');
-  console.log(params)
   return request('/api/v1/hotfix/create_os_type_relation/', {
     method: 'POST',
     headers: {
@@ -219,7 +234,6 @@ export async function submitOSType(params, options) {
 }
 
 export async function submitKernelVersion(params, options) {
-  console.log(params)
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/create_kernel_relation/', {
   method: 'POST',
