@@ -9,6 +9,7 @@ class User(BaseModel):
     is_admin = models.BooleanField(default=False)
     is_agree = models.BooleanField(default=False)
     description = models.TextField()
+    allow_login = models.BooleanField(default=True)
 
     role = models.ManyToManyField(to='Role', verbose_name='关联角色', db_constraint=False)
 
