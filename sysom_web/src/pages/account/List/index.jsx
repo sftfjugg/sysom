@@ -9,7 +9,7 @@ import AccountForm from "../components/AcontForm";
 import EditAccountModal from "../components/EditAccountModal";
 import DeleteAccount from "../components/DeleteAccount";
 
-const IsAdmin = (props) => {
+const CustomSwitch = (props) => {
   return <Switch checked={props.isAdmin} disabled size="small" />;
 };
 
@@ -40,7 +40,20 @@ const UserList = () => {
       // valueType: 'switch',
       hideInSearch: true,
       render: (_, record) => [
-        <IsAdmin isAdmin={record.is_admin} key={record.id} />,
+        <CustomSwitch isAdmin={record.is_admin} key={record.id} />,
+      ],
+    },
+    {
+      title: (
+        <FormattedMessage
+          id="pages.account.allow_login"
+          defaultMessage="AllowLogin"
+        />
+      ),
+      dataIndex: "allow_login",
+      hideInSearch: true,
+      render: (_, record) => [
+        <CustomSwitch isAdmin={record.allow_login} key={record.id} />,
       ],
     },
     {

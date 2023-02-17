@@ -189,6 +189,7 @@ export default {
   'pages.account.username': '用户名',
   'pages.account.password': '密码',
   'pages.account.is_admin': '是否管理员',
+  'pages.account.allow_login': '允许登录',
   'pages.account.account_create_time': '创建时间',
   'pages.account.description': '简介',
   'pages.account.action': '操作',

@@ -107,6 +107,15 @@ const EditAccountModal = (props) => {
           />
         }
       />
+      <ProFormSwitch
+        name="allow_login"
+        label={
+          <FormattedMessage
+            id="pages.account.allow_login"
+            defaultMessage="allow login"
+          />
+        }
+      />
       <ProFormTextArea
         name="description"
         label={
