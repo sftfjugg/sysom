@@ -1,4 +1,5 @@
 import { async } from "@antv/x6/lib/registry/marker/async";
+import { data } from "browserslist";
 import { request } from "umi";
 
 export async function getHotfixList(params, options) {
@@ -56,7 +57,7 @@ export async function setFormal(id, token, options) {
 }
 
 export const normFile = (e) => {
-  console.log('Upload event:', e);
+  // console.log('Upload event:', e, "1111111111");
   if (Array.isArray(e)) {
     return e;
   }
@@ -74,11 +75,14 @@ export const uploadProps = {
   onChange({ file, fileList }) {
     if (file.status !== 'uploading') {
       console.log(fileList[0]);
+      return fileList[0];
     }
-    if (file.status == 'done'){
-      console.log(`${file.name} file uploaded successfully`);
+    if (file.status === 'done'){
+      console.log(`${file.response.data.patch_name} file uploaded successfully`);
+      return file.response.data.patch_name;
     } else if (file.status === 'error') {
-      console.log(`${file.name} file upload failed.`);
+      console.log(`${file.response.data.patch_name} file upload failed.`);
+      return file.response.data.patch_name;
     }
   },
   maxCount:1,
@@ -95,7 +99,7 @@ export async function createHotfix(token, params, options) {
       'kernel_version': params.kernel_version,
       'hotfix_name': params.hotfix_name,
       'os_type': params.os_type,
-      'upload': params.upload
+      'patch_file_name': params.upload
     },
     ...(options || {}),
   })
@@ -147,6 +151,24 @@ export async function postChangeOsType(params, options){
       "os_type": params.os_type_name,
       "git_repo": params.git_repo_link,
       "image": params.image,
+    },
+    ...(options || {}),
+  })
+}
+
+//////rebuild
+export async function postRebuild(params, options){
+  // console.log(params, options,"lll");
+  const token = localStorage.getItem('token');
+  return request('/api/v1/hotfix/rebuild_hotfix/', {
+    method: 'POST',
+    headers: {
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    },
+    data: {
+      "hotfix_id": params
     },
     ...(options || {}),
   })
