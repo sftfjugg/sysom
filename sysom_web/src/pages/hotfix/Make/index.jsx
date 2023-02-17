@@ -34,7 +34,6 @@ const changeFormal = (record) => {
 };
 //创建
 const submitHotfix = (params) => {
-  // console.log(params,"222222222");
   const datapar = {
     hotfix_name: params.hotfix_name,
     kernel_version: params.kernel_version,
@@ -241,7 +240,6 @@ const HotfixList = () => {
               key="create" type="primary"
               onClick={() => {
                 const values = searchConfig?.form?.getFieldsValue();
-                console.log(values,"66666666666");
                 submitHotfix(values);
                 actionRef.current?.reload();
                 searchConfig?.form?.resetFields();

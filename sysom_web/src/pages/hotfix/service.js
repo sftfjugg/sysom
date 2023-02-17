@@ -57,7 +57,6 @@ export async function setFormal(id, token, options) {
 }
 
 export const normFile = (e) => {
-  // console.log('Upload event:', e, "1111111111");
   if (Array.isArray(e)) {
     return e;
   }
@@ -74,14 +73,11 @@ export const uploadProps = {
   method:"post",
   onChange({ file, fileList }) {
     if (file.status !== 'uploading') {
-      console.log(fileList[0]);
       return fileList[0];
     }
     if (file.status === 'done'){
-      console.log(`${file.response.data.patch_name} file uploaded successfully`);
       return file.response.data.patch_name;
     } else if (file.status === 'error') {
-      console.log(`${file.response.data.patch_name} file upload failed.`);
       return file.response.data.patch_name;
     }
   },
@@ -156,14 +152,12 @@ export async function postChangeOsType(params, options){
   })
 }
 
-//////rebuild
+//rebuild
 export async function postRebuild(params, options){
-  // console.log(params, options,"lll");
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/rebuild_hotfix/', {
     method: 'POST',
     headers: {
-      // 'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Type': 'application/json',
       'Authorization': token,
     },
@@ -223,7 +217,6 @@ export async function getKernelVersionList(params, options) {
 
 export async function submitOSType(params, options) {
   const token = localStorage.getItem('token');
-  console.log(params)
   return request('/api/v1/hotfix/create_os_type_relation/', {
     method: 'POST',
     headers: {
@@ -241,7 +234,6 @@ export async function submitOSType(params, options) {
 }
 
 export async function submitKernelVersion(params, options) {
-  console.log(params)
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/create_kernel_relation/', {
   method: 'POST',
