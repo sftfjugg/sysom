@@ -86,7 +86,7 @@ class HeartBeatProcess(Process):
         logger.opt(lazy=True).info(f'检查机器: IP {instance.ip} 心跳')
 
         cmd = r"""
-        uname -r && cat /etc/system-release
+        uname -r && cat /etc/system-release && uname -m
         """
         params = dict()
         params['params'] = {
@@ -112,6 +112,7 @@ class HeartBeatProcess(Process):
                 if len(results) > 2:
                     host_info['release'] = results[1]
                     host_info['kernel_version'] = results[0]
+                    host_info['arch'] = results[2]
                     instance.host_info = json.dumps(host_info)
             # force_update => Use SQL's update statement to update
             # It can avoid the bug that the host will be inserted again
