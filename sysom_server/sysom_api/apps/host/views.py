@@ -1,15 +1,15 @@
 import re
 from loguru import logger
 import os
-import threading
 from typing import Any
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework import mixins
-from django.db.models import Q
+from django.db.models import Q, Count
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponse
 from rest_framework.exceptions import ValidationError, NotAuthenticated
 from django.conf import settings
 
@@ -24,6 +24,22 @@ from lib.excel import Excel
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
 from channel_job import default_channel_job_executor
+from prometheus_client import CollectorRegistry, generate_latest, Gauge
+
+
+registry = CollectorRegistry()
+gauge_machines = Gauge(
+    "sysom_api_host_machines",
+    "Number of physical machines currently managed by SysOM",
+    ['status'],
+    registry=registry
+)
+gauge_clusters = Gauge(
+    "sysom_api_host_clusters",
+    "Number of clusters currently managed by SysOM",
+    [],
+    registry=registry
+)
 
 
 class HostModelViewSet(CommonModelViewSet,
@@ -367,6 +383,25 @@ class HostModelViewSet(CommonModelViewSet,
         p = '((\d{1,2})|([01]\d{2})|(2[0-4]\d)|(25[0-5]))'
         pattern = '^' + '\.'.join([p]*4) + '$'
         return bool(re.match(pattern, ip))
+
+
+class MetricsViewSet(CommonModelViewSet):
+    authentication_classes = []
+
+    #########################################################################
+    # Used by Monitor API => Return prometheus format data
+    #########################################################################
+    def host_metrics(self, request):
+        # Get machines
+        host_count_set = HostModel.objects.values("status") \
+            .annotate(status_count=Count("status"))
+        for item in host_count_set:
+            gauge_machines.labels(status=item['status']) \
+                .set(item["status_count"])
+        # Get Clusters
+        gauge_clusters.set(Cluster.objects.count())
+
+        return HttpResponse(generate_latest(registry))
 
 
 class ClusterViewSet(CommonModelViewSet,
