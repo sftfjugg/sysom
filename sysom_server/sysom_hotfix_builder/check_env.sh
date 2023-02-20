@@ -127,8 +127,14 @@ done
 
 
 
-if [[ -n $LOGFILE ]] && echo "Checking kpatch build directory" >> $LOGFILE
+if [[ -n $LOGFILE ]]; then 
+    echo "Checking kpatch build directory" >> $LOGFILE
+fi
 check_kpatch_build $KERNELVERSION
-if [[ -n $LOGFILE ]] && echo "Checking Kernel Source of Anolis" >> $LOGFILE
+if [[ -n $LOGFILE ]]; then
+    echo "Checking Kernel Source of Anolis" >> $LOGFILE
+fi
 check_kernel_src $KERNELVERSION
-if [[ -n $LOGFILE ]] && echo "Env Check Finished ..." >> $LOGFILE
+if [[ -n $LOGFILE ]]; then
+    echo "Env Check Finished ..." >> $LOGFILE
+fi
