@@ -1,7 +1,16 @@
 #!/bin/bash -x
 GRAFANA_CONFIG=/etc/grafana/grafana.ini
+GRAFANA_SAMPLE_CONFIG=/usr/share/grafana/conf/sample.ini
 SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
 GRAFANA_SERVER=grafana-server
+
+##fix sometime grafana.ini not found##
+if [ ! -f $GRAFANA_CONFIG ]
+then
+    echo "sysom grafana: $GRAFANA_CONFIG file not found"
+    mkdir -p /etc/grafana
+    cp $GRAFANA_SAMPLE_CONFIG $GRAFANA_CONFIG
+fi
 
 ###grafana configure mysql###
 SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
