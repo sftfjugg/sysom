@@ -304,7 +304,7 @@ class HotfixBuilder():
 
         description = "hello world"
         # run the build hotfix script
-        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {}".format(
+        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {} ".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
             self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, source_code_repo
         )
@@ -391,7 +391,7 @@ class HotfixBuilder():
         description = "hello world"
         
         # run the build hotfix script
-        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {}".format(
+        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {} ".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
             self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, kernel_config, vmlinux, source_code_repo, git_branch
         )
@@ -455,7 +455,8 @@ class HotfixBuilder():
                     self.build_supported_kernel(parameters)
                 else:
                     self.build_customize_kernel(parameters)
-
+                logger.info(log_file)
+                consumer.ack(event)
         except Exception as e:
             logger.error(str(e))
             self.connector.change_building_status(hotfix_id, "failed")
