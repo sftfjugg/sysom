@@ -43,16 +43,24 @@ class HostModelViewSet(CommonModelViewSet,
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
+    def get_authenticators(self):
+        if self.request.method == "GET":
+            return []
+        else:
+            return [auth() for auth in self.authentication_classes]
+
     def get_queryset(self):
         """
         通过Authentication后, 根据用户身份返回
         改用户可以操作的机器
         """
+        queryset = super().get_queryset()
+        if self.request.method == "GET":
+            return queryset
         user = getattr(self.request, 'user', None)
         if user is None:
             raise NotAuthenticated(detail='No Authenticated!')
-        
-        queryset = super().get_queryset()
+
         if not user.is_admin:
             queryset = queryset.filter(created_by=user.pk)
         return queryset
