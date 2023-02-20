@@ -8,7 +8,7 @@ del_cron()
 main()
 {
     systemctl stop grafana-server
-    yum erase -y grafana
+    rpm -e grafana
     ##del grafana runtime conf
     rm -rf /etc/grafana/
 
@@ -16,8 +16,6 @@ main()
     ###use supervisorctl update to stop and clear services###
     supervisorctl update
 
-    systemctl stop influxdb
-    yum erase -y influxdb
     del_cron
 }
 
