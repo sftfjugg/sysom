@@ -26,22 +26,6 @@ from apps.alarm.views import _create_alarm_message
 from channel_job import default_channel_job_executor
 from prometheus_client import CollectorRegistry, generate_latest, Gauge
 
-
-registry = CollectorRegistry()
-gauge_machines = Gauge(
-    "sysom_api_host_machines",
-    "Number of physical machines currently managed by SysOM",
-    ['status'],
-    registry=registry
-)
-gauge_clusters = Gauge(
-    "sysom_api_host_clusters",
-    "Number of clusters currently managed by SysOM",
-    [],
-    registry=registry
-)
-
-
 class HostModelViewSet(CommonModelViewSet,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
@@ -392,6 +376,19 @@ class MetricsViewSet(CommonModelViewSet):
     # Used by Monitor API => Return prometheus format data
     #########################################################################
     def host_metrics(self, request):
+        registry = CollectorRegistry()
+        gauge_machines = Gauge(
+            "sysom_api_host_machines",
+            "Number of physical machines currently managed by SysOM",
+            ['status'],
+            registry=registry
+        )
+        gauge_clusters = Gauge(
+            "sysom_api_host_clusters",
+            "Number of clusters currently managed by SysOM",
+            [],
+            registry=registry
+        )
         # Get machines
         host_count_set = HostModel.objects.values("status") \
             .annotate(status_count=Count("status"))
