@@ -1,3 +1,4 @@
+
 # 简介
 致力于打造一个集主机管理、配置部署、监控报警、异常诊断、安全审计等一系列功能的自动化运维平台。
 探索创新的sysAK、ossre诊断工具及高效的LCC（Libbpf Compiler Collection）开发编译平台和netinfo网络抖动问题监控系统等，
@@ -43,7 +44,7 @@
   ```
 
   输出包含如下结果表示编译成功：
-  ![编译日志](https://foruda.gitee.com/images/1674977326579767317/e08cc909_643601.png "编译日志.png")
+  [外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-dbTldAef-1676539163032)(https://foruda.gitee.com/images/1674977326579767317/e08cc909_643601.png "编译日志.png")]
 
   执行完之后使用 `tree -L 1` 查看当前文件夹分布如下：
 
@@ -63,7 +64,39 @@
 
   > 注意：打包出的 release 包的命名格式为 `sysomRelease-xxx.tar.gz` ，其中 `xxx` 为打包时的时间，因此每次打包时生成的压缩包名称都是不同的
 
-### 1.3 部署
+### 1.3 热补丁编译机（builder）设置
+用户需要使用热补丁中心的功能时，需要配置热补丁的编译机。
+
+- 在单机部署的情况下，可以忽略本步骤，部署完毕即可使用
+- 在多机部署的情况下，需要配置sysom/script/server/6_sysom_hotfix_builder下的init.sh以及sysom_server/sysom_hotfix_builder下的builder.ini
+
+  ```bash
+  #! /bin/bash
+  SERVER_DIR="sysom_server"
+  HOTFIX_BUILDER_DIR=${SERVER_DIR}/sysom_hotfix_builder
+  VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
+  SERVICE_NAME=sysom-hotfix-builder
+  NFS_SERVER_IP=${SERVER_LOCAL_IP}  # 将NFS_SEVER_IP配置为sysom主服务器的ip地址
+  ```
+  
+  builder.ini
+  ```bash
+  [sysom_server]
+  server_ip = http://127.0.0.1  # sysom主服务器的ip地址
+  account = account             # 用于登录sysom的账户
+  password = password           # 用于登录sysom的密码
+
+  [cec]
+  cec_url = redis://127.0.0.1:6379  # 此处指向sysom主服务器的redis地址
+
+  [builder]
+  hotfix_base = /hotfix_build/hotfix                      # 此处配置hotfix构建的工作目录
+  nfs_dir_home = /usr/local/sysom/server/builder/hotfix   # 此处构建与sysom主服务器共享目录的路径
+  package_repo = /hotfix/packages                         # 缓存设定路径
+  ```
+> 注意：在多机部署的情况下，角色为builder的机器可以在/sysom/server/conf下仅使能[base]和[hotfix-builder]这两个服务即可
+
+### 1.4 部署
 
 - 解压 release 包
 
@@ -196,3 +229,5 @@
 
 - 默认的用户名密码：admin/123456
 - SysOM提供了 Demo 体验网站，可以访问：http://sysom.openanolis.cn/
+
+
