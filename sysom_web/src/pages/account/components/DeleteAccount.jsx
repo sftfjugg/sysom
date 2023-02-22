@@ -1,6 +1,8 @@
-import { Popconfirm, message, Button } from "antd";
+import { message, Button, Checkbox, Modal } from "antd";
 import { delAccount } from "../service";
 import { FormattedMessage } from "umi";
+
+const { confirm } = Modal;
 
 const handleDelAccount = async (record) => {
   const hide = message.loading(
@@ -10,7 +12,12 @@ const handleDelAccount = async (record) => {
     let res = await delAccount(record.id);
     hide();
     if (res.code === 200) {
-      message.success(<FormattedMessage id="pages.account.delete_success" defaultMessage="delete success" />);
+      message.success(
+        <FormattedMessage
+          id="pages.account.delete_success"
+          defaultMessage="delete success"
+        />
+      );
       return true;
     } else {
       message.error(`删除失败: ${res.message}`);
@@ -20,6 +27,17 @@ const handleDelAccount = async (record) => {
     hide();
     return false;
   }
+};
+
+const DeletePrompt = (props) => {
+  return (
+    <>
+      <p>确定删除该账号？</p>
+      <p>
+        <Checkbox>该用户下有{props.count}台机器, 是否需要一并删除?</Checkbox>
+      </p>
+    </>
+  );
 };
 
 const DeleteAccount = (props) => {
@@ -41,34 +59,22 @@ const DeleteAccount = (props) => {
       </Button>
     );
   }
+
+  const showDeleteConfirm = () => {
+    confirm({
+      content: <DeletePrompt count={record.host_count} />,
+      okText: "删除",
+      cancelText: "我再想想",
+      onOk: async () => {
+        await handleDelAccount(record);
+        props.onAddAcountSuccess();
+      }
+    });
+  };
   return (
-    <>
-      <Popconfirm
-        title={
-          <FormattedMessage
-            id="pages.account.is_delete_account"
-            defaultMessage="Is Delete Account?"
-          />
-        }
-        okText={
-          <FormattedMessage id="pages.account.yes" defaultMessage="yes" />
-        }
-        cancelText={
-          <FormattedMessage
-            id="pages.account.think"
-            defaultMessage="I think it over"
-          />
-        }
-        onConfirm={async () => {
-          await handleDelAccount(record);
-          props.onAddAcountSuccess();
-        }}
-      >
-        <Button type="link">
-          <FormattedMessage id="pages.account.delete" defaultMessage="delete" />
-        </Button>
-      </Popconfirm>
-    </>
+    <Button type="link" onClick={showDeleteConfirm}>
+      <FormattedMessage id="pages.account.delete" defaultMessage="delete" />
+    </Button>
   );
 };
 
