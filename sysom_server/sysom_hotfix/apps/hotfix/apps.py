@@ -17,7 +17,7 @@ class HotfixConfig(AppConfig):
         try:
             hotfix_cec_topic_name = "hotfix_job"
             post_migrate.connect(initialization_subscribe, sender=self)
-            admin = dispatch_admin(settings.HOTFIX_CEC_URL)
+            admin = dispatch_admin(settings.SYSOM_CEC_URL)
             if admin.create_topic(hotfix_cec_topic_name):
                 logger.info(">>>>>>>> INIT_HOTFIX_VIEW : create hotfix_job cec topic success")
         except Exception as e:
