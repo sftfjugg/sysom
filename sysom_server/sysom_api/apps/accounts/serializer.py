@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from loguru import logger
 
 from . import models
 from lib.utils import JWT
 from django.conf import settings
+from apps.host.models import HostModel
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):
@@ -15,6 +17,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
 class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+    host_count = serializers.SerializerMethodField()
 
     class Meta:
         model = models.User
@@ -23,6 +26,9 @@ class UserListSerializer(serializers.ModelSerializer):
     def get_role(self, instance: models.User):
         roles = instance.role.all()
         return RoleListSerializer(instance=roles, many=True).data
+
+    def get_host_count(self, obj):
+        return HostModel.objects.filter(created_by=obj.pk).count()
 
 
 class AddUserSerializer(serializers.ModelSerializer):
