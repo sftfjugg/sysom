@@ -1,5 +1,6 @@
 import json
 from django.db import models
+from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 from lib.base_model import BaseModel, human_datetime
 from apps.host.models import HostModel
@@ -123,3 +124,9 @@ class VulJobModel(models.Model):
 
     def __str__(self):
         return f'Vulnerability scanning job：{self.job_name} in {self.job_start_time}'
+
+
+@receiver(models.signals.post_delete, sender=SaFixHistToHost)
+def _on_host_delete(sender, instance: SaFixHistToHost, **kwargs):
+    """使用signal级联删除SaFixHisToHost相关修复记录"""
+    instance.sa_fix_hist.delete()

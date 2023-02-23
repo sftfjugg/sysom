@@ -25,6 +25,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from apps.alarm.views import _create_alarm_message
 from channel_job import default_channel_job_executor
 from prometheus_client import CollectorRegistry, generate_latest, Gauge
+from django.db.utils import IntegrityError
+
 
 class HostModelViewSet(CommonModelViewSet,
                        mixins.ListModelMixin,
@@ -147,6 +149,16 @@ class HostModelViewSet(CommonModelViewSet,
         self.perform_destroy(instance)
         self.client_deploy_cmd_delete(instance)
         return ser
+    
+    def perform_destroy(self, instance):
+        """
+        重新主机删除功能, 当删除主机出现IntegrityError,
+        将主机ID交给安全中心做级联删除。
+        """
+        try:
+            instance.delete()
+        except IntegrityError:
+            pass
 
     def check_instance_exist(self, request, *args, **kwargs):
         instance = self.get_queryset().filter(**kwargs).first()
