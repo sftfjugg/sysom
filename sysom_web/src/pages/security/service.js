@@ -5,7 +5,7 @@ const token = localStorage.getItem('token');
 
 // 漏洞中心
   export async function listApi(options) {
-    const msg= await  request('/api/v1/vul', {
+    const msg= await request('/api/v1/vul/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
