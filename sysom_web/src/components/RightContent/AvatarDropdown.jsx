@@ -54,7 +54,7 @@ const AvatarDropdown = ({ menu }) => {
         })
         return;
       }
-      // history.push(`/account/${key}`);
+      history.push(`/account/${key}`);
     },
     [setInitialState],
   );
@@ -82,10 +82,10 @@ const AvatarDropdown = ({ menu }) => {
 
   const menuHeaderDropdown = (
     <Menu className={styles.menu} selectedKeys={[]} onClick={onMenuClick}>
-      {menu && (
+      {currentUser.is_admin && (
         <Menu.Item key="center">
           <UserOutlined />
-          个人中心
+          用户中心
         </Menu.Item>
       )}
       {menu && (
