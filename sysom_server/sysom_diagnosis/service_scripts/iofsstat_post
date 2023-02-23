@@ -4,6 +4,7 @@ import sys
 import json
 import random
 
+
 def bwToValue(bw):
     units = ["B", "KB", "MB", "GB", "TB", "PB"]
     if str(bw) == '0':
@@ -11,6 +12,7 @@ def bwToValue(bw):
     for i in range(5, -1, -1):
         if units[i] in bw:
             return float(bw.split(units[i])[0]) * pow(1024, i)
+
 
 def humConvert(value):
     units = ["B", "KB", "MB", "GB", "TB", "PB"]
@@ -22,6 +24,7 @@ def humConvert(value):
         if (value / size) < 1:
             return "%.1f%s/s" % (value, units[i])
         value = value / size
+
 
 def ioutilDataPaser(data, resultInfo):
     tUnit = None
@@ -39,7 +42,7 @@ def ioutilDataPaser(data, resultInfo):
                 tUnit = ds['bps_rd'].split('/')[1]
         if key not in resultInfo.keys():
             resultInfo.setdefault(key,
-                {'disk':ds['device'], 'maxIops':0, 'maxBps':0, 'file':ds['file']})
+                                  {'disk': ds['device'], 'maxIops': 0, 'maxBps': 0, 'file': ds['file']})
         resultInfo[key]['maxBps'] = max(bps, resultInfo[key]['maxBps'])
         resultInfo[key]['maxIops'] = max(iops, resultInfo[key]['maxIops'])
         if resultInfo[key]['maxBps'] != bps or resultInfo[key]['maxIops'] != iops:
@@ -48,7 +51,7 @@ def ioutilDataPaser(data, resultInfo):
                 del resultInfo[key]['bufferio']
         if 'bufferio' in ds.keys() and 'bufferio' not in resultInfo[key].keys():
             resultInfo[key].setdefault('bufferio', ds['bufferio'])
-    return totalIops,totalBw,tUnit
+    return totalIops, totalBw, tUnit
 
 
 def ioutilReport(resultInfo, tUnit, diagret):
@@ -66,28 +69,28 @@ def ioutilReport(resultInfo, tUnit, diagret):
                         continue
                     kTasklist.append(i['task'])
                     file += ('%s Wrbw %s disk %s file %s;' %
-                        (i['task'], i["Wrbw"], i["device"], i["file"]))
+                             (i['task'], i["Wrbw"], i["device"], i["file"]))
             if len(kTasklist):
                 file = '(Write bio from: '+file+')'
             if top == 1:
                 suggestPS = '(Found \'kworker\' flush dirty pages, Try to reduce'\
                     ' the buffer-IO write?%s or check the config /proc/sys/vm/'\
-                    '{dirty_ratio,dirty_background_ratio} too small?)' %(
+                    '{dirty_ratio,dirty_background_ratio} too small?)' % (
                         '('+';'.join(kTasklist)+')' if len(kTasklist) else '')
         maxBps = humConvert(val['maxBps']).replace('s', tUnit)
-        reason += ('%d. task[%s], access disk %s with iops:%s, bps:%s%s; \n' %(
-            top, str(key.rsplit(':',1)[0]), str(val['disk']),
+        reason += ('%d. task[%s], access disk %s with iops:%s, bps:%s%s; \n' % (
+            top, str(key.rsplit(':', 1)[0]), str(val['disk']),
             str(val['maxIops']), maxBps, file))
         if top == 1 and suggestPS == '':
-            suggestPS = '(Found task \'%s\')' %(str(key.rsplit(':',1)[0]))
+            suggestPS = '(Found task \'%s\')' % (str(key.rsplit(':', 1)[0]))
         top += 1
     suggest = \
         'Optimize the tasks that contributes the most IO flow%s' % suggestPS
-    return [{'result':diagret, 'reason':reason, 'solution':suggest}]
+    return [{'result': diagret, 'reason': reason, 'solution': suggest}]
 
 
 def dataToSummary(raw):
-    resultInfo= {}
+    resultInfo = {}
     totalBw = 0
     maxIops = maxBw = 0
     minIops = minBw = sys.maxsize
@@ -100,7 +103,7 @@ def dataToSummary(raw):
             stat = json.loads(data)
         except Exception:
             return
-        iops,bw,tUnit = ioutilDataPaser(stat, resultInfo)
+        iops, bw, tUnit = ioutilDataPaser(stat, resultInfo)
         maxIops = max(maxIops, iops)
         minIops = min(minIops, iops)
         maxBw = max(maxBw, bw)
@@ -108,8 +111,8 @@ def dataToSummary(raw):
         totalBw += bw
 
     if resultInfo:
-        content = 'Iops:'+str(minIops)+'~'+str(maxIops)+\
-            ', Bps:'+humConvert(minBw).replace('s', tUnit)+\
+        content = 'Iops:'+str(minIops)+'~'+str(maxIops) +\
+            ', Bps:'+humConvert(minBw).replace('s', tUnit) +\
             '~'+humConvert(maxBw).replace('s', tUnit)
         diagret = 'detect ('+content+')'
         rep = ioutilReport(resultInfo, tUnit, diagret)
@@ -139,14 +142,14 @@ def getDisksFromDiskstats(diskstats):
                 disks.append(o['diskname'])
     return disks
 
-def iofsstatJoinData(raw):
-    if raw.find("diskstats") == -1:
-        print({"status": "fail"})
-        return
 
+def iofsstatJoinData(raw):
     stat = {}
     stat["disks"] = {"data": []}
     stat["overview"] = {"data": []}
+    if raw.find("diskstats") == -1:
+        print(json.dumps(stat))
+        return
     stat["overview"]["data"] = dataToSummary(raw)
     stat["summary"] = "diagnose results: No IO traffic detected"
     if stat["overview"]["data"]:
@@ -164,7 +167,7 @@ def iofsstatJoinData(raw):
         if "diskstats" in str(s):
             disks = getDisksFromDiskstats(obj["diskstats"])
             stat["disks"]["data"] = \
-                [{'key':disks.index(d), 'value':d} for d in disks]
+                [{'key': disks.index(d), 'value': d} for d in disks]
             for d in disks:
                 if ("diskIOstat_"+d) not in stat.keys():
                     stat["diskIOstat_"+d] = {"data": []}
@@ -188,7 +191,8 @@ def iofsstatJoinData(raw):
                                 pat[key] = '0'
                             else:
                                 pat[key] = \
-                                    format(value/(o['iops_wr']*1.0)*100, '.2f')+'%'
+                                    format(
+                                        value/(o['iops_wr']*1.0)*100, '.2f')+'%'
                             patKey.append(key)
                     for key in patKey:
                         del o[key]
@@ -198,7 +202,7 @@ def iofsstatJoinData(raw):
                     if 'bufferio' in o.keys():
                         o['children'] = o['bufferio']
                         for e in o['children']:
-                            task = e['task'].rsplit(':',2)
+                            task = e['task'].rsplit(':', 2)
                             e['comm'] = task[0]
                             e['tgid:pid'] = task[1]+':'+task[2]
                             e['bps_wr'] = e['Wrbw']
@@ -211,11 +215,13 @@ def iofsstatJoinData(raw):
     s = json.dumps(stat, indent=4)
     print(s)
 
+
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()
