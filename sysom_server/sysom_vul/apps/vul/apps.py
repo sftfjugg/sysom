@@ -14,9 +14,15 @@ class VulConfig(AppConfig):
         from django.conf import settings
         if ('runserver' in sys.argv or 'manage.py' not in sys.argv):
             from channel_job.job import default_channel_job_executor
+            from .executor import VulListener
             # 初始化 channel_job sdk
             default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
             default_channel_job_executor.start()
+
+            try:
+                VulListener().start()
+            except Exception as e:
+                logger.exception(e)
         logger.info(">>> Vul module loading success")
 
 
