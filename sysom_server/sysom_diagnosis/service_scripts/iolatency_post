@@ -5,17 +5,23 @@ import json
 import random
 import re
 
-def iosdiagJoinData(raw):
-    if raw.startswith('fail'):
-        data = {"status":"fail"}
-        print(data)
 
+def iosdiagJoinData(raw):
     disks = []
     stat = {}
-    stat["disks"] = {"data": [{'key': 0, 'value':'overview'}]}
+    stat["disks"] = {"data": [{'key': 0, 'value': 'overview'}]}
+
+    if raw.startswith('fail'):
+        stat['summary'] = "diagnose results: failed"
+        stat["iolatencyOverview_overview"] = {
+            "data": [{'key': 'Check Result', "value": "failed"},
+                     {'key': "IOs of over threshold", "value": 0}]}
+        print(json.dumps(stat, indent=4))
+        return
+
     stat["iolatencyOverview_overview"] = {
         "data": [{'key': 'Check Result', "value": "normal"},
-        {'key': "IOs of over threshold", "value": 0}]}
+                 {'key': "IOs of over threshold", "value": 0}]}
     stat["summary"] = "diagnose results: Normal, No slow IO over threshold"
     for s in raw.split('\n'):
         try:
@@ -23,20 +29,21 @@ def iosdiagJoinData(raw):
         except Exception:
             continue
         if "percent" in str(obj):
-            disks = [s['diskname'] for s in obj['summary'] \
-                if s['diskname'] not in disks]
+            disks = [s['diskname'] for s in obj['summary']
+                     if s['diskname'] not in disks]
             stat["disks"]["data"] = \
-                [{'key':disks.index(d), 'value':d} for d in disks]
+                [{'key': disks.index(d), 'value': d} for d in disks]
             for s in obj['summary']:
                 diskIdx = 'iolatencyDistribution_'+s['diskname']
                 if diskIdx not in stat.keys():
                     stat[diskIdx] = {"data": []}
                 maxPercent = sorted(s['delays'],
-                            key=lambda e: (float(e['percent'].strip('%'))),
-                            reverse=True)[0]['percent']
+                                    key=lambda e: (
+                                        float(e['percent'].strip('%'))),
+                                    reverse=True)[0]['percent']
                 for delay in s['delays']:
-                    text = 'Max: '+str(round(delay['max'], 1))+\
-                        ' AVG: '+str(round(delay['avg'], 1))+\
+                    text = 'Max: '+str(round(delay['max'], 1)) +\
+                        ' AVG: '+str(round(delay['avg'], 1)) +\
                         ' Min: '+str(round(delay['min'], 1))
                     node = {
                         "key": delay['component'], "title": delay['component'],
@@ -64,10 +71,10 @@ def iosdiagJoinData(raw):
                 for delay in slowIOs:
                     idx += 1
                     if idx > 0 and delay["time"] == slowIOs[idx-1]["time"]:
-                        if (isSeqData and delay["totaldelay"] <= \
-                            slowIOs[idx-1]["totaldelay"]) or (not isSeqData and
-                            float(re.split(':| ', delay['abnormal'])[-2]) <= \
-                            float(re.split(':| ', slowIOs[idx-1]['abnormal'])[-2])):
+                        if (isSeqData and delay["totaldelay"] <= slowIOs[idx-1]["totaldelay"]) \
+                            or (not isSeqData and
+                                float(re.split(':| ', delay['abnormal'])[-2]) <=
+                                float(re.split(':| ', slowIOs[idx-1]['abnormal'])[-2])):
                             dupRm.append(delay)
                         else:
                             dupRm.append(slowIOs[idx-1])
@@ -77,9 +84,10 @@ def iosdiagJoinData(raw):
 
                 if not isSeqData:
                     slowIOs = \
-                        sorted(slowIOs,\
-                            key=lambda e:float(re.split(':| ', e['abnormal'])[-2]),\
-                            reverse=True)[:10]
+                        sorted(slowIOs,
+                               key=lambda e: float(
+                                   re.split(':| ', e['abnormal'])[-2]),
+                               reverse=True)[:10]
                     stat[diskIdx]["data"] = slowIOs
 
                 else:
@@ -94,7 +102,7 @@ def iosdiagJoinData(raw):
             count = len(stat['singleIOMetrics_'+d]["data"])
             stat["iolatencyOverview_"+d] = {
                 "data": [{'key': 'Check Result', "value": "abnormal"},
-                {'key': "IOs of over threshold", "value": count}]}
+                         {'key': "IOs of over threshold", "value": count}]}
         if 'iolatencyDistribution_'+d in stat.keys():
             if 'Abnormal' not in stat["summary"]:
                 stat["summary"] = "diagnose results: Abnormal, "
@@ -109,11 +117,13 @@ def iosdiagJoinData(raw):
     s = json.dumps(stat, indent=4)
     print(s)
 
+
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()
