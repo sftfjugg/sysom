@@ -36,7 +36,7 @@ const VmcoreCard = () => {
         </ProCard>
         <Divider type={responsive ? 'horizontal' : 'vertical'} />
         <ProCard>
-          <Statistic title="日宕机率" value={StatisticList?.rate_7days} precision={2} suffix="%" valueStyle={{ color: "red" }} />
+          <Statistic title="最近7天宕机率" value={StatisticList?.rate_7days} precision={2} suffix="%" valueStyle={{ color: "red" }} />
         </ProCard>
       </ProCard.Group>
     </RcResizeObserver>
