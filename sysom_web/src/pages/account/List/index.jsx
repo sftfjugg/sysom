@@ -8,6 +8,7 @@ import { getAccountList } from "../service";
 import AccountForm from "../components/AcontForm";
 import EditAccountModal from "../components/EditAccountModal";
 import DeleteAccount from "../components/DeleteAccount";
+import ResetPassword from "../components/ResetPassword";
 
 const CustomSwitch = (props) => {
   return <Switch checked={props.isAdmin} disabled size="small" />;
@@ -100,6 +101,11 @@ const UserList = () => {
           onAddAcountSuccess={() => {
             accountListTableActionRef.current?.reload();
           }}
+        />,
+        <ResetPassword
+          key="reset"
+          record={record}
+          currentUser={currentUser}
         />,
       ],
     },
