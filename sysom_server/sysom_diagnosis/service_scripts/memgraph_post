@@ -11,11 +11,17 @@ def memgraph_result(raw):
     raw = fd.read().strip()
     fd.close()
     '''
-    outdata = {}
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
     if raw.find("memGraph") == -1:
-        outdata = {"status": "fail"}
-        print(outdata)
+        postprocess_result["code"] = 1
+        postprocess_result["err_msg"] = f"Diagnosis failed:\n{raw}"
+        print(json.dumps(postprocess_result, indent=4))
         return
+
     rawdata = json.loads(raw)
 
     memgraph = {}
@@ -62,7 +68,8 @@ def memgraph_result(raw):
             "RssAnon": item["RssAnon"], "RssFile": item["RssFile"]}
         for index, item in enumerate(rawdata["memTop"])]
 
-    print(json.dumps(newmemgraph, ensure_ascii=False))
+    postprocess_result["result"] = newmemgraph
+    print(json.dumps(postprocess_result, ensure_ascii=False))
 
 
 def extract_params():
@@ -70,6 +77,7 @@ def extract_params():
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()

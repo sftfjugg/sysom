@@ -1,15 +1,21 @@
 #!/usr/bin/python3
 # coding=utf-8
-import sys,os
+import sys
 import json
-import traceback
+
 if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-ERR_LEVEL = ["none","info","warning","error","critical","fatal"]
+ERR_LEVEL = ["none", "info", "warning", "error", "critical", "fatal"]
+
 
 def ossre_to_sysom_json(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
     retdata = {}
     retdata["check_success"] = 0
     retdata["CONFIG"] = {}
@@ -80,9 +86,10 @@ def ossre_to_sysom_json(raw):
     retdata["HW"]["DMESG"] = {}
     retdata["HW"]["DMESG"]["summary"] = "未发现异常"
     retdata["HW"]["DMESG"]["level"] = "none"
+    postprocess_result["result"] = retdata
     try:
         if "ossre" not in raw:
-            print (json.dumps(retdata, indent=4,ensure_ascii=False))
+            print(json.dumps(postprocess_result, indent=4, ensure_ascii=False))
         else:
             rawdata_json = json.loads(raw)
             retdata["check_success"] = 1
@@ -90,26 +97,36 @@ def ossre_to_sysom_json(raw):
             if "CONFIG" in cust:
                 for item in cust["CONFIG"]:
                     if retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] == "未发现异常":
-                        retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] = ""
-                    retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] += "%s\n"%cust["CONFIG"][item]["name"]
+                        retdata["CONFIG"][cust["CONFIG"][item]
+                                          ["category"]]["summary"] = ""
+                    retdata["CONFIG"][cust["CONFIG"][item]["category"]
+                                      ]["summary"] += "%s\n" % cust["CONFIG"][item]["name"]
                     if len(cust["CONFIG"][item]["desc"]) != 0:
-                        retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] += "%s\n"%cust["CONFIG"][item]["desc"]
-                    retdata["CONFIG"][cust["CONFIG"][item]["category"]]["summary"] += "%s\n"%cust["CONFIG"][item]["summary"]
+                        retdata["CONFIG"][cust["CONFIG"][item]["category"]
+                                          ]["summary"] += "%s\n" % cust["CONFIG"][item]["desc"]
+                    retdata["CONFIG"][cust["CONFIG"][item]["category"]
+                                      ]["summary"] += "%s\n" % cust["CONFIG"][item]["summary"]
 
                     if ERR_LEVEL.index(cust["CONFIG"][item]["level"]) > ERR_LEVEL.index(retdata["CONFIG"][cust["CONFIG"][item]["category"]]["level"]):
-                        retdata["CONFIG"][cust["CONFIG"][item]["category"]]["level"] = cust["CONFIG"][item]["level"]
+                        retdata["CONFIG"][cust["CONFIG"][item]["category"]
+                                          ]["level"] = cust["CONFIG"][item]["level"]
 
             if "SLI" in cust:
                 for item in cust["SLI"]:
                     if retdata["SLI"][cust["SLI"][item]["category"]]["summary"] == "未发现异常":
-                        retdata["SLI"][cust["SLI"][item]["category"]]["summary"] = ""
-                    retdata["SLI"][cust["SLI"][item]["category"]]["summary"] += "%s\n"%cust["SLI"][item]["name"]
+                        retdata["SLI"][cust["SLI"][item]
+                                       ["category"]]["summary"] = ""
+                    retdata["SLI"][cust["SLI"][item]["category"]
+                                   ]["summary"] += "%s\n" % cust["SLI"][item]["name"]
                     if len(cust["SLI"][item]["desc"]) != 0:
-                        retdata["SLI"][cust["SLI"][item]["category"]]["summary"] += "%s\n"%cust["SLI"][item]["desc"]
-                    retdata["SLI"][cust["SLI"][item]["category"]]["summary"] += "%s\n"%cust["SLI"][item]["summary"]
+                        retdata["SLI"][cust["SLI"][item]["category"]
+                                       ]["summary"] += "%s\n" % cust["SLI"][item]["desc"]
+                    retdata["SLI"][cust["SLI"][item]["category"]
+                                   ]["summary"] += "%s\n" % cust["SLI"][item]["summary"]
 
                     if ERR_LEVEL.index(cust["SLI"][item]["level"]) > ERR_LEVEL.index(retdata["SLI"][cust["SLI"][item]["category"]]["level"]):
-                        retdata["SLI"][cust["SLI"][item]["category"]]["level"] = cust["SLI"][item]["level"]
+                        retdata["SLI"][cust["SLI"][item]["category"]
+                                       ]["level"] = cust["SLI"][item]["level"]
 
             if "ISSUE" in cust:
                 for item in cust["ISSUE"]:
@@ -127,8 +144,8 @@ def ossre_to_sysom_json(raw):
 
                     if retdata["ISSUE"][level_idx]["summary"] == "未发现异常":
                         retdata["ISSUE"][level_idx]["summary"] = ""
-                    retdata["ISSUE"][level_idx]["summary"] += "%s\n"%cust["ISSUE"][item]["summary"]
-                    retdata["ISSUE"][level_idx]["summary"] += "%s\n\n"%cust["ISSUE"][item]["solution"]
+                    retdata["ISSUE"][level_idx]["summary"] += "%s\n" % cust["ISSUE"][item]["summary"]
+                    retdata["ISSUE"][level_idx]["summary"] += "%s\n\n" % cust["ISSUE"][item]["solution"]
                     retdata["ISSUE"][level_idx]["level"] = level
 
             if "LOG" in cust:
@@ -147,33 +164,35 @@ def ossre_to_sysom_json(raw):
 
                     if retdata["LOG"][level_idx]["summary"] == "未发现异常":
                         retdata["LOG"][level_idx]["summary"] = ""
-                    retdata["LOG"][level_idx]["summary"] += "%s\n%s\n"%(cust["LOG"][item]["name"],cust["LOG"][item]["desc"])
-                    retdata["LOG"][level_idx]["summary"] += "%s\n"%cust["LOG"][item]["summary"]
+                    retdata["LOG"][level_idx]["summary"] += "%s\n%s\n" % (
+                        cust["LOG"][item]["name"], cust["LOG"][item]["desc"])
+                    retdata["LOG"][level_idx]["summary"] += "%s\n" % cust["LOG"][item]["summary"]
                     retdata["LOG"][level_idx]["level"] = level
 
             if "HW" in cust:
                 for item in cust["HW"]:
                     level = cust["HW"][item]["level"]
 
-
                     if retdata["HW"]["DMESG"]["summary"] == "未发现异常":
                         retdata["HW"]["DMESG"]["summary"] = ""
                     if ERR_LEVEL.index(cust["HW"][item]["level"]) > ERR_LEVEL.index(retdata["HW"]["DMESG"]["level"]):
                         retdata["HW"]["DMESG"]["level"] = cust["HW"][item]["level"]
 
-                    retdata["HW"]["DMESG"]["summary"] += "%s\n%s\n"%(cust["HW"][item]["name"],cust["HW"][item]["desc"])
-                    retdata["HW"]["DMESG"]["summary"] += "%s\n"%cust["HW"][item]["summary"]
+                    retdata["HW"]["DMESG"]["summary"] += "%s\n%s\n" % (
+                        cust["HW"][item]["name"], cust["HW"][item]["desc"])
+                    retdata["HW"]["DMESG"]["summary"] += "%s\n" % cust["HW"][item]["summary"]
 
-            print (json.dumps(retdata, indent=4,ensure_ascii=False))
+            print(json.dumps(postprocess_result, indent=4, ensure_ascii=False))
     except:
-        print (json.dumps(retdata, indent=4,ensure_ascii=False))
-        #traceback.print_exc()
+        print(json.dumps(postprocess_result, indent=4, ensure_ascii=False))
+
 
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()

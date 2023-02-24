@@ -2,15 +2,26 @@
 # coding=utf-8
 import sys
 import json
-import random
+
 
 def iosdiagJoinData(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
     if raw.startswith('fail'):
-        data = {"status":"fail"}
-    elif 'summary' not in raw:
-        data = {"status":"success","IO timeout":"false"}
+        postprocess_result["code"] = 1
+        postprocess_result["err_msg"] = f"Diagnosis failed:\n{raw}"
+        print(json.dumps(postprocess_result, indent=4))
+        return
+
+    raw = raw.strip()
+
+    if 'summary' not in raw:
+        data = {"status": "success", "IO timeout": "false"}
     else:
-        data = {"status":"success","IO timeout":"true","stat":[],"seq":[]}
+        data = {"status": "success", "IO timeout": "true", "stat": [], "seq": []}
         for s in raw.split('\n'):
             obj = json.loads(s)
             if "percent" in str(obj):
@@ -25,14 +36,17 @@ def iosdiagJoinData(raw):
                         del seq["slow ios"][idx]
                     else:
                         del seq["slow ios"][idx-1]
-    s = json.dumps(data, indent=4)
+    postprocess_result["result"] = data
+    s = json.dumps(postprocess_result, indent=4)
     print(s)
+
 
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()

@@ -2,18 +2,23 @@
 # coding=utf-8
 import sys
 import json
-import random
+
 
 def debug_log(msg):
     log_file = "/tmp/.file.txt"
     fd = open(log_file, 'w+')
     fd.write(str(msg))
     fd.close()
-    
+
 
 def filecache_result(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
     rawdata = json.loads(raw)
-    cache = {"podmem":{"data":[]}}
+    cache = {"podmem": {"data": []}}
     cache_type = rawdata['type']
     podid = cache_type
     data = rawdata['data']
@@ -39,7 +44,8 @@ def filecache_result(raw):
                 row['ext'] = ext
                 i = i + 1
                 cache['podmem']['data'].append(row)
-    print(json.dumps(cache, ensure_ascii=False))
+    postprocess_result['result'] = cache
+    print(json.dumps(postprocess_result, ensure_ascii=False))
 
 
 def extract_params():
@@ -47,6 +53,7 @@ def extract_params():
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()

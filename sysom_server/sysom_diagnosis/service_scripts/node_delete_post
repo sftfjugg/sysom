@@ -1,14 +1,20 @@
 #!/usr/bin/python3
 # coding=utf-8
-import os
 import sys
 import json
-import random
 
-def oomcheck_result(raw):
-    result = {}
-    result = {"CommandResult":{"data":[{"key":"","value":raw}]}}
-    print(json.dumps(result))
+
+def node_delete_result(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
+    postprocess_result["result"] = {
+        "CommandResult": {"data": [{"key": "", "value": raw}]}
+    }
+    print(json.dumps(postprocess_result, indent=4))
+
 
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
@@ -17,6 +23,7 @@ def extract_params():
             res = res + "\r" + line
     return res, task_id
 
+
 if __name__ == "__main__":
     res, _ = extract_params()
-    oomcheck_result(res)
+    node_delete_result(res)

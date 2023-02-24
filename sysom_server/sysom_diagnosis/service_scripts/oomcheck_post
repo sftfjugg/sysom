@@ -2,7 +2,7 @@
 # coding=utf-8
 import sys
 import json
-import random
+
 
 def analyze_root(oomres):
     root = oomres['root']
@@ -16,7 +16,8 @@ def analyze_root(oomres):
             oomres['leaktype'] = ''
         if 'leakusage' not in oomres:
             oomres['leakusage'] = '0'
-        reason = "Memory of host limited. %sKB of %s memory leak are suspected." % (oomres['leakusage'], oomres['leaktype'])
+        reason = "Memory of host limited. %sKB of %s memory leak are suspected." % (
+            oomres['leakusage'], oomres['leaktype'])
     elif root == "fork":
         if 'fork_max_cnt' not in oomres:
             oomres['fork_max_cnt'] = 0
@@ -24,13 +25,15 @@ def analyze_root(oomres):
             oomres['fork_max_task'] = ''
         if 'fork_max_usage' not in oomres:
             oomres['fork_max_usage'] = 0
-        reason = "%s task(s) '%s' with high priority trigger(s) OOM and use %sKB." % (oomres['fork_max_cnt'],oomres['fork_max_task'], oomres['fork_max_usage'])
+        reason = "%s task(s) '%s' with high priority trigger(s) OOM and use %sKB." % (
+            oomres['fork_max_cnt'], oomres['fork_max_task'], oomres['fork_max_usage'])
     elif root == "cpuset":
         reason = "Memory of host limited. Make sure 'cpuset' is set appropriately since more than one memory nodes are detected."
     elif root == "frag":
         if 'order' not in oomres:
             oomres['order'] = '0-3 lower-order'
-        reason = "Memory fragments are detected. Lack of %s memory may cause OOM." % oomres['order']
+        reason = "Memory fragments are detected. Lack of %s memory may cause OOM." % oomres[
+            'order']
     elif root == "policy":
         reason = "Memory of host limited. Make sure 'mempolicy' is set appropriately since more than one memory nodes are detected."
     elif root == "shmem":
@@ -39,10 +42,11 @@ def analyze_root(oomres):
         reason = "%sKB shared memory used and may cause OOM" % oomres['shmem']
     return reason
 
+
 def advise_root(res):
     root = res["root"]
-    tcp_mem = res.get("tcp_mem",0)
-    tcp_task = res.get("tcp_task",[])
+    tcp_mem = res.get("tcp_mem", 0)
+    tcp_task = res.get("tcp_task", [])
     if tcp_task:
         tcp_task = tcp_task[0]
     advice = ""
@@ -50,7 +54,8 @@ def advise_root(res):
         advice = "Adjust the memory use of services."
     elif root == "memleak":
         if tcp_mem != 0:
-            advice = "Check task %s socket Recv-Q/Send-Q or killall %s"%(tcp_task,tcp_task)
+            advice = "Check task %s socket Recv-Q/Send-Q or killall %s" % (
+                tcp_task, tcp_task)
         else:
             advice = "Use SysAK memleak to in-depth investigation"
     elif root == "fork":
@@ -65,75 +70,89 @@ def advise_root(res):
         advice = "Adjust the shared memory use of services."
     return advice
 
+
 def oomcheck_result(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
+
     raw = raw.strip()
     result = {}
-    result = {"oomResult":{"data":[{"key":"OOM Tasks", "value":"-"},
-        {"key":"The number of OOM ", "value":"-"},{"key":"OOM Type", "value":"-"},
-        ]},"oomAnalysis":{"data":[
-        {"key":"OOM root cause", "value":"-"},{"key":"OOM suggestion", "value":"-"}
-            ]},"oomDetail":{"data":[
-                {"key":0, "Free":"-","Low watermark":"-", "RSS":"-"}]},"oomTask":{"data":[{"key":0, "Tasks":"-", "Used":"-"}]}}
+    result = {"oomResult": {"data": [{"key": "OOM Tasks", "value": "-"},
+                                     {"key": "The number of OOM ",
+                                         "value": "-"}, {"key": "OOM Type", "value": "-"},
+                                     ]}, "oomAnalysis": {"data": [
+                                         {"key": "OOM root cause", "value": "-"}, {
+                                             "key": "OOM suggestion", "value": "-"}
+                                     ]}, "oomDetail": {"data": [
+                                         {"key": 0, "Free": "-", "Low watermark": "-", "RSS": "-"}]}, "oomTask": {"data": [{"key": 0, "Tasks": "-", "Used": "-"}]}}
+    postprocess_result["result"] = result
     if len(raw) == 0:
-        print(json.dumps(result))
+        print(json.dumps(postprocess_result, indent=4))
         return
     rawdata = json.loads(raw)
-    exp_time = ""
     res = {}
     for time in rawdata:
-        exp_time = time
         res = rawdata[time]
     if len(res) == 0 or res['type'] == 'unknow':
-        print(json.dumps(result))
+        print(json.dumps(postprocess_result, indent=4))
         return
     if res['type'] == 'host':
-        result['oomResult']['data'][0]["value"] = "%s(%s)" % (res['task'], res['pid'])
+        result['oomResult']['data'][0]["value"] = "%s(%s)" % (
+            res['task'], res['pid'])
         result['oomResult']['data'][1]["value"] = res['total_oom']
         result['oomResult']['data'][2]["value"] = "Host OOM"
         result['oomAnalysis']['data'][0]["value"] = analyze_root(res)
         result['oomAnalysis']['data'][1]["value"] = advise_root(res)
 
-        result['oomDetail']['data'] = [{"key":0, "Free":res['host_free']
-            ,"Low watermark":res['host_low'], "RSS":res['total_rss']}]
+        result['oomDetail']['data'] = [
+            {"key": 0, "Free": res['host_free'], "Low watermark":res['host_low'], "RSS":res['total_rss']}]
 
         if len(res['rss_list_desc']) > 0:
             result['oomTask']['data'] = []
         cnt = 0
         for task_info in res['rss_list_desc']:
-            result['oomTask']['data'].append({"key":cnt, "Tasks":task_info['task'], "Used":task_info['rss']})
+            result['oomTask']['data'].append(
+                {"key": cnt, "Tasks": task_info['task'], "Used": task_info['rss']})
             cnt += 1
     elif res['type'] == 'cgroup':
-        result['oomResult']['data'][0]["value"] = "%s(%s)" % (res['task'], res['pid'])
+        result['oomResult']['data'][0]["value"] = "%s(%s)" % (
+            res['task'], res['pid'])
         result['oomResult']['data'][1]["value"] = res['total_oom']
         result['oomResult']['data'][2]["value"] = "Cgroup OOM"
         result['oomAnalysis']['data'][0]["value"] = analyze_root(res)
         result['oomAnalysis']['data'][1]["value"] = advise_root(res['root'])
 
         result['oomDetail']['data'] = []
-        result['oomDetail']['data'].append({"key":0})
-        result['oomDetail']['data'][0]["Cgroup名"]=res['cg_name']
+        result['oomDetail']['data'].append({"key": 0})
+        result['oomDetail']['data'][0]["Cgroup名"] = res['cg_name']
         if res['containerID'] != 'unknow':
-            result['oomDetail']['data'][0]["ContainerID"]=res['containerID']
+            result['oomDetail']['data'][0]["ContainerID"] = res['containerID']
         if res['podName'] != 'unknow':
-            result['oomDetail']['data'][0]["Pod"]=res['podName']
-        result['oomDetail']['data'][0]["Cgroup_Limit"]=res['cg_limit']
-        result['oomDetail']['data'][0]["Cgroup_Used"]=res['cg_usage']
+            result['oomDetail']['data'][0]["Pod"] = res['podName']
+        result['oomDetail']['data'][0]["Cgroup_Limit"] = res['cg_limit']
+        result['oomDetail']['data'][0]["Cgroup_Used"] = res['cg_usage']
 
         if len(res['rss_list_desc']) > 0:
             result['oomTask']['data'] = []
         cnt = 0
         for task_info in res['rss_list_desc']:
-            result['oomTask']['data'].append({"key":cnt, "Tasks":task_info['task'], "Used":task_info['rss']})
+            result['oomTask']['data'].append(
+                {"key": cnt, "Tasks": task_info['task'], "Used": task_info['rss']})
             cnt += 1
 
     result['summary'] = res.get('result', '')
-    print(json.dumps(result))
+    print(json.dumps(postprocess_result, indent=4))
+
 
 def extract_params():
     path, res, task_id = sys.argv[1], "", sys.argv[2]
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()
