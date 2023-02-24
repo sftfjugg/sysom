@@ -40,7 +40,7 @@ def drop_result(raw):
     newdrop["summary"] = "diagnones result: total capture {} retransmits".format(
         retran_cnt)
     postprocess_result["result"] = newdrop
-    print(json.dumps(newdrop, ensure_ascii=False))
+    print(json.dumps(postprocess_result, ensure_ascii=False))
 
 
 def extract_params():
