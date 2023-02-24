@@ -54,49 +54,49 @@
                 "nodes": [
                     {
                         "id": "l_tx_kern",
-                        "tips": "The time delay of the general block layer in OS kernel(unit: us)" ,
+                        "tips": "The time delay of the transmitting path in client OS kernel(unit: us)" ,
                         "col": 0,
                         "row": 0
                     },
                     {
                         "id": "l_tx_qdisc",
-                        "tips":"The time delay of OS kernel driver(unit: us)",
+                        "tips":"The time delay of client OS kernel qdisc(unit: us)",
                         "col": 1,
                         "row": 0
                     },
                     {
                         "id": "l_tx_outlink",
-                        "tips": "The time delay of disk(unit: us)",
+                        "tips": "The time delay of outter link(unit: us)",
                         "col": 2,
                         "row": 0
                     },
                     {
                         "id": "r_tx_kern",
-                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "tips": "The time delay of the transmitting path in server OS kernel(unit: us)",
                         "col": 3,
                         "row": 0
                     },
                     {
                         "id": "l_rx_inlink",
-                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "tips": "The time delay of inner link(unit: us)",
                         "col": 3,
                         "row": 1
                     },
                     {
                         "id": "l_rx_kern",
-                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "tips": "The time delay of the receiving path in client OS kernel(unit: us)",
                         "col": 2,
                         "row": 1
                     },
                     {
                         "id": "l_rx_task_waking",
-                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "tips": "The time delay of pingtrace task wakeup(unit: us)",
                         "col": 1,
                         "row": 1
                     },
                     {
                         "id": "l_rx_task_queue",
-                        "tips": "The time delay of io complete in OS kernel(unit: us)",
+                        "tips": "The time delay of pingtrace task queue(unit: us)",
                         "col": 0,
                         "row": 1
                     }
