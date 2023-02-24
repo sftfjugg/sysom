@@ -7,20 +7,19 @@ import sys
 import os.path
 import re
 import json
-import random
 import operator
-#import requests
 
 
 def exectue_cmd(command):
-    command=command.replace("\n", "")
+    command = command.replace("\n", "")
     command_fd = os.popen(command, "r")
     ret = command_fd.read()
     command_fd.close()
     return ret
 
+
 def stack(name, file):
-    fd = open(file,"r")
+    fd = open(file, "r")
     satck_str = fd.read().split("-----")
     for i, ek in enumerate(satck_str):
         if name in satck_str[i]:
@@ -29,19 +28,27 @@ def stack(name, file):
             return result
     fd.close()
 
+
 def cpuflamegraph(file):
-    fd = open(file,"r")
-    graph = fd.read().split("####################################################################################")
+    fd = open(file, "r")
+    graph = fd.read().split(
+        "####################################################################################")
     if len(graph) >= 3:
         return graph[2]
     else:
         return "FlameGraph failed!"
     fd.close()
 
+
 def parse_log(file):
-    parse_data=collections.OrderedDict()
-    new_parse_data=collections.OrderedDict()
-    reason=collections.OrderedDict()
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
+    parse_data = collections.OrderedDict()
+    new_parse_data = collections.OrderedDict()
+    reason = collections.OrderedDict()
     tasks = {}
     count = {}
     task_stack = {}
@@ -49,7 +56,7 @@ def parse_log(file):
     r_task_list = []
     cpuflamegraph_str = ""
 
-    fd = open(file,"r")
+    fd = open(file, "r")
     for line in fd.readlines():
         if "global_cpuflamegraph" in line:
             cpuflamegraph_str = cpuflamegraph(file)
@@ -73,48 +80,50 @@ def parse_log(file):
                 reason["io"] = "false"
             continue
         if "load_proc" in line:
-                reason["loadavg"] =  line.split()[1]
+            reason["loadavg"] = line.split()[1]
         if "Task_Name" in line:
-            task_name = re.search( r'Task_Name:	*(\S+)', line, re.I)
+            task_name = re.search(r'Task_Name:	*(\S+)', line, re.I)
             if task_name:
-                if task_name.group(1) in tasks:               
+                if task_name.group(1) in tasks:
                     tasks[task_name.group(1)] = tasks[task_name.group(1)] + 1
                 else:
                     tasks[task_name.group(1)] = 1
-                if "[<0>]" in stack(task_name.group(1),file):
-                    task_stack[task_name.group(1)] = stack(task_name.group(1),file)
+                if "[<0>]" in stack(task_name.group(1), file):
+                    task_stack[task_name.group(1)] = stack(
+                        task_name.group(1), file)
             continue
         if "Time" in line:
-            time = re.search( r'Time: (.+)', line, re.I)
+            time = re.search(r'Time: (.+)', line, re.I)
             if time:
                 time_str = time.group(1)
             continue
         if "uninterrupt_cnt" in line:
-            count["uninterrupt tasks"]=line.split()[1]
+            count["uninterrupt tasks"] = line.split()[1]
             continue
         if "running_cnt" in line:
-            count["runnig tasks"]=line.split()[1]
-            continue     
+            count["runnig tasks"] = line.split()[1]
+            continue
     fd.close()
-    task_sort = sorted(tasks.items(), key = lambda kv:kv[1],reverse=True)
-    stack_sort = sorted(task_stack.items(), key = lambda kv:kv[1],reverse=True)
+    task_sort = sorted(tasks.items(), key=lambda kv: kv[1], reverse=True)
+    stack_sort = sorted(task_stack.items(), key=lambda kv: kv[1], reverse=True)
     for i, el in enumerate(task_sort):
-        is_dtask=False
+        is_dtask = False
         for j, ek in enumerate(stack_sort):
             if el[0] == ek[0]:
                 d_task = {}
                 d_task["task"] = el[0]
                 d_task["weight"] = el[1]
-                d_task["stack"] = reduce(operator.add,ek[1].split("[<0>] ")[1:-1],' ')
+                d_task["stack"] = reduce(
+                    operator.add, ek[1].split("[<0>] ")[1:-1], ' ')
                 d_task_list.append(d_task)
-                is_dtask=True
+                is_dtask = True
         if not is_dtask:
             r_task = {}
             r_task["task"] = el[0]
             r_task["weight"] = el[1]
             r_task_list.append(r_task)
     parse_data["result"] = reason
-    parse_data["task_count"] =count
+    parse_data["task_count"] = count
     parse_data["uninterrupt load"] = d_task_list
     parse_data["running load"] = r_task_list
     parse_data["flamegraph"] = cpuflamegraph_str
@@ -152,7 +161,8 @@ def parse_log(file):
     else:
         io_summary = " is abnormal;"
 
-    new_parse_data["summary"] = "Load Influences Result:"+"sys utils"+ sys_summary + "hardirq" + hardirq_summary + "softirq" + softirq_summary + "io" + io_summary
+    new_parse_data["summary"] = "Load Influences Result:"+"sys utils" + sys_summary + \
+        "hardirq" + hardirq_summary + "softirq" + softirq_summary + "io" + io_summary
     new_parse_data["datataskcount"] = {"data": []}
     new_parse_data["datataskcount"]["data"] = [
         {"key": "uninterrupt_tasks", "value": int(count["uninterrupt tasks"])},
@@ -175,13 +185,15 @@ def parse_log(file):
         new_parse_data["datarunningload"]["data"].append(tmp_r_task)
 
     new_parse_data["dataflamegraph"] = {"data": []}
-    new_parse_data["dataflamegraph"]["data"]= [
+    new_parse_data["dataflamegraph"]["data"] = [
         {"key": 0, "value": cpuflamegraph_str}]
-    out = json.dumps(new_parse_data, indent=4)
+    postprocess_result["result"] = new_parse_data
+    out = json.dumps(postprocess_result, indent=4)
     #data = {"catalogue": parse_data["Global lamegraph"]}
     #files = {"file": open(parse_data["Global lamegraph"], 'rb')}
     #requests.post("http://127.0.0.1:8001/api/v1/host/upload_file/", data=data, files=files)
     print(out)
+
 
 if __name__ == '__main__':
     parse_log(sys.argv[1])

@@ -144,12 +144,19 @@ def getDisksFromDiskstats(diskstats):
 
 
 def iofsstatJoinData(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
+    if raw.find("diskstats") == -1:
+        postprocess_result['code'] = 1
+        postprocess_result['err_msg'] = f"Diagnosis failed: \n {raw}"
+        print(json.dumps(postprocess_result, indent=4))
+        return
     stat = {}
     stat["disks"] = {"data": []}
     stat["overview"] = {"data": []}
-    if raw.find("diskstats") == -1:
-        print(json.dumps(stat))
-        return
     stat["overview"]["data"] = dataToSummary(raw)
     stat["summary"] = "diagnose results: No IO traffic detected"
     if stat["overview"]["data"]:
@@ -212,7 +219,8 @@ def iofsstatJoinData(raw):
                     idx = obj["mstats"].index(o)
                     obj["mstats"][idx] = dict(new)
                     stat["taskIOstat_"+d]["data"].append(obj["mstats"][idx])
-    s = json.dumps(stat, indent=4)
+    postprocess_result['result'] = stat
+    s = json.dumps(postprocess_result, indent=4)
     print(s)
 
 

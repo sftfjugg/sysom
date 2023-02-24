@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 # coding=utf-8
 import sys
-import os
 import json
-import random
+
 
 class CpingDeamon(object):
     def __init__(self, f):
@@ -11,6 +10,11 @@ class CpingDeamon(object):
         self._file = f
 
     def proc(self):
+        postprocess_result = {
+            "code": 0,
+            "err_msg": "",
+            "result": {}
+        }
         dPing = {"stat": None, "seq": []}
         for l in self._file.readlines():
             obj = json.loads(l)
@@ -18,17 +22,19 @@ class CpingDeamon(object):
                 dPing['stat'] = obj["stat"]
             else:
                 dPing["seq"].append(obj)
-        
+
         ret = {}
         ret['pingtraceFlow'] = {}
         ret["pingtraceFlow"]['data'] = []
         for stage in dPing['stat']['stage']:
             ret["pingtraceFlow"]['data'].append(
-                {'key': stage['delay'], 'title': stage['delay'], 'text': "Max:{} Min:{} Avg:{}".format(stage['max'], stage['min'], stage['avg'])}
+                {'key': stage['delay'], 'title': stage['delay'], 'text': "Max:{} Min:{} Avg:{}".format(
+                    stage['max'], stage['min'], stage['avg'])}
             )
-        
-        s = json.dumps(ret, indent=4)
+        postprocess_result['result'] = ret
+        s = json.dumps(postprocess_result, indent=4)
         print(s)
+
 
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as f:

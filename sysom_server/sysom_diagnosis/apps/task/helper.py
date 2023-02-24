@@ -186,13 +186,20 @@ class DiagnosisHelper:
 
     def postprocess(instance: JobModel, job_result: JobResult):
         """Perform diagnosis postprocessing
-        {
+        JobResult -> {
             "code": 0,          => 0 表示成功，1表示失败
             "err_msg": "",      => 如果任务执行失败，错误信息可以使用这个字段获得
             "result": "xxx",    => 命令执行结果
             "echo": {
                 "task_id": 0
             }
+        }
+
+        Postprocess script response data format =>
+        {
+            "code": 0,          => 0 表示成功，1表示失败
+            "err_msg": "",      => 如果后处理脚本检测到诊断失败，在这边存放诊断错误信息
+            "result": {}        => 后处理脚本处理的结果，应该是一个 JSON Object
         }
         """
         try:
@@ -243,10 +250,18 @@ class DiagnosisHelper:
                     ))
                 stdout = resp.stdout
                 result = json.loads(stdout.decode('utf-8').strip())
-                # 后处理脚本执行结束，更新任务状态
-                DiagnosisHelper._update_job(
-                    instance, result=result, status="Success"
-                )
+                code = result.get("code", 1)
+                if code != 0:
+                    err_msg = result.get("err_msg", "Postprocess error")
+                    # 后处理脚本认为诊断出错
+                    DiagnosisHelper._update_job(
+                        instance, err_msg=err_msg, status="Fail")
+                else:
+                    rel_result = result.get("result", {})
+                    # 后处理脚本执行结束，更新任务状态
+                    DiagnosisHelper._update_job(
+                        instance, result=rel_result, status="Success"
+                    )
             pass
         except Exception as exc:
             logger.exception(

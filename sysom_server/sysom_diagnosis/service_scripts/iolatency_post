@@ -2,23 +2,25 @@
 # coding=utf-8
 import sys
 import json
-import random
 import re
 
 
 def iosdiagJoinData(raw):
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
+    if raw.startswith('fail'):
+        postprocess_result["code"] = 1
+        postprocess_result["err_msg"] = f"Diagnosis failed:\n{raw}"
+        print(json.dumps(postprocess_result, indent=4))
+        return
+
+    raw = raw.strip()
     disks = []
     stat = {}
     stat["disks"] = {"data": [{'key': 0, 'value': 'overview'}]}
-
-    if raw.startswith('fail'):
-        stat['summary'] = "diagnose results: failed"
-        stat["iolatencyOverview_overview"] = {
-            "data": [{'key': 'Check Result', "value": "failed"},
-                     {'key': "IOs of over threshold", "value": 0}]}
-        print(json.dumps(stat, indent=4))
-        return
-
     stat["iolatencyOverview_overview"] = {
         "data": [{'key': 'Check Result', "value": "normal"},
                  {'key': "IOs of over threshold", "value": 0}]}
@@ -113,8 +115,8 @@ def iosdiagJoinData(raw):
             stat["summary"] += \
                 ("The IO of disk %s is slow, caused by high %s latency;" % (
                     d, maxDelayComp))
-
-    s = json.dumps(stat, indent=4)
+    postprocess_result['result'] = stat
+    s = json.dumps(postprocess_result, indent=4)
     print(s)
 
 

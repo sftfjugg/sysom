@@ -2,7 +2,6 @@
 # coding=utf-8
 import sys
 import json
-import random
 
 
 def drop_result(raw):
@@ -11,15 +10,19 @@ def drop_result(raw):
     raw = fd.read().strip()
     fd.close()
     '''
-    outdata = {}
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
     if raw.find("reasons") == -1:
-        outdata = {"status": "fail"}
-        print(outdata)
+        postprocess_result["code"] = 1
+        postprocess_result["err_msg"] = f"Diagnosis failed:\n{raw}"
+        print(json.dumps(postprocess_result, indent=4))
         return
+
     rawdata = json.loads(raw)
-
     newdrop = {}
-
     newdrop["DropStat"] = {}
     newdrop["DropStat"]["data"] = []
 
@@ -33,9 +36,11 @@ def drop_result(raw):
             cnt += 1
             total_drop_cnt += item[1]
 
-    newdrop["summary"] = "diagnones result: total capture {} packet drops".format(total_drop_cnt)
-    
-    print(json.dumps(newdrop, ensure_ascii=False))
+    newdrop["summary"] = "diagnones result: total capture {} packet drops".format(
+        total_drop_cnt)
+
+    postprocess_result["result"] = newdrop
+    print(json.dumps(postprocess_result, indent=4, ensure_ascii=False))
 
 
 def extract_params():
@@ -43,6 +48,7 @@ def extract_params():
     with open(path, 'r') as tmp:
         res = tmp.read()
     return res, task_id
+
 
 if __name__ == "__main__":
     res, _ = extract_params()
