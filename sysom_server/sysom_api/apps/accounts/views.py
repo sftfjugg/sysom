@@ -16,6 +16,7 @@ from apps.accounts.authentication import Authentication
 from . import models
 from . import serializer
 from lib.response import success, other_response
+from lib.exception import APIException
 from django.core.cache import cache
 
 class UserModelViewSet(
@@ -266,10 +267,19 @@ class PermissionViewSet(GenericViewSet,
         return success(result=ser.data)
 
 
-class ChangePasswordViewSet(APIView):
+class PasswordViewSet(GenericViewSet):
     """Change User Password"""
-    authentication_classes = []
+    authentication_classes = [Authentication]
     required_fields = ['username', 'row_password', 'new_password', 'new_password_again']
+    default_password = '123456'
+
+    def get_authenticators(self):
+        """
+        对修改密码接口不做用户认证
+        """
+        if 'change_password' in self.request.path:
+            return []
+        return super().get_authenticators()
 
     @classmethod
     def _verfiy_user(cls, username: str, password: str) -> Union[None, models.User]:
@@ -285,7 +295,7 @@ class ChangePasswordViewSet(APIView):
         else:
             return user if user.verify_password(plain_password=password) else None
 
-    def post(self, request: Request):
+    def change_password(self, request: Request):
         """
         用户修改密码
         """
@@ -307,3 +317,47 @@ class ChangePasswordViewSet(APIView):
             logger.error(e)
             return other_response(message=f"数据库错误！{e}", code=400, success=False)
         return success(result={}, message="密码修成成功")
+
+    def reset_password(self, request: Request):
+        user = getattr(request, 'user')
+
+        if not self._has_admin_permissions(user):
+            raise APIException(message='not permissions')
+
+        b, m = self._check_fields(request.data, ['pk'])
+        if not b:
+            return other_response(result={}, message=m, success=False, code=400)
+
+        self._reset_password(**request.data)
+        
+        return success(result={}, message='password reset success')
+
+    def _check_fields(self, data: dict, fields: list=[]):
+        """检查请求参数"""
+        res, message = True, ""
+        for atx in filter(lambda item: not item[1],\
+             [(field, data.get(field, None)) for field in fields]):
+            res, message = False, f'field: {atx[0]} required!'
+        return res, message
+    
+    def _has_admin_permissions(self, user: models.User):
+        """检查用户是否具有admin权限"""
+        return user.is_admin
+
+    def _reset_password(self, pk: int):
+        """
+        重置用户密码, 默认密码(123456)
+        Args:
+            pk: 用户的唯一ID
+        """
+        try:
+            user = models.User.objects.get(pk=pk)
+        except models.User.DoesNotExist:
+            raise APIException(message=f'user not exist: {pk}')
+
+        try:        
+            user.password = user.make_password(self.default_password)
+            user.save()
+        except Exception as e:
+            logger.exception(e)
+            raise APIException(message='action reset password fialed!')

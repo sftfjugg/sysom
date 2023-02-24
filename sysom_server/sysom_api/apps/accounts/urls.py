@@ -16,5 +16,6 @@ urlpatterns = [
     path('api/v1/journal/', views.UserModelViewSet.as_view({'get': 'get_logs'})),
     path('api/v1/response_code/', views.UserModelViewSet.as_view({'get': 'get_response_code'})),
     path('api/v1/user_info/', views.UserModelViewSet.as_view({'get': 'get_user_info'})),
-    path('api/v1/change_password/', views.ChangePasswordViewSet.as_view())
+    path('api/v1/change_password/', views.PasswordViewSet.as_view({'post': 'change_password'})),
+    path('api/v1/reset_password/', views.PasswordViewSet.as_view({'post': 'reset_password'})),
 ]
