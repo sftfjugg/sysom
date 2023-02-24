@@ -31,7 +31,7 @@ const VmcoreConfig = () => {
 
   const onListClick = async () => {
     // console.log("3333333333333",formRef.current.getFieldValue(['server_host']),formRef.current.getFieldValue(['mount_point']));
-    const msg = await request("/api/v1/vmcore_config_test/", {
+    const msg = await request("/api/v1/vmcore/vmcore_config_test/", {
       params: { 
         server_host: formRef.current.getFieldValue(['server_host']),
         mount_point: formRef.current.getFieldValue(['mount_point'])
