@@ -2,6 +2,7 @@ import { request } from 'umi'
 
 const ACCOUNT_URL = '/api/v1/user/';
 const ROLE_URL = '/api/v1/role/';
+const RESETPASSWORD_URL = '/api/v1/reset_password/'
 
 
 export async function getAccountList(params, options) {
@@ -62,6 +63,20 @@ export const getRoles = async (params, options) => {
             'Authorization': token,
         },
         params: params,
+        ...(options || {})
+    })
+}
+
+
+export const resetPassword = async (body, options) => {
+    const token = localStorage.getItem('token')
+    return request(`${RESETPASSWORD_URL}`, {
+        method: 'POST',
+        headers: {
+            'ContentType': 'application/json',
+            'Authorization': token
+        },
+        data: body,
         ...(options || {})
     })
 }
