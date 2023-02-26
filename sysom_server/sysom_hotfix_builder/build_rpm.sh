@@ -16,12 +16,14 @@ function usage(){
 	echo "      kernel release"
 	echo "  --description"
 	echo "      The description of this hotfix"
+	echo "	--kpatch-module"
+	echo "		Enable the kpatch module"
 	echo "  --help"
 	echo  "     For help"
 }
 
 function parse_args(){
-	ARGS=`getopt -l module:,distro:,rpmbuild:,kernel:,release:,description:,changeinfo:,help -o hm:d:r:k:c:e:l: -- "$@" 2>/dev/null` || { usage; exit 1; }
+	ARGS=`getopt -l module:,distro:,rpmbuild:,kernel:,release:,description:,changeinfo:,help,kpatch-module -o hm:d:r:k:c:e:l: -- "$@" 2>/dev/null` || { usage; exit 1; }
 	eval set -- "${ARGS}"
 	while [ -n "$1" ]
 	do
@@ -57,6 +59,9 @@ function parse_args(){
 		-h|--help)
 			usage
 			;;
+		--kpatch-module)
+			USE_KPATCH_MODULE=1
+			;;
 		--)
 			shift
 			break
@@ -64,16 +69,22 @@ function parse_args(){
 		esac
 		shift
 	done
+
+	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+		USE_KPATCH_MODULE=1
+	else
+		USE_KPATCH_MODULE=0
+	fi
 	
-	if [[ -z ${description} ]] ; then
+	if [[ -z ${description} ]]; then
 		description="This hotfix have no description"
 	fi
 
-	if [[ -z ${distro} ]] ; then
+	if [[ -z ${distro} ]]; then
 		distro="Anolis"
 	fi
 	
-	if [[ -z ${rpmbuild} ]] ; then
+	if [[ -z ${rpmbuild} ]]; then
 		rpmbuild="`pwd`"
 	fi
 
@@ -124,9 +135,15 @@ Packager: Sysom <git@gitee.com:anolis/sysom.git>
 Group: applications
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildArch: ${arch}
-Source0: "${module}"
+Source0: ${module}
 Source1: patch
 Source2: description
+"
+if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+	hotfix_spec=${hotfix_spec}"Source3: kpatch.ko"
+fi
+
+hotfix_spec=${hotfix_spec}"
 
 Requires: kpatch >= 0.8.0-1.5
 
@@ -141,7 +158,11 @@ cp \$RPM_SOURCE_DIR/patch ${install_path}
 cp \$RPM_SOURCE_DIR/description ${install_path}
 cp \$RPM_SOURCE_DIR/changeinfo ${install_path}
 "
-	hotfix_spec=${hotfix_spec}"
+if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+	hotfix_spec=${hotfix_spec}"cp \$RPM_SOURCE_DIR/kpatch.ko  ${install_path}"
+fi
+
+hotfix_spec=${hotfix_spec}"
 %files
 ${hotfix_dir_path}/
 
@@ -157,8 +178,12 @@ fi
 %posttrans
 systemctl enable kpatch || exit 1
 "
+if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+	hotfix_spec=${hotfix_spec}"mkdir -p %{_ks_prefix}/lib/kpatch/%{_kernel_version}/
+cp -f %{_prefix}/%{_kernel_version}/${hotfix_base}/kpatch.ko %{_ks_prefix}/lib/kpatch/%{_kernel_version}/"
+fi
 
-	hotfix_spec=${hotfix_spec}"
+hotfix_spec=${hotfix_spec}"
 kpatch install -k ${kernel} ${hotfix_ko_path} || exit -1
 if [ \"\$(uname -r)\" == \"%{_kernel_version}\" ]; then
 	${hotfix_apply} || exit -1
@@ -180,6 +205,9 @@ function prepare_environment(){
 	cp patch "${rpmbuild}"/SOURCES/
 	cp description "${rpmbuild}"/SOURCES/
 	cp changeinfo "${rpmbuild}"/SOURCES/
+	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+		cp -f /usr/local/lib/kpatch/$kernel/kpatch.ko "$rpmbuild"/SOURCES/ 1>&2
+	fi
 	echo "${hotfix_spec}" > "${rpmbuild}"/SPECS/"${hotfix_ko_name}".spec
 }
 
