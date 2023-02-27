@@ -1,4 +1,5 @@
 import json
+from loguru import logger
 from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -129,4 +130,7 @@ class VulJobModel(models.Model):
 @receiver(models.signals.post_delete, sender=SaFixHistToHost)
 def _on_host_delete(sender, instance: SaFixHistToHost, **kwargs):
     """使用signal级联删除SaFixHisToHost相关修复记录"""
-    instance.sa_fix_hist.delete()
+    try:
+        instance.sa_fix_hist.delete()
+    except SaFixHistToHost.DoesNotExist as e:
+        logger.error(e)
