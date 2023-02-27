@@ -1,3 +1,5 @@
+# author: ydjohn <ydzhang@linux.alibaba.com>
+# This script is used to build a hotfix, which is an component of sysom
 SRCPREFIX="/tmp/src"
 tmpdir="/hotfix_tmpdir"
 CHANGEINFOFILE=${tmpdir}/changeinfo
@@ -27,11 +29,24 @@ warn() {
 }
 
 usage() {
-	echo "usage"
+	echo "usage: build_hotfix.sh [options] <parameters>" >&2
+	echo "		-h, --help              Show this help message" >&2
+	echo "		-p, --patch       		Specify the patch to build hotfix" >&2
+	echo "		-k, --kernel         	Specify kernel version (including arch)" >&2
+	echo "		-d, --description       Specify hotfix description " >&2
+	echo "		-b, --base	            Specify hotfix build work space" >&2
+	echo "		-v, --vmlinux           Specify original vmlinux" >&2
+	echo "		-n, --name              Specify name of hotfix" >&2
+	echo "		-g, --log	            Specify the log file" >&2
+	echo "		-c, --config            Specify kernel config file" >&2
+	echo "		-r, --repo              Specify the kernel source directory" >&2
+	echo "		-t, --tag       		Specify the tag of the source code if it is a git repo" >&2
+	echo "		--kpatch-module   		Config to use kpatch.ko module mode instead of livepatch" >&2
+	echo "		--kernel-devel   		Config the kernel-devel package path" >&2
 }
 
 function parse_args(){
-	ARGS=`getopt -l patch:,kernel:,base:,description:,vmlinux:,help,name:,log:,config:,repo:,tag: -o hv:p:k:d:n:b:g:c:r:t:  -- "$@" 2>/dev/null` || { usage; die "FAILED";}
+	ARGS=`getopt -l patch:,kernel:,base:,description:,vmlinux:,help,name:,log:,config:,repo:,tag:,kpatch-module,kernel-devel -o hv:p:k:d:n:b:g:c:r:t:  -- "$@" 2>/dev/null` || { usage; die "Usage parameter mismatch";}
 	eval set -- "${ARGS}"
 	while [ -n "$1" ]
 	do
@@ -79,6 +94,13 @@ function parse_args(){
 			tag="$2"
 			shift
 			;;
+		--kpatch-module)
+			USE_KPATCH_MODULE=1
+			;;
+		--kernel-devel)
+			DEV_PACKAGE="$2"
+			shift
+			;;
 		--)
 			echo bb
 			shift
@@ -88,21 +110,27 @@ function parse_args(){
 		shift
 	done
 
-	echo "=======================> ${SRCREPO}"
+	echo "Using Source repo name => ${SRCREPO}"
+
+	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+		echo "USE KPATCHMODULE"
+	else
+		USE_KPATCH_MODULE=0
+	fi
 
 	if [ -z ${patch} ]; then
 		usage;
-		die "FAILED";
+		die "not patch input";
 	fi
 	
 	if [ -z ${kernel} ]; then
 		usage;
-		die "FAILED";
+		die "No kernel version input";
 	fi
 
 	if [ -z "${description}" ]; then
 		usage;
-		die "FAILED";
+		die "No description input";
 	fi
 
     if [ -z "${hotfix_name}" ]; then
@@ -119,7 +147,7 @@ function parse_args(){
 	arch="${strtmp##*.}"
 	if [ "$arch" != "x86_64" -a "$arch" != "aarch64" ]; then
 		echo "please input complete kernel version including arch (x86_64 or aarch64)"
-		die "FAILED"
+		die "Arch is incomplete in kernel version"
 	fi
 
 	# 4.19.91-26.an7.x86_64 => 4.19.91-26.an7
@@ -204,17 +232,41 @@ function download_vmlinux() {
 
 # kpatch-build under kpatch_space
 function prepare_kpatch(){
+	devel_package=$DEV_PACKAGE
+	echo "preparing kpatch, found devel_package : $devel_package "
+	echo "installing dev_package..."
+	rpm -ivh $devel_package
+
 	kpatch_prefix="kpatch-build"
 	kpatch_dir="${BASE}/${kpatch_prefix}"
 	kpatch_build_path="${kpatch_dir}/kpatch-build/kpatch-build"
 
 	cd ${BASE}/${kpatch_prefix}
 
-	# make
+	# make, if we choose to make kpatch.ko, we need to bind the specific kernel version 
+	# because kpatch.ko is strongly connected to the kernel version
 	if [ $arch == "x86_64" ]; then
+		if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+			echo "x86 : Building under kpatch module"
+			if [[ -z $devel_package ]]; then
+				die "Error: No kernel-devel package provided with kpatch-module. Unable to build!!"
+			fi
+			source_dir=/usr/src/kernels/${kernel}
+			make KPATCH_BUILD=${source_dir} KERNELRELEASE=${kernel} clean
+			make BUILDMOD=yes KPATCH_BUILD=/usr/src/kernels/${kernel} KERNELRELEASE=${kernel} && make BUILDMOD=yes install KERNELRELEASE=${kernel}
+		else
 			make -C ${kpatch_prefix} BUILDMOD=no && make -C ${kpatch_prefix} BUILDMOD=no install
+		fi
 	else
+		if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+			echo "arm : Building under kpatch module"
+			if [[ -z $dev_package ]]; then
+				die "Error: No kernel-devel package provided with kpatch-module. Unable to build!!"
+			fi
+			export NO_PROFILING_CALLS=1 && make -C ${kpatch_prefix} BUILDMOD=yes && make -C ${kpatch_prefix} BUILDMOD=yes install
+		else
 			export NO_PROFILING_CALLS=1 && make -C ${kpatch_prefix} BUILDMOD=no && make -C ${kpatch_prefix} install
+		fi
 	fi
 
 	make install
@@ -248,7 +300,7 @@ function prepare_environment(){
 	set -x
 
     # build and install kpatch
-	prepare_kpatch
+	# prepare_kpatch
     source /etc/os-release
 
 	if [[ ! -d ${tmpdir} ]]; then
@@ -298,11 +350,18 @@ function prepare_environment(){
 		fi
 	fi
 
+	# after the previous operation, devel-package should be downloaded
+	DEV_PACKAGE=${HOTFIX_PACKAGE_REPO}/devel_pack/kernel-devel-${kernel_version}.rpm
+
+	# build and install kpatch
+	prepare_kpatch
+
     # checkout the source branch
 	checkout_branch
 
 	cd ${tmpdir}
 	
+	# rename the orig patch to ${kpatch_id}.patch
 	cp ${patch} "${kpatch_id}".patch || die "copy ${PATCH_FILE} to ${kpatch_id}.patch failed";
 	cp ${patch} patch || die "copy ${PATCH_FILE} to patch failed";
 	echo "${description}" > description || die "output description failed";
@@ -329,8 +388,16 @@ function do_kpatch_build(){
 
 	desc="hello world"
 	
-    cmd="${kpatch_build_path} --skip-compiler-check -a ${kernel_version} -n "${kpatch_id}" -s "${tmpdir}"/"${kernel_version}"/"${kernel_version}" -c "${CONFIGFILE}"  -o "${tmpdir}" -v "${VMLINUX}" "${tmpdir}"/"${kpatch_id}".patch " 2>&1 >> ${LOGFILE}
-	echo $cmd
+    cmd="${kpatch_build_path} "
+	cmd_tail="--skip-compiler-check -a ${kernel_version} -n "${kpatch_id}" -s "${tmpdir}"/"${kernel_version}"/"${kernel_version}" -c "${CONFIGFILE}"  -o "${tmpdir}" -v "${VMLINUX}" "${tmpdir}"/"${kpatch_id}".patch "
+	
+	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+		cmd=${cmd}"--use-kpatch-module "${cmd_tail}
+	else
+		cmd=${cmd}" "${cmd_tail}
+	fi
+	
+	echo $cmd >> $LOGFILE
 	if [[ -z "$USERMODBUILDDIR" ]]; then
 		if [ -z ${target} ]; then
 	        $cmd
@@ -360,7 +427,12 @@ function do_rpmbuild(){
 
 	# because kpatch-build will replace all the . into - in $kpatch-id
 	kofile=${kpatch_id//./-}
-	${BASE}/../build_rpm.sh -m "${tmpdir}"/"${kofile}".ko -d ${dist} -e "${description}" -r "${tmpdir}"/rpmbuild -k "${kernel_version}" -c "${CHANGEINFOFILE}" -l "${release}" 2>&1 >> ${LOGFILE} 
+
+	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+		${BASE}/../build_rpm.sh --kpatch-module -m "${tmpdir}"/"${kofile}".ko -d ${dist} -e "${description}" -r "${tmpdir}"/rpmbuild -k "${kernel_version}" -c "${CHANGEINFOFILE}" -l "${release}" 2>&1 >> ${LOGFILE} 
+	else
+		${BASE}/../build_rpm.sh -m "${tmpdir}"/"${kofile}".ko -d ${dist} -e "${description}" -r "${tmpdir}"/rpmbuild -k "${kernel_version}" -c "${CHANGEINFOFILE}" -l "${release}" 2>&1 >> ${LOGFILE} 
+	fi
 
 	if [[ $? -ne 0 ]]; then
 		die "FAILED"
