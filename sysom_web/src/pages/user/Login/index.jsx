@@ -1,5 +1,5 @@
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Alert, message, Tabs, Button } from "antd";
+import { LockOutlined, UserOutlined, ExclamationCircleFilled } from "@ant-design/icons";
+import { Alert, message, Tabs, Button, Modal } from "antd";
 import { useState, useRef } from "react";
 import { ProFormText, LoginForm, ProFormCheckbox } from "@ant-design/pro-form";
 import { useIntl, history, FormattedMessage, useModel } from "umi";
@@ -27,6 +27,32 @@ const Login = () => {
   const { initialState, setInitialState } = useModel("@@initialState");
   const intl = useIntl();
 
+  /* 跳转到主页或者重定向到历史页面 */
+  const ToIndexOrRedirectHistory = () => {
+    const { query } = history.location;
+    const { redirect } = query;
+    history.push(redirect || "/welcome");
+    return;
+  }
+
+/* 
+  提示用户是否需要修改密码，提升密码复杂度
+*/
+const IsChangePassword = () => {
+  Modal.confirm({
+    title: '是否要修改默认密码?',
+    icon: <ExclamationCircleFilled />,
+    okText: '修改',
+    cancelText: '忽略',
+    onCancel () {
+      ToIndexOrRedirectHistory();
+    },
+    onOk () {
+      setType('password')
+    }
+  })
+}
+
   const fetchUserInfo = async (userId, token) => {
     const userInfo = await initialState?.fetchUserInfo?.(userId, token);
 
@@ -48,10 +74,9 @@ const Login = () => {
           message.success("登录成功");
           await fetchUserInfo(userId, token);
 
+          if (!passwordReg.test(values.password)) { IsChangePassword(); return; }
           if (!history) return;
-          const { query } = history.location;
-          const { redirect } = query;
-          history.push(redirect || "/welcome");
+          ToIndexOrRedirectHistory();
           // setUserLoginState(res);
           return;
         } catch (e) {
@@ -73,7 +98,13 @@ const Login = () => {
             "new_password",
             "new_password_again",
           ]);
-          setType("account");
+          const userId = localStorage.getItem('userId')
+          if (!userId) { 
+            setType("account");
+          } else {
+            ToIndexOrRedirectHistory();
+          }
+          
         } catch (e) {
           console.log(e);
         }
@@ -269,9 +300,6 @@ const Login = () => {
                         defaultMessage="请输入原始密码！"
                       />
                     ),
-                  },{
-                    pattern: passwordReg,
-                    message: '密码至少8位, 包括数字、大小写字母和特殊字符三种及以上'
                   }
                 ]}
               />
