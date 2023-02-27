@@ -1,12 +1,17 @@
 #!/bin/bash -x
 NODE_INIT_DIR=${SERVER_HOME}/target/sysom_web/download/sysom_node_init
 RESOURCE_DIR=${SERVER_HOME}/monitor
-GRAFANA_PKG=grafana-9.2.2-1.x86_64.rpm
+ARCH=`uname -p`
+GRAFANA_PKG=grafana-9.2.2-1.${ARCH}.rpm
 PROMETHEUS_VER=2.29.1
 PROMETHEUS_ARCH=linux-amd64
+if [ "${ARCH}" == "aarch64" ]
+then
+    PROMETHEUS_ARCH=linue-arm64
+fi
 PROMETHEUS_PKG=prometheus-${PROMETHEUS_VER}.${PROMETHEUS_ARCH}
 PROMETHEUS_TAR=$PROMETHEUS_PKG.tar.gz
-NODE_EXPORTER_VER=1.2.2
+NODE_EXPORTER_VER=1.5.0
 NODE_EXPORTER_PKG=node_exporter-${NODE_EXPORTER_VER}.${PROMETHEUS_ARCH}
 NODE_EXPORTER_TAR=$NODE_EXPORTER_PKG.tar.gz
 OSS_URL=https://sysom.oss-cn-beijing.aliyuncs.com/monitor
