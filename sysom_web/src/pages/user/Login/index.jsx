@@ -21,6 +21,7 @@ const LoginMessage = ({ content }) => (
 
 const Login = () => {
   const formRef = useRef();
+  const passwordReg = /^(?![A-Za-z]+$)(?![A-Z\d]+$)(?![A-Z\W]+$)(?![a-z\d]+$)(?![a-z\W]+$)(?![\d\W]+$)\S{8,}$/
   const [userLoginState, setUserLoginState] = useState({});
   const [type, setType] = useState("account", "password");
   const { initialState, setInitialState } = useModel("@@initialState");
@@ -268,7 +269,10 @@ const Login = () => {
                         defaultMessage="请输入原始密码！"
                       />
                     ),
-                  },
+                  },{
+                    pattern: passwordReg,
+                    message: '密码至少8位, 包括数字、大小写字母和特殊字符三种及以上'
+                  }
                 ]}
               />
               <ProFormText.Password
@@ -290,7 +294,10 @@ const Login = () => {
                         defaultMessage="请输入新密码！"
                       />
                     ),
-                  },
+                  },{
+                    pattern: passwordReg,
+                    message: '密码至少8位, 包括数字、大小写字母和特殊字符三种及以上'
+                  }
                 ]}
               />
               <ProFormText.Password
@@ -312,7 +319,17 @@ const Login = () => {
                         defaultMessage="请再次输入新密码！"
                       />
                     ),
-                  },
+                  },{
+                    pattern: passwordReg,
+                    message: '密码至少8位, 包括数字、大小写字母和特殊字符三种及以上'
+                  },({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue('new_password') === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error('两次密码不同'));
+                    },
+                  }),
                 ]}
               />
             </>
