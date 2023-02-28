@@ -29,12 +29,12 @@ def stack(name, file):
     fd.close()
 
 
-def cpuflamegraph(file):
+def cpuflamegraph(file, index):
     fd = open(file, "r")
     graph = fd.read().split(
         "####################################################################################")
     if len(graph) >= 3:
-        return graph[2]
+        return graph[index]
     else:
         return "FlameGraph failed!"
     fd.close()
@@ -55,11 +55,15 @@ def parse_log(file):
     d_task_list = []
     r_task_list = []
     cpuflamegraph_str = ""
+    cpuflamegraph_folded_str = ""
 
     fd = open(file, "r")
     for line in fd.readlines():
         if "global_cpuflamegraph" in line:
-            cpuflamegraph_str = cpuflamegraph(file)
+            cpuflamegraph_str = cpuflamegraph(file,2)
+            continue
+        if "folded" in line:
+            cpuflamegraph_folded_str = cpuflamegraph(file,3)
             continue
         if "load reason" in line:
             if "sys" in line:
@@ -127,6 +131,7 @@ def parse_log(file):
     parse_data["uninterrupt load"] = d_task_list
     parse_data["running load"] = r_task_list
     parse_data["flamegraph"] = cpuflamegraph_str
+    parse_data["flamegraph_folded"] = cpuflamegraph_folded_str
 
     new_parse_data["dataresult"] = {"data": {}}
     new_parse_data["dataresult"]["data"] = [
