@@ -33,7 +33,7 @@ def cpuflamegraph(file, index):
     fd = open(file, "r")
     graph = fd.read().split(
         "####################################################################################")
-    if len(graph) >= 3:
+    if len(graph) > index:
         return graph[index]
     else:
         return "FlameGraph failed!"
@@ -60,10 +60,10 @@ def parse_log(file):
     fd = open(file, "r")
     for line in fd.readlines():
         if "global_cpuflamegraph" in line:
-            cpuflamegraph_str = cpuflamegraph(file,2)
+            cpuflamegraph_str = cpuflamegraph(file, 2)
             continue
         if "folded" in line:
-            cpuflamegraph_folded_str = cpuflamegraph(file,3)
+            cpuflamegraph_folded_str = cpuflamegraph(file, 3)
             continue
         if "load reason" in line:
             if "sys" in line:
@@ -86,7 +86,7 @@ def parse_log(file):
         if "load_proc" in line:
             reason["loadavg"] = line.split()[1]
         if "Task_Name" in line:
-            task_name = re.search(r'Task_Name:	*(\S+)', line, re.I)
+            task_name = re.search(r'Task_Name:  *(\S+)', line, re.I)
             if task_name:
                 if task_name.group(1) in tasks:
                     tasks[task_name.group(1)] = tasks[task_name.group(1)] + 1
@@ -192,6 +192,9 @@ def parse_log(file):
     new_parse_data["dataflamegraph"] = {"data": []}
     new_parse_data["dataflamegraph"]["data"] = [
         {"key": 0, "value": cpuflamegraph_str}]
+    new_parse_data["dataflamegraph_folded_str"] = {
+        "data": [{"key": 0, "value": cpuflamegraph_folded_str}]
+    }
     postprocess_result["result"] = new_parse_data
     out = json.dumps(postprocess_result, indent=4)
     #data = {"catalogue": parse_data["Global lamegraph"]}
