@@ -88,6 +88,7 @@ start_local_redis() {
 start_app() {
     systemctl enable nginx.service
     systemctl restart nginx.service
+    systemctl enable supervisord
     systemctl start supervisord
     if [ $usr_local_redis == 1 ]
     then
