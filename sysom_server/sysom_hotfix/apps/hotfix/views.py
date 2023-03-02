@@ -318,7 +318,6 @@ class HotfixAPIView(GenericViewSet,
 
     # this function is invoked when job finished..
     def sync_build_log(self, request):
-        success = False
         hotfix = HotfixModel.objects.filter(id=request.data["id"]).first()
         try:
             log = ""
