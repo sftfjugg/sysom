@@ -278,7 +278,7 @@ class HotfixBuilder():
         log = ""
         output = ""
         log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
-        f = open(log_file_path, "w")
+        f = open(log_file_path, "a")
 
         self.connector.change_building_status(hotfix_id, "building")
 
@@ -357,7 +357,7 @@ class HotfixBuilder():
         log = ""
         output = ""
         log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
-        f = open(log_file_path, "w")
+        f = open(log_file_path, "a")
 
         self.connector.change_building_status(hotfix_id, "building")
 
@@ -442,6 +442,10 @@ class HotfixBuilder():
                 log_file = parameters['log_file']
                 log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
 
+                # this operation aims to clear the previous log if rebuild
+                with open(log_file_path, "w") as f:
+                    f.write("=====Sysom Hotfix Building System=====\n")
+
                 if parameters['arch'] != self.local_arch:
                     break
 
@@ -451,6 +455,7 @@ class HotfixBuilder():
                     output = process.read()
 
                 customize = parameters['customize']
+
                 if not customize:
                     self.build_supported_kernel(parameters)
                 else:
