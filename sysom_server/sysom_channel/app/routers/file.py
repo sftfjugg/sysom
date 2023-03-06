@@ -54,6 +54,9 @@ async def send_file_to_node(
                 "result": []
             }
             for i in range(len(instances)):
+                if scp_result[i] is not None:
+                    result["code"] = 1
+                    result["err_msg"] = f"{result['err_msg']}, {str(scp_result[i])}"
                 result["result"].append({
                     "instance": instances[i],
                     "success": scp_result[i] is None,
