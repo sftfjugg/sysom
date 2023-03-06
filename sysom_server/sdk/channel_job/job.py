@@ -198,10 +198,17 @@ class ChannelFileJob:
         }
         response = requests.request(
             "POST", url, headers=headers, data=payload, files=files)
+        if response.status_code != 200:
+            return JobResult(
+                code=1,
+                err_msg=f"{response.reason}: {response.text}",
+                result=response.text
+            )
+        channel_result = response.json()
         return JobResult(
-            code=response.status_code,
-            err_msg="" if response.status_code == 200 else f"{response.reason}: {response.text}",
-            result=response.text
+            code=channel_result.get("code", 1),
+            err_msg=channel_result.get("err_msg", "Unknown error"),
+            result=json.dumps(channel_result.get("result", []))
         )
 
     def _get_file(self) -> JobResult:
@@ -226,7 +233,7 @@ class ChannelFileJob:
                 )
             else:
                 return JobResult(
-                    code=r.status_code,
+                    code=1,
                     err_msg=r.text,
                     result=""
                 )

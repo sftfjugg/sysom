@@ -732,7 +732,7 @@ class MigImpView(CommonModelViewSet):
         if backup_type == 'nfs':
             ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
             result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
-            if result.code != 200:
+            if result.code != 0:
                 mig_imp.status = 'fail'
                 mig_imp.detail = '下发备份工具失败'
                 mig_imp.save()
@@ -763,7 +763,7 @@ class MigImpView(CommonModelViewSet):
 
         ance_path = os.path.realpath(__file__).rsplit('/', 3)[0]
         result = send_file([mig_imp.ip,], os.path.join(ance_path, 'ance/anolis_migration_pkgs.tar.gz'), '/tmp/ance/database/anolis_migration_pkgs.tar.gz')
-        if result.code != 200:
+        if result.code != 0:
             mig_imp.status = 'fail'
             mig_imp.detail = '下发环境工具失败'
             mig_imp.save()
