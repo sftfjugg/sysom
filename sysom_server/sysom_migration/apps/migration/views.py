@@ -747,7 +747,7 @@ class MigImpView(CommonModelViewSet):
             else:
                 script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path}"
             cmd = run_script_ignore(backup_script.replace('BACKUP_SCRIPT', script))
-            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=18000000)
+            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=5400000)
             return
 
         mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))
