@@ -141,6 +141,7 @@ class MigAssView(CommonModelViewSet):
         try:
             host_info = res.json().get('data', [])
             mig_ass.hostname = host_info[0].get('hostname')
+            arch = host_info[0].get('host_info').get('arch')
         except:
             mig_ass.status = 'fail'
             mig_ass.detail = '获取机器信息异常'
@@ -163,10 +164,10 @@ class MigAssView(CommonModelViewSet):
             if 'pkgs.tar.gz' in i:
                 tar_path = os.path.join(settings.MIG_ASS_ANCE, i)
                 result = send_file([mig_ass.ip,], os.path.join(ance_path, i), tar_path)
-            if 'x86_64.rpm' in i:
+            if f'{arch}.rpm' in i:
                 rpm_path = os.path.join(settings.MIG_ASS_ANCE, i)
                 result = send_file([mig_ass.ip,], os.path.join(ance_path, i), rpm_path)
-            if '.sqlite' in i:
+            if f'{arch}.sqlite' in i:
                 sql_path = os.path.join(settings.MIG_ASS_ANCE, i)
                 result = send_file([mig_ass.ip,], os.path.join(ance_path, i), sql_path)
         if not tar_path or not rpm_path or not sql_path:
@@ -746,7 +747,7 @@ class MigImpView(CommonModelViewSet):
             else:
                 script = f"/usr/sbin/migrear --method nfs --url {backup_ip} --path {backup_path}"
             cmd = run_script_ignore(backup_script.replace('BACKUP_SCRIPT', script))
-            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=18000000)
+            self.run_async_job(mig_imp, 'mig_backup', cmd, timeout=5400000)
             return
 
         mig_imp.mig_step = json.dumps(self.get_mig_step(mig_imp.step, True))

@@ -4,8 +4,10 @@ TARGET_PATH=${SERVER_HOME}/target
 MIGRATION_DIR=${SERVER_DIR}/sysom_migration
 VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
 SERVICE_NAME=sysom-migration
-ANCE_PKG=ance-0.1.1-1.x86_64.rpm
-ANOLIS_SQLITE=AnolisOS-8.6-x86_64-dvd.iso.sqlite
+ANCE_X86_PKG=ance-0.1.1-1.x86_64.rpm
+ANCE_ARM_PKG=ance-0.1.1-1.aarch64.rpm
+ANOLIS_X86_SQLITE=Anolis_OS-8.6.x86_64.sqlite
+ANOLIS_ARM_SQLITE=Anolis_OS-8.6.aarch64.sqlite
 ANOLIS_MIGRATION_PKGS=anolis_migration_pkgs.tar.gz
 
 if [ "$UID" -ne 0 ]; then
@@ -32,13 +34,18 @@ init_conf() {
 
 check_or_download_ance() {
     mkdir -p ${TARGET_PATH}/${MIGRATION_DIR}/ance
-
     pushd ${TARGET_PATH}/${MIGRATION_DIR}/ance
-    if [ ! -f "${ANCE_PKG}" ]; then
-        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/release/x86_64/${ANCE_PKG}"
+    if [ ! -f "${ANCE_X86_PKG}" ]; then
+        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/release/x86_64/${ANCE_X86_PKG}"
     fi
-    if [ ! -f "${ANOLIS_SQLITE}" ]; then
-        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/databases/${ANOLIS_SQLITE}"
+    if [ ! -f "${ANCE_ARM_PKG}" ]; then
+        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/release/aarch64/${ANCE_ARM_PKG}"
+    fi
+    if [ ! -f "${ANOLIS_X86_SQLITE}" ]; then
+        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/databases/${ANOLIS_X86_SQLITE}"
+    fi
+    if [ ! -f "${ANOLIS_ARM_SQLITE}" ]; then
+        wget "https://ance.oss-cn-hangzhou.aliyuncs.com/databases/${ANOLIS_ARM_SQLITE}"
     fi
     if [ ! -f "${ANOLIS_MIGRATION_PKGS}" ]; then
         wget "https://gitee.com/src-anolis-sig/leapp/releases/download/v1.0.1-all-in-one/${ANOLIS_MIGRATION_PKGS}"
