@@ -28,6 +28,11 @@ warn() {
          echo "ERROR: $1" >&2
 }
 
+info() {
+	msg=$1
+	echo $1 >> $LOGFILE
+}
+
 usage() {
 	echo "usage: build_hotfix.sh [options] <parameters>" >&2
 	echo "		-h, --help              Show this help message" >&2
@@ -41,6 +46,7 @@ usage() {
 	echo "		-c, --config            Specify kernel config file" >&2
 	echo "		-r, --repo              Specify the kernel source directory" >&2
 	echo "		-t, --tag       		Specify the tag of the source code if it is a git repo" >&2
+	echo "                              if not provide --tag, it means the src direcotry is not a git repo" >&2
 	echo "		--kpatch-module   		Config to use kpatch.ko module mode instead of livepatch" >&2
 	echo "		--kernel-devel   		Config the kernel-devel package path" >&2
 }
@@ -115,7 +121,14 @@ function parse_args(){
 	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
 		echo "USE KPATCHMODULE"
 	else
+		echo "Using Livepatch"
 		USE_KPATCH_MODULE=0
+	fi
+
+	if [ -z ${tag} ]; then
+		USE_SRC_RPM=1
+	else
+		USE_SRC_RPM=0
 	fi
 
 	if [ -z ${patch} ]; then
@@ -153,7 +166,7 @@ function parse_args(){
 	# 4.19.91-26.an7.x86_64 => 4.19.91-26.an7
 	strtmp="${strtmp%.*}"
 
-	if [[ -z $tag ]]; then
+	if [[ $tag == "NULL" ]]; then
 	    tag="${strtmp%.*}"
 	fi
 	# $dist is like 'an8' or 'an7'
@@ -166,8 +179,11 @@ function parse_args(){
 	export LOCALVERSION="${localversion}"
 
 	kpatch_id=`date "+%Y%m%d%H%M%S"`
+	if [[ -z $tag ]]; then
+		tag="src"
+	fi
 	if [[ -n "$hotfix_name" ]]; then
-		echo "find hotfix_name : ${hotfix_name}"
+		info "find hotfix_name : ${hotfix_name}"
 		kpatch_id=${hotfix_name}-${tag}-${kpatch_id}
 	else
 		kpatch_id=${patch_name}-${tag}-${kpatch_id}
@@ -233,9 +249,11 @@ function download_vmlinux() {
 # kpatch-build under kpatch_space
 function prepare_kpatch(){
 	devel_package=$DEV_PACKAGE
-	echo "preparing kpatch, found devel_package : $devel_package "
-	echo "installing dev_package..."
-	rpm -ivh $devel_package
+	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
+		echo "preparing kpatch, found devel_package : $devel_package "
+		echo "installing dev_package..."
+		rpm -ivh $devel_package
+	fi
 
 	kpatch_prefix="kpatch-build"
 	kpatch_dir="${BASE}/${kpatch_prefix}"
@@ -276,6 +294,8 @@ function prepare_kpatch(){
 # checkout the branch or tag
 function checkout_branch() {
 	cd ${KSRCS}/${SRCREPO}
+	git fetch --tags
+
     repo_tag=`git tag | grep -w $tag -m 1`
 	if [[ -z $repo_tag ]]; then
 		repo_tag=`git branch -a | grep -w $tag -m 1`
@@ -284,7 +304,7 @@ function checkout_branch() {
 		die "the input tag cannot be found either in tag or branch"
 	fi
     
-    git checkout $repo_tag
+    git checkout $tag
     if [[ ! -d ${SRCPREFIX}/${kernel_version}/${kernel_version} ]];then
         mkdir -p ${SRCPREFIX}/${kernel_version}/${kernel_version}
     fi
@@ -302,13 +322,6 @@ function prepare_environment(){
     # build and install kpatch
 	# prepare_kpatch
     source /etc/os-release
-
-	if [[ ! -d ${tmpdir} ]]; then
-		mkdir -p ${tmpdir}
-	else
-		echo "Remove all file under ${tmpdir}"
-		rm -rf ${tmpdir}/*
-	fi
 
 	# for the supported kernel, no CONFIGFILE passed
 	# prepare the config file and the vmlinx
@@ -356,14 +369,17 @@ function prepare_environment(){
 	# build and install kpatch
 	prepare_kpatch
 
-    # checkout the source branch
-	checkout_branch
+    # checkout the source branch with git
+	# if args with -t options, means need checkout ,otherwise, just use the source direcotry
+	if [[ $USE_SRC_RPM -eq 0 ]]; then
+		checkout_branch
+	fi
 
 	cd ${tmpdir}
 	
 	# rename the orig patch to ${kpatch_id}.patch
-	cp ${patch} "${kpatch_id}".patch || die "copy ${PATCH_FILE} to ${kpatch_id}.patch failed";
-	cp ${patch} patch || die "copy ${PATCH_FILE} to patch failed";
+	cp ${patch} "${kpatch_id}".patch || die "copy ${patch} to ${kpatch_id}.patch failed";
+	cp ${patch} patch || die "copy ${patch} to patch failed";
 	echo "${description}" > description || die "output description failed";
 	
 	set +x
@@ -391,6 +407,10 @@ function do_kpatch_build(){
     cmd="${kpatch_build_path} "
 	cmd_tail="--skip-compiler-check -a ${kernel_version} -n "${kpatch_id}" -s "${tmpdir}"/"${kernel_version}"/"${kernel_version}" -c "${CONFIGFILE}"  -o "${tmpdir}" -v "${VMLINUX}" "${tmpdir}"/"${kpatch_id}".patch "
 	
+	if [[ $USE_SRC_RPM -eq 1 ]]; then
+		cmd_tail="--skip-compiler-check -a ${kernel_version} -n "${kpatch_id}" -s "$SRCREPO" -c "${CONFIGFILE}"  -o "${tmpdir}" -v "${VMLINUX}" "${tmpdir}"/"${kpatch_id}".patch "
+	fi
+
 	if [[ $USE_KPATCH_MODULE -eq 1 ]]; then
 		cmd=${cmd}"--use-kpatch-module "${cmd_tail}
 	else

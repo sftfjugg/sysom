@@ -39,6 +39,13 @@ usage() {
          exit 1
  }
 
+# info : output log to LOGFILE
+ info() {
+    msg=$1
+    echo $1
+    echo $1 >> $LOGFILE
+ }
+
 # make sure ${hotfix_base}/kpatch_space has kpatch-build
  check_kpatch_build() {
     kernel_version=$1
@@ -49,7 +56,7 @@ usage() {
     
     cd ${BASE}/kpatch_space
     if [[ ! -d "kpatch-build" ]]; then
-        echo "Cloning kpatch-build ... " >> $LOGFILE
+        info "Cloning kpatch-build ... "
         git clone https://gitee.com/anolis/kpatch-build.git
 
         if [[ $? -ne 0 ]]; then
@@ -59,7 +66,7 @@ usage() {
             fi
         fi
     else
-        echo "Found kpatch-build"
+        info "Found kpatch-build"
         cd ${BASE}/kpatch_space/kpatch-build && git pull
     fi
 
@@ -76,7 +83,8 @@ usage() {
 
     cd ${BASE}/kernel_repos
     if [[ ! -d "cloud-kernel" ]]; then
-        echo "Cloning cloud-kernel ... " >> $LOGFILE
+        info "Cloning cloud-kernel ... "
+        info "When Cloning into cloud-kernel, it may take a long time ..."
         git clone https://gitee.com/anolis/cloud-kernel.git
         if [[ $? -ne 0 ]]; then
             cp -a ${NFSDIR}/cloud-kernel .
@@ -125,16 +133,21 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
+echo "checking enviroment..."
+if [[ -z $LOGFILE ]]; then
+    echo "Warning: No log file specify...the log may not out put to the log file!"
+else
+    echo "outputing log to : $LOGFILE..."
+fi
 
-
-if [[ -n $LOGFILE ]]; then 
-    echo "Checking kpatch build directory" >> $LOGFILE
+if [[ -n $LOGFILE ]]; then
+    info "Checking kpatch build directory..."
 fi
 check_kpatch_build $KERNELVERSION
 if [[ -n $LOGFILE ]]; then
-    echo "Checking Kernel Source of Anolis" >> $LOGFILE
+    info "Checking Kernel Source of Anolis..."
 fi
 check_kernel_src $KERNELVERSION
 if [[ -n $LOGFILE ]]; then
-    echo "Env Check Finished ..." >> $LOGFILE
+    info "Env Check Finished ..." 
 fi

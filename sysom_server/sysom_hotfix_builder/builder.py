@@ -7,6 +7,7 @@ File                builder.py
 Description:        This is the main program of hotfix builder
 """
 import os
+from os import listdir
 from loguru import logger
 import threading
 import requests
@@ -105,6 +106,9 @@ class HotfixBuilder():
         self.local_arch = os.uname().release.split(".")[-1]
         self.connector = ServerConnector(server_ip, username, password)
         self.tmpdir="/hotfix_tmpdir"
+        self.src_rpm_tmpdir="/tmp/hotfix_src"
+        self.hotfix_id = None
+        self.fd = None
         self.token = self.connector.get_token()
         self.prepare_env()
 
@@ -118,6 +122,13 @@ class HotfixBuilder():
 
     def run(self):
         self.thread_runner.start()
+
+    def change_building_status(self, status):
+        self.connector.change_building_status(self.hotfix_id, status)
+
+    def die(self, msg):
+        self.fd.write("%s \n" % msg)
+        self.change_building_status("failed")
 
     def prepare_env(self):
         # prepare kernel src and kaptch-build
@@ -161,6 +172,9 @@ class HotfixBuilder():
         if not os.path.exists(os.path.join(self.builder_hotfix_package_repo, "vmlinux")):
             os.makedirs(os.path.join(self.builder_hotfix_package_repo, "vmlinux"))
 
+        if not os.path.exists(os.path.join(self.builder_hotfix_package_repo, "src_pack")):
+            os.makedirs(os.path.join(self.builder_hotfix_package_repo, "src_pack"))
+
         # copy build_hotfix.sh to BASE
         if os.path.exists("./build_hotfix.sh"):
             shutil.copy("./build_hotfix.sh", self.hotfix_base)
@@ -171,6 +185,10 @@ class HotfixBuilder():
             shutil.copy("./build_rpm.sh", self.hotfix_base)
         else:
             logger.error("ERROR: cannot find build_rpm.sh")
+
+    def clear_tmpdir(self):
+        os.system("rm -rf {} && mkdir {} ".format(self.tmpdir, self.tmpdir))
+        os.system("rm -rf {}/*patch".format(self.hotfix_base))
 
     def find_build_rpm(self):
         directory = "/hotfix_tmpdir"
@@ -213,15 +231,16 @@ class HotfixBuilder():
         devel_package = devel_link.split("/")[-1]
         if os.path.exists(os.path.join(devel_package_directory, devel_package)):
             # release devel package and storage config file
-            os.system("cp {} /tmp/a.rpm && cd /tmp".format(os.path.join(devel_package_directory, devel_package)))
-            os.system("rpm2cpio a.rpm | cpio -div ./usr/src/kernels/{}/.config".format(kernel_version))
+            os.system("cp {} /tmp/a.rpm".format(os.path.join(devel_package_directory, devel_package)))
+            os.system("cd /tmp && rpm2cpio a.rpm | cpio -dim".format(kernel_version))
             os.system("cd /tmp && cp ./usr/src/kernels/{}/.config {}/config-{} && rm -rf ./usr && rm -rf a.rpm".format(kernel_version, kernel_config_directory, kernel_version))
         else:
             # download devel package,copy devel-package and config file to its own directory
+            self.fd.write("Downloading devel package from {}...\n".format(devel_link))
             os.system("wget -P {} {}".format(devel_package_directory, devel_link))
             os.system("cp {} /tmp/a.rpm".format(os.path.join(devel_package_directory, devel_package)))
-            os.system("cd /tmp && rpm2cpio a.rpm | cpio -div ./usr/src/kernels/{}/.config".format(kernel_version))
-            os.system("cp ./usr/src/kernels/{}/.config {}/config-{} && rm -rf ./usr && rm -rf a.rpm".format(kernel_version, kernel_config_directory, kernel_version))
+            os.system("cd /tmp && rpm2cpio a.rpm | cpio -dim".format(kernel_version))
+            os.system("cd /tmp && cp ./usr/src/kernels/{}/.config {}/config-{} && rm -rf ./usr && rm -rf a.rpm".format(kernel_version, kernel_config_directory, kernel_version))
         config_name = "config-" + kernel_version
         config_name = os.path.join(kernel_config_directory, config_name)
         return config_name
@@ -236,30 +255,67 @@ class HotfixBuilder():
         debuginfo_package = debuginfo_link.split("/")[-1]
         if os.path.exists(os.path.join(debuginfo_package_directory, debuginfo_package)):
             os.system("cp {} /tmp/b.rpm".format(os.path.join(debuginfo_package_directory, debuginfo_package)))
-            os.system("cd /tmp && rpm2cpio b.rpm | cpio -div ./usr/lib/debug/lib/modules/{}/vmlinux".format(kernel_version))
+            os.system("cd /tmp && rpm2cpio b.rpm | cpio -dim".format(kernel_version))
             os.system("cd /tmp && cp ./usr/lib/debug/lib/modules/{}/vmlinux {}/vmlinux-{} && rm -rf ./usr && rm -rf b.rpm".format(kernel_version, vmlinux_directory, kernel_version))
         else:
             # download debuginfo package,copy debuginfo-package and vmlinx to its own directory
+            self.fd.write("Downloading debuginfo package from {}...\n".format(debuginfo_link))
             os.system("wget -P {} {}".format(debuginfo_package_directory, debuginfo_link))
             os.system("cp {} /tmp/b.rpm".format(os.path.join(debuginfo_package_directory, debuginfo_package)))
-            os.system("cd /tmp && rpm2cpio /tmp/b.rpm | cpio -div ./usr/lib/debug/lib/modules/{}/vmlinux".format(os.path.join(debuginfo_package_directory, debuginfo_package), kernel_version))
-            os.system("cp ./usr/lib/debug/lib/modules/{}/vmlinux {}/vmlinux-{} && rm -rf ./usr".format(kernel_version, vmlinux_directory, kernel_version))
+            os.system("cd /tmp && rpm2cpio /tmp/b.rpm | cpio -dim ".format(os.path.join(debuginfo_package_directory, debuginfo_package), kernel_version))
+            os.system("cd /tmp && cp ./usr/lib/debug/lib/modules/{}/vmlinux {}/vmlinux-{} && rm -rf ./usr && rm -rf b.rpm".format(kernel_version, vmlinux_directory, kernel_version))
         vmlinux_name = "vmlinux-" + kernel_version
         vmlinux_name = os.path.join(vmlinux_directory, vmlinux_name)
         return vmlinux_name
 
-    def check_kernel_source(self, git_repo, source_code_repo):
-        if not os.path.exists(os.path.join(self.hotfix_base, "kernel_repos", source_code_repo)):
-            os.system("cd {} && git clone {}".format(os.path.join(self.hotfix_base, "kernel_repos"), git_repo)) # if the kernel source is not exist, clone the repo
+    def check_kernel_source(self, src_repo, source_code_repo, kernel_version, is_src_package):
+        if not is_src_package:
+            if not os.path.exists(os.path.join(self.hotfix_base, "kernel_repos", source_code_repo)):
+                os.system("cd {} && git clone {}".format(os.path.join(self.hotfix_base, "kernel_repos"), src_repo)) # if the kernel source is not exist, clone the repo
+            else:
+                os.system("cd {} && git fetch && git pull".format(os.path.join(self.hotfix_base, "kernel_repos", source_code_repo))) # source_code_repo: cloud-kernel
         else:
-            os.system("cd {} && git fetch && git pull".format(os.path.join(self.hotfix_base, "kernel_repos", source_code_repo)))
-            # if the repo exist, we should sync the tags and updates
+            # use src package , source_code_repo is download link, download src.rpm
+            src_name = source_code_repo.split("/")[-1]
+            if not os.path.exists(os.path.join(self.builder_hotfix_package_repo, "src_pack", src_name)):
+                os.system("cd {} && wget {} -O {}.src.rpm".format(os.path.join(self.builder_hotfix_package_repo, "src_pack"), source_code_repo, kernel_version))
 
     def get_building_image(self, kernel_version):
         arch = kernel_version.split(".")[-1]
         image_list_file = open('./img_list.json')
         images = json.load(image_list_file)
         return images[arch]['anolis']
+
+    def extract_description_from_patch(self, local_patch):
+        logger.info("+++++++ %s" % local_patch)
+        return "hello world"
+
+    """
+    when using .src.rpm, input kernel_version, before this function, the src.rpm should be downloaded
+    and stored in the src_pack repo
+    this function is to convert rpm to source rpm into direcotry link git repo
+    """
+    def get_source_code_from_rpm(self, kernel_version):
+        src_rpm_name = kernel_version + ".src.rpm"
+        src_pack_dir = os.path.join(self.builder_hotfix_package_repo, "src_pack")
+        if not os.path.exists(os.path.join(src_pack_dir, src_rpm_name)):
+            return None
+        os.system("rm -rf {} && mkdir {} ".format(self.src_rpm_tmpdir, self.src_rpm_tmpdir, self.src_rpm_tmpdir))
+        shutil.copy(os.path.join(src_pack_dir, src_rpm_name), self.src_rpm_tmpdir)
+        os.system("pushd {} && rpm2cpio {} | cpio -dmi".format(self.src_rpm_tmpdir, src_rpm_name))
+        # walk the directory, find out the linux-{}.tar.xz file, release it, and the source code name is linux-{}
+        src = None
+        for each_file in listdir(self.src_rpm_tmpdir):
+            if re.search(".tar.xz", each_file):
+                src = each_file
+                break
+        if src is None:
+            return None
+        os.system("pushd {} && tar -xvf {}".format(self.src_rpm_tmpdir, src))
+        src = src.replace(".tar.xz", "")
+        # remove the source directory to hotfix tmpdir
+        os.system("cp -a {} {}".format(os.path.join(self.src_rpm_tmpdir, src), self.tmpdir))
+        return os.path.join(self.tmpdir, src)
 
     """
     build the supported kernel like : anolis
@@ -274,17 +330,30 @@ class HotfixBuilder():
         patch_path = os.path.join(self.nfs_dir_home, "patch", patch_path)
         log_file = parameters['log_file']
         git_repo = parameters['git_repo']
+        is_src_package = False
         source_code_repo = git_repo.split("/")[-1].rstrip(".git") # findout the kernel repo name
         log = ""
         output = ""
         log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
-        f = open(log_file_path, "a")
+        self.fd = open(log_file_path, "a")
+
+        self.fd.write("=========================================================\n")
+        self.fd.write("Created Hotfix Building Task ... \n")
+        self.fd.write("Kernel Version: %s\n" % kernel_version)
+        self.fd.write("Patch file: %s\n" % patch_path)
+        self.fd.write("Hotfix name : %s\n" % hotfix_name)
+        self.fd.write("=========================================================\n")
 
         self.connector.change_building_status(hotfix_id, "building")
 
-        self.check_kernel_source(git_repo, source_code_repo)
+        self.check_kernel_source(git_repo, source_code_repo, kernel_version, is_src_package)
 
         image = self.get_building_image(kernel_version)
+        if image is None:
+            raise Exception("No specify building image ... ")
+            return None
+        else:
+            self.fd.write("Using Building Image : %s \n" % image)
 
         # move the patch to base
         try:
@@ -292,24 +361,18 @@ class HotfixBuilder():
             logger.info("the local patch is : %s " % local_patch)
             shutil.copy(patch_path, local_patch)
         except Exception as e:
-            f.write(str(e))
+            self.fd.write(str(e))
             logger.error(str(e))
             # self.connector.change_building_status(hotfix_id, "failed")
 
-        f.write("Created Hotfix Building Task ... \n")
-        f.write("Kernel Version: %s\n" % kernel_version)
-        f.write("Patch file: %s\n" % patch_path)
-        f.write("Hotfix name : %s\n" % hotfix_name)
-        f.write("Using Building Image : %s \n" % image)
-
-        description = "hello world"
+        description = self.extract_description_from_patch(local_patch)
         # run the build hotfix script
-        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {} ".format(
+        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -r {} -t NULL ".format(
             self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
             self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, source_code_repo
         )
-        f.write(cmd+"\n")
-        f.close()
+        self.fd.write(cmd+"\n")
+        self.fd.close()
         logger.info(cmd)
         
         cmd += " 2>&1 >> %s" % log_file_path
@@ -321,7 +384,7 @@ class HotfixBuilder():
         rpm_names = self.find_build_rpm()
 
         # when finished building, sync the build log
-        self.connector.sync_building_log(hotfix_id)
+        #self.connector.sync_building_log(hotfix_id)
 
         # if rpm is more than one, upload it one by one
         for each_rpm in rpm_names:
@@ -346,60 +409,105 @@ class HotfixBuilder():
         hotfix_name = parameters['hotfix_name']
         devel_link = parameters['devel_link']
         debuginfo_link = parameters['debuginfo_link']
-        git_repo = parameters['git_repo']
-        git_branch = parameters['git_branch']
+        src_repo = parameters['src_repo']    # if git, git_repo; if src, src download repo
+        src_origin = parameters['src_origin']# if git, git tag/branch; if src, src download link
         # find the patch_path in builder local
         patch_path = parameters['patch_path'].split("/")[-1]
         patch_path = os.path.join(self.nfs_dir_home, "patch", patch_path)
         log_file = parameters['log_file']
         image = parameters['image']
-        source_code_repo = git_repo.split("/")[-1].rstrip(".git") # findout the kernel repo name
+        is_src_package = parameters['is_src_package']
+
         log = ""
         output = ""
         log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
-        f = open(log_file_path, "a")
+        self.fd = open(log_file_path, "a")
 
         self.connector.change_building_status(hotfix_id, "building")
 
+        self.fd.write("=========================================================\n")
+        self.fd.write("Created Hotfix Building Task ... \n")
+        self.fd.write("Kernel Version: %s\n" % kernel_version)
+        self.fd.write("Patch file: %s\n" % patch_path)
+        self.fd.write("Hotfix name : %s\n" % hotfix_name)
+        self.fd.write("Using Building Image : %s \n" % image)
+        self.fd.write("=========================================================\n")
+        
+        if not is_src_package:
+            self.fd.write("Using the source repo...\n")
+            source_code_repo = src_repo.split("/")[-1].rstrip(".git") # findout the kernel repo name: cloud-kernel
+        else:
+            self.fd.write("Using the src.rpm...\n")
+            source_code_repo = src_origin # if use .src.rpm, source code is in src_pack directory, not a directory
+            src_rpm_name = src_origin.split("/")[-1]  # Here, src_origin is the link to src.rpm
+
         if len(image) == 0:
             image = self.get_building_image(kernel_version)
+        if image is None:
+            raise Exception("No specify building image ... ")
+            return None
+        else:
+            self.fd.write("Using Building Image : %s \n" % image)
 
-        self.check_kernel_source(git_repo, source_code_repo)
+        self.fd.write("Checking the source code...\n")
+        self.check_kernel_source(src_repo, source_code_repo, kernel_version, is_src_package)
 
+        if is_src_package:
+            source_code_path = self.get_source_code_from_rpm(kernel_version)
+            if source_code_path is None:
+                logger.error("Get Source Code from Rpm Failed...")
+                self.die("Get Source Code from Rpm Failed...\n")
+                raise Exception('Get Source Code from .src.rpm failed...')
+                return None
+
+        self.fd.write("Checking the devel package for config file...\n")
         kernel_config = self.check_config(kernel_version)
         if kernel_config is None:
+            self.fd.write("kernel_config is not found...Now check the buffer of kernel-devel...\n")
             kernel_config = self.check_devel_package(devel_link, kernel_version)
+            if not os.path.exists(kernel_config):
+                self.die("Get the kernel config file failed...\n")
+                return None
+            else:
+                self.fd.write("Succeed in getting the kernel config from kernel-devel package...\n")
 
+        self.fd.write("Checking the vmlinux...\n")
         vmlinux = self.check_vmlinux(kernel_version)
         if vmlinux is None:
+            self.fd.write("vmlinux not found...Now checking the buffer of kernel-debuginfo...\n")
             vmlinux = self.check_debuginfo_package(debuginfo_link, kernel_version)
+            if not os.path.exists(vmlinux):
+                self.die("Get the kernel vmlinux failed...\n")
+                return None
+            else:
+                self.fd.write("Succeed in getting vmlinux from debuginfo...\n")
+
 
         # move the patch to base
         try:
             local_patch = os.path.join(self.hotfix_base, parameters['patch_path'].split("/")[-1])
             shutil.copy(patch_path, local_patch)
         except Exception as e:
-            f.write(str(e)+"\n")
-            self.connector.change_building_status(hotfix_id, "failed")
+            self.die("Error when copying the source patch, may be this patch is not exist?")
+            return None
 
-        f.write("Created Hotfix Building Task ... \n")
-        f.write("Kernel Version: %s\n" % kernel_version)
-        f.write("Patch file: %s\n" % patch_path)
-        f.write("Hotfix name : %s\n" % hotfix_name)
-        f.write("Using Building Image : %s \n" % image)
-
-        description = "hello world"
+        description = self.extract_description_from_patch(local_patch)
         
         # run the build hotfix script
-        cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {} ".format(
-            self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
-            self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, kernel_config, vmlinux, source_code_repo, git_branch
-        )
-        f.write(cmd + "\n")
-        f.close()
-        logger.info(cmd)
+        if is_src_package:
+            cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} 2>&1 1 >> {} ".format(
+                self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
+                self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, kernel_config, vmlinux, source_code_path, log_file_path
+            )
+        else:
+            cmd = "docker run --rm -v {}:{} -v {}:{} -v {}:{} -v {}:{} --net=host {} sh {}/build_hotfix.sh -p {} -k {} -d {} -b {} -n {} -g {} -c {} -v {} -r {} -t {} 2>&1 1 >> {}".format(
+                self.hotfix_base, self.hotfix_base, self.nfs_dir_home, self.nfs_dir_home, self.builder_hotfix_package_repo, self.builder_hotfix_package_repo, self.tmpdir, self.tmpdir, image,
+                self.hotfix_base, local_patch, kernel_version, description, self.hotfix_base, hotfix_name, log_file_path, kernel_config, vmlinux, source_code_repo, git_branch, log_file_path
+            )
         
-        cmd += " 2>&1 >> %s" % log_file_path
+        self.fd.write(cmd + "\n")
+        self.fd.close()
+        logger.info(cmd)
 
         p=subprocess.Popen(cmd, shell=True)
         return_code=p.wait()
@@ -408,7 +516,7 @@ class HotfixBuilder():
         rpm_names = self.find_build_rpm()
 
         # when finished building, sync the build log
-        self.connector.sync_building_log(hotfix_id)
+        #self.connector.sync_building_log(hotfix_id)
 
         # if rpm is more than one, upload it one by one
         for each_rpm in rpm_names:
@@ -426,6 +534,11 @@ class HotfixBuilder():
     '''
     Each event is an object, the parameter is inside event.value
     event.value is a dictionary.
+
+    For supported kernel, we use gitee for source code management.
+    However, for customize kernel, user may have different ways for their 
+    source code management. Therefore, we support git/.src.rpm for kernel source
+
     '''
     def build(self):
         with dispatch_admin(self.cec_url) as admin:
@@ -440,14 +553,19 @@ class HotfixBuilder():
                 # get one event from cec, if match the arch, ack this event
                 parameters = event.value
                 log_file = parameters['log_file']
+                self.hotfix_id = parameters['hotfix_id']
                 log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
 
                 # this operation aims to clear the previous log if rebuild
                 with open(log_file_path, "w") as f:
-                    f.write("=====Sysom Hotfix Building System=====\n")
+                    f.write("=========================================================\n")
+                    f.write("==========*******Sysom Hotfix Building System*******==============\n")
+                    f.write("=========================================================\n")
 
                 if parameters['arch'] != self.local_arch:
                     break
+
+                self.connector.change_building_status(self.hotfix_id, "building")
 
                 # for each run, update the repo
                 cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s -l %s " % (self.hotfix_base, self.nfs_dir_home, log_file_path)
@@ -455,22 +573,24 @@ class HotfixBuilder():
                     output = process.read()
 
                 customize = parameters['customize']
-
+                # before build one job, clear the tmpdir
+                self.clear_tmpdir()
                 if not customize:
                     self.build_supported_kernel(parameters)
                 else:
                     self.build_customize_kernel(parameters)
                 logger.info(log_file)
+                self.fd.close()
                 consumer.ack(event)
         except Exception as e:
             logger.error(str(e))
-            self.connector.change_building_status(hotfix_id, "failed")
+            self.connector.change_building_status(self.hotfix_id, "failed")
             exit(1)
         finally:
+            self.fd.close()
             consumer.ack(event)
 
         
-
 if __name__ == "__main__":
     config_file = "builder.ini"
     

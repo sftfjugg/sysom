@@ -117,7 +117,7 @@ function prepare_spec(){
 
     hotfix_apply="/usr/sbin/kpatch load %{_prefix}/\$(uname -r)/${hotfix_base}/${hotfix_file}"
     hotfix_apply_prefix="/usr/sbin/kpatch load"
-    hotfix_undo="yes | /usr/sbin/kpatch unload %{_prefix}/\$(uname -r)/${hotfix_base}/${hotfix_file}"
+    hotfix_undo=" /usr/sbin/kpatch unload %{_prefix}/\$(uname -r)/${hotfix_base}/${hotfix_file}"
 	hotfix_spec="
 %define srcname ${hotfix_file} 
 %define _prefix /var/khotfix
