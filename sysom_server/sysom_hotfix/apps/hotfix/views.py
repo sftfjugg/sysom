@@ -144,12 +144,15 @@ class HotfixAPIView(GenericViewSet,
                     arch=res.arch, log_file=res.log_file)
                 except Exception as e:
                     return other_response(msg=str(e), code=400)
+            else:
+                return other_response(msg=f"This custom kernel version :{kernel_version} needs to be configured before use", code=400)
         else:
             # This is a customize kernel version
             os_type = self.function.get_info_from_version(kernel_version)
-            git_repo = self.function.get_gitrepo_of_os(os_type)
+            source_repo = self.function.get_sourcerepo_of_os(os_type)
             image = self.function.get_image_of_os(os_type)
-            git_branch = self.function.get_info_from_version(kernel_version, "branch")
+            is_src_package = self.function.get_src_pkg_mark_of_os(os_type)
+            source = self.function.get_info_from_version(kernel_version, "source")
             devel_link = self.function.get_info_from_version(kernel_version, "devel_link")
             debuginfo_link = self.function.get_info_from_version(kernel_version, "debuginfo_link")
             patch_path = os.path.join(settings.HOTFIX_FILE_STORAGE_REPO, patch_file_name)
@@ -164,7 +167,7 @@ class HotfixAPIView(GenericViewSet,
                 # with devel-package and debuginfo-package
                 status = self.function.create_message_to_cec(customize=True, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=res.os_type,
                 hotfix_id=res.id, kernel_version=res.kernel_version, hotfix_name=res.hotfix_name, patch_file=res.patch_file, patch_path=res.patch_path, arch=res.arch,
-                log_file=res.log_file, git_repo=git_repo, git_branch=git_branch, devel_link=devel_link,debuginfo_link=debuginfo_link,image=image)
+                log_file=res.log_file, source_repo=source_repo, source=source, devel_link=devel_link,debuginfo_link=debuginfo_link,image=image,is_src_package=is_src_package)
             except Exception as e:
                 other_response(msg=str(e), code=400)
         return success(result={"msg":"success","id":res.id,"event_id":self.event_id}, message="create hotfix job success")
@@ -193,15 +196,16 @@ class HotfixAPIView(GenericViewSet,
                         patch_file=hotfix_object.patch_file, patch_path=hotfix_object.patch_path, arch=hotfix_object.arch, log_file=hotfix_object.log_file
                         )
             else:
-                git_repo = self.function.get_gitrepo_of_os(os_type)
-                git_branch = self.function.get_info_from_version(kernel_version, "branch")
+                source_repo = self.function.get_sourcerepo_of_os(os_type)
+                source = self.function.get_info_from_version(kernel_version, "source")
                 devel_link = self.function.get_info_from_version(kernel_version, "devel_link")
                 debuginfo_link = self.function.get_info_from_version(kernel_version, "debuginfo_link")
                 image = self.function.get_image_of_os(os_type)
+                is_src_package = self.function.get_src_pkg_mark_of_os(os_type)
                 status = self.function.create_message_to_cec(customize=True, cec_topic=settings.SYSOM_CEC_HOTFIX_TOPIC, os_type=hotfix_object.os_type,
                     hotfix_id=hotfix_object.id, kernel_version=hotfix_object.kernel_version, hotfix_name=hotfix_object.hotfix_name, patch_file=hotfix_object.patch_file,
-                    patch_path=hotfix_object.patch_path, arch=hotfix_object.arch, log_file=hotfix_object.log_file, git_repo=git_repo, git_branch=git_branch, 
-                    devel_link=devel_link,debuginfo_link=debuginfo_link,image=image
+                    patch_path=hotfix_object.patch_path, arch=hotfix_object.arch, log_file=hotfix_object.log_file, source_repo=source_repo, source=source, 
+                    devel_link=devel_link,debuginfo_link=debuginfo_link,image=image,is_src_package=is_src_package
                     )
             if status:
                 hotfix_object.building_status = self.build_wait
@@ -353,23 +357,26 @@ class HotfixAPIView(GenericViewSet,
             return other_response(message=str(e), code=400)
 
     def insert_os_type_relation(self, request):
+        data = request.data
         os_type = request.data["os_type"]
-        git_repo = request.data["git_repo"]
+        source_repo = request.data["source_repo"]
+        src_pkg_mark = request.data["src_pkg_mark"]
         try:
             image = request.data['image']
         except Exception as e:
             image = ""
-        if len(os_type) > 0 and len(git_repo) > 0:
+        if len(os_type) > 0 and len(source_repo) > 0:
             try:
                 os_object = OSTypeModel.objects.all().filter(os_type=os_type).first()
                 if os_object is None:
                     os_type_object = OSTypeModel.objects.create(
                         os_type = os_type,
-                        git_repo = git_repo,
-                        image = image
+                        source_repo = source_repo,
+                        image = image,
+                        src_pkg_mark = src_pkg_mark
                     )
                 else:
-                    return other_response(message="same key found in record..", code=400)
+                    return other_response(message="same OS Type found in record..", code=400)
             except Exception as e:
                 return other_response(message=str(e), code=400)
         else:
@@ -378,18 +385,18 @@ class HotfixAPIView(GenericViewSet,
 
     def insert_kernel_version_relation(self, request):
         kernel_version = request.data['kernel_version']
-        git_branch = request.data['git_branch']
+        source = request.data['source']
         devel_link = request.data['devel_link']
         debuginfo_link = request.data['debuginfo_link']
         os_type = request.data['os_type']
-        if len(kernel_version)>0 and len(git_branch)>0 and len(devel_link)>0 and len(debuginfo_link)>0:
+        if len(kernel_version)>0 and len(source)>0 and len(devel_link)>0 and len(debuginfo_link)>0:
             try:
                 kernel_object = KernelVersionModel.objects.all().filter(kernel_version=kernel_version).first()
                 if kernel_object is None:
                     kernel_object = KernelVersionModel.objects.create(
                         kernel_version = kernel_version,
                         os_type=os_type,
-                        git_branch = git_branch,
+                        source = source,
                         devel_link = devel_link,
                         debuginfo_link = debuginfo_link
                     )
@@ -449,14 +456,13 @@ class HotfixAPIView(GenericViewSet,
         return success(result={"msg":"successfully deleted object"}, message="invoked delete kernel_version")
 
     def update_kernel_version(self, request):
-        print(request.data)
         try:
             kernel_object = KernelVersionModel.objects.all().filter(id=request.data['id']).first()
             if kernel_object is None:
                 return other_response(msg="can not find the kernelversion record", code=400)
             kernel_object.kernel_version = request.data['kernel_version']
             kernel_object.os_type = request.data['os_type']
-            kernel_object.git_branch = request.data['git_branch']
+            kernel_object.source = request.data['source']
             kernel_object.devel_link = request.data['devel_link']
             kernel_object.debuginfo_link = request.data['debuginfo_link']
             kernel_object.save()
@@ -470,8 +476,11 @@ class HotfixAPIView(GenericViewSet,
             if os_type_object is None:
                 return other_response(msg="can not find the OS type record", code=400)
             os_type_object.os_type = request.data['os_type']
-            os_type_object.git_repo = request.data['git_repo']
+            os_type_object.source_repo = request.data['source_repo']
             os_type_object.image = request.data['image']
+            src_pkg_mark = request.data.get("src_pkg_mark", None)
+            if src_pkg_mark:
+                os_type_object.src_pkg_mark = request.data["src_pkg_mark"]
             os_type_object.save()
         except Exception as e:
             return other_response(msg=str(e), code=400)

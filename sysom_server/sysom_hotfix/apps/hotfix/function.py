@@ -52,8 +52,8 @@ class FunctionClass():
                 return None
             if info == "os_type":
                 return version_object.os_type
-            if info == "branch":
-                return version_object.git_branch
+            if info == "source":
+                return version_object.source
             if info == "devel_link":
                 return version_object.devel_link
             if info == "debuginfo_link":
@@ -62,12 +62,12 @@ class FunctionClass():
             logger.error(str(e))
             return None        
 
-    def get_gitrepo_of_os(self, os_type):
+    def get_sourcerepo_of_os(self, os_type):
         try:
             os_object = OSTypeModel.objects.all().filter(os_type=os_type).first()
             if os_object is None:
                 return None
-            return os_object.git_repo
+            return os_object.source_repo
         except Exception as e:
             logger.error(str(e))
             return None
@@ -82,6 +82,16 @@ class FunctionClass():
             logger.exception(e)
             return None
     
+    def get_src_pkg_mark_of_os(self, os_type):
+        try:
+            os_object = OSTypeModel.objects.all().filter(os_type=os_type).first()
+            if os_object is None:
+                return None
+            return os_object.src_pkg_mark
+        except Exception as e:
+            logger.exception(e)
+            return None
+
     # building status and formal is set to be 0 when creating a hotfix
     def create_hotfix_object_to_database(self, os_type, kernel_version, hotfix_name, patch_file, patch_path, hotfix_necessary, hotfix_risk, 
     log_file, arch):
@@ -129,11 +139,12 @@ class FunctionClass():
                 return True
             else:
                 # this is customize kernel
-                git_repo = kwargs['git_repo']
-                git_branch = kwargs['git_branch']
+                source_repo = kwargs['source_repo']
+                source = kwargs['source']
                 devel_link = kwargs['devel_link']
                 debuginfo_link = kwargs['debuginfo_link']
                 image = kwargs['image']
+                is_src_package = kwargs["is_src_package"]
                 self.cec.produce_event_to_cec(cec_topic, {
                     "hotfix_id" : hotfix_id,
                     "kernel_version" : kernel_version,
@@ -144,11 +155,12 @@ class FunctionClass():
                     "log_file" : log_file,
                     "os_type" : os_type,
                     "customize": 1,
-                    "git_repo": git_repo,
-                    "git_branch": git_branch,
+                    "src_repo": source_repo,
+                    "src_origin": source,
                     "devel_link": devel_link,
                     "debuginfo_link": debuginfo_link,
-                    "image": image
+                    "image": image,
+                    "is_src_package": is_src_package
                 })
             return True
         except Exception as e:
