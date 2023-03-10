@@ -196,7 +196,6 @@ class NodeManager:
         ).execute_async()
         if result.code != 200:
             # Dispatch file failed
-            print(result.result, result.code)
             raise NodeManagerException(
                 f"Dispatch file to node failed: {result.err_msg}"
             )
@@ -216,7 +215,6 @@ class NodeManager:
             auto_retry=True
         ).execute_async()
         if result.code != 0:
-            print(result.code, result.result)
             raise NodeManagerException(
                 f"Execute init script failed: {result.err_msg}"
             )
@@ -242,7 +240,6 @@ class NodeManager:
             auto_retry=True
         ).execute_async()
         if result.code != 0:
-            print(result.code, result.result)
             raise NodeManagerException(
                 f"Execute clear script failed: {result.err_msg}"
             )
