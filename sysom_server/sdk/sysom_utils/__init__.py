@@ -11,3 +11,4 @@ name = "sysom_utils"
 from .adddict import *
 from .node_manager import *
 from .yaml_concat import *
+from .config_parser import *

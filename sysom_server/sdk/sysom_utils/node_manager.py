@@ -14,6 +14,7 @@ import os
 from asyncer import syncify
 from typing import List
 from channel_job.job import ChannelJobExecutor
+from .config_parser import ConfigParser
 from .adddict import Dict
 
 
@@ -22,8 +23,11 @@ class NodeManagerException(Exception):
 
 
 class NodeManager:
-    def __init__(self, config: Dict, channel_job_executor: ChannelJobExecutor) -> None:
+    def __init__(self, config: ConfigParser, channel_job_executor: ChannelJobExecutor) -> None:
         self._config = config
+        self._server_config = config.get_server_config()
+        self._service_config = config.get_service_config()
+        self._node_config = config.get_node_config()
         self._channel_job_executor = channel_job_executor
 
     ##############################################################################
@@ -31,24 +35,24 @@ class NodeManager:
     ##############################################################################
 
     def _get_target_package_dir(self, arch: str) -> str:
-        return f"{self._config.service_name}-{arch}"
+        return f"{self._service_config.service_name}-{arch}"
 
     def _get_service_root_path(self) -> str:
         return os.path.join(
-            self._config.comm.sysom_server.path.root_path,
-            self._config.service_dir
+            self._server_config.path.root_path,
+            self._service_config.service_dir
         )
 
     def _get_from_dir_path(self) -> str:
         return os.path.join(
             self._get_service_root_path(),
-            self._config.node.delivery.from_dir
+            self._node_config.delivery.from_dir
         )
 
     def _get_to_dir_path(self, arch: str) -> str:
         return os.path.join(
             self._get_service_root_path(),
-            self._config.node.delivery.to_dir,
+            self._node_config.delivery.to_dir,
             self._get_target_package_dir(arch)
         )
 
@@ -64,8 +68,8 @@ class NodeManager:
 
     def _get_node_service_dir(self) -> str:
         return os.path.join(
-            self._config.comm.sysom_node.path.root_path,
-            self._config.service_name
+            self._node_config.path.root_path,
+            self._service_config.service_name
         )
 
     def _is_tar_exists(self, arch: str):
@@ -73,9 +77,9 @@ class NodeManager:
         return os.path.exists(self._get_tar_package_path(arch))
 
     def _get_node_envs(self, arch: str):
-        envs = self._config.comm.sysom_node.envs
+        envs = self._node_config.envs
         envs["ARCH"] = arch
-        envs["SERVICE_NAME"] = self._config.service_name
+        envs["SERVICE_NAME"] = self._service_config.service_name
         res = ""
         for env_k in envs:
             res += f"export {env_k}={envs[env_k]};"
@@ -151,7 +155,7 @@ class NodeManager:
             shutil.copy2(src_file, dst_file)
 
         # 1. Check whether the specified architecture is supported.
-        files = self._config.node.delivery.files[arch]
+        files = self._node_config.delivery.files[arch]
         if not files:
             raise NodeManagerException(f"Unsupported architectures: {arch}")
 
@@ -201,14 +205,14 @@ class NodeManager:
         cd_workspace = f"cd {node_service_dir}"
         unzip_cmd = f"tar -zxvf {self._get_tar_package_name(arch)}"
         cd_tar_unzip_dir = f"cd {self._get_target_package_dir(arch)}"
-        init_cmd = f"bash {self._config.node.scripts.get('init', '')}"
+        init_cmd = f"bash {self._node_config.scripts.get('init', '')}"
         result = await self._channel_job_executor.dispatch_job(
             channel_opt="cmd",
             params={
                 "instance": target_instance,
                 "command": f"{self._get_node_envs(arch)} {cd_workspace} && {unzip_cmd} && {cd_tar_unzip_dir} &&{init_cmd}",
             },
-            timeout=self._config.comm.sysom_node.get("timeout", 60000),
+            timeout=self._node_config.get("timeout", 60000),
             auto_retry=True
         ).execute_async()
         if result.code != 0:
@@ -227,14 +231,14 @@ class NodeManager:
             self._get_target_package_dir(arch)
         )
         cd_workspace = f"cd {node_service_dir}"
-        clear_cmd = f"bash {self._config.node.scripts.get('clear', '')}"
+        clear_cmd = f"bash {self._node_config.scripts.get('clear', '')}"
         result = await self._channel_job_executor.dispatch_job(
             channel_opt="cmd",
             params={
                 "instance": target_instance,
                 "command": f"{self._get_node_envs(arch)} {cd_workspace} && {clear_cmd}",
             },
-            timeout=self._config.comm.sysom_node.get("timeout", 60000),
+            timeout=self._node_config.get("timeout", 60000),
             auto_retry=True
         ).execute_async()
         if result.code != 0:
