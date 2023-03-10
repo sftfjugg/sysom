@@ -1,0 +1,48 @@
+# sysom_server config
+sysom_global:
+  path:
+    # root_path: &global_root_path "/usr/local/sysom"
+    root_path: &global_root_path "/root/sysom"
+
+# Unified configuration of Server
+sysom_server:
+  path:
+    # root_path: !concat [&global_root_path, "server/target/sysom_server"]
+    root_path: !concat [*global_root_path, "/sysom_server"]
+  db:
+    redis:
+      host: localhost
+      port: 6379
+      username:
+      password:
+  cec:
+    protocol: redis
+    topics:
+      # 用于分发插件系统相关事件的主题
+      SYSOM_CEC_PLUGIN_TOPIC: SYSOM_CEC_PLUGIN_TOPIC
+      # 通道模块用于对外开放，投递操作的主题
+      SYSOM_CEC_CHANNEL_TOPIC: SYSOM_CEC_CHANNEL_TOPIC
+      # 监控模块用于接收通道结果的主题
+      SYSOM_CEC_CHANNEL_MONITOR_TOPIC: SYSOM_CEC_CHANNEL_MONITOR_TOPIC
+
+    special_param:
+      comm:
+        cec_default_max_len: 1000
+      admin:
+      producer:
+        cec_auto_mk_topic: true
+      consumer:
+
+# Unified configuration of Web
+sysom_web:
+  path:
+    root_path: !concat [*global_root_path, "/sysom_web"]
+
+# Unified configuration of Node
+sysom_node:
+  # 与节点交互命令超时时间，单位为 ms
+  path:
+    root_path: !concat &sysom_node_root_path [*global_root_path, "/node"]
+  timeout: 60000
+  envs:
+    NODE_HOME: *sysom_node_root_path
