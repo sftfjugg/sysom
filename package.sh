@@ -18,6 +18,7 @@ check_cmd tar
 RELEASE=sysomRelease-$(date +"%Y%m%d%H%M%S")
 SERVERDIR=sysom_server
 WEBDIR=sysom_web
+CONFDIR=conf
 SCRIPTDIR=script
 TOOLSDIR=tools
 # build web
@@ -27,7 +28,7 @@ yarn build
 popd || exit
 
 mkdir -p "${RELEASE}"
-cp -r ${SERVERDIR}/ ${TOOLSDIR}/ "${RELEASE}"/
+cp -r ${SERVERDIR}/ ${TOOLSDIR}/ ${CONFDIR}/ "${RELEASE}"/
 cp -r ${WEBDIR}/dist/ "${RELEASE}"/${WEBDIR}/
 mkdir -p "${RELEASE}"/${WEBDIR}/download/
 cp ${TOOLSDIR}/deploy/deploy.sh "${RELEASE}"/
