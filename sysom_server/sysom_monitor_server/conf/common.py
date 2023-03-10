@@ -6,12 +6,8 @@ Email               mfeng@linux.alibaba.com
 File                common.py
 Description:
 """
-import os
 from pathlib import Path
-from lib.adddict import Dict
-import yaml
-from yamlinclude import YamlIncludeConstructor
-from sysom_utils import YamlConcatConstructor, ConfigParser
+from sysom_utils import ConfigParser
 
 # sysom_monitor_server root path
 BASE_DIR = Path(__file__).resolve().parent.parent
