@@ -88,6 +88,9 @@ class ConfigParser:
     # Helper functions
     ##############################################################################
 
+    def get_consumer_group(self) -> str:
+        return self.get_server_config().cec.consumer_group
+
     def get_cec_url(self, target: CecTarget) -> str:
         server_config = self.get_server_config()
         cec_config = server_config.cec

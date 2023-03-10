@@ -17,6 +17,9 @@ setuptools.setup(
     url="",
     packages=["sysom_utils"],
     install_requires=[
+        "cec_base>=0.0.1",
+        "channel_job>=0.0.1",
+        "loguru>=0.6.0",
         "aiohttp>=3.8.3",
         "aiofiles>=0.8.0",
         "anyio>=3.6.2"
