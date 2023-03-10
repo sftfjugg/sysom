@@ -1,0 +1,45 @@
+vars:
+  NODE_EXPORT_BASE_DOWNLOAD_URL: &NODE_EXPORT_BASE_DOWNLOAD_URL https://sysom.oss-cn-beijing.aliyuncs.com/monitor/
+  NODE_EXPORT_VERSION: &NODE_EXPORT_VERSION 1.5.0
+  SERVICE_NAME: &SERVICE_NAME sysom_monitor 
+
+sysom_server:
+  channel_job:
+    target_topic: SYSOM_CEC_CHANNEL_TOPIC
+    listen_topic: SYSOM_CEC_CHANNEL_MONITOR_TOPIC
+    consumer_group: SYSOM_CEC_CHANNEL_MONITOR_TOPIC
+
+sysom_service:
+  service_name: *SERVICE_NAME
+  service_dir: !concat [*SERVICE_NAME, "_server"]
+
+# 节点测配置
+sysom_node:
+  version: 2.1
+  # 节点分发配置
+  delivery:
+    from_dir: scripts
+    to_dir: node
+    files:
+      comm: &code_delivery_files_comm
+        - local: node_init.sh
+          remote:
+        - local: node_clear.sh
+          remote:
+        - local: node_update.sh
+          remote:
+      amd64: &node_delivery_files_amd64
+        - *code_delivery_files_comm
+        - local: node_exporter-1.5.0.linux-amd64.tar.gz
+          remote: !concat [*NODE_EXPORT_BASE_DOWNLOAD_URL, "node_exporter-", *NODE_EXPORT_VERSION, ".linux-amd64.tar.gz"]
+      arm64:
+        - *code_delivery_files_comm
+        - local: node_exporter-1.5.0.linux-arm64.tar.gz
+          remote: !concat [*NODE_EXPORT_BASE_DOWNLOAD_URL, "node_exporter-", *NODE_EXPORT_VERSION, ".linux-arm64.tar.gz"]
+      x86_64:
+        - *node_delivery_files_amd64
+  scripts:
+    prepare: node_prepare.sh
+    init: node_init.sh
+    clear: node_clear.sh
+    update: node_update.sh
