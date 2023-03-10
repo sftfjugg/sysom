@@ -13,7 +13,7 @@ const KernelVersionConfigList = () => {
   const [dataoptionlist, setDataOptionList] = useState([]);
   
   const callback = (count) => {
-    const dr = [{label: count.os_type, value: count.os_type}];
+    const dr = [{label: count[0].os_type, value: count[0].os_type}];
     setDataOsType(dr)
   }
 
@@ -31,7 +31,7 @@ const KernelVersionConfigList = () => {
       }
       setDataOptionList({arr:arr});
   }
-  
+
   return (
     <PageContainer>
       <OSTypeConfigList parentCallback={callback} ref={refNetListTable} />
