@@ -194,7 +194,7 @@ class NodeManager:
                 "instances": [target_instance]
             }
         ).execute_async()
-        if result.code != 200:
+        if result.code != 0:
             # Dispatch file failed
             raise NodeManagerException(
                 f"Dispatch file to node failed: {result.err_msg}"

@@ -6,6 +6,8 @@ Email               mfeng@linux.alibaba.com
 File                common.py
 Description:
 """
+from cec_base.log import LoggerHelper, LoggerLevel
+import sys
 from pathlib import Path
 from sysom_utils import ConfigParser
 
@@ -25,3 +27,14 @@ YAML_CONFIG = ConfigParser(YAML_GLOBAL_CONFIG_PATH, YAML_SERVICE_CONFIG_PATH)
 ##################################################################
 # channl_job SDK 需要的url
 CHANNEL_JOB_URL = YAML_CONFIG.get_local_channel_job_url()
+
+
+##################################################################
+# Logger settings
+##################################################################
+# Config log format
+log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO,
+                 format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING,
+                 format=log_format, colorize=True)

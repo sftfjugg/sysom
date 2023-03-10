@@ -194,13 +194,13 @@ main()
     mkdir -p ${RESOURCE_DIR}
     install_grafana
     install_prometheus
-    download_node_exporter
+    # download_node_exporter
 
     start_grafana_service
     start_prometheus_service
 
     set_node_init_cmd
-    prepare_node_init_tar
+    #prepare_node_init_tar
 
     configure_grafana
     configure_cron

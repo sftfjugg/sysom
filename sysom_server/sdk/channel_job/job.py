@@ -245,7 +245,7 @@ class ChannelFileJob:
             return self._get_file()
 
     async def execute_async(self) -> JobResult:
-        return anyio.to_thread.run_sync(self.execute)
+        return await anyio.to_thread.run_sync(self.execute)
 
 
 class ChannelJobExecutorConfig:

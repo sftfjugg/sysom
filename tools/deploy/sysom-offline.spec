@@ -146,6 +146,7 @@ echo "build sysom end........"
 mkdir -p %{buildroot}/usr/local/sysom/server/target
 mkdir -p %{buildroot}/usr/local/sysom/server/redis
 cp -a sysom_server %{buildroot}/usr/local/sysom/server/target
+cp -a conf %{buildroot}/usr/local/sysom/server/target
 cp -a sysom_web/dist %{buildroot}/usr/local/sysom/server/target/sysom_web
 cp -a script %{buildroot}/usr/local/sysom/init_scripts
 cp -a monitor  %{buildroot}/usr/local/sysom/server/

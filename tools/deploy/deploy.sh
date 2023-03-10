@@ -9,6 +9,7 @@
 APP_NAME="sysom"
 SERVER_DIR="sysom_server"
 WEB_DIR="sysom_web"
+CONF_DIR="conf"
 SCRIPT_DIR="script"
 APP_HOME=/usr/local/sysom
 SERVER_LOCAL_IP=""
@@ -57,7 +58,7 @@ update_target() {
     fi
     mkdir -p ${TARGET_PATH}
     echo "INFO: copy project file..."
-    cp -r ${SERVER_DIR} ${WEB_DIR} ${TARGET_PATH}
+    cp -r ${SERVER_DIR} ${WEB_DIR} ${CONF_DIR} ${TARGET_PATH}
     cp -r ${SCRIPT_DIR} ${APP_HOME}/init_scripts
     cp tools/deploy/sysom-server.service /usr/lib/systemd/system/
 }
