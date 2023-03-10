@@ -1,14 +1,12 @@
 # sysom_server config
 sysom_global:
   path:
-    # root_path: &global_root_path "/usr/local/sysom"
-    root_path: &global_root_path "/root/sysom"
+    root_path: &global_root_path "/usr/local/sysom"
 
 # Unified configuration of Server
 sysom_server:
   path:
-    # root_path: !concat [&global_root_path, "server/target/sysom_server"]
-    root_path: !concat [*global_root_path, "/sysom_server"]
+    root_path: !concat [*global_root_path, "server/target/sysom_server"]
   db:
     redis:
       host: localhost
@@ -36,7 +34,7 @@ sysom_server:
 # Unified configuration of Web
 sysom_web:
   path:
-    root_path: !concat [*global_root_path, "/sysom_web"]
+    root_path: !concat [*global_root_path, "server/target/sysom_web"]
 
 # Unified configuration of Node
 sysom_node:
