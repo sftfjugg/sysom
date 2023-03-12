@@ -160,6 +160,16 @@ class AsyncSSH:
             channel_result.result = f"SSH Channel: Auth failed (host = {self._hostname})"
             channel_result.err_msg = f"SSH Channel: Auth failed (host = {self._hostname}) => {str(exc)}"
             logger.exception(exc)
+        except asyncssh.misc.ConnectionLost as exc:
+            channel_result.code = ChannelCode.CHANNEL_CONNECT_FAILED.value
+            channel_result.result = f"SSH Channel: Connection lost (host = {self._hostname})"
+            channel_result.err_msg = f"SSH Channel: Connection lost (host = {self._hostname}) => {str(exc)}"
+            logger.exception(exc)
+        except ConnectionRefusedError as exc:
+            channel_result.code = ChannelCode.CHANNEL_CONNECT_FAILED.value
+            channel_result.result = f"SSH Channel: Connection refused (host = {self._hostname})"
+            channel_result.err_msg = f"SSH Channel: Connection refused (host = {self._hostname}) => {str(exc)}"
+            logger.exception(exc)
         except concurrent.futures._base.TimeoutError:
             channel_result.code = ChannelCode.CHANNEL_CONNECT_TIMEOUT.value
             channel_result.result = f"SSH Channel: Connect to {self._hostname} timeout."
