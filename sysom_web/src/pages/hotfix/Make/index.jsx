@@ -166,7 +166,7 @@ const HotfixList = () => {
             <a href={"/hotfix/hotfix_log/" + record.id} target="_blank">查看日志</a>
           </span>,
           <span key='rebuild'>
-            <a disabled={record.building_status == 2 ? false : true} onClick={() => record.building_status == 2 ? hotfixMakeRebuild(record) : ""}>重新构建</a>
+            <a disabled={record.building_status == 2 ? false : true} onClick={() => hotfixMakeRebuild(record)}>重新构建</a>
           </span>
       ],
     },

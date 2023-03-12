@@ -73,14 +73,11 @@ export const uploadProps = {
   method:"post",
   onChange({ file, fileList }) {
     if (file.status !== 'uploading') {
-      console.log(fileList[0]);
       return fileList[0];
     }
     if (file.status === 'done'){
-      console.log(`${file.response.data.patch_name} file uploaded successfully`);
       return file.response.data.patch_name;
     } else if (file.status === 'error') {
-      console.log(`${file.response.data.patch_name} file upload failed.`);
       return file.response.data.patch_name;
     }
   },
@@ -148,13 +145,14 @@ export async function postChangeOsType(params, options){
     data: {
       "id": params.id,
       "os_type": params.os_type_name,
-      "source_repo": params.git_repo_link,
+      "git_repo": params.git_repo_link,
       "image": params.image,
     },
     ...(options || {}),
   })
 }
 
+//rebuild
 export async function postRebuild(params, options){
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/rebuild_hotfix/', {
@@ -182,7 +180,7 @@ export async function postChangeKernelVersion(params, options){
       "id": params.id,
       "kernel_version": params.kernel_version,
       "os_type": params.os_type,
-      "source": params.source,
+      "git_branch": params.git_branch,
       "devel_link": params.devel_link,
       "debuginfo_link": params.debuginfo_link
     },
@@ -227,9 +225,8 @@ export async function submitOSType(params, options) {
     },
     data: {
       "os_type":params.os_type,
-      "source_repo":params.source_repo,
-      "src_pkg_mark": params.src_pkg_mark,
-      "image": params.image,
+      "git_repo":params.git_repo,
+      "image": params.image
     },
     params: params,
     ...(options || {}),
@@ -237,7 +234,6 @@ export async function submitOSType(params, options) {
 }
 
 export async function submitKernelVersion(params, options) {
-  console.log(params)
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/create_kernel_relation/', {
   method: 'POST',
@@ -248,7 +244,7 @@ export async function submitKernelVersion(params, options) {
   data:{
     "os_type": params.os_type,
     "kernel_version": params.kernel_version,
-    "source": params.source,
+    "git_branch": params.git_branch,
     "devel_link": params.devel_link,
     "debuginfo_link": params.debuginfo_link
   },
