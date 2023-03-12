@@ -1,6 +1,7 @@
 import sys
 from loguru import logger
 from django.apps import AppConfig
+from sysom_utils import PluginEventExecutor
 
 
 class TaskConfig(AppConfig):
@@ -17,10 +18,15 @@ class TaskConfig(AppConfig):
             default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
             default_channel_job_executor.start()
 
+            # 初始化插件处理线程（自动处理节点端的初始化和清理操作）
+            PluginEventExecutor(
+                settings.YAML_CONFIG, default_channel_job_executor
+            ).start()
+
             # 这边微服务正式启动的时候执行一些处理代码
             # 启动任务结果处理线程
             try:
-                DiagnosisTaskExecutor().start()
+                DiagnosisTaskExecutor(settings.YAML_CONFIG).start()
             except Exception as e:
                 logger.exception(e)
         else:

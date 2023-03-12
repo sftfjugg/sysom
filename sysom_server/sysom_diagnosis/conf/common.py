@@ -1,17 +1,48 @@
+from cec_base.log import LoggerHelper, LoggerLevel
 import sys
 import os
-import socket
 from pathlib import Path
-
-
-def get_ip_address():
-    """ip address"""
-    hostname = socket.gethostname()
-    return socket.gethostbyname(hostname)
+from sysom_utils import ConfigParser, CecTarget
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-^d8b9di9w&-mmsbpt@)o#e+2^z+^m4nhf+z8304%9@8y#ko46l'
+
+##################################################################
+# Load yaml config first
+##################################################################
+YAML_GLOBAL_CONFIG_PATH = f"{BASE_DIR.parent.parent}/conf/config.yml"
+YAML_SERVICE_CONFIG_PATH = f"{BASE_DIR}/config.yml"
+
+YAML_CONFIG = ConfigParser(YAML_GLOBAL_CONFIG_PATH, YAML_SERVICE_CONFIG_PATH)
+
+##########################################################################################
+# Diagnosis Service config
+##########################################################################################
+
+SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
+
+##################################################################
+# Cec settings
+##################################################################
+SYSOM_CEC_PRODUCER_URL = YAML_CONFIG.get_cec_url(CecTarget.PRODUCER)
+# 诊断模块消费组
+SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP = "SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP"
+# 诊断任务下发主题（由 View -> Executor）
+SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC = "SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC"
+
+# channl_job SDK 需要的url
+CHANNEL_JOB_URL = YAML_CONFIG.get_local_channel_job_url()
+
+##########################################################################################
+# Django Config
+##########################################################################################
+
+SECRET_KEY = YAML_CONFIG.get_server_config().jwt.get("SECRET_KEY", "")
+
+# JWT Token Decode DIR
+JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
+if not os.path.exists(JWT_TOKEN_DECODE_DIR):
+    os.makedirs(JWT_TOKEN_DECODE_DIR)
 
 ALLOWED_HOSTS = ['*']
 
@@ -33,24 +64,26 @@ MIDDLEWARE = [
 
 DEBUG = True
 
-SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
-
 # Mysql数据库
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sysom',
-        'USER': 'sysom',
-        'PASSWORD': 'sysom_admin',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': YAML_CONFIG.get_server_config().db.mysql.database,
+        'USER': YAML_CONFIG.get_server_config().db.mysql.user,
+        'PASSWORD': YAML_CONFIG.get_server_config().db.mysql.password,
+        'HOST': YAML_CONFIG.get_server_config().db.mysql.host,
+        'PORT': YAML_CONFIG.get_server_config().db.mysql.port,
     }
 }
+
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": (
+            f"redis://{YAML_CONFIG.get_server_config().db.redis.host}"
+            f":{YAML_CONFIG.get_server_config().db.redis.port}/1"
+        ),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {"max_connections": 100},
@@ -97,37 +130,11 @@ REST_FRAMEWORK = {
 }
 
 ##################################################################
-# Cec settings
+# Config settings
 ##################################################################
-SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000&cec_auto_mk_topic=true"
-SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
-# 通道模块用于对外开放，投递操作的主题
-SYSOM_CEC_CHANNEL_TOPIC = "SYSOM_CEC_CHANNEL_TOPIC"
-# 通道模块用于投递执行结果的主题
-SYSOM_CEC_CHANNEL_RESULT_TOPIC = "SYSOM_CEC_CHANNEL_RESULT_TOPIC"
-# 诊断模块用于接收通道执行结果的主题
-SYSOM_CEC_CHANNEL_DIAGNOSIS_TOPIC = "SYSOM_CEC_CHANNEL_DIAGNOSIS_TOPIC"
-# 诊断模块消费组
-SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP = "SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP"
-# 诊断模块用于汇报最终诊断执行结果的主题
-SYSOM_CEC_DIAGNOSIS_RESULT_TOPIC = "SYSOM_CEC_DIAGNOSIS_RESULT_TOPIC"
-# 用于分发插件系统相关事件的主题
-SYSOM_CEC_PLUGIN_TOPIC = "SYSOM_CEC_PLUGIN_TOPIC"
-# 诊断任务下发主题（由 View -> Executor）
-SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC = "SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC"
-
-# channl_job SDK 需要的url
-CHANNEL_JOB_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}" \
-                  f"&channel_job_listen_topic={SYSOM_CEC_CHANNEL_DIAGNOSIS_TOPIC}" \
-                  f"&channel_job_consumer_group={SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP}"
-
-# JWT Token Decode DIR
-JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
-if not os.path.exists(JWT_TOKEN_DECODE_DIR):
-    os.makedirs(JWT_TOKEN_DECODE_DIR)
-
 # Config log format
-from cec_base.log import LoggerHelper, LoggerLevel
 log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
-LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
-LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO,
+                 format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING,
+                 format=log_format, colorize=True)
