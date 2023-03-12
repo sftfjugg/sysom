@@ -138,6 +138,7 @@ class DiagnosisHelper:
                 code=1, err_msg=f"Diagnosis preprocess error: {str(exc)}")
         return success
 
+    @staticmethod
     def execute(instance: JobModel, result_callback: Callable[[JobResult], None]) -> bool:
         """Execute diagnosis task"""
         success = False
@@ -184,6 +185,7 @@ class DiagnosisHelper:
                 code=1, err_msg=f"Diagnosis execute task error: {str(exc)}")
         return success
 
+    @staticmethod
     def postprocess(instance: JobModel, job_result: JobResult):
         """Perform diagnosis postprocessing
         JobResult -> {

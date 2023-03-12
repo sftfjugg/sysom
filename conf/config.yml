@@ -6,22 +6,33 @@ sysom_global:
 # Unified configuration of Server
 sysom_server:
   path:
-    root_path: !concat [*global_root_path, "/server/target/sysom_server"]
+    root_path:
+      !concat &sysom_server_root_path [
+        *global_root_path,
+        "/server/target/sysom_server",
+      ]
   db:
     redis:
       host: localhost
       port: 6379
       username:
       password:
+    mysql:
+      host: localhost
+      port: 3306
+      user: sysom
+      password: sysom_admin
+      database: sysom
+  jwt:
+    SECRET_KEY: "django-insecure-^d8b9di9w&-mmsbpt@)o#e+2^z+^m4nhf+z8304%9@8y#ko46l"
   cec:
     protocol: redis
+    # 各个微服务对外提供服务的主题统一定义在这
     topics:
       # 用于分发插件系统相关事件的主题
       SYSOM_CEC_PLUGIN_TOPIC: SYSOM_CEC_PLUGIN_TOPIC
       # 通道模块用于对外开放，投递操作的主题
       SYSOM_CEC_CHANNEL_TOPIC: SYSOM_CEC_CHANNEL_TOPIC
-      # 监控模块用于接收通道结果的主题
-      SYSOM_CEC_CHANNEL_MONITOR_TOPIC: SYSOM_CEC_CHANNEL_MONITOR_TOPIC
 
     special_param:
       comm:
@@ -30,6 +41,8 @@ sysom_server:
       producer:
         cec_auto_mk_topic: true
       consumer:
+  logger:
+    format: "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
 
 # Unified configuration of Web
 sysom_web:
@@ -38,9 +51,10 @@ sysom_web:
 
 # Unified configuration of Node
 sysom_node:
-  # 与节点交互命令超时时间，单位为 ms
   path:
     root_path: !concat &sysom_node_root_path [*global_root_path, "/node"]
+  # 与节点交互命令超时时间，单位为 ms
   timeout: 60000
   envs:
     NODE_HOME: *sysom_node_root_path
+    SERVER_HOME: *sysom_server_root_path

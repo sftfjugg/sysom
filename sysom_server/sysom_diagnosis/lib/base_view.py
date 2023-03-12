@@ -26,7 +26,7 @@ class CommonModelViewSet(GenericViewSet):
         """Produce one event to specific topic"""
         if CommonModelViewSet._producer is None:
             CommonModelViewSet._producer = dispatch_producer(
-                settings.SYSOM_CEC_URL)
+                settings.SYSOM_CEC_PRODUCER_URL)
         CommonModelViewSet._producer.produce(topic, value)
         CommonModelViewSet._producer.flush()
 

@@ -5,15 +5,20 @@ from django.conf import settings
 from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask
 from cec_base.event import Event
 from cec_base.consumer import Consumer
+from sysom_utils import ConfigParser, CecTarget
 from .helper import DiagnosisHelper
 
 
 class DiagnosisTaskExecutor(MultiConsumer):
 
-    def __init__(self):
-        super().__init__(settings.SYSOM_CEC_URL, custom_callback=self.on_receive_event)
+    def __init__(self, config: ConfigParser):
+        super().__init__(
+            settings.SYSOM_CEC_PRODUCER_URL,
+            custom_callback=self.on_receive_event
+        )
+        self._config = config
         self.append_group_consume_task(
-            settings.SYSOM_CEC_PLUGIN_TOPIC,
+            config.get_server_config().cec.topics.SYSOM_CEC_PLUGIN_TOPIC,
             settings.SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP,
             Consumer.generate_consumer_id(),
             ensure_topic_exist=True
@@ -30,7 +35,7 @@ class DiagnosisTaskExecutor(MultiConsumer):
         try:
             if task.topic_name == settings.SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC:
                 self._process_task_dispatch_event(event)
-            elif task.topic_name == settings.SYSOM_CEC_PLUGIN_TOPIC:
+            elif task.topic_name == self._config.get_server_config().cec.topics.SYSOM_CEC_PLUGIN_TOPIC:
                 self._process_plugin_event(event)
             else:
                 # Unexpected
