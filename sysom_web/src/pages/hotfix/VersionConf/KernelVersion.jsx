@@ -2,12 +2,15 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import ProTable from '@ant-design/pro-table';
-import { Popconfirm, message, Upload, Button, Select, Form} from 'antd';
+import { Popconfirm, message, Upload, Button, Select, Form, Switch} from 'antd';
 import { delOSType, delKernelVersion, getOSTypeList, getKernelVersionList, submitOSType, submitKernelVersion, postChangeOsType } from '../service';
 import { ProForm, ModalForm, ProFormText, ProFormTextArea, ProFormSelect } from '@ant-design/pro-form';
 import { async } from '@antv/x6/lib/registry/marker/async';
 import { PropertySafetyFilled } from '@ant-design/icons';
+import KernelConfigForm from '../components/KernelConfigForm'
+import ProCard from '@ant-design/pro-card';
 
+const { Divider } = ProCard;
 
 const handleDelOSType = async (record) => {
   const hide = message.loading('正在删除');
@@ -36,7 +39,9 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
   useEffect(()=>{
     getOSTypeList();
   },[]);
-
+  const onPostTask = () => {
+    oslistRef.current.reload();
+  }
   const columns = [
     {
       title: <FormattedMessage id="pages.hotfix.os_type" defaultMessage="os_type"/>,
@@ -46,10 +51,10 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
       tooltip: '操作系统名，请为您该系列的操作系统类型命名'
     },
     {
-      title: <FormattedMessage id="pages.hotfix.kernel_repo_location" defaultMessage="repo_location" />,
-      dataIndex: 'git_repo',
+      title: <FormattedMessage id="pages.hotfix.kernel_repo_git" defaultMessage="repo_location" />,
+      dataIndex: 'source_repo',
       valueType: 'input',
-      tooltip: '该操作系统类型的git仓库地址'
+      tooltip: '该操作系统类型的源码仓库地址',
     },
     {
       title: <FormattedMessage id="pages.hotfix.image" defaultMessage="image" />,
@@ -58,7 +63,6 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
       tooltip: '输入该类操作系统构建热补丁时使用的镜像,如不填写则使用默认提供的Anolis镜像'
     },
     {
-      // This is Operation column
       title: <FormattedMessage id="pages.hotfix.operation" defaultMessage="Operating" />,
       key: 'option',
       dataIndex: 'option',
@@ -66,9 +70,7 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
       render: (_, record) => [
           <span key='delete'>
               <Popconfirm title="是否要删除该类型?注意，删除类型会连带删除该类型关联的所有内核版本！" onConfirm={async () => {
-                console.log(_, record);
                   if (record.id == undefined) {
-                      console.log(record.id,"id");
                       message.error(intl.formatMessage({
                           id: 'pages.hotfix.delete_ostype_not_exist',
                           defaultMessage: "Not allow to delete this os type"
@@ -116,13 +118,24 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
                 placeholder="请输入名称"
                 initialValue={record.os_type}
               />
-              <ProFormText 
-                width="md" 
-                name="git_repo_link"
-                label="源码git仓库地址" 
-                placeholder="请输入git仓库地址"  
-                initialValue={record.git_repo}
-              />
+              {
+                record.src_pkg_mark === true ? 
+                <ProFormText 
+                  width="md" 
+                  name="git_repo_link"
+                  label="源码包地址" 
+                  placeholder="请输入源码包地址"  
+                  initialValue={record.source_repo}
+                /> :
+                <ProFormText 
+                  width="md" 
+                  name="git_repo_link"
+                  label="源码git仓库地址" 
+                  placeholder="请输入git仓库地址"  
+                  initialValue={record.source_repo}
+                />
+              }
+              
               <ProFormText
                 width="md" 
                 name="building_image" 
@@ -136,6 +149,9 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
     }
   ];
   return (
+    <>
+      <KernelConfigForm onSuccess={onPostTask} parentBack={props.parentCallback} updata={props.forceUpdate} />
+      <Divider />
       <ProTable
         headerTitle={intl.formatMessage({
           id: 'pages.hotfix.title.os_type',
@@ -143,32 +159,13 @@ const OSTypeConfigList = React.forwardRef((props, ref) => {
         })}
         actionRef={oslistRef}
         rowKey="id"
-        search={{
-          labelWidth: 120,
-          collapsed: false,
-          collapseRender: false,
-          optionRender: (searchConfig, formProps, dom) => [
-            dom[0],
-            <Button
-              key="create" type="primary"
-              onClick={(e) => {
-                const values = searchConfig?.form?.getFieldsValue();
-                searchConfig?.form?.resetFields();
-                props.parentCallback(values);
-                submitOSType(values);
-                getOSTypeList();
-                oslistRef.current.reload();
-              }}
-            >
-              添加
-            </Button>,
-          ],
-        }}
+        search={false}
         toolBarRender={() => [
         ]}
         request={getOSTypeList}
         columns={columns}
       />
+    </>
   );
 });
 

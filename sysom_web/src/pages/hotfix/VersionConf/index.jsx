@@ -1,4 +1,4 @@
-import {  useRef, useState, useEffect } from 'react';
+import {  useRef, useState, useEffect, useContext, useReducer } from 'react';
 import { useIntl, FormattedMessage } from 'umi';
 import { PageContainer } from '@ant-design/pro-layout';
 import { delOSType, delKernelVersion, getOSTypeList, getKernelVersionList, submitOSType, submitKernelVersion } from '../service';
@@ -11,10 +11,10 @@ const KernelVersionConfigList = () => {
   const intl = useIntl();
   const [dataostype, setDataOsType] = useState([]);
   const [dataoptionlist, setDataOptionList] = useState([]);
-  
+
   const callback = (count) => {
-    const dr = [{label: count.os_type, value: count.os_type}];
-    setDataOsType(dr)
+    const dr = [{label: count[0].os_type, value: count[0].os_type}];
+    setDataOsType(dr);
   }
 
   useEffect(()=>{
@@ -31,7 +31,7 @@ const KernelVersionConfigList = () => {
       }
       setDataOptionList({arr:arr});
   }
-  
+
   return (
     <PageContainer>
       <OSTypeConfigList parentCallback={callback} ref={refNetListTable} />

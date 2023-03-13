@@ -133,7 +133,6 @@ export function downloadHotfixFile(id, options){
   });
 }
 
-
 export async function postChangeOsType(params, options){
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/update_ostype/', {
@@ -145,14 +144,13 @@ export async function postChangeOsType(params, options){
     data: {
       "id": params.id,
       "os_type": params.os_type_name,
-      "git_repo": params.git_repo_link,
+      "source_repo": params.git_repo_link,
       "image": params.image,
     },
     ...(options || {}),
   })
 }
 
-//rebuild
 export async function postRebuild(params, options){
   const token = localStorage.getItem('token');
   return request('/api/v1/hotfix/rebuild_hotfix/', {
@@ -180,7 +178,7 @@ export async function postChangeKernelVersion(params, options){
       "id": params.id,
       "kernel_version": params.kernel_version,
       "os_type": params.os_type,
-      "git_branch": params.git_branch,
+      "source": params.source,
       "devel_link": params.devel_link,
       "debuginfo_link": params.debuginfo_link
     },
@@ -225,8 +223,9 @@ export async function submitOSType(params, options) {
     },
     data: {
       "os_type":params.os_type,
-      "git_repo":params.git_repo,
-      "image": params.image
+      "source_repo":params.source_repo,
+      "src_pkg_mark": params.src_pkg_mark,
+      "image": params.image,
     },
     params: params,
     ...(options || {}),
@@ -244,7 +243,7 @@ export async function submitKernelVersion(params, options) {
   data:{
     "os_type": params.os_type,
     "kernel_version": params.kernel_version,
-    "git_branch": params.git_branch,
+    "source": params.source,
     "devel_link": params.devel_link,
     "debuginfo_link": params.debuginfo_link
   },

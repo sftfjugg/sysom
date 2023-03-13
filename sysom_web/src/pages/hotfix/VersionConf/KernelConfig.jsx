@@ -53,7 +53,7 @@ const VersionConfigList = React.forwardRef((props, ref) => {
     },
     {
       title: <FormattedMessage id="pages.hotfix.kernel_repo_branch" defaultMessage="repo_branch" />,
-      dataIndex: 'git_branch',
+      dataIndex: 'source',
       valueType: 'input',
       tooltip: '该内核版本所在仓库的源码git标签(tag)或者分支(branch)'
     },
@@ -115,7 +115,7 @@ const VersionConfigList = React.forwardRef((props, ref) => {
                   id: record.id,
                   os_type: values.os_type,
                   kernel_version: values.kernel_version,
-                  git_branch: values.git_branch,
+                  source: values.source,
                   devel_link: values.devel_link,
                   debuginfo_link: values.debuginfo_link
                 }
@@ -134,7 +134,7 @@ const VersionConfigList = React.forwardRef((props, ref) => {
                 initialValue={record.kernel_version}
               />
               <ProFormSelect width="md" options={props.OSTypedata.concat(props.data)} name="os_type" label="操作系统名" placeholder="输入操作系统类型" initialValue={record.os_type} />
-              <ProFormText width="md" name="git_branch" label="git标签" placeholder="请输入git标签" initialValue={record.git_branch}/>
+              <ProFormText width="md" name="source" label="源码来源" placeholder="请输入源码来源" initialValue={record.source}/>
               <ProFormText width="md" name="devel_link" label="devel链接" placeholder="请输入devel包链接" initialValue={record.devel_link} />
               <ProFormText width="md" name="debuginfo_link" label="debuginfo链接" placeholder="请输入debuginfo包链接" initialValue={record.debuginfo_link} />
             </ModalForm>
