@@ -545,50 +545,52 @@ class HotfixBuilder():
             if not admin.is_topic_exist(self.cec_hotfix_topic):
                 admin.create_topic(self.cec_hotfix_topic)
         consumer_id = Consumer.generate_consumer_id()
-        consumer = dispatch_consumer(self.cec_url, self.cec_hotfix_topic,
-                                 consumer_id=consumer_id,
-                                 group_id="hotfix_job_group")
-        try:
-            for event in consumer:
-                # get one event from cec, if match the arch, ack this event
+        if self.local_arch == "x86_64":
+            consumer = dispatch_consumer(self.cec_url, self.cec_hotfix_topic,
+                                    consumer_id=consumer_id,
+                                    group_id="hotfix_job_group_x86")
+        else:
+            consumer = dispatch_consumer(self.cec_url, self.cec_hotfix_topic,
+                                    consumer_id=consumer_id,
+                                    group_id="hotfix_job_group_arm")
+
+        for event in consumer:
+            try:
                 parameters = event.value
                 log_file = parameters['log_file']
                 self.hotfix_id = parameters['hotfix_id']
                 log_file_path = os.path.join(self.nfs_dir_home, "log", log_file)
 
-                # this operation aims to clear the previous log if rebuild
-                with open(log_file_path, "w") as f:
-                    f.write("=========================================================\n")
-                    f.write("==========*******Sysom Hotfix Building System*******==============\n")
-                    f.write("=========================================================\n")
+                if parameters['arch'] == self.local_arch:
+                    # this operation aims to clear the previous log if rebuild
+                    with open(log_file_path, "w") as f:
+                        f.write("=========================================================\n")
+                        f.write("==========*******Sysom Hotfix Building System*******==============\n")
+                        f.write("=========================================================\n")
 
-                if parameters['arch'] != self.local_arch:
-                    break
+                    self.connector.change_building_status(self.hotfix_id, "building")
 
-                self.connector.change_building_status(self.hotfix_id, "building")
+                    # for each run, update the repo
+                    cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s -l %s " % (self.hotfix_base, self.nfs_dir_home, log_file_path)
+                    with os.popen(cmd) as process:
+                        output = process.read()
 
-                # for each run, update the repo
-                cmd = "chmod +x check_env.sh && ./check_env.sh -b %s -n %s -l %s " % (self.hotfix_base, self.nfs_dir_home, log_file_path)
-                with os.popen(cmd) as process:
-                    output = process.read()
-
-                customize = parameters['customize']
-                # before build one job, clear the tmpdir
-                self.clear_tmpdir()
-                if not customize:
-                    self.build_supported_kernel(parameters)
-                else:
-                    self.build_customize_kernel(parameters)
-                logger.info(log_file)
-                self.fd.close()
+                    customize = parameters['customize']
+                    # before build one job, clear the tmpdir
+                    self.clear_tmpdir()
+                    if not customize:
+                        self.build_supported_kernel(parameters)
+                    else:
+                        self.build_customize_kernel(parameters)
+                    logger.info(log_file)
+                    self.fd.close()
+            except Exception as e:
+                logger.error(str(e))
+                self.connector.change_building_status(self.hotfix_id, "failed")
+            finally:
+                if self.fd is not None:
+                    self.fd.close()
                 consumer.ack(event)
-        except Exception as e:
-            logger.error(str(e))
-            self.connector.change_building_status(self.hotfix_id, "failed")
-            exit(1)
-        finally:
-            self.fd.close()
-            consumer.ack(event)
 
         
 if __name__ == "__main__":
