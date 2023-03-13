@@ -68,7 +68,7 @@
 用户需要使用热补丁中心的功能时，需要配置热补丁的编译机。
 
 - 在单机部署的情况下，可以忽略本步骤，部署完毕即可使用
-- 在多机部署的情况下，需要配置sysom/script/server/6_sysom_hotfix_builder下的init.sh以及sysom_server/sysom_hotfix_builder下的builder.ini
+- 在多机部署的情况下，请确保builder机器与server机器在同一网段内。需要配置sysom/script/server/6_sysom_hotfix_builder下的init.sh以及sysom_server/sysom_hotfix_builder下的builder.ini
 
   ```bash
   #! /bin/bash
@@ -76,7 +76,7 @@
   HOTFIX_BUILDER_DIR=${SERVER_DIR}/sysom_hotfix_builder
   VIRTUALENV_HOME=${SERVER_HOME}/virtualenv
   SERVICE_NAME=sysom-hotfix-builder
-  NFS_SERVER_IP=${SERVER_LOCAL_IP}  # 将NFS_SEVER_IP配置为sysom主服务器的ip地址
+  NFS_SERVER_IP=${SERVER_LOCAL_IP}  # 将NFS_SEVER_IP配置为sysom主服务器的内网ip地址
   ```
   
   builder.ini
@@ -87,15 +87,16 @@
   password = password           # 用于登录sysom的密码
 
   [cec]
-  cec_url = redis://127.0.0.1:6379  # 此处指向sysom主服务器的redis地址
+  cec_url = redis://127.0.0.1:6379  # 此处指向sysom主服务器的redis地址，填写内网ip地址
 
   [builder]
   hotfix_base = /hotfix_build/hotfix                      # 此处配置hotfix构建的工作目录
   nfs_dir_home = /usr/local/sysom/server/builder/hotfix   # 此处构建与sysom主服务器共享目录的路径
   package_repo = /hotfix/packages                         # 缓存设定路径
   ```
-> 注意：在多机部署的情况下，角色为builder的机器可以在/sysom/server/conf下仅使能[base]和[hotfix-builder]这两个服务即可
 
+
+> 注意：在多机部署的情况下，角色为builder的机器可以在/sysom/server/conf下仅使能[base]和[hotfix-builder]这两个服务即可；此外，需要修改server的redis配置文件(如/etc/redis.conf)，允许其他机器访问server的redis，否则服务会不可用 。
 ### 1.4 部署
 
 - 解压 release 包
