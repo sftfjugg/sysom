@@ -40,13 +40,19 @@ def initialization_vul_config(sender, **kwargs):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\
              (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
     }
+    params = {
+        "format": "json",
+        "page_num": 1,
+        "page_size": 50,
+    }
 
     fields = {
         "name": "Anolis 漏洞数据",
         "description": "Anolis 漏洞数据",
-        "url": "https://anas.openanolis.cn/api/portal/v1/cves/?format=json&page_num=1&page_size=50",
+        "url": "https://anas.openanolis.cn/api/portal/v1/cves/",
         "parser": json.dumps(parser),
-        "headers": json.dumps(headers)
+        "headers": json.dumps(headers),
+        "params": json.dumps(params),
     }
 
     try:
