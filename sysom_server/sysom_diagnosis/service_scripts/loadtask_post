@@ -169,10 +169,17 @@ def parse_log(file):
     new_parse_data["summary"] = "Load Influences Result:"+"sys utils" + sys_summary + \
         "hardirq" + hardirq_summary + "softirq" + softirq_summary + "io" + io_summary
     new_parse_data["datataskcount"] = {"data": []}
-    new_parse_data["datataskcount"]["data"] = [
-        {"key": "uninterrupt_tasks", "value": int(count["uninterrupt tasks"])},
-        {"key": "runnig_tasks", "value": int(count["runnig tasks"])},
-    ]
+    if "uninterrupt tasks" in count.keys() and "runnig tasks" in count.keys():
+        new_parse_data["datataskcount"]["data"] = [
+            {"key": "uninterrupt_tasks", "value": int(count["uninterrupt tasks"])},
+            {"key": "runnig_tasks", "value": int(count["runnig tasks"])},
+        ]
+    else:
+        new_parse_data["datataskcount"]["data"] = [
+            {"key": "uninterrupt_tasks", "value": 0)},
+            {"key": "runnig_tasks", "value": 0)},
+        ]
+
     new_parse_data["datataskcount"]["data"]
 
     new_parse_data["datauninterruptload"] = {"data": []}
