@@ -16,7 +16,7 @@ from django.db.models import Q
 from rest_framework import status
 from apps.vul.models import *
 from apps.host.models import HostModel
-from apps.vul.ssh_pool import SshProcessQueueManager, VulTaskManager
+from apps.vul.ssh_pool import VulTaskManager
 
 from lib.utils import human_datetime
 from .async_fetch import FetchVulData
