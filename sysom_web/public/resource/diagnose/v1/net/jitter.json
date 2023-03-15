@@ -22,7 +22,7 @@
         {
             "key": "flowchart",
             "type": "flow",
-            "title": "发送报文路径",
+            "title": "发送端报文路径",
             "flowconfigs": {
                 "nodes": [
                     {
@@ -32,13 +32,13 @@
                     },
                     {
                         "id": "out",
-                        "x": "40",
-                        "y": "140"
+                        "x": "340",
+                        "y": "40"
                     },
                     {
                         "id" : "recv",
-                        "x": "40",
-                        "y": "240"
+                        "x": "640",
+                        "y": "40"
                     }
                 ],
                 "edges": [
@@ -46,14 +46,14 @@
                         "source": "send",
                         "target": {
                             "cell": "out",
-                            "port": "top"
+                            "port": "right"
                         }
                     },
                     {
                         "source": "out",
                         "target": {
                             "cell": "recv",
-                            "port": "top"
+                            "port": "right"
                         }
                     }
                 ]
@@ -63,7 +63,7 @@
         {
             "key": "flowchart",
             "type": "flow",
-            "title": "发送报文路径",
+            "title": "接收端报文路径",
             "flowconfigs": {
                 "nodes": [
                     {
