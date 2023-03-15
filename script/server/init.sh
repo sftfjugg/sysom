@@ -33,11 +33,11 @@ mkdir -p ${SERVER_HOME}/logs
 config=conf
 basedir=`dirname $0`
 
-SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
-SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
-SYSOM_DATABASE_PORT=`cat $SYSOM_CONF | grep "'PORT'" | awk -F"'" '{print $4}'`
-SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep "'USER'" | awk -F"'" '{print $4}'`
-SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep PASSWORD | awk -F"'" '{print $4}'`
+SYSOM_CONF=${SERVER_HOME}/target/conf/config.yml
+SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a host | awk '{print $2}'`
+SYSOM_DATABASE_PORT=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a port | awk '{print $2}'`
+SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a user | awk '{print $2}'`
+SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a password | awk '{print $2}'`
 UPLOAD_DIR=${SERVER_HOME}/target/sysom_web/download/
 NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
@@ -82,12 +82,20 @@ SERVER_PORT=${SERVER_PORT}
 EOF
 }
 
+update_global_config() {
+    sed "s/SERVER_LOCAL_IP: 127.0.0.1/SERVER_LOCAL_IP: $SERVER_LOCAL_IP/g" -i ${SYSOM_CONF}
+    sed "s/SERVER_PUBLIC_IP: 127.0.0.1/SERVER_PUBLIC_IP: $SERVER_PUBLIC_IP/g" -i ${SYSOM_CONF}
+    sed "s/SERVER_PORT: 80/SERVER_PORT: $SERVER_PORT/g" -i ${SYSOM_CONF}
+    sed "s/global_root_path \/usr\/local\/sysom/global_root_path $APP_HOME/g" -i ${SYSOM_CONF}
+}
+
 pushd $basedir
 
 if [ $FIRST_INIT_DONE == 0 ]
 then
     generate_service_env
     init_sysom_node_init
+    update_global_config
     for dir in `cat $config`
     do
         if [ -d $dir ]
