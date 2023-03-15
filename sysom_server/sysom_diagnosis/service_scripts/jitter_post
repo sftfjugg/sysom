@@ -5,84 +5,155 @@ import json
 import random
 
 
-def jitter_result(raw):
+class Stat:
+    def __init__(self):
+        self.cnt = 0
+        self.max = 0
+        self.avg = 0
+        self.min = 9223372036854775808
+        self.total = 0
+    
+    def add_val(self, val):
+        self.cnt += 1
+        self.max = max(self.max, val)
+        self.min = min(self.min, val)
+        self.total += val
+
+    def do_avg(self):
+        if self.cnt != 0:
+            self.avg = self.total / self.cnt
+    
+    def to_ms(self):
+        if self.cnt == 0:
+            self.min = 0
+        self.avg = int(self.avg/1000000)
+        self.max = int(self.max/1000000)
+        self.min = int(self.min/1000000)
+
+# max avg min
+sender_send = Stat()
+sender_out = Stat()
+sender_recv = Stat()
+
+receiver_recv = Stat()
+receiver_send = Stat()
+
+def sender_delay(sender):
+
+    send_start = 0
+    send_end = 0
+    recv_start = 0
+    recv_end = 0
+
+    for event in sender['events']:
+        if event['ty'] == 'PingSnd' and send_start == 0:
+            send_start = event['ts']
+        elif event['ty'] == 'PingNetDevXmit':
+            send_end = event['ts']
+        elif event['ty'] == 'PingNetifRcv' and recv_start == 0:
+            recv_start = event['ts']
+        elif event['ty'] == 'PingRcv':
+            recv_end = event['ts']
+
+    if send_start !=0 and send_end != 0 and recv_start != 0 and recv_end != 0:
+        sender_send.add_val(send_end - send_start)
+        sender_out.add_val(recv_start - send_end)
+        sender_recv.add_val(recv_end - recv_start)
+
+
+def receiver_delay(receiver):
+
+    recv_start = 0
+    recv_end = 0
+    send_end = 0
+
+    for event in receiver['events']:
+        if event['ty'] == 'PingNetifRcv' and recv_start == 0:
+            recv_start = event['ts']
+        elif event['ty'] == 'PingIcmpRcv':
+            recv_end = event['ts']
+        elif event['ty'] == 'PingNetDevXmit':
+            send_end = event['ts']
+
+    if recv_start != 0 and recv_end != 0 and send_end != 0:
+        receiver_recv.add_val(recv_end - recv_start)
+        receiver_send.add_val(send_end - recv_end)
+        
+
+def jitter_result(rawdata):
     '''
     fd = open("./test.json", 'r')
     raw = fd.read().strip()
     fd.close()
     '''
-    postprocess_result = {
-        "code": 0,
-        "err_msg": "",
-        "result": {}
-    }
-    if raw.find("sender") == -1:
-        postprocess_result['code'] = 1
-        postprocess_result['err_msg'] = f"Diagnosis failed: \n {raw}"
-        print(json.dumps(postprocess_result, indent=4))
-        return
+    for data in rawdata:
+        if data['sender']:
+            sender_delay(data)
+        else:
+            receiver_delay(data)
 
-    rawdata = json.loads(raw)
+    sender_send.do_avg()
+    sender_out.do_avg()
+    sender_recv.do_avg()
+
+    receiver_recv.do_avg()
+    receiver_send.do_avg()
+
+    sender_send.to_ms()
+    sender_out.to_ms()
+    sender_recv.to_ms()
+
+    receiver_recv.to_ms()
+    receiver_send.to_ms()
+
     newjitter = {}
-    send_max = int(int(rawdata["sender_max"]["send"])/1000000)
-    out_max = int(int(rawdata["sender_max"]["out"])/1000000)
-    recv_max = int(int(rawdata["sender_max"]["recv"])/1000000)
-    send_avg = int(int(rawdata["sender_avg"]["send"])/1000000)
-    out_avg = int(int(rawdata["sender_avg"]["out"])/1000000)
-    recv_avg = int(int(rawdata["sender_avg"]["recv"])/1000000)
-    send_min = int(int(rawdata["sender_min"]["send"])/1000000)
-    out_min = int(int(rawdata["sender_min"]["out"])/1000000)
-    recv_min = int(int(rawdata["sender_min"]["recv"])/1000000)
 
     newjitter["senderflow"] = {}
     newjitter["senderflow"]["data"] = [
-        {"key": "send", "title": "kernelSnd", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(
-            send_max, send_avg, send_min)},
-        {"key": "out", "title": "externalLink",
-            "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(out_max, out_avg, out_min)},
-        {"key": "recv", "title": "kernelRcv", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(
-            recv_max, recv_avg, recv_min)},
+        {"key": "send", "title": "kernelSnd", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(sender_send.max, sender_send.avg, sender_send.min)},
+        {"key": "out", "title": "externalLink", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(sender_out.max, sender_out.avg, sender_out.min)},
+        {"key": "recv", "title": "kernelRcv", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(sender_recv.max, sender_recv.avg, sender_recv.min)},
     ]
-
-    send_max = int(int(rawdata["receiver_max"]["send"])/1000000)
-    recv_max = int(int(rawdata["receiver_max"]["recv"])/1000000)
-    send_avg = int(int(rawdata["receiver_avg"]["send"])/1000000)
-    recv_avg = int(int(rawdata["receiver_avg"]["recv"])/1000000)
-    send_min = int(int(rawdata["receiver_min"]["send"])/1000000)
-    recv_min = int(int(rawdata["receiver_min"]["recv"])/1000000)
 
     newjitter["receiverflow"] = {}
     newjitter["receiverflow"]["data"] = [
-        {"key": "recv", "title": "kernelRcv", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(
-            recv_max, recv_avg, recv_min)},
-        {"key": "send", "title": "kernelSnd", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(
-            send_max, send_avg, send_min)},
+        {"key": "recv", "title": "kernelRcv", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(receiver_recv.max, receiver_recv.avg, receiver_recv.min)},
+        {"key": "send", "title": "kernelSnd", "text": "MAX:{}ms AVG:{}ms MIN:{}ms".format(receiver_send.max, receiver_send.avg, receiver_send.min)},
     ]
+
+    newjitter["rawdata"] = rawdata
+
 
     summary = ""
 
-    if int(rawdata["send_event_count"]) != 0:
-        summary = "Sender: kernelSnd-({}, {}, {}), externalLink-({}, {}, {}), kernelRcv-({}, {}, {})".format(
-            send_max, send_avg, send_min, out_max, out_avg, out_min, recv_max, recv_avg, recv_min)
+    if sender_send.cnt != 0:
+        summary = "Sender: kernelSnd-({}, {}, {}), externalLink-({}, {}, {}), kernelRcv-({}, {}, {})".format(sender_send.max, sender_send.avg, sender_send.min, sender_out.max, sender_out.avg, sender_out.min, sender_recv.max, sender_recv.avg, sender_recv.min)
 
-    if int(rawdata["recv_envet_count"]) != 0:
-        summary = "Receiver: kernelRcv-({}, {}, {}), kernelSnd-({}, {}, {})".format(
-            recv_max, recv_avg, recv_min, send_max, send_avg, send_min)
+    if receiver_recv.cnt != 0:
+        summary = "Receiver: kernelRcv-({}, {}, {}), kernelSnd-({}, {}, {})".format(receiver_recv.max, receiver_recv.avg, receiver_recv.min, receiver_send.max, receiver_send.avg, receiver_send.min)
 
     if len(summary) == 0:
         summary = "No captured infomation"
 
     newjitter["summary"] = summary
+
+    postprocess_result = {
+        "code": 0,
+        "err_msg": "",
+        "result": {}
+    }
     postprocess_result["result"] = newjitter
     print(json.dumps(postprocess_result, ensure_ascii=False))
 
 
 def extract_params():
-    path, res, task_id = sys.argv[1], "", sys.argv[2]
+    path, res, task_id = sys.argv[1], [], sys.argv[2]
     with open(path, 'r') as tmp:
-        res = tmp.read()
-    return res, task_id
+        for line in tmp.readlines():
+            obj = json.loads(line)
+            res.append(obj)
 
+    return res, task_id
 
 if __name__ == "__main__":
     res, _ = extract_params()
