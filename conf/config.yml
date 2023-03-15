@@ -24,7 +24,10 @@ sysom_server:
       password: sysom_admin
       database: sysom
   jwt:
+    # JWT token secret key
     SECRET_KEY: "django-insecure-^d8b9di9w&-mmsbpt@)o#e+2^z+^m4nhf+z8304%9@8y#ko46l"
+    # JWT token expire time (2 days)
+    TOKEN_EXPIRE: 172800
   cec:
     protocol: redis
     # 各个微服务对外提供服务的主题统一定义在这
@@ -33,6 +36,11 @@ sysom_server:
       SYSOM_CEC_PLUGIN_TOPIC: SYSOM_CEC_PLUGIN_TOPIC
       # 通道模块用于对外开放，投递操作的主题
       SYSOM_CEC_CHANNEL_TOPIC: SYSOM_CEC_CHANNEL_TOPIC
+      # 警告通知事件投递主题
+      SYSOM_CEC_ALARM_TOPIC: SYSOM_CEC_ALARM_TOPIC
+
+      # Host
+      SYSOM_CEC_API_HOST_TOPIC: SYSOM_CEC_API_HOST_TOPIC
 
     special_param:
       comm:

@@ -1,0 +1,21 @@
+vars:
+  SERVICE_NAME: &SERVICE_NAME sysom_api
+  SERVICE_CONSUMER_GROUP:
+    !concat &SERVICE_CONSUMER_GROUP [*SERVICE_NAME, "_consumer_group"]
+
+sysom_server:
+  cec:
+    consumer_group: *SERVICE_CONSUMER_GROUP
+  channel_job:
+    target_topic: SYSOM_CEC_CHANNEL_TOPIC
+    listen_topic: SYSOM_CEC_CHANNEL_API_TOPIC
+    consumer_group: *SERVICE_CONSUMER_GROUP
+
+sysom_service:
+  service_name: *SERVICE_NAME
+  service_dir: *SERVICE_NAME
+  heartbeat:
+    HEARTBEAT_INTERVAL: 20
+  app_host:
+    # Host init timeout (seconds)
+    HOST_INIT_TIMEOUT: 600

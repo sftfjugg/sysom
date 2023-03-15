@@ -33,7 +33,7 @@ CHANNEL_JOB_URL = YAML_CONFIG.get_local_channel_job_url()
 # Logger settings
 ##################################################################
 # Config log format
-log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+log_format = YAML_CONFIG.get_server_config().logger.format
 LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO,
                  format=log_format, colorize=True)
 LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING,

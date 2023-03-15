@@ -1,7 +1,7 @@
 #!/bin/bash -x
 GRAFANA_CONFIG=/etc/grafana/grafana.ini
 GRAFANA_SAMPLE_CONFIG=/usr/share/grafana/conf/sample.ini
-SYSOM_CONF=${SERVER_HOME}/target/sysom_server/sysom_api/conf/common.py
+SYSOM_CONF=${SERVER_HOME}/target/conf/config.yml
 GRAFANA_SERVER=grafana-server
 
 ##fix sometime grafana.ini not found##
@@ -13,10 +13,10 @@ then
 fi
 
 ###grafana configure mysql###
-SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep "'HOST'" | awk -F"'" '{print $4}'`
-SYSOM_DATABASE_PORT=`cat $SYSOM_CONF | grep "'PORT'" | awk -F"'" '{print $4}'`
-SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep "'USER'" | awk -F"'" '{print $4}'`
-SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep PASSWORD | awk -F"'" '{print $4}'`
+SYSOM_DATABASE_HOST=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a host | awk '{print $2}'`
+SYSOM_DATABASE_PORT=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a port | awk '{print $2}'`
+SYSOM_DATABASE_USER=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a user | awk '{print $2}'`
+SYSOM_DATABASE_PASSWORD=`cat $SYSOM_CONF | grep -Pzo '(?s)mysql.*n.*database:(.*?)\n' | grep -a password | awk '{print $2}'`
 ##modify grafana.ini
 sed -i 's/;type\ =\ sqlite3/type\ =\ mysql/g' $GRAFANA_CONFIG
 ####If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""

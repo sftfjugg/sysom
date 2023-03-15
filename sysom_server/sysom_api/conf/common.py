@@ -1,19 +1,44 @@
 from cec_base.log import LoggerHelper, LoggerLevel
 import os
 import sys
-import socket
 import datetime
 from pathlib import Path
-
-
-def get_ip_address():
-    """ip address"""
-    hostname = socket.gethostname()
-    return socket.gethostbyname(hostname)
+from sysom_utils import ConfigParser, CecTarget
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-^d8b9di9w&-mmsbpt@)o#e+2^z+^m4nhf+z8304%9@8y#ko46l'
+
+##################################################################
+# Load yaml config first
+##################################################################
+YAML_GLOBAL_CONFIG_PATH = f"{BASE_DIR.parent.parent}/conf/config.yml"
+YAML_SERVICE_CONFIG_PATH = f"{BASE_DIR}/config.yml"
+
+YAML_CONFIG = ConfigParser(YAML_GLOBAL_CONFIG_PATH, YAML_SERVICE_CONFIG_PATH)
+
+##########################################################################################
+# SysomAPI Service config
+##########################################################################################
+# Host init timeout (seconds)
+HOST_INIT_TIMEOUT = YAML_CONFIG.get_server_config() \
+    .app_host.get("HOST_INIT_TIMEOUT", 600)  # seconds
+HEARTBEAT_INTERVAL = YAML_CONFIG.get_server_config() \
+    .heartbeat.get("HEARTBEAT_INTERVAL", 20)  # seconds
+
+##########################################################################################
+# Django Config
+##########################################################################################
+
+SECRET_KEY = YAML_CONFIG.get_server_config().jwt.get("SECRET_KEY", "")
+JWT_TOKEN_EXPIRE = YAML_CONFIG.get_server_config().jwt.get(
+    "TOKEN_EXPIRE", 60 * 60 * 24 * 2)
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=JWT_TOKEN_EXPIRE),
+}
+# JWT Token Decode DIR
+JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
+if not os.path.exists(JWT_TOKEN_DECODE_DIR):
+    os.makedirs(JWT_TOKEN_DECODE_DIR)
 
 ALLOWED_HOSTS = ['*']
 
@@ -43,18 +68,21 @@ DEBUG = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sysom',
-        'USER': 'sysom',
-        'PASSWORD': 'sysom_admin',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': YAML_CONFIG.get_server_config().db.mysql.database,
+        'USER': YAML_CONFIG.get_server_config().db.mysql.user,
+        'PASSWORD': YAML_CONFIG.get_server_config().db.mysql.password,
+        'HOST': YAML_CONFIG.get_server_config().db.mysql.host,
+        'PORT': YAML_CONFIG.get_server_config().db.mysql.port,
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
+        "LOCATION": (
+            f"redis://{YAML_CONFIG.get_server_config().db.redis.host}"
+            f":{YAML_CONFIG.get_server_config().db.redis.port}/1"
+        ),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {"max_connections": 100},
@@ -66,14 +94,6 @@ CACHES = {
 ROOT_URLCONF = 'sysom.urls'
 
 AUTH_USER_MODEL = 'accounts.User'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-    },
-]
 
 WSGI_APPLICATION = 'sysom.wsgi.application'
 ASGI_APPLICATION = 'sysom.asgi.application'
@@ -110,32 +130,12 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'lib.exception.exception_handler'
 }
 
-JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
-}
-
-JWT_TOKEN_EXPIRE = 60 * 60 * 24 * 2
-
-SERVICE_SVG_PATH = os.path.join(BASE_DIR, 'netinfo')
-
 # upload file
-MEDIA_URL = '/uploads/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 
 SCRIPTS_DIR = os.path.join(BASE_DIR, 'service_scripts')
 
-SERVER_IP = get_ip_address()
-
 IS_MICRO_SERVICES = False  # 是否微服务
-
-# sysom node resource download dir
-WEB_DIR = os.path.join(BASE_DIR.parent, 'sysom_web')
-DOWNLOAD_DIR = os.path.join(WEB_DIR, 'download')
-
-##################################################################
-# Heartbeat
-##################################################################
-HEARTBEAT_INTERVAL = 20  # seconds
 
 ##################################################################
 # SSH channel settings
@@ -149,36 +149,29 @@ SSH_CHANNEL_KEY_PUB = os.path.join(SSH_CHANNEL_KEY_DIR, "sysom_id.pub")
 ##################################################################
 # Cec settings
 ##################################################################
-SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000&cec_auto_mk_topic=true"
-SYSOM_CEC_ALARM_TOPIC = "CEC-SYSOM-ALARM"
-# 通道模块用于对外开放，投递操作的主题
-SYSOM_CEC_CHANNEL_TOPIC = "SYSOM_CEC_CHANNEL_TOPIC"
-# 通道模块用于投递执行结果的主题
-SYSOM_CEC_CHANNEL_RESULT_TOPIC = "SYSOM_CEC_CHANNEL_RESULT_TOPIC"
+SYSOM_CEC_URL = YAML_CONFIG.get_cec_url(CecTarget.PRODUCER)
+SYSOM_CEC_ALARM_TOPIC = YAML_CONFIG.get_server_config().cec.topics.SYSOM_CEC_ALARM_TOPIC
 # 用于分发插件系统相关事件的主题
-SYSOM_CEC_PLUGIN_TOPIC = "SYSOM_CEC_PLUGIN_TOPIC"
+SYSOM_CEC_PLUGIN_TOPIC = \
+    YAML_CONFIG.get_server_config().cec.topics.SYSOM_CEC_PLUGIN_TOPIC
 # API主机模块消费组
-SYSOM_CEC_API_HOST_CONSUMER_GROUP = "SYSOM_CEC_API_HOST_CONSUMER_GROUP"
+SYSOM_CEC_API_HOST_CONSUMER_GROUP = \
+    YAML_CONFIG.get_server_config().cec.consumer_group
 # HOST用于接收其他模块发出的异步请求的主题
-SYSOM_CEC_API_HOST_TOPIC = "SYSOM_CEC_API_HOST_TOPIC"
+SYSOM_CEC_API_HOST_TOPIC = \
+    YAML_CONFIG.get_server_config().cec.topics.SYSOM_CEC_API_HOST_TOPIC
 
 ##################################################################
 # Channel settings
 ##################################################################
-SYSOM_HOST_LISTEN_TOPIC = "SYSOM_HOST_LISTEN_TOPIC"
-SYSOM_HOST_CONSUME_GROUP = "SYSOM_HOST_CONSUME_GROUP"
-SYSOM_HOST_CEC_URL = f"{SYSOM_CEC_URL}&channel_job_target_topic={SYSOM_CEC_CHANNEL_TOPIC}&channel_job_listen_topic={SYSOM_HOST_LISTEN_TOPIC}&channel_job_consumer_group={SYSOM_HOST_CONSUME_GROUP}"
-# Host init timeout (seconds)
-HOST_INIT_TIMEOUT = 600
-
-# JWT Token Decode DIR
-JWT_TOKEN_DECODE_DIR = os.path.join(BASE_DIR, 'lib', 'decode')
-if not os.path.exists(JWT_TOKEN_DECODE_DIR):
-    os.makedirs(JWT_TOKEN_DECODE_DIR)
+# channl_job SDK 需要的url
+SYSOM_HOST_CEC_URL = YAML_CONFIG.get_local_channel_job_url()
 
 
-# Config log format
-log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
+##################################################################
+# Config settings
+##################################################################
+log_format = YAML_CONFIG.get_server_config().logger.format
 LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO,
                  format=log_format, colorize=True)
 LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING,

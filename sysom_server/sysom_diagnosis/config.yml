@@ -34,8 +34,7 @@ sysom_node:
           remote:
       amd64: &node_delivery_files_amd64
         - *code_delivery_files_comm
-        - local: node_exporter-1.5.0.linux-amd64.tar.gz
-          local: !concat ["sysak-", *SYSAK_VERSION, ".x86_64.rpm"]
+        - local: !concat ["sysak-", *SYSAK_VERSION, ".x86_64.rpm"]
           remote:
             !concat [
               *SYSAK_DOWNLOAD_URL,
