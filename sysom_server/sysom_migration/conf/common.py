@@ -11,16 +11,26 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+from sysom_utils import ConfigParser, CecTarget
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+##################################################################
+# Load yaml config first
+##################################################################
+YAML_GLOBAL_CONFIG_PATH = f"{BASE_DIR.parent.parent}/conf/config.yml"
+YAML_SERVICE_CONFIG_PATH = f"{BASE_DIR}/config.yml"
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+YAML_CONFIG = ConfigParser(YAML_GLOBAL_CONFIG_PATH, YAML_SERVICE_CONFIG_PATH)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-752$3&4lq+k1x+gh%)l!-+r1c!=tq##xi+4c3e#*^aj(nn2l(o'
+
+##########################################################################################
+# Django Config
+##########################################################################################
+
+SECRET_KEY = YAML_CONFIG.get_server_config().jwt.get("SECRET_KEY", "")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -47,23 +57,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'sysom_migration.urls'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
 WSGI_APPLICATION = 'sysom_migration.wsgi.application'
 ASGI_APPLICATION = 'sysom_migration.asgi.application'
 
@@ -74,11 +67,11 @@ ASGI_APPLICATION = 'sysom_migration.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sysom',
-        'USER': 'sysom',
-        'PASSWORD': 'sysom_admin',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': YAML_CONFIG.get_server_config().db.mysql.database,
+        'USER': YAML_CONFIG.get_server_config().db.mysql.user,
+        'PASSWORD': YAML_CONFIG.get_server_config().db.mysql.password,
+        'HOST': YAML_CONFIG.get_server_config().db.mysql.host,
+        'PORT': YAML_CONFIG.get_server_config().db.mysql.port,
     }
 }
 
@@ -116,7 +109,6 @@ USE_L10N = True
 USE_TZ = True
 
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
@@ -149,10 +141,7 @@ MIG_IMP_REBOOT = 120
 ##################################################################
 # Cec settings
 ##################################################################
-SYSOM_CEC_URL = "redis://localhost:6379?cec_default_max_len=1000&cec_auto_mk_topic=true"
-# HOST用于接收其他模块发出的异步请求的主题
-SYSOM_CEC_API_HOST_TOPIC = "SYSOM_CEC_API_HOST_TOPIC"
-
+SYSOM_CEC_URL = YAML_CONFIG.get_cec_url(CecTarget.PRODUCER)
 
 #########################################################################################
 # rest_framework settings
@@ -162,7 +151,7 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.IsAuthenticated'
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
-    #     'apps.accounts.authentication.Authentication'
+        #     'apps.accounts.authentication.Authentication'
     ],
     'UNAUTHENTICATED_USER': None,
     'DEFAULT_VERSIONING_CLASS': "rest_framework.versioning.URLPathVersioning",
@@ -256,4 +245,3 @@ LOGGING = {
         },
     }
 }
-
