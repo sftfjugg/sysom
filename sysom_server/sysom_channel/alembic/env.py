@@ -3,8 +3,19 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from app.models import Base
-
 from alembic import context
+from pathlib import Path
+from sysom_utils import ConfigParser
+
+##################################################################
+# Load yaml config first
+##################################################################
+BASE_DIR = Path(__file__).resolve().parent.parent
+YAML_GLOBAL_CONFIG_PATH = f"{BASE_DIR.parent.parent}/conf/config.yml"
+YAML_SERVICE_CONFIG_PATH = f"{BASE_DIR}/config.yml"
+
+YAML_CONFIG = ConfigParser(YAML_GLOBAL_CONFIG_PATH, YAML_SERVICE_CONFIG_PATH)
+mysql_config = YAML_CONFIG.get_server_config().db.mysql
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,6 +25,15 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Update mysql config according config.yml
+config.set_main_option(
+    "sqlalchemy.url",
+    (
+        f"mariadb+pymysql://{mysql_config.user}:{mysql_config.password}@"
+        f"{mysql_config.host}:{mysql_config.port}/{mysql_config.database}"
+    )
+)
 
 # add your model's MetaData object here
 # for 'autogenerate' support

@@ -1,0 +1,18 @@
+vars:
+  SERVICE_NAME: &SERVICE_NAME sysom_channel
+  SERVICE_CONSUMER_GROUP:
+    !concat &SERVICE_CONSUMER_GROUP [*SERVICE_NAME, "_consumer_group"]
+
+sysom_server:
+  cec:
+    consumer_group: SYSOM_CEC_CHANNEL_CONSUMER_GROUP
+
+sysom_service:
+  service_name: *SERVICE_NAME
+  service_dir: *SERVICE_NAME
+  channel:
+    public:
+      proto: &CHANNEL_PUBLIC_PROTO http
+      host: &CHANNEL_PUBLIC_HOST 127.0.0.1
+      port: &CHANNEL_PUBLIC_PORT "7003"
+      base_url: !concat [*CHANNEL_PUBLIC_PROTO, "://", *CHANNEL_PUBLIC_HOST, ":", *CHANNEL_PUBLIC_PORT]
