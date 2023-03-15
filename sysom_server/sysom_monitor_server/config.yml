@@ -3,7 +3,7 @@ vars:
   NODE_EXPORT_VERSION: &NODE_EXPORT_VERSION 1.5.0
   SERVICE_NAME: &SERVICE_NAME sysom_monitor
   SERVICE_CONSUMER_GROUP:
-    !concat &SERVICE_CONSUMER_GROUP [*SERVICE_NAME, "_consumer_group"]
+    &SERVICE_CONSUMER_GROUP !concat [*SERVICE_NAME, "_consumer_group"]
 
 sysom_server:
   cec:
