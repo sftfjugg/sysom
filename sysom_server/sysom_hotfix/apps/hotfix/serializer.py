@@ -1,9 +1,6 @@
-import logging
+from loguru import logger
 from rest_framework import serializers
 from apps.hotfix.models import HotfixModel, OSTypeModel, KernelVersionModel
-logger = logging.getLogger(__name__)
-
-from datetime import datetime
 
 class HotfixSerializer(serializers.ModelSerializer):
 
