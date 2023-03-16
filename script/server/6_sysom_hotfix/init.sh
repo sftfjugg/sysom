@@ -12,8 +12,6 @@ source_virtualenv() {
 
 init_conf() {
     pushd ${TARGET_PATH}/${HOTFIX_DIR}
-    rm -f apps/*/migrations/00*.py
-    python manage.py makemigrations hotfix
     python manage.py migrate
     popd
 
