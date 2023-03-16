@@ -154,23 +154,6 @@ download_node_exporter()
 
 }
 
-prepare_node_init_tar()
-{
-    mkdir -p ${NODE_INIT_DIR}
-    cp -r ${BASE_DIR}/../../node/monitor ${NODE_INIT_DIR}
-    cp ${RESOURCE_DIR}/${NODE_EXPORTER_TAR} ${NODE_INIT_DIR}/monitor/
-}
-
-set_node_init_cmd()
-{
-    sed "s#server_local_ip='xxx'#server_local_ip=\"${SERVER_LOCAL_IP}\"#g" -i ${NODE_INIT_SCRIPT}
-    sed "s#server_public_ip='xxx'#server_public_ip=\"${SERVER_PUBLIC_IP}\"#g" -i  ${NODE_INIT_SCRIPT}
-    sed "s#server_port='xxx'#server_port=\"${SERVER_PORT}\"#g" -i  ${NODE_INIT_SCRIPT}
-    sed "s#app_home='xxx'#app_home=\"${APP_HOME}\"#g" -i ${NODE_INIT_SCRIPT}
-    sed "s#node_home='xxx'#node_home=\"${NODE_HOME}\"#g" -i ${NODE_DELETE_SCRIPT}
-}
-
-
 configure_grafana()
 {
     bash -x grafana_api_set.sh
@@ -198,9 +181,6 @@ main()
 
     start_grafana_service
     start_prometheus_service
-
-    set_node_init_cmd
-    #prepare_node_init_tar
 
     configure_grafana
     configure_cron

@@ -60,14 +60,7 @@ start_cron()
     echo "* * * * * pushd ${SERVER_HOME}/vmcore;${VIRTUALENV_PYTHON3} parse_panic.py ${file_path} ${SERVER_PORT};popd" >> /var/spool/cron/root
 }
 
-prepare_node_init_tar()
-{
-    mkdir -p ${NODE_INIT_DIR}
-    cp -r ${BASE_DIR}/../../node/vmcore ${NODE_INIT_DIR}
-}
-
 deploy() {
-    # prepare_node_init_tar
     source_virtualenv
     init_conf
     start_app

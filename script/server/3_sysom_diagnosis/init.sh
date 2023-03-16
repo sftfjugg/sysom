@@ -40,22 +40,7 @@ start_app() {
     exit 1
 }
 
-prepare_node_init_tar()
-{
-    mkdir -p ${NODE_INIT_DIR}
-    cp -r ${BASE_DIR}/../../node/diagnosis ${NODE_INIT_DIR}
-    # pushd ${NODE_INIT_DIR}/diagnosis
-    # ls | grep ${SYSAK_PKG} 1>/dev/null 2>/dev/null
-    # if [ $? -ne 0 ]
-    # then
-    #     wget ${SYSAK_DOWNLOAD_URL}/${SYSAK_PKG}
-    #     ls
-    # fi
-    # popd
-}
-
 deploy() {
-    # prepare_node_init_tar
     source_virtualenv
     init_conf
     start_app
