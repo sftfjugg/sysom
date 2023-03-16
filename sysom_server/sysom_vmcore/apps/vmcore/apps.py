@@ -1,10 +1,11 @@
 import json
 import os
+import sys
 from django.apps import AppConfig
+from loguru import logger
 
 from django.db.models.signals import post_migrate
 from django.db import transaction
-from django.conf import settings
 
 
 
@@ -13,6 +14,23 @@ class VmcoreConfig(AppConfig):
     name = 'apps.vmcore'
 
     def ready(self) -> None:
+        from django.conf import settings
+        from sysom_utils import PluginEventExecutor
+        if ('runserver' in sys.argv or 'manage.py' not in sys.argv):
+            from channel_job.job import default_channel_job_executor
+
+            # 初始化 channel_job sdk
+            default_channel_job_executor.init_config(settings.CHANNEL_JOB_URL)
+            default_channel_job_executor.start()
+
+            # 初始化插件处理线程（自动处理节点端的初始化和清理操作）
+            PluginEventExecutor(
+                settings.YAML_CONFIG, default_channel_job_executor
+            ).start()
+        else:
+            # 这边执行数据库迁移等操作的时候执行一些处理代码
+            pass
+        logger.info(">>> Diagnosis module loading success")
         post_migrate.connect(initialization_vmcore, sender=self)
 
 

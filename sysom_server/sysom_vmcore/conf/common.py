@@ -9,19 +9,34 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+from cec_base.log import LoggerHelper, LoggerLevel
 import sys
-import os
 from pathlib import Path
+from sysom_utils import ConfigParser
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+##################################################################
+# Load yaml config first
+##################################################################
+YAML_GLOBAL_CONFIG_PATH = f"{BASE_DIR.parent.parent}/conf/config.yml"
+YAML_SERVICE_CONFIG_PATH = f"{BASE_DIR}/config.yml"
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
+YAML_CONFIG = ConfigParser(YAML_GLOBAL_CONFIG_PATH, YAML_SERVICE_CONFIG_PATH)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-752$3&4lq+k1x+gh%)l!-+r1c!=tq##xi+4c3e#*^aj(nn2l(o'
+##################################################################
+# Cec settings
+##################################################################
+# channl_job SDK 需要的url
+CHANNEL_JOB_URL = YAML_CONFIG.get_local_channel_job_url()
+
+
+##########################################################################################
+# Django Config
+##########################################################################################
+
+SECRET_KEY = YAML_CONFIG.get_server_config().jwt.get("SECRET_KEY", "")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -49,22 +64,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'sysom_vmcore.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
 WSGI_APPLICATION = 'sysom_vmcore.wsgi.application'
 ASGI_APPLICATION = 'sysom_diagnosis.asgi.application'
 
@@ -75,11 +74,11 @@ ASGI_APPLICATION = 'sysom_diagnosis.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sysom',
-        'USER': 'sysom',
-        'PASSWORD': 'sysom_admin',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': YAML_CONFIG.get_server_config().db.mysql.database,
+        'USER': YAML_CONFIG.get_server_config().db.mysql.user,
+        'PASSWORD': YAML_CONFIG.get_server_config().db.mysql.password,
+        'HOST': YAML_CONFIG.get_server_config().db.mysql.host,
+        'PORT': YAML_CONFIG.get_server_config().db.mysql.port,
     }
 }
 
@@ -117,7 +116,6 @@ USE_L10N = True
 USE_TZ = True
 
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
@@ -139,7 +137,7 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.IsAuthenticated'
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
-    #     'apps.accounts.authentication.Authentication'
+        #     'apps.accounts.authentication.Authentication'
     ],
     'UNAUTHENTICATED_USER': None,
     'DEFAULT_VERSIONING_CLASS': "rest_framework.versioning.URLPathVersioning",
@@ -155,9 +153,12 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'lib.exception.exception_handler'
 }
 
+##################################################################
+# Config settings
+##################################################################
 # Config log format
-from cec_base.log import LoggerHelper, LoggerLevel
-log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{file.path}</cyan>:<cyan>{line}</cyan> | {message}"
-LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO, format=log_format, colorize=True)
-LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING, format=log_format, colorize=True)
-
+log_format = YAML_CONFIG.get_server_config().logger.format
+LoggerHelper.add(sys.stdout, level=LoggerLevel.LOGGER_LEVEL_INFO,
+                 format=log_format, colorize=True)
+LoggerHelper.add(sys.stderr, level=LoggerLevel.LOGGER_LEVEL_WARNING,
+                 format=log_format, colorize=True)

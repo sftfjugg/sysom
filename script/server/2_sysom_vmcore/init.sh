@@ -67,7 +67,7 @@ prepare_node_init_tar()
 }
 
 deploy() {
-    prepare_node_init_tar
+    # prepare_node_init_tar
     source_virtualenv
     init_conf
     start_app

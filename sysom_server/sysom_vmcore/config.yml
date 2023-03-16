@@ -1,0 +1,42 @@
+vars:
+  SERVICE_NAME: &SERVICE_NAME sysom_vmcore
+  SERVICE_CONSUMER_GROUP:
+    &SERVICE_CONSUMER_GROUP !concat [*SERVICE_NAME, "_consumer_group"]
+
+sysom_server:
+  cec:
+    consumer_group: *SERVICE_CONSUMER_GROUP
+  channel_job:
+    target_topic: SYSOM_CEC_CHANNEL_TOPIC
+    listen_topic: SYSOM_CEC_CHANNEL_VMCORE_TOPIC
+    consumer_group: *SERVICE_CONSUMER_GROUP
+
+sysom_service:
+  service_name: *SERVICE_NAME
+  service_dir: *SERVICE_NAME
+
+# 节点测配置
+sysom_node:
+  version: 2.1
+  # 节点分发配置
+  delivery:
+    from_dir: scripts
+    to_dir: node
+    files:
+      comm: &code_delivery_files_comm
+        - local: node_init.sh
+          remote:
+        - local: node_clear.sh
+          remote:
+        - local: node_update.sh
+          remote:
+        - local: vmcore_collect.py
+          remote:
+      amd64: *code_delivery_files_comm
+      arm64: *code_delivery_files_comm
+      x86_64: *code_delivery_files_comm
+  scripts:
+    prepare: node_prepare.sh
+    init: node_init.sh
+    clear: node_clear.sh
+    update: node_update.sh

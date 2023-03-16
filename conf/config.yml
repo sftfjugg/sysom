@@ -1,7 +1,7 @@
 # sysom_server config
 sysom_global:
   path:
-    root_path: &global_root_path "/usr/local/sysom"
+    root_path: &global_root_path /usr/local/sysom
 
 # Unified configuration of Server
 sysom_server:
@@ -67,4 +67,8 @@ sysom_node:
   timeout: 60000
   envs:
     NODE_HOME: *sysom_node_root_path
-    SERVER_HOME: *sysom_server_root_path
+    APP_HOME: *global_root_path
+    SERVER_HOME: !concat [*global_root_path, "/server"]
+    SERVER_LOCAL_IP: 127.0.0.1
+    SERVER_PUBLIC_IP: 127.0.0.1
+    SERVER_PORT: 80
