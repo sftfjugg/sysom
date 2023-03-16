@@ -1,12 +1,8 @@
-import logging
-import sys
+from loguru import logger
 from django.apps import AppConfig
-from channel_job import default_channel_job_executor
 from django.db.models.signals import post_migrate
 from django.conf import settings
 from cec_base.admin import dispatch_admin
-
-logger = logging.getLogger(__name__)
 
 
 class HotfixConfig(AppConfig):
