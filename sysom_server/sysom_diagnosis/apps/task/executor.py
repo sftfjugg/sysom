@@ -5,7 +5,7 @@ from django.conf import settings
 from cec_base.cec_client import MultiConsumer, CecAsyncConsumeTask
 from cec_base.event import Event
 from cec_base.consumer import Consumer
-from sysom_utils import ConfigParser, CecTarget
+from sysom_utils import ConfigParser
 from .helper import DiagnosisHelper
 
 
@@ -18,12 +18,6 @@ class DiagnosisTaskExecutor(MultiConsumer):
         )
         self._config = config
         self.append_group_consume_task(
-            config.get_server_config().cec.topics.SYSOM_CEC_PLUGIN_TOPIC,
-            settings.SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP,
-            Consumer.generate_consumer_id(),
-            ensure_topic_exist=True
-        )
-        self.append_group_consume_task(
             settings.SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC,
             settings.SYSOM_CEC_DIAGNOSIS_CONSUMER_GROUP,
             Consumer.generate_consumer_id(),
@@ -35,8 +29,6 @@ class DiagnosisTaskExecutor(MultiConsumer):
         try:
             if task.topic_name == settings.SYSOM_CEC_DIAGNOSIS_TASK_DISPATCH_TOPIC:
                 self._process_task_dispatch_event(event)
-            elif task.topic_name == self._config.get_server_config().cec.topics.SYSOM_CEC_PLUGIN_TOPIC:
-                self._process_plugin_event(event)
             else:
                 # Unexpected
                 logger.error("Receive unknown topic event, unexpected!!")
@@ -48,46 +40,6 @@ class DiagnosisTaskExecutor(MultiConsumer):
     ################################################################################################
     # 事件处理
     ################################################################################################
-    def _process_plugin_event(self, event: Event):
-        """Process plugin event
-        {
-            "type": "clean",
-            "params": {
-                "channel": "ssh",
-                "host": instance.ip,
-                "username": instance.username,
-                "port": instance.port
-            },
-            "echo": {
-                "instance": params.get("host", "Unknown host"),
-                "label": "host_init"
-            }
-        }
-        """
-        from lib.authentications import decode_token
-        try:
-            value = event.value
-            plugin_event_type = value.get("type", "Unknown type")
-            params = value.get("params", {})
-            token = params.pop("token", "")
-
-            if plugin_event_type == "init":
-                params["service_name"] = "node_init"
-            elif plugin_event_type == "clean":
-                params["service_name"] = "node_delete"
-            else:
-                raise Exception(f"Receive not supprt plugin event: {event}")
-
-            user = decode_token(token)
-            # 1. Perform init
-            instance = DiagnosisHelper.init(params, user)
-
-            # 2. Execute diagnosis task
-            self._execute_diagnosis_task_by_model(instance)
-        except Exception as exc:
-            logger.exception(
-                f"Diagnosis process plugin event error: {str(exc)}")
-
     def _process_task_dispatch_event(self, event: Event):
         """Process diagnosis task dispatch event
         {

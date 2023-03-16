@@ -43,22 +43,6 @@ NODE_INIT_DIR=sysom_node_init
 NODE_INIT_PKG=sysom_node_init.tar.gz
 NODE_DIR=${basedir}/../node
 
-###initial download sysom_node_init.tar.gz###
-init_sysom_node_init()
-{
-    mkdir -p ${UPLOAD_DIR}/${NODE_INIT_DIR}
-    cp ${NODE_DIR}/init.sh ${UPLOAD_DIR}/${NODE_INIT_DIR}
-    cp ${NODE_DIR}/clear.sh ${UPLOAD_DIR}/${NODE_INIT_DIR}
-}
-
-tar_sysom_node_init()
-{
-    pushd ${UPLOAD_DIR}
-    tar -zcf ${NODE_INIT_PKG} ${NODE_INIT_DIR}
-    rm -rf ${NODE_INIT_DIR}
-    popd
-}
-
 ###enable the service web menu###
 setup_web_menu_enable()
 {
@@ -94,7 +78,6 @@ pushd $basedir
 if [ $FIRST_INIT_DONE == 0 ]
 then
     generate_service_env
-    init_sysom_node_init
     update_global_config
     for dir in `cat $config`
     do
@@ -106,7 +89,6 @@ then
             popd
         fi
     done
-    tar_sysom_node_init
     sed -i 's/^FIRST_INIT_DONE=0/FIRST_INIT_DONE=1/g' $0
 else
     for dir in `ls`

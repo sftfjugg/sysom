@@ -5,12 +5,12 @@ import socket
 
 nfs_ip = '127.0.0.1'
 nfs_dir = '/usr/vmcore-nfs'
-node_conf = '/usr/local/sysom/conf'
+# node_conf = '/usr/local/sysom/conf'
 if len(sys.argv) >= 3 :
     nfs_ip = sys.argv[1]
     nfs_dir = sys.argv[2]
-    if len(sys.argv) == 4 and sys.argv[3] != "":
-        node_conf = sys.argv[3]
+    # if len(sys.argv) == 4 and sys.argv[3] != "":
+    #     node_conf = sys.argv[3]
 
 def get_crash_path():
     try:
@@ -102,18 +102,19 @@ def upload_nfs(vmcore_dir):
         pass
 
 def nfs_config():
-    global nfs_ip, nfs_dir,node_conf
+    global nfs_ip, nfs_dir
+    # global node_conf
     server_local_ip = ""
     server_port = "80"
     try:
-        with open(node_conf,'r') as fin:
-            line = fin.readline()
-            while len(line):
-                if line.startswith("SERVER_LOCAL_IP"):
-                    server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
-                if line.startswith("SERVER_PORT"):
-                    server_port = line.split("SERVER_PORT=")[1].strip()
-                line = fin.readline()
+        # with open(node_conf,'r') as fin:
+        #     line = fin.readline()
+        #     while len(line):
+        #         if line.startswith("SERVER_LOCAL_IP"):
+        #             server_local_ip = line.split("SERVER_LOCAL_IP=")[1].strip()
+        #         if line.startswith("SERVER_PORT"):
+        #             server_port = line.split("SERVER_PORT=")[1].strip()
+        #         line = fin.readline()
         if server_local_ip != "":
             cmd = f'wget -T 3 -t 1 http://{server_local_ip}:{server_port}/download/vmcore_nfs_config -O vmcore_nfs_config'
             ret = os.system(cmd)
