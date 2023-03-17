@@ -12,7 +12,7 @@ export default (props) => {
     const { loading, error, run } = useRequest(submitKernelVersion, {
         manual: true,
         onSuccess: (result, params) => {
-            formRef?.form?.resetFields();
+            formRef.current.resetFields();
             props?.onSuccess?.(result, params);
         },
     });
@@ -54,10 +54,10 @@ export default (props) => {
                         label="内核版本"
                     />
                     <ProFormText
-                        name="git_branch"
+                        name="source"
                         width="md"
-                        tooltip="该内核版本所在仓库的源码git标签(tag)或者分支(branch)"
-                        label="git标签/分支"
+                        tooltip="如果为git方式管理，请输入该内核版本的源码branch或tag；如果使用源码包，请填入源码包下载地址"
+                        label="源码来源"
                     />
                     <ProFormText
                         name="devel_link"
