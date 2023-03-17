@@ -26,7 +26,7 @@ cmd0 = {}
 cmd0['instance'] = args["instance"]
 cache_type = args['type']
 value = args['value']
-cache_cmd = "sysak podmem "
+cache_cmd = "sysak podmem -r 100 "
 if cache_type == "pod":
     cache_cmd += " -p " + str(value)
 elif cache_type == "container":
